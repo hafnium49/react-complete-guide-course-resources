@@ -1,42 +1,21 @@
-import reactImg from './assets/react-core-concepts.png';
+
 // import componentImg from './assets/components.png';
 import { CORE_CONCEPTS } from './data.js';
-
-const reactDescriptions = ['Fundamental', 'Crucial', 'Core', 'Essential'];
-
-function genRandomInt(max) {
-  return Math.floor(Math.random() * (max));
-}
+import Header from './components/Header/Header.jsx';
+import CoreConcept from './components/CoreConcept.jsx';
+import TabButton from './components/TabButton.jsx';
 
 
-function Header() {
-  return (
-    <header>
-      <img src={reactImg} className="react-logo" alt="Stylized atom" />
-      <h1>React Essentials</h1>
-      <p>
-        {reactDescriptions[genRandomInt(reactDescriptions.length)]} React concepts you will need for almost any app you are
-        going to build!
-      </p>
-    </header>
-  );
-}
-
-function CoreConcept({image, title, description}) {
-  return (
-    <li>
-      <img src={image} className="concept-logo" alt="Stylized atom" />
-      <h3>{title}</h3>
-      <p>
-        {description}
-      </p>
-    </li>
-  );
-}
 
 function App() {
   return (
     <div>
+      <header>
+        <h1>React Essentials</h1>
+        <p>
+          React concepts you will need for almost any app you are going to build!
+        </p>
+      </header>
       <Header />
       <main>
         <section id="core-concepts">
@@ -47,6 +26,19 @@ function App() {
             <CoreConcept {...CORE_CONCEPTS[2]} />
             <CoreConcept {...CORE_CONCEPTS[3]} />
           </ul>
+        </section>
+        <section id="examples">
+          <h2>Examples</h2>
+          <menu>  
+            {/* <TabButton>Class Counter</TabButton>
+            <TabButton>Hooks Counter</TabButton>
+            <TabButton>Props Demo</TabButton>
+            <TabButton>State Demo</TabButton> */}
+            <TabButton label="Class Counter"/>
+            <TabButton label="Hooks Counter"/>
+            <TabButton label="Props Demo"/>
+            <TabButton label="State Demo"/>
+          </menu>
         </section>
         <h2>Time to get started!</h2>
       </main>
