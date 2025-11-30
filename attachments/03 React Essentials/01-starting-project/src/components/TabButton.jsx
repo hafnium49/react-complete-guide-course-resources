@@ -2,7 +2,7 @@
 //   return <li><button>{props.children}</button></li>
 // }
 
-export default function TabButton({ children, onSelect }) {
+export default function TabButton({ children, onSelect, isSelected }) {
   // document.querySelectorAll('button').forEach(btn => {
   //   btn.classList.remove('active');
   // });
@@ -14,7 +14,7 @@ export default function TabButton({ children, onSelect }) {
   console.log('TabButton Rendered');
   return (
     <li>
-      <button onClick={onSelect}>{children}</button>
+      <button className={isSelected ? "active" : undefined} onClick={onSelect}>{children}</button>
     </li>
   );
 }
