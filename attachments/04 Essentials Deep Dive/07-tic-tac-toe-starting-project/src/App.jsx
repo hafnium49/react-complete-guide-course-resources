@@ -1,6 +1,23 @@
 import Player from "./components/Player.jsx"
+import GameBoard from "./components/GameBoard.jsx"
+import { useState } from "react";
+import Log from "./components/Log.jsx"
+
 function App() {
-  
+  const [gameTurns, setGameTurns] = useState([]);
+  const [activePlayer, setActivePlayer] = useState("X");
+
+  function handleSelectSquare(rowIndex, colIndex) {
+    setActivePlayer((curActivePlayer) => (curActivePlayer === "X" ? "O" : "X"));
+    setGameTurns(preTurns => {
+      let currentPlayer = "X";
+      if (prevTurn.length > 0 && preTurns[0].player === "X") {
+        currentPlayer = "O";
+      }
+      const updatedTurns = [{square: {row: rowIndex, col: colIndex}}, ...preTurns];});
+      return updatedTurns;
+  }
+
 
   // return (
   //   // <header>
@@ -12,7 +29,7 @@ function App() {
   return (
     <main>  
       <div id="game-container">
-        <ol id="players">
+        <ol id="players" className="highlight-player">
           {/* <li>
             <span className="player">
               <span className="player-name">Player 2</span>
@@ -20,12 +37,18 @@ function App() {
             </span>
             <button>Edit</button>
           </li> */}
-          <Player name="Player 1" symbol="X" /> {/* Same component different instance */}
-          <Player name="Player 2" symbol="O" /> {/* Same component different instance */}
+          <Player name="Player 1" symbol="X" isActive={activePlayer === "X"}/> {/* Same component different instance */}
+          <Player name="Player 2" symbol="O" isActive={activePlayer === "O"} /> {/* Same component different instance */}
         </ol>
-        <ol id="game-board">
-        </ol>
+        {/* <ol id="game-board">
+        </ol> */}
+        <GameBoard 
+          onSelectSquare={handleSelectSquare} 
+          // activePlayerSymbol={activePlayer}
+          turns={gameTurns}
+          />
       </div>
+      {/* <Log /> */}
     </main>
   )
 }
