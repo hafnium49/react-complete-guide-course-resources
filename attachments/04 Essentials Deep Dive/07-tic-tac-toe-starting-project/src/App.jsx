@@ -1,7 +1,7 @@
 import Player from "./components/Player.jsx"
 import GameBoard from "./components/GameBoard.jsx"
 import { useState } from "react";
-import Log from "./components/Log.jsx"
+// import Log from "./components/Log.jsx"
 
 function App() {
   const [gameTurns, setGameTurns] = useState([]);
@@ -11,11 +11,12 @@ function App() {
     setActivePlayer((curActivePlayer) => (curActivePlayer === "X" ? "O" : "X"));
     setGameTurns(preTurns => {
       let currentPlayer = "X";
-      if (prevTurn.length > 0 && preTurns[0].player === "X") {
+      if (preTurns.length > 0 && preTurns[0].player === "X") {
         currentPlayer = "O";
       }
-      const updatedTurns = [{square: {row: rowIndex, col: colIndex}}, ...preTurns];});
+      const updatedTurns = [{square: {row: rowIndex, col: colIndex}, player: currentPlayer}, ...preTurns];
       return updatedTurns;
+    });
   }
 
 
