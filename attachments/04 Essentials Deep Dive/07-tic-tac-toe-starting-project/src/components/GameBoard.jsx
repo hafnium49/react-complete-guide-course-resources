@@ -1,18 +1,18 @@
 // import { useState } from "react";
 
-const initialBoard = [
-    [null, null, null],
-    [null, null, null],
-    [null, null, null]
-];
+// const initialBoard = [
+//     [null, null, null],
+//     [null, null, null],
+//     [null, null, null]
+// ];
 
-export default function GameBoard( { onSelectSquare, turns } ) {
-    let gameBoard = initialBoard;
-    for (const turn of turns) {
-        const { square, player } = turn;
-        const { row, col } = square;
-        gameBoard[row][col] = player;
-    } // deriving state from props
+export default function GameBoard( { onSelectSquare, board } ) {
+    // let gameBoard = initialBoard;
+    // for (const turn of turns) {
+    //     const { square, player } = turn;
+    //     const { row, col } = square;
+    //     gameBoard[row][col] = player;
+    // } // deriving state from props
     
 
     // const [gameBoard, setGameBoard] = useState(initialBoard);
@@ -31,7 +31,7 @@ export default function GameBoard( { onSelectSquare, turns } ) {
 
     return (
         <ol id="game-board">
-            {gameBoard.map((row, rowIndex) =>
+            {board.map((row, rowIndex) =>
                     <li key={rowIndex}>
                     <ol>
                     {row.map((playerSymbol, colIndex) => (

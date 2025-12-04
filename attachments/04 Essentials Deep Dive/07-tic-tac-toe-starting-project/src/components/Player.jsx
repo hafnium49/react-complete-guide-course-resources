@@ -1,7 +1,7 @@
 import { useState } from "react"
 
-export default function Player({ name, symbol, isActive }) {
-    const [playerName, setPlayerName] = useState(name);
+export default function Player({ name, symbol, isActive, onNameChange }) {
+    const [playerName, setPlayerName] = useState(name); // do not lift state up
     const [isEditing, setIsEditing] = useState(false);
 
     // ## Exercise Time!
@@ -19,6 +19,9 @@ export default function Player({ name, symbol, isActive }) {
         // setIsEditing(isEditing ? false : true);
         // setIsEditing(!isEditing); // schedules a state update based on the last updated state value
         setIsEditing((editing) => !editing); // schedules a state update based on the latest available state value
+        if (isEditing) {
+            onNameChange(symbol, playerName);
+        }
     }
 
     function handleChange(event) {
