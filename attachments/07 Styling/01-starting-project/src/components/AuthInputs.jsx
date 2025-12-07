@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { styled } from 'style-components';
+import { styled } from 'styled-components';
 
-const ControledContainer=styled.dev`
+const ControledContainer=styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
