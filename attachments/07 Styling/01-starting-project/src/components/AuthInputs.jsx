@@ -15,19 +15,19 @@ const Label = styled.label`
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #6b7280;
-`;
+  color: ${({invalid}) => (invalid ? '#f87171' : '#6b7280')};
+`; // color: ${(props) => props.invalid ? '#f87171' : '#374151'};
 
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
   line-height: 1.5;
-  background-color: #d1d5db;
-  color: #374151;
-  border: 1px solid transparent;
+  background-color: ${({invalide}) => (invalide ? '#fed2d2' : '#d1d5db')};
+  color: ${({invalide}) => (invalide ? '#ef4444' : '#374151')};
+  border: 1px solid ${({invalide}) => (invalide ? '#f73f3f' : 'transparent')};
   border-radius: 0.25rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  `
+  `;
 
 export default function AuthInputs() {
   const [enteredEmail, setEnteredEmail] = useState('');
@@ -54,21 +54,23 @@ export default function AuthInputs() {
       {/* <div className="controls"> */}
       <ControledContainer>
         <p className="paragraph">
-          <Label className={emailNotValid ? 'invalid' : ''}>Email</Label>
+          {/* <Label className={emailNotValid ? 'invalid' : ''}>Email</Label> */}
+          <Label invalid={emailNotValid}>Email</Label>
           <Input
+            invalide={emailNotValid}
             type="email"
             // style={{ backgroundColor: emailNotValid ? '#fed2d2' : '#d1d5db' }}
             // className={emailNotValid && 'invalid'} // The className will be defined as false if emailNotValid is false
-            className={emailNotValid ? 'invalid' : undefined}
+            // className={emailNotValid ? 'invalid' : undefined}
             onChange={(event) => handleInputChange('email', event.target.value)}
           />
         </p>
         <p>
-          <Label className={passwordNotValid ? 'invalid' : ''}>Password</Label>
+          <Label invalid={passwordNotValid}>Password</Label>
           {/* <label className={`label ${passwordNotValid ? 'invalid' : ''}`}>Password</label> */}
           <Input
             type="password"
-            className={passwordNotValid ? 'invalid' : undefined}
+            invalide={passwordNotValid}
             onChange={(event) =>
               handleInputChange('password', event.target.value)
             }
