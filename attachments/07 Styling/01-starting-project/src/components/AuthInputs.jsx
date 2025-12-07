@@ -1,4 +1,12 @@
 import { useState } from 'react';
+import { styled } from 'style-components';
+
+const ControledContainer=styled.dev`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+` // Tagged template literal
 
 export default function AuthInputs() {
   const [enteredEmail, setEnteredEmail] = useState('');
@@ -22,7 +30,8 @@ export default function AuthInputs() {
 
   return (
     <div id="auth-inputs">
-      <div className="controls">
+      {/* <div className="controls"> */}
+      <ControledContainer>
         <p className="paragraph">
           <label className={`label ${emailNotValid ? 'invalid' : ''}`}>Email</label>
           <input
@@ -43,7 +52,8 @@ export default function AuthInputs() {
             }
           />
         </p>
-      </div>
+      {/* </div> */}
+      </ControledContainer>
       {/* <p>Some text</p> */}
       <div className="actions">
         <button type="button" className="text-button">
