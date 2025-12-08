@@ -47,9 +47,9 @@ import logo from '../assets/logo.png';
 
 export default function Header() {
   return (
-    <header className="">
-      <img src={logo} alt="A canvas" />
-      <h1>ReactArt</h1>
+    <header className="flex flex-col items-center justify-center my-8 md:mb-16">
+      <img src={logo} alt="A canvas" className="object-contain mb-8 w-44 h-44" />
+      <h1 className="text-4xl font-semibold tracking-widest text-center uppercase text-[#9a3412] font-pacifico mb-4">ReactArt</h1>
       {/* <p style={{ color: 'red', textAlign: 'left' }}>A community of artists and art-lovers.</p> */}
       {/* <p className={classes.paragraph}>A community of artists and art-lovers.</p> Using CSS Modules You can add conditions as well */}
     </header>
