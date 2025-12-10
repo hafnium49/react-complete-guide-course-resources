@@ -1,24 +1,25 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function Player() {
+  const playerName = useRef();
   const [enteredPlayerName, setEnteredPlayerName] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  // const [submitted, setSubmitted] = useState(false);
 
-  function handleChange(event) {
-    setSubmitted(false);
-    setEnteredPlayerName(event.target.value);
-  }
+  // function handleChange(event) {
+  //   setSubmitted(false);
+  //   setEnteredPlayerName(event.target.value);
+  // }
 
   function handleClick() {
-    console.log("Player name set to:", enteredPlayerName);
-    setSubmitted(true);
+    setEnteredPlayerName(playerName.current.value);
+    playerName.current.value = ""; // Clear input field after setting name, impacting only uncontrolled input
   }
 
   return (
     <section id="player">
-      <h2>Welcome {submitted ? enteredPlayerName : "unknown entity"}</h2>
+      <h2>Welcome {enteredPlayerName ?? "unknown entity"}</h2>
       <p>
-        <input type="text" onChange={handleChange} value={enteredPlayerName} />
+        <input ref={playerName} type="text" />
         <button onClick={handleClick}>Set Name</button>
       </p>
     </section>
