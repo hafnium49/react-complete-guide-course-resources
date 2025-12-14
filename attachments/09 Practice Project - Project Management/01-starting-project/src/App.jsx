@@ -71,7 +71,7 @@ function App() {
     setProjectsState((prevState) => ({
       ...prevState,
       selectedProjectId: undefined,
-      projects: prevState.projects.filter(
+      projects: prevState.projects.filter( // Immutable removal
         (project) => project.id !== prevState.selectedProjectId
       ),
     }));

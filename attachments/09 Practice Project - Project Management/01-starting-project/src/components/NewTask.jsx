@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 export default function NewTask({ onAdd }) {
-  const [enteredTask, setEnteredTask] = useState('');
+  const [enteredTask, setEnteredTask] = useState(''); // Empty initial state in order to sustain controlled input
 
   function handleChange(event) {
     setEnteredTask(event.target.value);
@@ -21,7 +21,7 @@ export default function NewTask({ onAdd }) {
         type="text"
         className="w-64 px-2 py-1 rounded-sm bg-stone-200"
         onChange={handleChange}
-        value={enteredTask}
+        value={enteredTask} 
       />
       <button
         className="text-stone-700 hover:text-stone-950"
