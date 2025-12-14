@@ -27,7 +27,7 @@ export default function ProjectsSidebar({
             <li key={project.id}>
               <button
                 className={cssClasses}
-                onClick={() => onSelectProject(project.id)}
+                onClick={() => onSelectProject(project.id)} // Use function to pass argument
               >
                 {project.title}
               </button>

@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+// Works for older React versions that do not support ref forwarding with function components
 
 const Input = forwardRef(function Input({ label, textarea, ...props }, ref) {
   const classes =

@@ -19,7 +19,7 @@ export default function NewProject({ onAdd, onCancel }) {
       enteredDescription.trim() === '' ||
       enteredDueDate.trim() === ''
     ) {
-      modal.current.open();
+      modal.current.open(); // Show error modal
       return;
     }
 
@@ -61,7 +61,7 @@ export default function NewProject({ onAdd, onCancel }) {
           </li>
         </menu>
         <div>
-          <Input type="text" ref={title} label="Title" />
+          <Input type="text" ref={title} label="Title" /> 
           <Input ref={description} label="Description" textarea />
           <Input type="date" ref={dueDate} label="Due Date" />
         </div>

@@ -54,14 +54,14 @@ function App() {
   }
 
   function handleAddProject(projectData) {
-    setProjectsState((prevState) => {
+    setProjectsState((prevState) => { // Use function form to ensure latest state
       const newProject = {
         ...projectData,
-        id: Math.random(),
+        id: Math.random(), // Enrich with unique ID
       };
       return {
         ...prevState,
-        selectedProjectId: undefined,
+        selectedProjectId: undefined, // Fall back to no project selected
         projects: [...prevState.projects, newProject],
       };
     });
@@ -97,6 +97,8 @@ function App() {
       tasks={projectTasks}
     />
   );
+
+  console.log('Projects State:', projectsState);
 
   if (projectsState.selectedProjectId === null) {
     content = (
