@@ -3,8 +3,9 @@ import { useContext } from "react";
 import { CartContext } from "../store/shopping-cart-context";
 
 
-export default function Cart({ onUpdateItemQuantity }) {
-  const cartCtx = useContext(CartContext);
+export default function Cart() {
+  // const cartCtx = useContext(CartContext); // Reexecutes on every render
+  const { items: cartItems, updateItemWuantity: onUpdateItemQuantity } = useContext(CartContext);
   // Can distructure here too
   // const { items } = useContext(CartContext);
   // const cartCtx = use(CartContext); // Can use in if blocks. available in React 18.3+
@@ -30,11 +31,11 @@ export default function Cart({ onUpdateItemQuantity }) {
                   <span> ({formattedPrice})</span>
                 </div>
                 <div className="cart-item-actions">
-                  <button onClick={() => onUpdateItemQuantity(item.id, -1)}>
+                  <button onClick={() => updateItemWuantity(item.id, -1)}>
                     -
                   </button>
                   <span>{item.quantity}</span>
-                  <button onClick={() => onUpdateItemQuantity(item.id, 1)}>
+                  <button onClick={() => updateItemWuantity(item.id, 1)}>
                     +
                   </button>
                 </div>
