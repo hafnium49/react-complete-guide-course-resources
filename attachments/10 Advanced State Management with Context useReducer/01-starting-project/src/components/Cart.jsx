@@ -10,6 +10,7 @@ export default function Cart() {
   // const { items } = useContext(CartContext);
   // const cartCtx = use(CartContext); // Can use in if blocks. available in React 18.3+
 
+  // Reducer functionality will go here later
   const totalPrice = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
