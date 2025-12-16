@@ -35,8 +35,9 @@ function Modal({ open, children, onClose }) {
   // });
 
   return createPortal(
-    <dialog className="modal" ref={dialog} onClose={onClose}>
-      {children}
+    <dialog className="modal" ref={dialog}>
+      {open ? children : null}
+      {/* What if you click cancel? */}
     </dialog>,
     document.getElementById('modal')
   );
