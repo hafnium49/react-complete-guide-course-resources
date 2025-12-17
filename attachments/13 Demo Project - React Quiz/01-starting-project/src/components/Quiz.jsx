@@ -4,6 +4,7 @@ import Question from './Question.jsx';
 import Summary from './Summary.jsx';
 
 export default function Quiz() {
+  // const [activeQuestionIndex, setActiveQuestionIndex] = useState(0); // Not necessarily the best way
   const [userAnswers, setUserAnswers] = useState([]);
 
   const activeQuestionIndex = userAnswers.length;
