@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
@@ -97,7 +97,7 @@ function App() {
     }
   }
 
-  function handleRemovePlace() {
+  const handleRemovePlace = useCallback(() => {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
@@ -111,7 +111,11 @@ function App() {
       JSON.stringify(updatedIDs)
     );
   }
-
+  , []);
+  // Recreated every render because it is defined inside App component
+  // But in this case, setModelIsOpen will remove the previously created function 
+  // useCallback is the ultimate solution which always. It gives extra guarantee that the function identity remains the same across renders
+  
   return (
     <>
       <Modal open={modelIsOpen} onClose={handleStopRemovePlace}>
