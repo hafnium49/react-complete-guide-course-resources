@@ -20,6 +20,11 @@ export default function Question({ index, onSelectAnswer, onSkipAnswer }) {
   }
 
   function handleSelectAnswer(answer) {
+    // Another way to update userAnswers in Quiz.jsx
+    // setUserAnswers((prevUserAnswers) => {
+        // return [...prevUserAnswers, selectedAnswer];
+    // });
+    // This way, we can add delays and show correct/wrong states
     setAnswer({
       selectedAnswer: answer,
       isCorrect: null,
@@ -48,9 +53,10 @@ export default function Question({ index, onSelectAnswer, onSkipAnswer }) {
   return (
     <div id="question">
       <QuestionTimer
-        key={timer}
+        key={timer} // Recreate timer on each change in answer state, a nice trick
         timeout={timer}
-        onTimeout={answer.selectedAnswer === '' ? onSkipAnswer : null}
+        // onTimeout={() => handleSelectAnswer(null)} // Alternative way to skip on timeout. This way a new function is created on each render. Wrapped in useCallback in Quiz.jsx to avoid that.
+        onTimeout={answer.selectedAnswer === '' ? onSkipAnswer : null} // This way we skip silently on timeout
         mode={answerState}
       />
       <h2>{QUESTIONS[index].text}</h2>
