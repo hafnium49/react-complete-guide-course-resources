@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import QUESTIONS from '../questions.js';
 import Question from './Question.jsx';
 import Summary from './Summary.jsx';
@@ -40,8 +40,8 @@ export default function Quiz() {
   return (
     <div id="quiz">
       <Question
-        key={activeQuestionIndex}
-        index={activeQuestionIndex}
+        key={activeQuestionIndex} // Reset Question component state on each new question
+        index={activeQuestionIndex} // index = key redundant but necessary to use as prop
         onSelectAnswer={handleSelectAnswer}
         onSkipAnswer={handleSkipAnswer}
       />

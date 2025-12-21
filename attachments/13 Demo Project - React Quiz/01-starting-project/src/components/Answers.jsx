@@ -2,6 +2,7 @@ import { useRef } from 'react';
 
 export default function Answers({ answers, selectedAnswer, answerState, onSelect }) {
   const shuffledAnswers = useRef();
+  // const [shuffledAnswers, setShuffledAnswers] = useState([]); // Minimize the use of state. Use useRef instead.
 
   if (!shuffledAnswers.current) {
     shuffledAnswers.current = [...answers];
@@ -10,7 +11,7 @@ export default function Answers({ answers, selectedAnswer, answerState, onSelect
 
   return (
     <ul id="answers">
-      {shuffledAnswers.current.map((answer) => {
+      {shuffledAnswers.current.map((answer) => { // shuffle answers only once per component instance, make sure to use shuffledAnswers.current
         const isSelected = selectedAnswer === answer;
         let cssClass = '';
 
@@ -27,7 +28,7 @@ export default function Answers({ answers, selectedAnswer, answerState, onSelect
             <button
               onClick={() => onSelect(answer)}
               className={cssClass}
-              disabled={answerState !== ''}
+              disabled={answerState !== ''} // so that user can't change answer after selecting
             >
               {answer}
             </button>

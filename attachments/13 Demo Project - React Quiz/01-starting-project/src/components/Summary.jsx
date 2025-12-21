@@ -46,6 +46,7 @@ export default function Summary({ userAnswers }) {
           }
 
           return (
+            // key can be answer but index is the better key because answers can repeat
             <li key={index}>
               <h3>{index + 1}</h3>
               <p className="question">{QUESTIONS[index].text}</p>
