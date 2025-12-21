@@ -23,8 +23,8 @@ export default function CounterHistory({ history }) {
 
   return (
     <ol>
-      {history.map((count, index) => (
-        <HistoryItem key={index} count={count} />
+      {history.map((count ) => (
+        <HistoryItem key={count.id} count={count.value} /> // react forces to use key in evry list item, 
       ))}
     </ol>
   );
