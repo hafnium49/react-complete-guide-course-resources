@@ -33,6 +33,41 @@ import classes from './User.module.css';
 // - Use lifecycle methods
 // - Manage state (covered later)
 class User extends Component {
+  // ===========================================================================
+  // componentWillUnmount() - UNMOUNTING PHASE
+  // ===========================================================================
+  // Called ONCE right before the component is removed from the DOM.
+  // This is the perfect place to:
+  // - Cancel HTTP requests
+  // - Remove event listeners
+  // - Clear timers (clearTimeout, clearInterval)
+  // - Clean up subscriptions
+  //
+  // FUNCTIONAL EQUIVALENT:
+  //   useEffect(() => {
+  //     return () => {
+  //       // This cleanup function runs before unmount
+  //       console.log('User will unmount!');
+  //     };
+  //   }, []);
+  //
+  // WHY IS THIS IMPORTANT?
+  // The User component is rendered inside the Users list, which is
+  // conditionally rendered based on showUsers state. When "Hide Users"
+  // is clicked, all User components are REMOVED from the DOM, and
+  // componentWillUnmount is called for EACH User instance.
+  //
+  // Try clicking "Hide Users" and check the console - you'll see
+  // "User will unmount!" logged THREE times (once for each user).
+  // ===========================================================================
+  componentWillUnmount() {
+    console.log('User will unmount!');
+    // In a real app, you might:
+    // - clearTimeout(this.timer);
+    // - this.subscription.unsubscribe();
+    // - window.removeEventListener('resize', this.handleResize);
+  }
+
   // ---------------------------------------------------------------------------
   // OPTIONAL: Constructor method
   // ---------------------------------------------------------------------------
