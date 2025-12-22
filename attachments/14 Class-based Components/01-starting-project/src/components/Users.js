@@ -18,11 +18,15 @@ import { Component } from 'react';
 import User from './User';
 import classes from './Users.module.css';
 
-const DUMMY_USERS = [
-  { id: 'u1', name: 'Max' },
-  { id: 'u2', name: 'Manuel' },
-  { id: 'u3', name: 'Julie' },
-];
+// -----------------------------------------------------------------------------
+// NOTE: DUMMY_USERS removed!
+// -----------------------------------------------------------------------------
+// Users are now passed via PROPS from the parent component (UserFinder).
+// This makes the Users component more REUSABLE - it can display any list of
+// users, not just a hardcoded list.
+//
+// Access the users with: this.props.users
+// -----------------------------------------------------------------------------
 
 class Users extends Component {
   // ===========================================================================
@@ -136,9 +140,16 @@ class Users extends Component {
     // -------------------------------------------------------------------------
     // You can still define helper variables/constants inside render()
     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ACCESSING PROPS: this.props.users
+    // -------------------------------------------------------------------------
+    // Users are passed from the parent component (UserFinder) via props.
+    // In functional components: props.users (parameter)
+    // In class-based components: this.props.users
+    // -------------------------------------------------------------------------
     const usersList = (
       <ul>
-        {DUMMY_USERS.map((user) => (
+        {this.props.users.map((user) => (
           <User key={user.id} name={user.name} />
         ))}
       </ul>
@@ -196,7 +207,7 @@ class Users extends Component {
 // - State can be any type (not required to be an object)
 // - Multiple useState calls instead of one state object
 // =============================================================================
-// const Users = () => {
+// const Users = ({ users }) => {  // ← Destructure props
 //   const [showUsers, setShowUsers] = useState(true);
 //
 //   const toggleUsersHandler = () => {
@@ -205,7 +216,7 @@ class Users extends Component {
 //
 //   const usersList = (
 //     <ul>
-//       {DUMMY_USERS.map((user) => (
+//       {users.map((user) => (     // ← Use props.users instead of DUMMY_USERS
 //         <User key={user.id} name={user.name} />
 //       ))}
 //     </ul>
