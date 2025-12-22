@@ -79,6 +79,82 @@ class Users extends Component {
   }
 
   // ===========================================================================
+  // componentDidUpdate() - THROWING ERRORS FOR ERROR BOUNDARIES
+  // ===========================================================================
+  // This lifecycle method runs after every re-render (when state or props change).
+  //
+  // Here, we're using it to INTENTIONALLY throw an error when there are no users.
+  // This demonstrates how Error Boundaries work.
+  //
+  // WHY THROW AN ERROR?
+  // Sometimes errors aren't "bugs" - they're used to:
+  // - Signal that something unexpected happened
+  // - Transport information from one part of the app to another
+  // - Trigger error handling in parent components
+  //
+  // In this case, "no users" might mean:
+  // - The search found no results
+  // - Data failed to load
+  // - An edge case that should be handled gracefully
+  //
+  // By throwing an error, we let the Error Boundary handle the UI gracefully
+  // instead of showing an empty or broken state.
+  // ===========================================================================
+  componentDidUpdate() {
+    // -------------------------------------------------------------------------
+    // ALTERNATIVE: Using try-catch INSIDE the component
+    // -------------------------------------------------------------------------
+    // If you want to handle errors WITHIN this component, you can use try-catch:
+    //
+    //   try {
+    //     someCodeWhichMightFail();
+    //   } catch (err) {
+    //     // handle error locally
+    //     this.setState({ hasLocalError: true });
+    //   }
+    //
+    // But if you want a PARENT component to handle the error (like an Error
+    // Boundary), you need to let the error bubble up by throwing it.
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // Check if users array is empty
+    // -------------------------------------------------------------------------
+    // this.props.users is the array of users passed from UserFinder.
+    // When the search filters out all users (e.g., searching for "xyz"),
+    // this array becomes empty.
+    //
+    // We throw an error to demonstrate Error Boundary handling.
+    // The ErrorBoundary component will catch this and show a fallback UI.
+    // -------------------------------------------------------------------------
+    if (this.props.users.length === 0) {
+      throw new Error('No users provided!');
+    }
+
+    // -------------------------------------------------------------------------
+    // HOW THE ERROR FLOWS
+    // -------------------------------------------------------------------------
+    //
+    //   Users component                    Error bubbles up...
+    //   ┌─────────────────┐                      │
+    //   │ throw new Error │ ─────────────────────┘
+    //   └─────────────────┘                      │
+    //                                            ▼
+    //   ErrorBoundary component           Catches the error!
+    //   ┌─────────────────────────────────────────────────────┐
+    //   │ componentDidCatch(error) {                          │
+    //   │   console.log(error);                               │
+    //   │   this.setState({ hasError: true });                │
+    //   │ }                                                   │
+    //   └─────────────────────────────────────────────────────┘
+    //                                            │
+    //                                            ▼
+    //   render() returns fallback UI instead of children
+    //
+    // -------------------------------------------------------------------------
+  }
+
+  // ===========================================================================
   // CLASS METHODS - Event Handlers
   // ===========================================================================
   // In class-based components, event handlers are defined as class methods.

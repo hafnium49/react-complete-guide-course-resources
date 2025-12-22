@@ -62,6 +62,19 @@ import Users from './Users';
 import classes from './UserFinder.module.css';
 
 // =============================================================================
+// IMPORT ERROR BOUNDARY
+// =============================================================================
+// ErrorBoundary is a class-based component that catches JavaScript errors
+// in its child components. We wrap components that might throw errors with it.
+//
+// Key points:
+// - Error Boundaries MUST be class-based (no functional equivalent exists!)
+// - They catch errors in render, lifecycle methods, and constructors
+// - They do NOT catch errors in event handlers (use try-catch for those)
+// =============================================================================
+import ErrorBoundary from './ErrorBoundary';
+
+// =============================================================================
 // IMPORT THE CONTEXT
 // =============================================================================
 // We need to import the Context object to:
@@ -210,7 +223,41 @@ class UserFinder extends Component {
         <div className={classes.finder}>
           <input type='search' onChange={this.searchChangeHandler.bind(this)} />
         </div>
-        <Users users={this.state.filteredUsers} />
+        {/* -------------------------------------------------------------------
+            ERROR BOUNDARY WRAPPER
+            -------------------------------------------------------------------
+            We wrap <Users> with <ErrorBoundary> because Users might throw
+            an error (when the users array is empty after filtering).
+
+            Without ErrorBoundary:
+            - Error crashes the entire application
+            - User sees a blank screen or error message
+
+            With ErrorBoundary:
+            - Error is caught by componentDidCatch()
+            - ErrorBoundary shows fallback UI ("Something went wrong!")
+            - Rest of the application continues to work
+
+            WHY WE CAN'T USE TRY-CATCH HERE:
+            ─────────────────────────────────────────────────────────────────
+            You might think: "Why not just wrap this in try-catch?"
+
+              try {
+                return <Users users={...} />;  // ❌ Doesn't work!
+              } catch (error) {
+                return <p>Error!</p>;
+              }
+
+            This doesn't work because:
+            1. JSX is declarative - errors happen DURING rendering
+            2. By the time the error occurs, the try-catch is gone
+            3. The error bubbles up through React's render tree, not JS call stack
+
+            Error Boundaries are React's solution for catching render errors!
+        ------------------------------------------------------------------- */}
+        <ErrorBoundary>
+          <Users users={this.state.filteredUsers} />
+        </ErrorBoundary>
       </Fragment>
     );
   }
