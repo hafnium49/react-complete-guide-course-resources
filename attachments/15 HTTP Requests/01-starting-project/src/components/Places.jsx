@@ -1,124 +1,105 @@
 // =============================================================================
-// PLACES COMPONENT - Displaying Data from Backend
+// PLACES COMPONENT - With Loading State Support
 // =============================================================================
 // This component renders a list of places (either user's selected places
 // or available places to choose from).
 //
-// KEY LEARNING: How to handle images served from a backend server.
+// KEY LEARNINGS:
+// 1. How to handle images served from a backend server
+// 2. How to display a loading state while fetching data
 // =============================================================================
 
 // =============================================================================
-// THE IMAGE PROBLEM
+// WHY DO WE NEED A LOADING STATE?
 // =============================================================================
 //
-// When we fetch place data from the backend, we get something like:
+// When fetching data from a backend, there's a delay between:
+//   1. The request being sent
+//   2. The response arriving
 //
-//   {
-//     "id": "p1",
-//     "title": "Forest Waterfall",
-//     "image": {
-//       "src": "forest-waterfall.jpg",    <-- Just the filename!
-//       "alt": "A tranquil forest..."
-//     }
-//   }
+// During this time, the user sees... what?
 //
-// Notice: image.src is JUST the filename, not a full URL!
-//
-// If we used this directly:
-//   <img src={place.image.src} />  // src="forest-waterfall.jpg"
-//
-// The browser would look for the image at:
-//   http://localhost:5173/forest-waterfall.jpg  (frontend server)
-//
-// But the images are stored in the BACKEND project (backend/images/)!
-// They're NOT in our React app's public folder.
-//
-// =============================================================================
-
-// =============================================================================
-// BACKEND vs FRONTEND FILE ACCESS
-// =============================================================================
-//
+// WITHOUT loading state:
 //   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │                     WHERE ARE THE FILES?                                │
-//   ├─────────────────────────────────────────────────────────────────────────┤
+//   │  Initial render: places = []                                           │
+//   │  User sees: "No places available" (confusing! data isn't loaded yet)   │
 //   │                                                                         │
-//   │   FRONTEND (React/Vite)              BACKEND (Node/Express)            │
-//   │   ────────────────────               ──────────────────────            │
-//   │   src/                               backend/                          │
-//   │   public/                            ├── images/  <-- Images here!     │
-//   │   ├── logo.png (accessible)         │   ├── forest-waterfall.jpg      │
-//   │                                      │   ├── grand-canyon.jpg          │
-//   │   No place images here!             │   └── ...                        │
-//   │                                      └── data/                          │
-//   │                                          └── places.json               │
-//   │                                                                         │
+//   │  After fetch: places = [...]                                           │
+//   │  User sees: actual places (finally!)                                   │
 //   └─────────────────────────────────────────────────────────────────────────┘
 //
-// IMPORTANT: Backend files are NOT automatically accessible!
-// By default, ALL backend code and files are HIDDEN from users.
-// The backend must EXPLICITLY expose files/routes to make them accessible.
+// WITH loading state:
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │  Initial render: isLoading = true                                      │
+//   │  User sees: "Fetching place data..." (clear feedback!)                 │
+//   │                                                                         │
+//   │  After fetch: isLoading = false, places = [...]                        │
+//   │  User sees: actual places                                              │
+//   └─────────────────────────────────────────────────────────────────────────┘
 //
-// In our backend (app.js), there's special code that serves the images:
-//   app.use(express.static('images'));
-//
-// This makes files in the images/ folder accessible at:
-//   http://localhost:3000/forest-waterfall.jpg
-//   http://localhost:3000/grand-canyon.jpg
-//   etc.
-//
-// =============================================================================
-
-// =============================================================================
-// THE SOLUTION: Construct Full Backend URL
-// =============================================================================
-//
-// We need to build a complete URL pointing to the backend server.
-//
-// BEFORE (broken):
-//   <img src={place.image.src} />
-//   // Results in: src="forest-waterfall.jpg"
-//   // Browser looks at: http://localhost:5173/forest-waterfall.jpg (404!)
-//
-// AFTER (working):
-//   <img src={`http://localhost:3000/${place.image.src}`} />
-//   // Results in: src="http://localhost:3000/forest-waterfall.jpg"
-//   // Browser fetches from: backend server (success!)
-//
-// We use a TEMPLATE LITERAL (backticks ``) to construct the URL:
-//   `http://localhost:3000/${place.image.src}`
-//
-// Template literals allow embedding expressions with ${...}
+// The loading state provides better UX by giving users feedback!
 //
 // =============================================================================
 
 // =============================================================================
-// TEMPLATE LITERALS - Quick Refresher
+// TESTING LOADING STATES
 // =============================================================================
 //
-// Template literals use backticks (`) instead of quotes:
+// To see the loading state in action:
 //
-//   // Regular string concatenation:
-//   'http://localhost:3000/' + place.image.src
+// 1. Open Developer Tools (F12 or right-click → Inspect)
+// 2. Go to the "Network" tab
+// 3. Find the throttling dropdown (usually says "No throttling")
+// 4. Select "Slow 3G"
+// 5. Reload the page
 //
-//   // Template literal (cleaner!):
-//   `http://localhost:3000/${place.image.src}`
+// Now you'll see:
+//   - Page takes time to load (slow network)
+//   - "Fetching place data..." appears while waiting
+//   - Places appear once data arrives
 //
-// Inside ${...} you can put any JavaScript expression:
-//   `Hello, ${user.name}!`
-//   `Total: ${price * quantity}`
-//   `${isLoggedIn ? 'Welcome' : 'Please login'}`
+// This simulates what users on slow connections experience!
+// Don't forget to disable throttling when done testing.
 //
 // =============================================================================
 
-export default function Places({ title, places, fallbackText, onSelectPlace }) {
+// =============================================================================
+// THE IMAGE PROBLEM (from previous lesson)
+// =============================================================================
+//
+// Images are stored in the backend (backend/images/).
+// API returns just the filename: "forest-waterfall.jpg"
+// We construct the full URL: `http://localhost:3000/${filename}`
+//
+// =============================================================================
+
+// =============================================================================
+// PROPS OVERVIEW
+// =============================================================================
+//
+// This component now accepts these props:
+//
+//   title        - The section heading (e.g., "Available Places")
+//   places       - Array of place objects to display
+//   fallbackText - Text to show when places array is empty
+//   onSelectPlace - Function called when a place is clicked
+//   isLoading    - Boolean: true while fetching, false when done
+//   loadingText  - Text to show while isLoading is true
+//
+// The isLoading and loadingText props enable the loading state feature!
+//
+// =============================================================================
+
+export default function Places({
+  title,
+  places,
+  fallbackText,
+  onSelectPlace,
+  isLoading,      // NEW: Boolean to indicate loading state
+  loadingText     // NEW: Text to display while loading
+}) {
   // ---------------------------------------------------------------------------
-  // DEBUG: Log places data to see what we're receiving from the backend
-  // ---------------------------------------------------------------------------
-  // This helps us understand the structure of the data.
-  // You can see in the console:
-  //   - places is an array
-  //   - Each place has: id, title, image: { src, alt }, lat, lon
+  // DEBUG: Log places data (can remove in production)
   // ---------------------------------------------------------------------------
   console.log(places);
 
@@ -126,37 +107,62 @@ export default function Places({ title, places, fallbackText, onSelectPlace }) {
     <section className="places-category">
       <h2>{title}</h2>
 
-      {/* ---------------------------------------------------------------------
-          CONDITIONAL RENDERING: Show fallback if no places
-          --------------------------------------------------------------------- */}
-      {places.length === 0 && <p className="fallback-text">{fallbackText}</p>}
+      {/* =====================================================================
+          LOADING STATE - Show loading text while fetching
+          =====================================================================
+          When isLoading is true, we show the loadingText instead of
+          the places or fallback text.
 
-      {/* ---------------------------------------------------------------------
-          RENDER LIST OF PLACES
-          --------------------------------------------------------------------- */}
-      {places.length > 0 && (
+          This provides immediate feedback to users that data is being fetched.
+
+          The conditional rendering order matters:
+          1. First check if loading → show loading text
+          2. Then check if no places → show fallback text
+          3. Finally, if we have places → show them
+
+          This ensures we never show "No places available" while still loading!
+      ===================================================================== */}
+      {isLoading && (
+        <p className="fallback-text">{loadingText}</p>
+      )}
+
+      {/* =====================================================================
+          FALLBACK TEXT - Show when NOT loading AND no places
+          =====================================================================
+          Notice the condition: !isLoading && places.length === 0
+
+          We ONLY show "No places available" when:
+          - We're NOT currently loading (isLoading is false)
+          - AND there are no places (places.length === 0)
+
+          This prevents showing the fallback while data is still being fetched!
+
+          BEFORE (without isLoading check):
+            {places.length === 0 && <p>No places available</p>}
+            // Shows "No places available" while loading! Bad UX.
+
+          AFTER (with isLoading check):
+            {!isLoading && places.length === 0 && <p>No places available</p>}
+            // Only shows when we're done loading AND there's no data.
+      ===================================================================== */}
+      {!isLoading && places.length === 0 && (
+        <p className="fallback-text">{fallbackText}</p>
+      )}
+
+      {/* =====================================================================
+          PLACES LIST - Show when NOT loading AND we have places
+          =====================================================================
+          Similarly, we only render the places when:
+          - We're NOT currently loading
+          - AND there are places to show
+
+          This ensures we don't try to render an empty list while loading.
+      ===================================================================== */}
+      {!isLoading && places.length > 0 && (
         <ul className="places">
           {places.map((place) => (
             <li key={place.id} className="place-item">
               <button onClick={() => onSelectPlace(place)}>
-                {/* -------------------------------------------------------------
-                    IMAGE SOURCE: Constructing the Backend URL
-                    -------------------------------------------------------------
-                    The image source needs to point to the backend server!
-
-                    place.image.src = "forest-waterfall.jpg" (just filename)
-
-                    We construct the full URL:
-                      `http://localhost:3000/${place.image.src}`
-                      = "http://localhost:3000/forest-waterfall.jpg"
-
-                    This tells the browser to fetch the image from the
-                    backend server, where the images are actually stored.
-
-                    NOTE: In production, you'd use an environment variable
-                    or configuration for the backend URL instead of hardcoding
-                    "localhost:3000".
-                ------------------------------------------------------------- */}
                 <img
                   src={`http://localhost:3000/${place.image.src}`}
                   alt={place.image.alt}
@@ -172,39 +178,50 @@ export default function Places({ title, places, fallbackText, onSelectPlace }) {
 }
 
 // =============================================================================
-// SUMMARY: Loading Images from a Backend
+// CONDITIONAL RENDERING SUMMARY
 // =============================================================================
 //
 //   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │  1. Backend stores images in a folder (backend/images/)                │
-//   │  2. Backend explicitly exposes that folder via static serving          │
-//   │  3. API returns just the filename in the data (not full URL)           │
-//   │  4. Frontend constructs full URL: `${backendUrl}/${filename}`          │
-//   │  5. Browser fetches image directly from backend server                 │
+//   │  STATE                │  WHAT'S SHOWN                                  │
+//   ├───────────────────────┼────────────────────────────────────────────────┤
+//   │  isLoading: true      │  Loading text ("Fetching place data...")      │
+//   │  isLoading: false,    │  Fallback text ("No places available")        │
+//   │    places: []         │                                                │
+//   │  isLoading: false,    │  The actual places list                       │
+//   │    places: [...]      │                                                │
 //   └─────────────────────────────────────────────────────────────────────────┘
-//
-// This is a common pattern in web development where:
-//   - Data (JSON) comes from an API endpoint
-//   - Static assets (images) are served from a different path
-//   - Frontend combines base URL + filename to create full image URL
 //
 // =============================================================================
 
 // =============================================================================
-// PRODUCTION CONSIDERATIONS
+// THE PATTERN: Multiple States for Async Operations
 // =============================================================================
 //
-// In a real production app, you would NOT hardcode "localhost:3000".
-// Instead, you'd use:
+// When dealing with async operations (like fetching data), you often need
+// to track MULTIPLE states:
 //
-//   1. Environment variables:
-//      const API_URL = import.meta.env.VITE_API_URL;
-//      src={`${API_URL}/${place.image.src}`}
+//   1. DATA STATE       - The actual data (places array)
+//   2. LOADING STATE    - Are we currently fetching? (boolean)
+//   3. ERROR STATE      - Did something go wrong? (coming in next lessons!)
 //
-//   2. Or a configuration file:
-//      import { API_BASE_URL } from '../config';
-//      src={`${API_BASE_URL}/${place.image.src}`}
+// This pattern is so common it has a name: "Loading/Error/Data" pattern
+// or sometimes called the "fetch state machine":
 //
-// This allows different URLs for development vs production environments.
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │                    ASYNC STATE MACHINE                                  │
+//   │                                                                         │
+//   │   IDLE ─────────> LOADING ─────────> SUCCESS                           │
+//   │    │                 │                  │                               │
+//   │    │                 │                  │ (has data)                    │
+//   │    │                 ▼                  ▼                               │
+//   │    │              ERROR            [show data]                          │
+//   │    │                │                                                   │
+//   │    │                ▼                                                   │
+//   │    │           [show error]                                             │
+//   │    │                                                                    │
+//   │    └── (initial state, waiting for user action or mount)               │
+//   └─────────────────────────────────────────────────────────────────────────┘
+//
+// We'll add error handling in the next lessons!
 //
 // =============================================================================

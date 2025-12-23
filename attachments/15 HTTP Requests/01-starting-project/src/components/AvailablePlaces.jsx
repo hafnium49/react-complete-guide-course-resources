@@ -1,134 +1,74 @@
 // =============================================================================
-// FETCHING DATA FROM A BACKEND - Using async/await in useEffect
+// FETCHING DATA FROM A BACKEND - With Loading State
 // =============================================================================
 // This component demonstrates how to fetch data from a backend API in React
-// using the modern async/await syntax inside useEffect.
+// using the modern async/await syntax inside useEffect, AND how to manage
+// a loading state for better user experience.
 //
-// KEY CONCEPT: React apps often need to communicate with backend servers
-// to fetch or send data. This is fundamentally different from accessing
-// local data (like localStorage) because HTTP requests are ASYNCHRONOUS.
+// KEY CONCEPTS:
+// 1. Async data fetching with useEffect
+// 2. Managing LOADING STATE alongside DATA STATE
+// 3. Providing user feedback during data fetching
 //
 // =============================================================================
 
 // =============================================================================
-// THE TWO-SERVER ARCHITECTURE
+// WHY MANAGE LOADING STATE?
 // =============================================================================
 //
-// When working with a backend, you typically have TWO separate servers:
+// HTTP requests take time - especially on slow networks!
+//
+// Problem without loading state:
+//   1. Component renders with places = []
+//   2. User sees "No places available" (confusing!)
+//   3. Eventually places load and appear
+//
+// Solution with loading state:
+//   1. Component renders with isFetching = true
+//   2. User sees "Fetching place data..." (clear feedback!)
+//   3. Eventually places load and appear
+//
+// This is a better user experience!
+//
+// =============================================================================
+
+// =============================================================================
+// MULTIPLE STATES FOR ASYNC OPERATIONS
+// =============================================================================
+//
+// When fetching data, you typically need MULTIPLE pieces of state:
 //
 //   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │                     DEVELOPMENT SETUP                                   │
+//   │  STATE             │  PURPOSE                                          │
 //   ├─────────────────────────────────────────────────────────────────────────┤
-//   │                                                                         │
-//   │   FRONTEND (Vite Dev Server)          BACKEND (Node/Express Server)    │
-//   │   ─────────────────────────           ──────────────────────────────   │
-//   │   • npm run dev                       • node app.js                    │
-//   │   • http://localhost:5173             • http://localhost:3000          │
-//   │   • Serves React app                  • Serves API endpoints           │
-//   │   • Hot module replacement            • Handles data/images            │
-//   │                                                                         │
-//   │                    HTTP Request                                         │
-//   │   React App ──────────────────────────────────> Backend API            │
-//   │              <──────────────────────────────── JSON Response           │
-//   │                                                                         │
+//   │  data              │  The actual fetched data (places array)          │
+//   │  isLoading         │  Are we currently fetching? (boolean)            │
+//   │  error             │  Did something go wrong? (coming next!)          │
 //   └─────────────────────────────────────────────────────────────────────────┘
 //
-// IMPORTANT: Both servers must be running simultaneously!
-// - Terminal 1: npm run dev (frontend)
-// - Terminal 2: cd backend && node app.js (backend)
+// This is such a common pattern that libraries like React Query, SWR, and
+// TanStack Query are built specifically to manage these states for you!
+//
+// But understanding how to do it manually is important for learning.
 //
 // =============================================================================
 
 // =============================================================================
-// ASYNC/AWAIT IN useEffect - The Right Way
+// THE DATA FLOW WITH LOADING STATE
 // =============================================================================
 //
-// PROBLEM: You CANNOT make the useEffect callback function async!
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │  TIME         │  isFetching  │  places  │  USER SEES                   │
+//   ├───────────────┼──────────────┼──────────┼──────────────────────────────┤
+//   │  Initial      │  false       │  []      │  (nothing yet)               │
+//   │  Start fetch  │  true        │  []      │  "Fetching place data..."    │
+//   │  (waiting...) │  true        │  []      │  "Fetching place data..."    │
+//   │  Data arrives │  false       │  [...]   │  List of places!             │
+//   └─────────────────────────────────────────────────────────────────────────┘
 //
-//   ❌ WRONG - This will cause a React warning:
-//   ─────────────────────────────────────────────────────────────────────────
-//   useEffect(async () => {
-//     const response = await fetch(url);
-//     // ...
-//   }, []);
-//
-//   Why? Because useEffect expects:
-//   - Either nothing returned (undefined)
-//   - Or a CLEANUP FUNCTION returned
-//
-//   But async functions ALWAYS return a Promise!
-//   React doesn't know what to do with a Promise as a cleanup function.
-//
-//   ✅ CORRECT - Define an async function INSIDE, then call it:
-//   ─────────────────────────────────────────────────────────────────────────
-//   useEffect(() => {
-//     async function fetchData() {     // 1. Define async function
-//       const response = await fetch(url);
-//       // ...
-//     }
-//     fetchData();                      // 2. Call it immediately
-//   }, []);
-//
-// This is a very common pattern in React!
-//
-// =============================================================================
-
-// =============================================================================
-// .then() vs async/await - COMPARISON
-// =============================================================================
-//
-//   Using .then() chains (previous approach):
-//   ─────────────────────────────────────────────────────────────────────────
-//   useEffect(() => {
-//     fetch('http://localhost:3000/places')
-//       .then(response => response.json())
-//       .then(data => setAvailablePlaces(data.places));
-//   }, []);
-//
-//   Using async/await (cleaner, more readable):
-//   ─────────────────────────────────────────────────────────────────────────
-//   useEffect(() => {
-//     async function fetchPlaces() {
-//       const response = await fetch('http://localhost:3000/places');
-//       const resData = await response.json();
-//       setAvailablePlaces(resData.places);
-//     }
-//     fetchPlaces();
-//   }, []);
-//
-// Both approaches do EXACTLY the same thing!
-// async/await is just "syntactic sugar" that makes the code look synchronous.
-//
-// Benefits of async/await:
-//   1. More readable - looks like regular synchronous code
-//   2. Easier to understand the flow
-//   3. Better for complex logic with multiple steps
-//   4. Easier error handling with try/catch
-//
-// =============================================================================
-
-// =============================================================================
-// HOW async/await WORKS
-// =============================================================================
-//
-//   async function fetchPlaces() {
-//     const response = await fetch(url);  // Pause here until fetch completes
-//     const data = await response.json(); // Pause here until JSON is parsed
-//     return data;                         // Return the result
-//   }
-//
-// The "await" keyword:
-//   - Can ONLY be used inside an async function
-//   - PAUSES execution until the Promise resolves
-//   - Returns the resolved value (not the Promise!)
-//
-// Under the hood, this is equivalent to:
-//
-//   fetch(url)
-//     .then(response => response.json())
-//     .then(data => { /* use data */ });
-//
-// The async function still returns a Promise, but the code LOOKS synchronous.
+// The key insight: There may be SECONDS between setting isFetching = true
+// and setting isFetching = false. During that time, the user sees the
+// loading message instead of a confusing "No places available" message.
 //
 // =============================================================================
 
@@ -141,87 +81,108 @@ import Places from './Places.jsx';
 // =============================================================================
 export default function AvailablePlaces({ onSelectPlace }) {
   // ===========================================================================
-  // STATE FOR FETCHED DATA
+  // STATE #1: DATA STATE - The fetched places
   // ===========================================================================
   const [availablePlaces, setAvailablePlaces] = useState([]);
 
   // ===========================================================================
-  // FETCHING DATA WITH async/await INSIDE useEffect
+  // STATE #2: LOADING STATE - Are we currently fetching?
+  // ===========================================================================
+  // This state tracks whether an HTTP request is in progress.
+  //
+  // Why do we need this?
+  // - Without it, we can't distinguish between:
+  //   a) "We have no data YET" (still loading)
+  //   b) "We have no data BECAUSE there is none" (done loading, empty result)
+  //
+  // Initial value: false
+  //   We haven't started fetching yet, so we're not "fetching".
+  //   We set it to true inside useEffect when we START the fetch.
+  //
+  // Alternative approach: Start with true
+  //   const [isFetching, setIsFetching] = useState(true);
+  //   This would show loading immediately, which some prefer.
+  //   But then you need to make sure to set it false even if fetch fails.
+  // ===========================================================================
+  const [isFetching, setIsFetching] = useState(false);
+
+  // ===========================================================================
+  // FETCHING DATA WITH LOADING STATE
   // ===========================================================================
   useEffect(() => {
-    // -------------------------------------------------------------------------
-    // STEP 1: DEFINE AN ASYNC FUNCTION INSIDE useEffect
-    // -------------------------------------------------------------------------
-    // We create a function called fetchPlaces and mark it as "async".
-    // This is just a regular function defined inside useEffect.
-    // React doesn't care about this function - it's purely JavaScript.
-    //
-    // Why can't we make the useEffect callback async directly?
-    // Because useEffect expects the callback to return either:
-    //   - undefined (nothing)
-    //   - A cleanup function
-    // But async functions ALWAYS return a Promise, which confuses React.
-    //
-    // By creating a separate async function, we avoid this issue.
-    // -------------------------------------------------------------------------
     async function fetchPlaces() {
       // -----------------------------------------------------------------------
-      // STEP 2: AWAIT THE FETCH REQUEST
+      // STEP 1: SET LOADING TO TRUE (before fetch)
       // -----------------------------------------------------------------------
-      // The "await" keyword pauses execution until the Promise resolves.
-      // When the server responds, "response" will be the Response object.
+      // We're about to start fetching, so set isFetching to true.
+      // This will trigger a re-render showing the loading text.
       //
-      // Without await:
-      //   const response = fetch(url);  // response is a Promise
-      //
-      // With await:
-      //   const response = await fetch(url);  // response is the actual Response
+      // You could also set this outside of fetchPlaces(), right after
+      // the function definition. It doesn't matter much since both
+      // execute synchronously before any async operation.
       // -----------------------------------------------------------------------
-      const response = await fetch('http://localhost:3000/places');
+      setIsFetching(true);
 
       // -----------------------------------------------------------------------
-      // STEP 3: AWAIT THE JSON PARSING
+      // STEP 2: FETCH THE DATA
       // -----------------------------------------------------------------------
-      // response.json() also returns a Promise (parsing takes time).
-      // We await it to get the actual parsed JavaScript object.
+      // This is where the actual network request happens.
+      // The await keyword pauses execution here until the server responds.
       //
-      // resData will be: { places: [...] }
+      // On a fast connection: milliseconds
+      // On a slow connection (Slow 3G): several seconds!
+      //
+      // During this time, isFetching remains true, and the user sees
+      // "Fetching place data..." instead of "No places available".
       // -----------------------------------------------------------------------
+      const response = await fetch('http://localhost:3000/places');
       const resData = await response.json();
 
       // -----------------------------------------------------------------------
-      // STEP 4: UPDATE STATE
+      // STEP 3: UPDATE DATA STATE
       // -----------------------------------------------------------------------
-      // Now we have the data! Update state to trigger a re-render.
+      // Now we have the data! Store it in state.
       // -----------------------------------------------------------------------
       setAvailablePlaces(resData.places);
+
+      // -----------------------------------------------------------------------
+      // STEP 4: SET LOADING TO FALSE (after fetch)
+      // -----------------------------------------------------------------------
+      // We're done fetching! Set isFetching to false.
+      // This will trigger a re-render showing the actual places.
+      //
+      // IMPORTANT: The code between setIsFetching(true) and setIsFetching(false)
+      // may look like just 3 lines, but the await statements can take SECONDS
+      // to complete. That's why we need this loading state!
+      //
+      // Timeline:
+      //   t=0.000s: setIsFetching(true)
+      //   t=0.001s: fetch() starts
+      //   t=2.500s: response arrives (on slow network)
+      //   t=2.501s: JSON parsed
+      //   t=2.502s: setAvailablePlaces(data)
+      //   t=2.503s: setIsFetching(false)
+      //
+      // During those ~2.5 seconds, the user sees the loading message!
+      // -----------------------------------------------------------------------
+      setIsFetching(false);
     }
 
-    // -------------------------------------------------------------------------
-    // STEP 5: CALL THE ASYNC FUNCTION
-    // -------------------------------------------------------------------------
-    // We defined the function above, but we haven't CALLED it yet!
-    // We need to invoke it so the fetch actually happens.
-    //
-    // Pattern: Define then immediately call
-    //   async function doSomething() { ... }
-    //   doSomething();
-    //
-    // Alternative (IIFE - Immediately Invoked Function Expression):
-    //   (async () => {
-    //     const response = await fetch(url);
-    //     // ...
-    //   })();
-    //
-    // The named function approach is more readable and easier to debug.
-    // -------------------------------------------------------------------------
     fetchPlaces();
   }, []);
-  // ^^^^^^^^^^^
-  // EMPTY DEPENDENCY ARRAY = Run only once after initial render
 
   // ===========================================================================
-  // RENDER THE PLACES
+  // RENDER WITH LOADING STATE PROPS
+  // ===========================================================================
+  // We pass the loading state and text to the Places component.
+  //
+  // isLoading={isFetching}
+  //   - true while we're fetching
+  //   - false when we're done
+  //
+  // loadingText="Fetching place data..."
+  //   - Shown to the user while isLoading is true
+  //   - Clear, user-friendly message
   // ===========================================================================
   return (
     <Places
@@ -229,82 +190,77 @@ export default function AvailablePlaces({ onSelectPlace }) {
       places={availablePlaces}
       fallbackText="No places available."
       onSelectPlace={onSelectPlace}
+      isLoading={isFetching}
+      loadingText="Fetching place data..."
     />
   );
 }
 
 // =============================================================================
-// THE async/await PATTERN IN useEffect
+// THE COMPLETE LOADING STATE PATTERN
 // =============================================================================
 //
-//   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │  THE PATTERN:                                                           │
-//   │                                                                         │
-//   │  useEffect(() => {                                                      │
-//   │                                                                         │
-//   │    async function fetchData() {   // 1. Define async function          │
-//   │      const response = await fetch(url);                                 │
-//   │      const data = await response.json();                                │
-//   │      setState(data);                                                    │
-//   │    }                                                                    │
-//   │                                                                         │
-//   │    fetchData();                   // 2. Call it immediately             │
-//   │                                                                         │
-//   │  }, [dependencies]);                                                    │
-//   │                                                                         │
-//   └─────────────────────────────────────────────────────────────────────────┘
-//
-// This is the standard pattern for using async/await in useEffect.
-// You'll see this in virtually every React codebase that fetches data!
-//
-// =============================================================================
-
-// =============================================================================
-// WHY NOT USE IIFE (Immediately Invoked Function Expression)?
-// =============================================================================
-//
-// You might see this alternative pattern:
+//   const [data, setData] = useState([]);
+//   const [isLoading, setIsLoading] = useState(false);
 //
 //   useEffect(() => {
-//     (async () => {
+//     async function fetchData() {
+//       setIsLoading(true);              // 1. Start loading
+//
 //       const response = await fetch(url);
-//       const data = await response.json();
-//       setState(data);
-//     })();
+//       const result = await response.json();
+//
+//       setData(result);                 // 2. Store data
+//       setIsLoading(false);             // 3. Done loading
+//     }
+//     fetchData();
 //   }, []);
 //
-// This is valid but:
-//   - Less readable
-//   - Harder to give a meaningful name
-//   - Harder to reuse or debug
-//
-// The named function approach is preferred:
-//   - Clear intent: "fetchPlaces" describes what it does
-//   - Easier to read and maintain
-//   - Could be called multiple times if needed
+// This is a fundamental pattern you'll use in almost every React app!
 //
 // =============================================================================
 
 // =============================================================================
-// COMPARISON: .then() vs async/await
+// TESTING THE LOADING STATE
 // =============================================================================
 //
-//   .then() chains:
-//   ─────────────────────────────────────────────────────────────────────────
-//   fetch('http://localhost:3000/places')
-//     .then(response => response.json())
-//     .then(resData => setAvailablePlaces(resData.places));
+// On a fast connection, the loading state flashes by so quickly you might
+// not even see it! To test it properly:
 //
-//   async/await:
-//   ─────────────────────────────────────────────────────────────────────────
-//   const response = await fetch('http://localhost:3000/places');
-//   const resData = await response.json();
-//   setAvailablePlaces(resData.places);
+//   1. Open DevTools (F12)
+//   2. Go to Network tab
+//   3. Find the throttling dropdown
+//   4. Select "Slow 3G"
+//   5. Reload the page
 //
-// Both do the same thing! async/await is:
-//   ✓ More readable (looks like synchronous code)
-//   ✓ Easier to understand the data flow
-//   ✓ Better for complex async logic
-//   ✓ Easier error handling with try/catch (coming in next lessons!)
+// Now you'll see:
+//   - "Fetching place data..." appears
+//   - After a few seconds, places appear
+//
+// This simulates real-world slow connections!
+//
+// =============================================================================
+
+// =============================================================================
+// COMING NEXT: ERROR HANDLING
+// =============================================================================
+//
+// What happens if the fetch fails? (Server down, network error, etc.)
+//
+// Currently, we don't handle errors at all. The user would see the loading
+// message forever, or the app might crash.
+//
+// In the next lessons, we'll add:
+//
+//   const [error, setError] = useState(null);
+//
+//   try {
+//     const response = await fetch(url);
+//     // ...
+//   } catch (error) {
+//     setError(error);
+//   }
+//
+// This completes the "Loading/Error/Data" pattern!
 //
 // =============================================================================
