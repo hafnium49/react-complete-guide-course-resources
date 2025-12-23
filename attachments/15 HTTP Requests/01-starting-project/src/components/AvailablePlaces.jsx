@@ -1,5 +1,5 @@
 // =============================================================================
-// FETCHING DATA FROM A BACKEND - Introduction
+// FETCHING DATA FROM A BACKEND - Using fetch() and useEffect
 // =============================================================================
 // This component demonstrates how to fetch data from a backend API in React.
 //
@@ -39,112 +39,251 @@
 // =============================================================================
 
 // =============================================================================
-// SYNCHRONOUS vs ASYNCHRONOUS DATA FETCHING
+// THE FETCH API
 // =============================================================================
 //
-// LOCAL STORAGE (Synchronous):
-// ─────────────────────────────────────────────────────────────────────────────
-//   const places = localStorage.getItem('places');
-//   // Data is available IMMEDIATELY - no waiting!
-//   // This works because localStorage is in the browser's memory
+// fetch() is a BUILT-IN browser function (not from React!) for sending
+// HTTP requests. Despite the name, it can both FETCH and SEND data.
 //
-// HTTP REQUEST (Asynchronous):
-// ─────────────────────────────────────────────────────────────────────────────
-//   fetch('http://localhost:3000/places')
-//   // Data is NOT available immediately!
-//   // The request must:
-//   //   1. Travel through the network to the server
-//   //   2. Server processes the request
-//   //   3. Server sends back a response
-//   //   4. Response travels back through the network
-//   // This takes milliseconds or even seconds!
+// Basic syntax:
+//   fetch(url)                    // GET request (default)
+//   fetch(url, { method: 'POST', body: ... })  // POST request
+//
+// Key points about fetch():
+//   1. Returns a PROMISE (not the data itself!)
+//   2. By default, sends a GET request
+//   3. Works with any backend that speaks HTTP
+//   4. Built into all modern browsers
 //
 // =============================================================================
 
 // =============================================================================
-// WHY WE CAN'T FETCH DATA DIRECTLY IN COMPONENT FUNCTION
+// PROMISES - A Quick Refresher
 // =============================================================================
 //
-// You might think we could do this:
+// A Promise is a JavaScript object that represents a value that will
+// eventually be available (or an error if something goes wrong).
 //
-//   function AvailablePlaces() {
-//     const response = fetch('http://localhost:3000/places');  // ❌ Won't work!
-//     const places = response.json();
-//     return <Places places={places} />;
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │                    PROMISE LIFECYCLE                                    │
+//   ├─────────────────────────────────────────────────────────────────────────┤
+//   │                                                                         │
+//   │   fetch(url)  ──────>  Promise (pending)                               │
+//   │                              │                                          │
+//   │                              │ (network request in progress...)        │
+//   │                              │                                          │
+//   │                              ▼                                          │
+//   │                        ┌─────────────┐                                  │
+//   │                        │  resolved   │ ──> .then(data => ...)          │
+//   │                        │     OR      │                                  │
+//   │                        │  rejected   │ ──> .catch(error => ...)        │
+//   │                        └─────────────┘                                  │
+//   │                                                                         │
+//   └─────────────────────────────────────────────────────────────────────────┘
+//
+// Think of a Promise as a "wrapper" around a value that's not there YET
+// but WILL be there eventually (like a package being delivered).
+//
+// =============================================================================
+
+// =============================================================================
+// PROMISE CHAINING with .then()
+// =============================================================================
+//
+// The .then() method lets you specify what to do when a Promise resolves:
+//
+//   fetch(url)
+//     .then(response => {
+//       // This function runs LATER, when the response arrives
+//       // NOT immediately after calling fetch()!
+//       return response.json();  // Also returns a Promise!
+//     })
+//     .then(data => {
+//       // This runs after response.json() resolves
+//       console.log(data);
+//     });
+//
+// Each .then() returns a NEW Promise, allowing you to chain them.
+// This is called "Promise chaining".
+//
+// =============================================================================
+
+// =============================================================================
+// ASYNC/AWAIT - Alternative Syntax (NOT usable in component functions!)
+// =============================================================================
+//
+// Modern JavaScript has async/await for cleaner Promise handling:
+//
+//   async function fetchData() {
+//     const response = await fetch(url);
+//     const data = await response.json();
+//     return data;
 //   }
 //
-// This DOESN'T work because:
+// BUT: React DOES NOT allow async component functions!
 //
-//   1. fetch() returns a PROMISE, not the data itself
-//   2. Component functions execute instantly in one single step
-//   3. The function doesn't "wait" for the HTTP request to complete
-//   4. By the time the data arrives, the function has already returned!
+//   ❌ async function AvailablePlaces() { ... }  // NOT ALLOWED!
 //
-// SOLUTION: Use useState + useEffect
-//   1. Start with empty/default data (useState)
-//   2. Send the HTTP request (useEffect)
-//   3. When data arrives, update the state
-//   4. React re-renders the component with the new data
+// This is a restriction imposed by React because:
+// - Component functions must return JSX synchronously
+// - React needs to render immediately, not wait for data
+//
+// We CAN use async/await inside useEffect (we'll see this later).
 //
 // =============================================================================
 
-import { useState } from 'react';
+// =============================================================================
+// JSON - The Data Format
+// =============================================================================
+//
+// JSON (JavaScript Object Notation) is the standard format for API data.
+// It looks like JavaScript objects/arrays, but:
+//   - All keys MUST be wrapped in double quotes
+//   - It's a TEXT format (string), not actual JavaScript
+//
+// Example from backend/data/places.json:
+//   {
+//     "places": [
+//       { "id": "p1", "title": "Forest Waterfall", ... },
+//       { "id": "p2", "title": "Grand Canyon", ... }
+//     ]
+//   }
+//
+// response.json() PARSES this text into actual JavaScript objects.
+//
+// =============================================================================
+
+// =============================================================================
+// THE INFINITE LOOP PROBLEM
+// =============================================================================
+//
+// ❌ WRONG - Calling fetch directly in component function:
+//
+//   function AvailablePlaces() {
+//     fetch('http://localhost:3000/places')
+//       .then(response => response.json())
+//       .then(data => setAvailablePlaces(data.places));  // Updates state!
+//
+//     return <Places places={availablePlaces} />;
+//   }
+//
+// This creates an INFINITE LOOP:
+//
+//   ┌──────────────────────────────────────────────────────────────────────────┐
+//   │                     THE INFINITE LOOP                                   │
+//   │                                                                          │
+//   │   Component renders ──> fetch() called ──> response arrives             │
+//   │         ▲                                         │                      │
+//   │         │                                         ▼                      │
+//   │         └────────────── setState() ◄──────────────┘                     │
+//   │                     (triggers re-render!)                                │
+//   │                                                                          │
+//   │   This loops FOREVER until your browser crashes!                        │
+//   └──────────────────────────────────────────────────────────────────────────┘
+//
+// The cycle:
+//   1. Component function executes
+//   2. fetch() is called
+//   3. Response arrives, setState() is called
+//   4. State update triggers re-render
+//   5. Component function executes AGAIN
+//   6. fetch() is called AGAIN
+//   7. ...and so on, infinitely!
+//
+// SOLUTION: useEffect with an empty dependency array []
+//
+// =============================================================================
+
+import { useState, useEffect } from 'react';
 
 import Places from './Places.jsx';
 
 // =============================================================================
 // AVAILABLE PLACES COMPONENT
 // =============================================================================
-// This component fetches and displays places that users can select.
-// The data comes from our backend API, not from the React project itself.
-// =============================================================================
 export default function AvailablePlaces({ onSelectPlace }) {
   // ===========================================================================
   // STATE FOR FETCHED DATA
   // ===========================================================================
-  // We use useState to manage the places data.
-  //
-  // IMPORTANT: We start with an EMPTY ARRAY as the initial value!
-  //
-  // Why empty array?
-  // ─────────────────────────────────────────────────────────────────────────
-  // 1. The HTTP request hasn't been sent yet
-  // 2. Even after sending, the response takes time to arrive
-  // 3. We need to render SOMETHING while waiting for the data
-  // 4. An empty array allows the component to render without errors
-  //
-  // The data flow will be:
-  //   1. Component renders with empty array (shows "No places available")
-  //   2. HTTP request is sent to backend
-  //   3. Data arrives from backend
-  //   4. State is updated with the fetched data
-  //   5. Component RE-RENDERS with the actual places
-  //
-  // ===========================================================================
   const [availablePlaces, setAvailablePlaces] = useState([]);
 
   // ===========================================================================
-  // UPCOMING: FETCH DATA FROM BACKEND
+  // useEffect - THE SOLUTION TO THE INFINITE LOOP
   // ===========================================================================
-  // In the next lesson, we'll add useEffect to fetch data:
+  // useEffect lets us run "side effects" (like HTTP requests) in a controlled way.
   //
-  //   useEffect(() => {
-  //     fetch('http://localhost:3000/places')
-  //       .then(response => response.json())
-  //       .then(data => setAvailablePlaces(data.places));
-  //   }, []);
+  // Why useEffect solves the infinite loop:
+  // ─────────────────────────────────────────────────────────────────────────
+  // 1. The effect function runs AFTER the component renders
+  // 2. The dependency array [] means "only run once, after initial render"
+  // 3. Even though setState triggers a re-render, the effect WON'T run again
+  //    because the dependencies haven't changed (there are none!)
   //
-  // The useEffect hook is perfect for this because:
-  // - It runs AFTER the component renders
-  // - We can send HTTP requests (side effects) inside it
-  // - We can update state when the response arrives
+  // The flow with useEffect:
+  //   1. Component renders (with empty places)
+  //   2. useEffect runs ONCE after render
+  //   3. fetch() sends request
+  //   4. Response arrives, setState() updates state
+  //   5. Component re-renders with data
+  //   6. useEffect does NOT run again (deps unchanged)
+  //   7. No infinite loop!
+  //
   // ===========================================================================
+  useEffect(() => {
+    // -------------------------------------------------------------------------
+    // SENDING THE HTTP REQUEST
+    // -------------------------------------------------------------------------
+    // fetch() is a built-in browser function for HTTP requests.
+    //
+    // The URL breakdown:
+    //   http://localhost:3000  - The backend server address
+    //   /places                - The API endpoint (defined in backend/app.js)
+    //
+    // By default, fetch() sends a GET request, which is what we need
+    // to retrieve (fetch) data from the server.
+    // -------------------------------------------------------------------------
+    fetch('http://localhost:3000/places')
+      // -----------------------------------------------------------------------
+      // FIRST .then() - Handle the Response Object
+      // -----------------------------------------------------------------------
+      // When the server responds, we get a Response object.
+      // This object contains:
+      //   - status code (200, 404, 500, etc.)
+      //   - headers
+      //   - body (the actual data, but not directly accessible)
+      //
+      // response.json() extracts and PARSES the JSON body.
+      // It returns ANOTHER Promise (hence the second .then()).
+      // -----------------------------------------------------------------------
+      .then((response) => {
+        return response.json();
+      })
+      // -----------------------------------------------------------------------
+      // SECOND .then() - Handle the Parsed Data
+      // -----------------------------------------------------------------------
+      // Now we have the actual JavaScript data (parsed from JSON).
+      //
+      // Our backend returns: { places: [...] }
+      // So we access resData.places to get the array.
+      //
+      // We then update state with this data, which triggers a re-render
+      // and displays the places to the user!
+      // -----------------------------------------------------------------------
+      .then((resData) => {
+        setAvailablePlaces(resData.places);
+      });
+  }, []);
+  // ^^^^^^^^^^^
+  // EMPTY DEPENDENCY ARRAY = Run only once after initial render
+  //
+  // If we had dependencies like [someValue]:
+  //   - Effect would run on mount AND whenever someValue changes
+  //
+  // With no dependencies []:
+  //   - Effect runs ONLY on mount (like componentDidMount in class components)
 
   // ===========================================================================
   // RENDER THE PLACES
-  // ===========================================================================
-  // Initially, availablePlaces is an empty array, so fallbackText is shown.
-  // Once data is fetched and state is updated, the actual places will appear.
   // ===========================================================================
   return (
     <Places
@@ -157,42 +296,54 @@ export default function AvailablePlaces({ onSelectPlace }) {
 }
 
 // =============================================================================
-// SUMMARY: FETCHING DATA IN REACT
+// THE COMPLETE DATA FLOW
 // =============================================================================
 //
 //   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │  STEP 1: Initial Render                                                │
-//   │    • Component renders with empty state                                │
-//   │    • User sees loading state or fallback                               │
+//   │  1. INITIAL RENDER                                                      │
+//   │     • availablePlaces = [] (empty)                                     │
+//   │     • User sees "No places available"                                  │
 //   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  STEP 2: Fetch Data (useEffect)                                        │
-//   │    • Send HTTP request to backend                                      │
-//   │    • Request travels through network                                   │
+//   │  2. AFTER RENDER - useEffect RUNS                                      │
+//   │     • fetch('http://localhost:3000/places') is called                  │
+//   │     • Request travels to backend server                                │
 //   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  STEP 3: Receive Response                                              │
-//   │    • Backend sends JSON data                                           │
-//   │    • Parse the response                                                │
+//   │  3. BACKEND RESPONDS                                                    │
+//   │     • First .then(): response.json() parses the JSON                   │
+//   │     • Second .then(): we get { places: [...] }                         │
 //   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  STEP 4: Update State                                                  │
-//   │    • Call setState with the fetched data                               │
-//   │    • Triggers a re-render                                              │
+//   │  4. STATE UPDATE                                                        │
+//   │     • setAvailablePlaces(resData.places) is called                     │
+//   │     • React schedules a re-render                                       │
 //   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  STEP 5: Re-render with Data                                           │
-//   │    • Component renders again with actual data                          │
-//   │    • User sees the fetched content                                     │
+//   │  5. RE-RENDER WITH DATA                                                 │
+//   │     • availablePlaces now contains the fetched places                  │
+//   │     • User sees the list of places!                                    │
+//   │     • useEffect does NOT run again (deps unchanged)                    │
 //   └─────────────────────────────────────────────────────────────────────────┘
 //
 // =============================================================================
 
 // =============================================================================
-// KEY TAKEAWAYS
+// SUMMARY: fetch() + useEffect Pattern
 // =============================================================================
 //
-// 1. HTTP requests are ASYNCHRONOUS - they take time!
-// 2. Component functions execute INSTANTLY - they don't wait
-// 3. Use useState with empty initial value to handle "no data yet" state
-// 4. Use useEffect to send HTTP requests after component mounts
-// 5. Update state when data arrives to trigger a re-render
-// 6. The UI updates automatically when state changes (React's job!)
+// This is the standard pattern for fetching data in React:
+//
+//   const [data, setData] = useState(initialValue);
+//
+//   useEffect(() => {
+//     fetch(url)
+//       .then(response => response.json())
+//       .then(data => setData(data));
+//   }, []);  // Empty array = run once on mount
+//
+// Key points:
+//   1. fetch() is a browser API, not React
+//   2. fetch() returns a Promise
+//   3. .then() chains let you handle async results
+//   4. response.json() parses JSON (also returns a Promise!)
+//   5. useEffect prevents infinite loops
+//   6. Empty dependency array [] = run only once
 //
 // =============================================================================
