@@ -1,7 +1,8 @@
 // =============================================================================
-// FETCHING DATA FROM A BACKEND - Using fetch() and useEffect
+// FETCHING DATA FROM A BACKEND - Using async/await in useEffect
 // =============================================================================
-// This component demonstrates how to fetch data from a backend API in React.
+// This component demonstrates how to fetch data from a backend API in React
+// using the modern async/await syntax inside useEffect.
 //
 // KEY CONCEPT: React apps often need to communicate with backend servers
 // to fetch or send data. This is fundamentally different from accessing
@@ -39,158 +40,95 @@
 // =============================================================================
 
 // =============================================================================
-// THE FETCH API
+// ASYNC/AWAIT IN useEffect - The Right Way
 // =============================================================================
 //
-// fetch() is a BUILT-IN browser function (not from React!) for sending
-// HTTP requests. Despite the name, it can both FETCH and SEND data.
+// PROBLEM: You CANNOT make the useEffect callback function async!
 //
-// Basic syntax:
-//   fetch(url)                    // GET request (default)
-//   fetch(url, { method: 'POST', body: ... })  // POST request
-//
-// Key points about fetch():
-//   1. Returns a PROMISE (not the data itself!)
-//   2. By default, sends a GET request
-//   3. Works with any backend that speaks HTTP
-//   4. Built into all modern browsers
-//
-// =============================================================================
-
-// =============================================================================
-// PROMISES - A Quick Refresher
-// =============================================================================
-//
-// A Promise is a JavaScript object that represents a value that will
-// eventually be available (or an error if something goes wrong).
-//
-//   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │                    PROMISE LIFECYCLE                                    │
-//   ├─────────────────────────────────────────────────────────────────────────┤
-//   │                                                                         │
-//   │   fetch(url)  ──────>  Promise (pending)                               │
-//   │                              │                                          │
-//   │                              │ (network request in progress...)        │
-//   │                              │                                          │
-//   │                              ▼                                          │
-//   │                        ┌─────────────┐                                  │
-//   │                        │  resolved   │ ──> .then(data => ...)          │
-//   │                        │     OR      │                                  │
-//   │                        │  rejected   │ ──> .catch(error => ...)        │
-//   │                        └─────────────┘                                  │
-//   │                                                                         │
-//   └─────────────────────────────────────────────────────────────────────────┘
-//
-// Think of a Promise as a "wrapper" around a value that's not there YET
-// but WILL be there eventually (like a package being delivered).
-//
-// =============================================================================
-
-// =============================================================================
-// PROMISE CHAINING with .then()
-// =============================================================================
-//
-// The .then() method lets you specify what to do when a Promise resolves:
-//
-//   fetch(url)
-//     .then(response => {
-//       // This function runs LATER, when the response arrives
-//       // NOT immediately after calling fetch()!
-//       return response.json();  // Also returns a Promise!
-//     })
-//     .then(data => {
-//       // This runs after response.json() resolves
-//       console.log(data);
-//     });
-//
-// Each .then() returns a NEW Promise, allowing you to chain them.
-// This is called "Promise chaining".
-//
-// =============================================================================
-
-// =============================================================================
-// ASYNC/AWAIT - Alternative Syntax (NOT usable in component functions!)
-// =============================================================================
-//
-// Modern JavaScript has async/await for cleaner Promise handling:
-//
-//   async function fetchData() {
+//   ❌ WRONG - This will cause a React warning:
+//   ─────────────────────────────────────────────────────────────────────────
+//   useEffect(async () => {
 //     const response = await fetch(url);
-//     const data = await response.json();
-//     return data;
-//   }
+//     // ...
+//   }, []);
 //
-// BUT: React DOES NOT allow async component functions!
+//   Why? Because useEffect expects:
+//   - Either nothing returned (undefined)
+//   - Or a CLEANUP FUNCTION returned
 //
-//   ❌ async function AvailablePlaces() { ... }  // NOT ALLOWED!
+//   But async functions ALWAYS return a Promise!
+//   React doesn't know what to do with a Promise as a cleanup function.
 //
-// This is a restriction imposed by React because:
-// - Component functions must return JSX synchronously
-// - React needs to render immediately, not wait for data
+//   ✅ CORRECT - Define an async function INSIDE, then call it:
+//   ─────────────────────────────────────────────────────────────────────────
+//   useEffect(() => {
+//     async function fetchData() {     // 1. Define async function
+//       const response = await fetch(url);
+//       // ...
+//     }
+//     fetchData();                      // 2. Call it immediately
+//   }, []);
 //
-// We CAN use async/await inside useEffect (we'll see this later).
-//
-// =============================================================================
-
-// =============================================================================
-// JSON - The Data Format
-// =============================================================================
-//
-// JSON (JavaScript Object Notation) is the standard format for API data.
-// It looks like JavaScript objects/arrays, but:
-//   - All keys MUST be wrapped in double quotes
-//   - It's a TEXT format (string), not actual JavaScript
-//
-// Example from backend/data/places.json:
-//   {
-//     "places": [
-//       { "id": "p1", "title": "Forest Waterfall", ... },
-//       { "id": "p2", "title": "Grand Canyon", ... }
-//     ]
-//   }
-//
-// response.json() PARSES this text into actual JavaScript objects.
+// This is a very common pattern in React!
 //
 // =============================================================================
 
 // =============================================================================
-// THE INFINITE LOOP PROBLEM
+// .then() vs async/await - COMPARISON
 // =============================================================================
 //
-// ❌ WRONG - Calling fetch directly in component function:
-//
-//   function AvailablePlaces() {
+//   Using .then() chains (previous approach):
+//   ─────────────────────────────────────────────────────────────────────────
+//   useEffect(() => {
 //     fetch('http://localhost:3000/places')
 //       .then(response => response.json())
-//       .then(data => setAvailablePlaces(data.places));  // Updates state!
+//       .then(data => setAvailablePlaces(data.places));
+//   }, []);
 //
-//     return <Places places={availablePlaces} />;
+//   Using async/await (cleaner, more readable):
+//   ─────────────────────────────────────────────────────────────────────────
+//   useEffect(() => {
+//     async function fetchPlaces() {
+//       const response = await fetch('http://localhost:3000/places');
+//       const resData = await response.json();
+//       setAvailablePlaces(resData.places);
+//     }
+//     fetchPlaces();
+//   }, []);
+//
+// Both approaches do EXACTLY the same thing!
+// async/await is just "syntactic sugar" that makes the code look synchronous.
+//
+// Benefits of async/await:
+//   1. More readable - looks like regular synchronous code
+//   2. Easier to understand the flow
+//   3. Better for complex logic with multiple steps
+//   4. Easier error handling with try/catch
+//
+// =============================================================================
+
+// =============================================================================
+// HOW async/await WORKS
+// =============================================================================
+//
+//   async function fetchPlaces() {
+//     const response = await fetch(url);  // Pause here until fetch completes
+//     const data = await response.json(); // Pause here until JSON is parsed
+//     return data;                         // Return the result
 //   }
 //
-// This creates an INFINITE LOOP:
+// The "await" keyword:
+//   - Can ONLY be used inside an async function
+//   - PAUSES execution until the Promise resolves
+//   - Returns the resolved value (not the Promise!)
 //
-//   ┌──────────────────────────────────────────────────────────────────────────┐
-//   │                     THE INFINITE LOOP                                   │
-//   │                                                                          │
-//   │   Component renders ──> fetch() called ──> response arrives             │
-//   │         ▲                                         │                      │
-//   │         │                                         ▼                      │
-//   │         └────────────── setState() ◄──────────────┘                     │
-//   │                     (triggers re-render!)                                │
-//   │                                                                          │
-//   │   This loops FOREVER until your browser crashes!                        │
-//   └──────────────────────────────────────────────────────────────────────────┘
+// Under the hood, this is equivalent to:
 //
-// The cycle:
-//   1. Component function executes
-//   2. fetch() is called
-//   3. Response arrives, setState() is called
-//   4. State update triggers re-render
-//   5. Component function executes AGAIN
-//   6. fetch() is called AGAIN
-//   7. ...and so on, infinitely!
+//   fetch(url)
+//     .then(response => response.json())
+//     .then(data => { /* use data */ });
 //
-// SOLUTION: useEffect with an empty dependency array []
+// The async function still returns a Promise, but the code LOOKS synchronous.
 //
 // =============================================================================
 
@@ -208,79 +146,79 @@ export default function AvailablePlaces({ onSelectPlace }) {
   const [availablePlaces, setAvailablePlaces] = useState([]);
 
   // ===========================================================================
-  // useEffect - THE SOLUTION TO THE INFINITE LOOP
-  // ===========================================================================
-  // useEffect lets us run "side effects" (like HTTP requests) in a controlled way.
-  //
-  // Why useEffect solves the infinite loop:
-  // ─────────────────────────────────────────────────────────────────────────
-  // 1. The effect function runs AFTER the component renders
-  // 2. The dependency array [] means "only run once, after initial render"
-  // 3. Even though setState triggers a re-render, the effect WON'T run again
-  //    because the dependencies haven't changed (there are none!)
-  //
-  // The flow with useEffect:
-  //   1. Component renders (with empty places)
-  //   2. useEffect runs ONCE after render
-  //   3. fetch() sends request
-  //   4. Response arrives, setState() updates state
-  //   5. Component re-renders with data
-  //   6. useEffect does NOT run again (deps unchanged)
-  //   7. No infinite loop!
-  //
+  // FETCHING DATA WITH async/await INSIDE useEffect
   // ===========================================================================
   useEffect(() => {
     // -------------------------------------------------------------------------
-    // SENDING THE HTTP REQUEST
+    // STEP 1: DEFINE AN ASYNC FUNCTION INSIDE useEffect
     // -------------------------------------------------------------------------
-    // fetch() is a built-in browser function for HTTP requests.
+    // We create a function called fetchPlaces and mark it as "async".
+    // This is just a regular function defined inside useEffect.
+    // React doesn't care about this function - it's purely JavaScript.
     //
-    // The URL breakdown:
-    //   http://localhost:3000  - The backend server address
-    //   /places                - The API endpoint (defined in backend/app.js)
+    // Why can't we make the useEffect callback async directly?
+    // Because useEffect expects the callback to return either:
+    //   - undefined (nothing)
+    //   - A cleanup function
+    // But async functions ALWAYS return a Promise, which confuses React.
     //
-    // By default, fetch() sends a GET request, which is what we need
-    // to retrieve (fetch) data from the server.
+    // By creating a separate async function, we avoid this issue.
     // -------------------------------------------------------------------------
-    fetch('http://localhost:3000/places')
+    async function fetchPlaces() {
       // -----------------------------------------------------------------------
-      // FIRST .then() - Handle the Response Object
+      // STEP 2: AWAIT THE FETCH REQUEST
       // -----------------------------------------------------------------------
-      // When the server responds, we get a Response object.
-      // This object contains:
-      //   - status code (200, 404, 500, etc.)
-      //   - headers
-      //   - body (the actual data, but not directly accessible)
+      // The "await" keyword pauses execution until the Promise resolves.
+      // When the server responds, "response" will be the Response object.
       //
-      // response.json() extracts and PARSES the JSON body.
-      // It returns ANOTHER Promise (hence the second .then()).
-      // -----------------------------------------------------------------------
-      .then((response) => {
-        return response.json();
-      })
-      // -----------------------------------------------------------------------
-      // SECOND .then() - Handle the Parsed Data
-      // -----------------------------------------------------------------------
-      // Now we have the actual JavaScript data (parsed from JSON).
+      // Without await:
+      //   const response = fetch(url);  // response is a Promise
       //
-      // Our backend returns: { places: [...] }
-      // So we access resData.places to get the array.
-      //
-      // We then update state with this data, which triggers a re-render
-      // and displays the places to the user!
+      // With await:
+      //   const response = await fetch(url);  // response is the actual Response
       // -----------------------------------------------------------------------
-      .then((resData) => {
-        setAvailablePlaces(resData.places);
-      });
+      const response = await fetch('http://localhost:3000/places');
+
+      // -----------------------------------------------------------------------
+      // STEP 3: AWAIT THE JSON PARSING
+      // -----------------------------------------------------------------------
+      // response.json() also returns a Promise (parsing takes time).
+      // We await it to get the actual parsed JavaScript object.
+      //
+      // resData will be: { places: [...] }
+      // -----------------------------------------------------------------------
+      const resData = await response.json();
+
+      // -----------------------------------------------------------------------
+      // STEP 4: UPDATE STATE
+      // -----------------------------------------------------------------------
+      // Now we have the data! Update state to trigger a re-render.
+      // -----------------------------------------------------------------------
+      setAvailablePlaces(resData.places);
+    }
+
+    // -------------------------------------------------------------------------
+    // STEP 5: CALL THE ASYNC FUNCTION
+    // -------------------------------------------------------------------------
+    // We defined the function above, but we haven't CALLED it yet!
+    // We need to invoke it so the fetch actually happens.
+    //
+    // Pattern: Define then immediately call
+    //   async function doSomething() { ... }
+    //   doSomething();
+    //
+    // Alternative (IIFE - Immediately Invoked Function Expression):
+    //   (async () => {
+    //     const response = await fetch(url);
+    //     // ...
+    //   })();
+    //
+    // The named function approach is more readable and easier to debug.
+    // -------------------------------------------------------------------------
+    fetchPlaces();
   }, []);
   // ^^^^^^^^^^^
   // EMPTY DEPENDENCY ARRAY = Run only once after initial render
-  //
-  // If we had dependencies like [someValue]:
-  //   - Effect would run on mount AND whenever someValue changes
-  //
-  // With no dependencies []:
-  //   - Effect runs ONLY on mount (like componentDidMount in class components)
 
   // ===========================================================================
   // RENDER THE PLACES
@@ -296,54 +234,77 @@ export default function AvailablePlaces({ onSelectPlace }) {
 }
 
 // =============================================================================
-// THE COMPLETE DATA FLOW
+// THE async/await PATTERN IN useEffect
 // =============================================================================
 //
 //   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │  1. INITIAL RENDER                                                      │
-//   │     • availablePlaces = [] (empty)                                     │
-//   │     • User sees "No places available"                                  │
-//   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  2. AFTER RENDER - useEffect RUNS                                      │
-//   │     • fetch('http://localhost:3000/places') is called                  │
-//   │     • Request travels to backend server                                │
-//   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  3. BACKEND RESPONDS                                                    │
-//   │     • First .then(): response.json() parses the JSON                   │
-//   │     • Second .then(): we get { places: [...] }                         │
-//   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  4. STATE UPDATE                                                        │
-//   │     • setAvailablePlaces(resData.places) is called                     │
-//   │     • React schedules a re-render                                       │
-//   ├─────────────────────────────────────────────────────────────────────────┤
-//   │  5. RE-RENDER WITH DATA                                                 │
-//   │     • availablePlaces now contains the fetched places                  │
-//   │     • User sees the list of places!                                    │
-//   │     • useEffect does NOT run again (deps unchanged)                    │
+//   │  THE PATTERN:                                                           │
+//   │                                                                         │
+//   │  useEffect(() => {                                                      │
+//   │                                                                         │
+//   │    async function fetchData() {   // 1. Define async function          │
+//   │      const response = await fetch(url);                                 │
+//   │      const data = await response.json();                                │
+//   │      setState(data);                                                    │
+//   │    }                                                                    │
+//   │                                                                         │
+//   │    fetchData();                   // 2. Call it immediately             │
+//   │                                                                         │
+//   │  }, [dependencies]);                                                    │
+//   │                                                                         │
 //   └─────────────────────────────────────────────────────────────────────────┘
+//
+// This is the standard pattern for using async/await in useEffect.
+// You'll see this in virtually every React codebase that fetches data!
 //
 // =============================================================================
 
 // =============================================================================
-// SUMMARY: fetch() + useEffect Pattern
+// WHY NOT USE IIFE (Immediately Invoked Function Expression)?
 // =============================================================================
 //
-// This is the standard pattern for fetching data in React:
-//
-//   const [data, setData] = useState(initialValue);
+// You might see this alternative pattern:
 //
 //   useEffect(() => {
-//     fetch(url)
-//       .then(response => response.json())
-//       .then(data => setData(data));
-//   }, []);  // Empty array = run once on mount
+//     (async () => {
+//       const response = await fetch(url);
+//       const data = await response.json();
+//       setState(data);
+//     })();
+//   }, []);
 //
-// Key points:
-//   1. fetch() is a browser API, not React
-//   2. fetch() returns a Promise
-//   3. .then() chains let you handle async results
-//   4. response.json() parses JSON (also returns a Promise!)
-//   5. useEffect prevents infinite loops
-//   6. Empty dependency array [] = run only once
+// This is valid but:
+//   - Less readable
+//   - Harder to give a meaningful name
+//   - Harder to reuse or debug
+//
+// The named function approach is preferred:
+//   - Clear intent: "fetchPlaces" describes what it does
+//   - Easier to read and maintain
+//   - Could be called multiple times if needed
+//
+// =============================================================================
+
+// =============================================================================
+// COMPARISON: .then() vs async/await
+// =============================================================================
+//
+//   .then() chains:
+//   ─────────────────────────────────────────────────────────────────────────
+//   fetch('http://localhost:3000/places')
+//     .then(response => response.json())
+//     .then(resData => setAvailablePlaces(resData.places));
+//
+//   async/await:
+//   ─────────────────────────────────────────────────────────────────────────
+//   const response = await fetch('http://localhost:3000/places');
+//   const resData = await response.json();
+//   setAvailablePlaces(resData.places);
+//
+// Both do the same thing! async/await is:
+//   ✓ More readable (looks like synchronous code)
+//   ✓ Easier to understand the data flow
+//   ✓ Better for complex async logic
+//   ✓ Easier error handling with try/catch (coming in next lessons!)
 //
 // =============================================================================
