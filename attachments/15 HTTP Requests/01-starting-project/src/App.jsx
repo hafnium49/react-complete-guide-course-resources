@@ -1,16 +1,15 @@
 // =============================================================================
-// APP COMPONENT - Optimistic Updating with Error Handling
+// APP COMPONENT - Complete CRUD Operations with Optimistic Updates
 // =============================================================================
 //
-// This lesson covers OPTIMISTIC UPDATING with proper error handling:
+// This component now handles BOTH adding AND removing places:
+//   - handleSelectPlace: Add a place (optimistic update + backend sync)
+//   - handleRemovePlace: Remove a place (optimistic update + backend sync)
 //
+// Both use the same pattern:
 //   1. Update UI immediately (optimistic)
 //   2. Send request to backend
-//   3. If error occurs: ROLLBACK the UI change + show error message
-//
-// This provides the best of both worlds:
-//   - Fast, responsive UI (no loading spinners)
-//   - Proper error feedback if something goes wrong
+//   3. If error: rollback + show error message
 //
 // =============================================================================
 
@@ -19,12 +18,6 @@ import { useRef, useState, useCallback } from 'react';
 import Places from './components/Places.jsx';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
-// =============================================================================
-// IMPORTING THE ERROR COMPONENT
-// =============================================================================
-// We use ErrorPage (renamed on import) to show error messages in a modal.
-// Remember: We rename it to avoid shadowing the global Error class.
-// =============================================================================
 import ErrorPage from './components/Error.jsx';
 import logoImg from './assets/logo.png';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
@@ -35,18 +28,6 @@ function App() {
 
   const [userPlaces, setUserPlaces] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-
-  // ===========================================================================
-  // ERROR STATE FOR UPDATE OPERATIONS
-  // ===========================================================================
-  // This state tracks errors that occur when UPDATING user places.
-  // It's separate from the modal state because:
-  //   - We have multiple modals (delete confirmation + error)
-  //   - Each needs its own open/close logic
-  //
-  // When errorUpdatingPlaces has a value (is truthy), we show the error modal.
-  // When it's null/undefined (falsy), the error modal is hidden.
-  // ===========================================================================
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
 
   function handleStartRemovePlace(place) {
@@ -59,23 +40,10 @@ function App() {
   }
 
   // ===========================================================================
-  // HANDLING PLACE SELECTION - OPTIMISTIC UPDATE WITH ROLLBACK
+  // HANDLING PLACE SELECTION - ADD PLACE (Optimistic Update)
   // ===========================================================================
   async function handleSelectPlace(selectedPlace) {
-    // =========================================================================
-    // STEP 1: UPDATE LOCAL STATE IMMEDIATELY (Optimistic Update)
-    // =========================================================================
-    // We update the UI BEFORE sending the request.
-    // The user sees instant feedback - the place appears in their list.
-    //
-    // Why is this better than showing a loading spinner?
-    //   - Feels instant and responsive
-    //   - No "waiting" experience for the user
-    //   - Most of the time, the request will succeed anyway
-    //
-    // The risk: If the request fails, the UI will be temporarily wrong.
-    // Solution: We ROLLBACK the change if an error occurs (see catch block).
-    // =========================================================================
+    // Optimistic update - add place to UI immediately
     setUserPlaces((prevPickedPlaces) => {
       if (!prevPickedPlaces) {
         prevPickedPlaces = [];
@@ -86,43 +54,12 @@ function App() {
       return [selectedPlace, ...prevPickedPlaces];
     });
 
-    // =========================================================================
-    // STEP 2: SEND REQUEST WITH ERROR HANDLING
-    // =========================================================================
-    // We wrap the HTTP call in try-catch to handle potential errors.
-    // =========================================================================
+    // Sync with backend
     try {
       await updateUserPlaces([selectedPlace, ...userPlaces]);
     } catch (error) {
-      // =======================================================================
-      // ROLLBACK: REVERT THE STATE CHANGE
-      // =======================================================================
-      // If the request fails, we need to UNDO the optimistic update.
-      // We set the state back to what it was BEFORE we added the new place.
-      //
-      // IMPORTANT: We use `userPlaces` directly here, NOT the function form!
-      //
-      //   setUserPlaces(userPlaces);            // ✓ Uses the OLD state value
-      //   setUserPlaces(prev => prev...);       // ✗ Would use the NEW state
-      //
-      // Why? Because we WANT the old value (before the optimistic update).
-      // The function form would give us the current state, which includes
-      // the place we just (optimistically) added.
-      //
-      // This is one of the rare cases where NOT using the function form
-      // is intentional and correct!
-      // =======================================================================
+      // Rollback on error
       setUserPlaces(userPlaces);
-
-      // =======================================================================
-      // SET ERROR STATE TO SHOW ERROR MODAL
-      // =======================================================================
-      // Besides rolling back, we also want to INFORM the user what happened.
-      // Otherwise, the place would just mysteriously disappear from their list
-      // with no explanation - very confusing!
-      //
-      // We store the error in state, which will trigger the error modal to open.
-      // =======================================================================
       setErrorUpdatingPlaces({
         message: error.message || 'Failed to update places.'
       });
@@ -130,85 +67,113 @@ function App() {
   }
 
   // ===========================================================================
-  // ALTERNATIVE APPROACH: NON-OPTIMISTIC UPDATE (Commented Out)
-  // ===========================================================================
-  // Instead of optimistic updating, you COULD wait for the request to complete
-  // before updating the UI:
-  //
-  //   async function handleSelectPlace(selectedPlace) {
-  //     try {
-  //       await updateUserPlaces([selectedPlace, ...userPlaces]);  // Wait first
-  //       setUserPlaces([selectedPlace, ...userPlaces]);           // Then update UI
-  //     } catch (error) {
-  //       setErrorUpdatingPlaces({ message: error.message });
-  //     }
-  //   }
-  //
-  // PROS: No need for rollback (state only changes on success)
-  // CONS: User has to wait - should show loading spinner/text
-  //
-  // Which approach to use depends on:
-  //   - How fast is the operation typically?
-  //   - How bad is it if the UI is temporarily wrong?
-  //   - What user experience do you want?
-  //
-  // For most update operations, optimistic updating feels better.
-  // ===========================================================================
-
-  // ===========================================================================
   // CLEARING THE ERROR
-  // ===========================================================================
-  // This function is called when the user dismisses the error modal.
-  // We simply clear the error state, which hides the modal.
   // ===========================================================================
   function handleError() {
     setErrorUpdatingPlaces(null);
   }
 
-  const handleRemovePlace = useCallback(async function handleRemovePlace() {
-    setUserPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current.id)
-    );
+  // ===========================================================================
+  // HANDLING PLACE REMOVAL - DELETE PLACE (Optimistic Update)
+  // ===========================================================================
+  // This function handles removing a place from the user's selection.
+  // It follows the SAME optimistic update pattern as handleSelectPlace:
+  //   1. Update UI immediately
+  //   2. Send request to backend
+  //   3. Rollback + show error if it fails
+  //
+  // =============================================================================
+  // WHY useCallback?
+  // =============================================================================
+  // This function is passed to DeleteConfirmation as `onConfirm`.
+  // useCallback prevents unnecessary re-creation of the function,
+  // which could cause child components to re-render unnecessarily.
+  //
+  // =============================================================================
+  // IMPORTANT: DEPENDENCY ARRAY
+  // =============================================================================
+  // We now use `userPlaces` inside this function (for the backend request).
+  // Therefore, `userPlaces` MUST be in the dependency array!
+  //
+  //   const handleRemovePlace = useCallback(async function () {
+  //     await updateUserPlaces(userPlaces.filter(...));  // Uses userPlaces!
+  //   }, [userPlaces]);  // ← Must include userPlaces!
+  //
+  // Without this dependency:
+  //   - The function would be created once with the initial userPlaces value
+  //   - It would never see updated userPlaces values
+  //   - We'd send stale/incorrect data to the backend!
+  //
+  // With this dependency:
+  //   - The function is recreated whenever userPlaces changes
+  //   - It always has access to the current userPlaces value
+  //   - We send the correct data to the backend ✓
+  //
+  // This is the trade-off with useCallback:
+  //   - Prevents unnecessary function recreation
+  //   - BUT you must carefully track dependencies
+  // =============================================================================
+  const handleRemovePlace = useCallback(
+    async function handleRemovePlace() {
+      // =========================================================================
+      // STEP 1: OPTIMISTIC UPDATE - Remove from UI immediately
+      // =========================================================================
+      // We update the state BEFORE the backend request completes.
+      // The user sees the place disappear instantly.
+      // =========================================================================
+      setUserPlaces((prevPickedPlaces) =>
+        prevPickedPlaces.filter(
+          (place) => place.id !== selectedPlace.current.id
+        )
+      );
 
-    setModalIsOpen(false);
-  }, []);
+      // Close the confirmation modal
+      setModalIsOpen(false);
+
+      // =========================================================================
+      // STEP 2: SYNC WITH BACKEND
+      // =========================================================================
+      // We send the updated places array to the backend.
+      //
+      // Notice we're using the SAME filter logic here as in setUserPlaces above.
+      // We filter out the place with the matching ID.
+      //
+      // Why duplicate the logic?
+      //   - setUserPlaces uses the function form (gets latest state)
+      //   - updateUserPlaces needs the actual array to send
+      //   - We can't use the state right after setting it (not immediate!)
+      //
+      // So we construct the filtered array the same way:
+      //   userPlaces.filter(place => place.id !== selectedPlace.current.id)
+      // =========================================================================
+      try {
+        await updateUserPlaces(
+          userPlaces.filter((place) => place.id !== selectedPlace.current.id)
+        );
+      } catch (error) {
+        // =======================================================================
+        // STEP 3: ROLLBACK ON ERROR
+        // =======================================================================
+        // If the backend request fails, we need to:
+        //   1. Restore the UI to its previous state (rollback)
+        //   2. Inform the user about the error
+        //
+        // We use the captured `userPlaces` value (from before the optimistic
+        // update) to restore the state.
+        // =======================================================================
+        setUserPlaces(userPlaces);
+        setErrorUpdatingPlaces({
+          message: error.message || 'Failed to delete place.'
+        });
+      }
+    },
+    [userPlaces] // ← CRITICAL: userPlaces is used inside, so it's a dependency!
+  );
 
   return (
     <>
-      {/* ===================================================================
-          ERROR MODAL FOR UPDATE FAILURES
-          ===================================================================
-          This modal shows when an error occurs while updating user places.
-
-          open={errorUpdatingPlaces}
-            - The modal opens when errorUpdatingPlaces is truthy (has a value)
-            - It closes when errorUpdatingPlaces is falsy (null/undefined)
-
-          onClose={handleError}
-            - Called when user presses Escape or clicks backdrop
-            - Clears the error, which closes the modal
-          =================================================================== */}
+      {/* Error Modal */}
       <Modal open={errorUpdatingPlaces} onClose={handleError}>
-        {/* =================================================================
-            CONDITIONAL RENDERING OF ERROR COMPONENT
-            =================================================================
-            IMPORTANT: We render ErrorPage CONDITIONALLY with &&
-
-            Why? Because the Modal component is ALWAYS in the DOM,
-            even when it's not visible. The `open` prop just controls
-            visibility (CSS), not whether it's rendered.
-
-            If we always rendered <ErrorPage message={errorUpdatingPlaces.message} />:
-              - When errorUpdatingPlaces is null, we'd try to access null.message
-              - This would cause a runtime error!
-
-            By using: {errorUpdatingPlaces && <ErrorPage ... />}
-              - When errorUpdatingPlaces is null/undefined, nothing renders
-              - When errorUpdatingPlaces has a value, ErrorPage renders
-
-            This is a common pattern when rendering content conditionally
-            inside always-present wrapper components.
-            ================================================================= */}
         {errorUpdatingPlaces && (
           <ErrorPage
             title="An error occurred!"
@@ -218,6 +183,7 @@ function App() {
         )}
       </Modal>
 
+      {/* Delete Confirmation Modal */}
       <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
@@ -250,113 +216,107 @@ function App() {
 export default App;
 
 // =============================================================================
-// OPTIMISTIC UPDATING - THE COMPLETE PATTERN
+// COMPARING ADD VS REMOVE - SAME PATTERN!
 // =============================================================================
 //
-//   async function handleUpdate(newData) {
-//     const previousData = currentData;  // Save current state for rollback
+// ADD PLACE (handleSelectPlace):
+// ------------------------------
+//   1. setUserPlaces([newPlace, ...prevPlaces])     // Optimistic: add to UI
+//   2. await updateUserPlaces([newPlace, ...old])   // Sync with backend
+//   3. catch → setUserPlaces(oldPlaces)             // Rollback on error
 //
-//     // STEP 1: Optimistic update (immediate UI change)
-//     setState(newData);
+// REMOVE PLACE (handleRemovePlace):
+// ---------------------------------
+//   1. setUserPlaces(prev.filter(notThisPlace))     // Optimistic: remove from UI
+//   2. await updateUserPlaces(old.filter(...))      // Sync with backend
+//   3. catch → setUserPlaces(oldPlaces)             // Rollback on error
 //
-//     try {
-//       // STEP 2: Send request to server
-//       await sendToServer(newData);
-//       // Success! State is already correct.
-//     } catch (error) {
-//       // STEP 3: Rollback on failure
-//       setState(previousData);
-//
-//       // STEP 4: Inform the user
-//       setError({ message: error.message });
-//     }
-//   }
-//
-// This pattern is used by:
-//   - Social media likes/unlikes
-//   - Todo list checkboxes
-//   - Shopping cart additions
-//   - Any quick user action
+// The PATTERN is identical! Only the state transformation differs:
+//   - Add: [newItem, ...existingItems]
+//   - Remove: existingItems.filter(item => item.id !== targetId)
 //
 // =============================================================================
 
 // =============================================================================
-// WHY NOT USE THE FUNCTION FORM FOR ROLLBACK?
+// useCallback DEPENDENCIES EXPLAINED
 // =============================================================================
 //
-// Normally, we use the function form for state updates:
-//   setUserPlaces(prev => [...prev, newPlace]);
+// When you use values inside a useCallback function, you must list them
+// as dependencies. React needs to know when to recreate the function.
 //
-// But for ROLLBACK, we intentionally DON'T use it:
-//   setUserPlaces(userPlaces);  // Use the OLD captured value
+// RULE: If a value can change and is used inside the callback, it's a dependency.
 //
-// Here's why:
+//   const [count, setCount] = useState(0);
+//   const [name, setName] = useState('');
 //
-//   1. Before optimistic update: userPlaces = [A, B]
-//   2. Optimistic update: setUserPlaces(prev => [C, ...prev])
-//      Now internal state is [C, A, B]
-//   3. Request fails...
-//   4. Rollback: setUserPlaces(userPlaces)
-//      userPlaces still refers to [A, B] (closure captured it)
-//      State is restored to [A, B] ✓
+//   // Uses count → count is a dependency
+//   const handleClick = useCallback(() => {
+//     console.log(count);
+//   }, [count]);
 //
-// If we used the function form:
-//   setUserPlaces(prev => prev)
-//   prev would be [C, A, B] (the current/new state)
-//   We'd be setting it to itself - no rollback! ✗
+//   // Uses name → name is a dependency
+//   const handleSubmit = useCallback(() => {
+//     console.log(name);
+//   }, [name]);
 //
-// This is a rare but intentional use of stale closure values.
+//   // Uses both → both are dependencies
+//   const handleBoth = useCallback(() => {
+//     console.log(count, name);
+//   }, [count, name]);
 //
-// =============================================================================
-
-// =============================================================================
-// WHEN TO USE OPTIMISTIC UPDATES VS LOADING STATES
-// =============================================================================
+// WHAT ABOUT REFS?
+//   - Refs (like selectedPlace) don't need to be dependencies
+//   - The ref object itself never changes (same reference)
+//   - Only ref.current changes, and that's always the latest value
 //
-// USE OPTIMISTIC UPDATES when:
-//   ✓ The operation is usually fast and reliable
-//   ✓ The UI change is easily reversible
-//   ✓ It's okay to briefly show incorrect state
-//   ✓ Examples: likes, favorites, toggles, quick edits
-//
-// USE LOADING STATES when:
-//   ✓ The operation takes noticeable time
-//   ✓ You're fetching data that doesn't exist yet
-//   ✓ The user needs to know something is happening
-//   ✓ Examples: initial data fetch, file uploads, complex operations
-//
-// YOU CAN COMBINE BOTH:
-//   - Optimistic update for immediate feedback
-//   - Show subtle loading indicator (spinner in button, etc.)
-//   - Handle errors with rollback
+// WHAT ABOUT SET FUNCTIONS?
+//   - setState functions (like setUserPlaces) don't need to be dependencies
+//   - React guarantees they're stable (same reference across renders)
 //
 // =============================================================================
 
 // =============================================================================
-// ERROR DISPLAY OPTIONS
+// WHAT'S STILL MISSING?
 // =============================================================================
 //
-// There are many ways to show errors to users:
+// We can now:
+//   ✓ Add places (with backend sync)
+//   ✓ Remove places (with backend sync)
+//   ✓ Handle errors with rollback
 //
-// 1. MODAL (what we're using)
-//    - Demands attention
-//    - Good for important errors
-//    - User must acknowledge
+// But we're still missing:
+//   ✗ FETCHING saved places when the app loads!
 //
-// 2. TOAST/NOTIFICATION
-//    - Non-blocking
-//    - Auto-dismisses
-//    - Good for recoverable errors
+// Currently, userPlaces starts as an empty array:
+//   const [userPlaces, setUserPlaces] = useState([]);
 //
-// 3. INLINE ERROR
-//    - Shows near the action that failed
-//    - Contextual
-//    - Good for form validation
+// Even if the backend has saved places, we don't fetch them.
+// On page reload, the "I'd like to visit" section is always empty.
 //
-// 4. BANNER/ALERT
-//    - Persistent until dismissed
-//    - Good for system-wide issues
+// Next lesson: We'll fetch user places on component mount!
 //
-// Choose based on error severity and user experience needs.
+// =============================================================================
+
+// =============================================================================
+// THE COMPLETE CRUD PATTERN
+// =============================================================================
+//
+// CRUD = Create, Read, Update, Delete
+//
+// In this app:
+//   - Create/Update: handleSelectPlace (adds a place)
+//   - Delete: handleRemovePlace (removes a place)
+//   - Read: Coming next lesson! (fetch on load)
+//
+// All mutations (Create, Update, Delete) follow the optimistic pattern:
+//   1. Update UI optimistically
+//   2. Sync with backend
+//   3. Rollback on error
+//
+// Reads (fetching data) use the loading/error/data pattern:
+//   1. Set loading state
+//   2. Fetch data
+//   3. Handle success or error
+//   4. Clear loading state
 //
 // =============================================================================
