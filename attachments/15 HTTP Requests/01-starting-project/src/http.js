@@ -8,237 +8,277 @@
 //   1. SEPARATION OF CONCERNS
 //      - Components focus on UI and state management
 //      - HTTP logic is isolated in its own module
-//      - Easier to understand and maintain each part
 //
 //   2. REUSABILITY
 //      - Same fetch function can be used by multiple components
 //      - No code duplication across the app
-//      - Change the API URL in one place, affects everywhere
 //
 //   3. TESTABILITY
 //      - HTTP functions can be unit tested independently
-//      - Mock the module in component tests
-//      - Test error handling without touching components
 //
 //   4. CLEANER COMPONENTS
 //      - Components become leaner and more readable
-//      - Focus on what to do with data, not how to fetch it
-//      - Reduced cognitive load when reading component code
 //
 // =============================================================================
 
 // =============================================================================
-// COMMON PATTERNS FOR ORGANIZING HTTP CODE
+// HTTP METHODS OVERVIEW
 // =============================================================================
 //
-// There are several ways to organize HTTP/API code in React apps:
+// HTTP defines several REQUEST METHODS (also called "verbs"):
 //
-// 1. UTILITY FILE (this approach)
-//    - Simple functions in a file like http.js or api.js
-//    - Good for small to medium apps
-//    - Easy to understand
+//   GET     - Retrieve data (default for fetch)
+//   POST    - Create new data
+//   PUT     - Update/replace existing data
+//   PATCH   - Partially update existing data
+//   DELETE  - Remove data
 //
-// 2. API SERVICE CLASS
-//    - Class with methods for each endpoint
-//    - Can store base URL, auth tokens, etc.
-//    - Good for larger apps with many endpoints
+// These methods tell the server what KIND of operation you want to perform.
 //
-//    class ApiService {
-//      constructor(baseUrl) { this.baseUrl = baseUrl; }
-//      async getPlaces() { ... }
-//      async updatePlace(id, data) { ... }
-//    }
+// For fetch(), the default method is GET. To use others, you must specify
+// the method in the configuration object:
 //
-// 3. CUSTOM HOOKS
-//    - useFetch, useApi hooks that handle loading/error states
-//    - Combines fetching logic with React state
-//    - We'll learn about this later!
-//
-// 4. LIBRARIES
-//    - React Query, SWR, Apollo (GraphQL)
-//    - Handle caching, refetching, optimistic updates
-//    - Best for complex data requirements
-//
-// For learning purposes, the utility file approach is perfect!
+//   fetch(url);                           // GET (default)
+//   fetch(url, { method: 'POST' });       // POST
+//   fetch(url, { method: 'PUT' });        // PUT
+//   fetch(url, { method: 'DELETE' });     // DELETE
 //
 // =============================================================================
 
 // =============================================================================
-// FETCH AVAILABLE PLACES
+// FETCH AVAILABLE PLACES (GET Request)
 // =============================================================================
-// This function fetches the list of available places from our backend API.
-//
-// WHY IS THIS AN ASYNC FUNCTION?
-// --------------------------------
-// We mark it with `async` because:
-//   1. We use `await` inside it (for fetch and response.json)
-//   2. Async functions ALWAYS return a Promise
-//
-// This is important! Even though we `return resData.places` (an array),
-// the caller receives a Promise that resolves to that array.
-//
-//   // Inside this function:
-//   return resData.places;  // Looks like we return an array
-//
-//   // But for the caller:
-//   const places = await fetchAvailablePlaces();  // Must await!
-//   // OR
-//   fetchAvailablePlaces().then(places => { ... });  // Or use .then()
-//
+// Fetches the list of available places from our backend API.
+// This is a simple GET request - no body, no special headers needed.
 // =============================================================================
 export async function fetchAvailablePlaces() {
-  // ---------------------------------------------------------------------------
-  // STEP 1: SEND THE HTTP REQUEST
-  // ---------------------------------------------------------------------------
-  // fetch() returns a Promise that resolves to a Response object.
-  // We await it to pause execution until the response arrives.
-  //
-  // Note: We're using the full URL including http://localhost:3000
-  // In a real app, you might use:
-  //   - Environment variables: process.env.REACT_APP_API_URL
-  //   - A base URL constant: const API_BASE = 'http://localhost:3000'
-  //   - Relative URLs if frontend and backend are on same domain
-  // ---------------------------------------------------------------------------
   const response = await fetch('http://localhost:3000/places');
 
-  // ---------------------------------------------------------------------------
-  // STEP 2: CHECK FOR HTTP ERRORS
-  // ---------------------------------------------------------------------------
-  // Remember: fetch() doesn't throw for HTTP errors (404, 500, etc.)
-  // We must check response.ok manually and throw if it's false.
-  //
-  // This throw will:
-  //   1. Exit this function immediately
-  //   2. Reject the Promise returned by this async function
-  //   3. Be caught by try-catch in the calling code
-  //
-  // The error propagates UP to whoever called fetchAvailablePlaces().
-  // ---------------------------------------------------------------------------
   if (!response.ok) {
     throw new Error('Failed to fetch places.');
   }
 
-  // ---------------------------------------------------------------------------
-  // STEP 3: PARSE THE JSON RESPONSE
-  // ---------------------------------------------------------------------------
-  // response.json() also returns a Promise, so we await it.
-  // This parses the response body as JSON and returns a JavaScript object.
-  //
-  // Our backend returns: { places: [...] }
-  // So resData.places is the array we want.
-  // ---------------------------------------------------------------------------
   const resData = await response.json();
-
-  // ---------------------------------------------------------------------------
-  // STEP 4: RETURN THE DATA
-  // ---------------------------------------------------------------------------
-  // We return just the places array, not the whole response object.
-  // This makes the function's return value clean and predictable.
-  //
-  // The caller gets exactly what they need: an array of places.
-  //
-  // IMPORTANT: Because this is an async function, this return statement
-  // actually resolves the Promise that the function returns.
-  //
-  //   return resData.places;
-  //   // Is equivalent to:
-  //   return Promise.resolve(resData.places);
-  //
-  // ---------------------------------------------------------------------------
   return resData.places;
 }
 
 // =============================================================================
-// HOW ERRORS PROPAGATE FROM THIS FUNCTION
+// UPDATE USER PLACES (PUT Request)
 // =============================================================================
 //
-// When an error occurs in this function (either thrown or from fetch):
+// This function sends the user's selected places to the backend to be stored.
+// Unlike fetchAvailablePlaces (which just GETs data), this function:
+//   - Changes data on the server (requires PUT method)
+//   - Sends data IN the request (requires body)
+//   - Must tell the server what format the data is in (requires headers)
 //
-//   1. The async function's Promise is REJECTED
-//   2. The error propagates to the calling code
-//   3. It can be caught with try-catch (if using await) or .catch()
+// =============================================================================
 //
-// Example of how errors flow:
+// SENDING DATA WITH fetch() - THE THREE KEY PROPERTIES
+// =====================================================
 //
-//   // In http.js:
-//   export async function fetchAvailablePlaces() {
-//     if (!response.ok) {
-//       throw new Error('Failed!');  // Error thrown here
-//     }
-//   }
+// When sending data to a server, you need to configure THREE things:
 //
-//   // In AvailablePlaces.jsx:
-//   try {
-//     const places = await fetchAvailablePlaces();  // Called here
-//   } catch (error) {
-//     // Error caught here!
-//     console.log(error.message);  // "Failed!"
-//   }
+//   1. METHOD: What operation are you performing?
+//      - 'GET' (default) - Just fetching data, no body needed
+//      - 'POST' - Creating new data
+//      - 'PUT' - Replacing/updating data (what we use here)
+//      - 'PATCH' - Partially updating data
+//      - 'DELETE' - Removing data
 //
-// This is why we can still use try-catch in AvailablePlaces.jsx
-// even though the actual fetch code is now in this file.
+//   2. BODY: What data are you sending?
+//      - Must be a STRING (JSON, form data, etc.)
+//      - JavaScript objects/arrays must be CONVERTED to JSON first
+//      - Use JSON.stringify() to convert JS → JSON string
+//
+//   3. HEADERS: Metadata about the request
+//      - 'Content-Type' tells the server the format of the body
+//      - 'application/json' means "I'm sending JSON data"
+//      - Without this, the server might not parse the data correctly!
+//
+// =============================================================================
+//
+// JSON.stringify() - CONVERTING JS TO JSON
+// =========================================
+//
+// JavaScript objects/arrays are NOT directly sendable over HTTP.
+// They must be converted to a STRING format first.
+//
+// JSON (JavaScript Object Notation) is a text format that looks like JS:
+//
+//   JavaScript:          JSON string:
+//   { name: "Bob" }  →  '{"name":"Bob"}'
+//   [1, 2, 3]        →  '[1,2,3]'
+//
+// JSON.stringify() converts JS → JSON string:
+//   const obj = { name: "Bob", age: 25 };
+//   const json = JSON.stringify(obj);
+//   // json = '{"name":"Bob","age":25}'
+//
+// JSON.parse() converts JSON string → JS:
+//   const json = '{"name":"Bob"}';
+//   const obj = JSON.parse(json);
+//   // obj = { name: "Bob" }
+//
+// Note: response.json() does JSON.parse() for us automatically!
+//
+// =============================================================================
+export async function updateUserPlaces(places) {
+  // ---------------------------------------------------------------------------
+  // SENDING A PUT REQUEST WITH DATA
+  // ---------------------------------------------------------------------------
+  // fetch() accepts a second argument: a configuration object.
+  // This lets us customize the request beyond a simple GET.
+  // ---------------------------------------------------------------------------
+  const response = await fetch('http://localhost:3000/user-places', {
+    // -------------------------------------------------------------------------
+    // METHOD: Specify the HTTP method
+    // -------------------------------------------------------------------------
+    // Our backend expects a PUT request for updating user places.
+    // PUT means "replace the resource with this new data".
+    //
+    // If we don't specify method, fetch() defaults to 'GET'.
+    // GET requests are for reading data, not writing it!
+    // -------------------------------------------------------------------------
+    method: 'PUT',
+
+    // -------------------------------------------------------------------------
+    // BODY: The data to send
+    // -------------------------------------------------------------------------
+    // The body must be a STRING, not a JavaScript object.
+    // We use JSON.stringify() to convert our data to JSON format.
+    //
+    // IMPORTANT: Our backend expects the data in a specific format:
+    //   { places: [...] }
+    //
+    // NOT just the array directly:
+    //   [...] ← This would cause an error!
+    //
+    // This is a common gotcha! Always check what format your API expects.
+    //
+    // We use the shorthand { places } which is the same as { places: places }
+    // -------------------------------------------------------------------------
+    body: JSON.stringify({ places }),
+
+    // -------------------------------------------------------------------------
+    // HEADERS: Metadata about the request
+    // -------------------------------------------------------------------------
+    // Headers provide additional information about the request.
+    //
+    // 'Content-Type': 'application/json'
+    //   - Tells the server: "The body of this request is JSON formatted"
+    //   - The server uses this to know HOW to parse the body
+    //   - Without it, the server might fail to understand the data!
+    //
+    // Other common Content-Type values:
+    //   - 'application/x-www-form-urlencoded' (HTML form data)
+    //   - 'multipart/form-data' (file uploads)
+    //   - 'text/plain' (plain text)
+    // -------------------------------------------------------------------------
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // CHECK FOR ERRORS
+  // ---------------------------------------------------------------------------
+  // Just like with GET requests, we must check response.ok for HTTP errors.
+  // -------------------------------------------------------------------------
+  if (!response.ok) {
+    throw new Error('Failed to update user data.');
+  }
+
+  // ---------------------------------------------------------------------------
+  // PARSE AND RETURN THE RESPONSE
+  // ---------------------------------------------------------------------------
+  // Our backend returns: { message: "User places updated!" }
+  // We return just the message string.
+  //
+  // In this app, we won't actually use this return value,
+  // but it's good practice to return the server's response.
+  // ---------------------------------------------------------------------------
+  const resData = await response.json();
+  return resData.message;
+}
+
+// =============================================================================
+// COMPARISON: GET vs PUT REQUEST
+// =============================================================================
+//
+//   GET REQUEST (fetchAvailablePlaces):
+//   -----------------------------------
+//   fetch('http://localhost:3000/places')
+//
+//   - No configuration needed (GET is default)
+//   - No body (we're just requesting data)
+//   - No Content-Type (nothing to describe)
+//
+//
+//   PUT REQUEST (updateUserPlaces):
+//   --------------------------------
+//   fetch('http://localhost:3000/user-places', {
+//     method: 'PUT',
+//     body: JSON.stringify({ places }),
+//     headers: { 'Content-Type': 'application/json' }
+//   })
+//
+//   - Must specify method
+//   - Must include body with data
+//   - Must set Content-Type header
 //
 // =============================================================================
 
 // =============================================================================
-// EXTENDING THIS FILE
+// THE FULL FETCH CONFIGURATION OBJECT
 // =============================================================================
 //
-// As your app grows, you can add more functions here:
+// fetch() accepts many configuration options:
 //
-//   export async function fetchPlaceById(id) {
-//     const response = await fetch(`http://localhost:3000/places/${id}`);
-//     if (!response.ok) throw new Error('Failed to fetch place.');
-//     const resData = await response.json();
-//     return resData.place;
-//   }
+//   fetch(url, {
+//     method: 'POST',              // HTTP method
+//     body: JSON.stringify(data),  // Request body
+//     headers: {                   // Request headers
+//       'Content-Type': 'application/json',
+//       'Authorization': 'Bearer token123'
+//     },
+//     credentials: 'include',      // Include cookies
+//     mode: 'cors',                // CORS mode
+//     cache: 'no-cache',           // Cache mode
+//     redirect: 'follow',          // Redirect handling
+//     signal: abortController.signal  // For cancellation
+//   });
 //
-//   export async function updateUserPlaces(places) {
-//     const response = await fetch('http://localhost:3000/user-places', {
-//       method: 'PUT',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ places })
-//     });
-//     if (!response.ok) throw new Error('Failed to update places.');
-//     const resData = await response.json();
-//     return resData.message;
-//   }
-//
-// Common patterns:
-//   - Each endpoint gets its own function
-//   - Functions handle request/response details
-//   - Components just call functions and handle returned data
+// For most cases, you only need: method, body, headers
 //
 // =============================================================================
 
 // =============================================================================
-// DRY PRINCIPLE: DON'T REPEAT YOURSELF
+// ERROR HANDLING FOR PUT/POST REQUESTS
 // =============================================================================
 //
-// Before extracting to http.js:
+// Errors in PUT/POST requests can occur for many reasons:
 //
-//   // Component A:
-//   const response = await fetch('http://localhost:3000/places');
-//   if (!response.ok) throw new Error('Failed...');
-//   const data = await response.json();
+//   1. NETWORK ERRORS
+//      - No internet connection
+//      - Server is down
+//      → fetch() throws, caught by try-catch
 //
-//   // Component B (needs same data):
-//   const response = await fetch('http://localhost:3000/places');  // Same!
-//   if (!response.ok) throw new Error('Failed...');                // Same!
-//   const data = await response.json();                            // Same!
+//   2. HTTP ERRORS (response.ok is false)
+//      - 400 Bad Request (invalid data format)
+//      - 401 Unauthorized (not logged in)
+//      - 403 Forbidden (no permission)
+//      - 404 Not Found (wrong URL)
+//      - 500 Server Error (server bug)
+//      → We check response.ok and throw
 //
-// After extracting to http.js:
+//   3. JSON PARSING ERRORS
+//      - Server returns invalid JSON
+//      → response.json() throws
 //
-//   // Component A:
-//   const places = await fetchAvailablePlaces();
-//
-//   // Component B:
-//   const places = await fetchAvailablePlaces();
-//
-// Benefits:
-//   - Less code in each component
-//   - Bug fix in one place fixes everywhere
-//   - API URL change in one place
-//   - Consistent error handling
+// Our pattern handles all these by:
+//   1. Checking response.ok and throwing if false
+//   2. Letting network/parsing errors propagate
+//   3. Caller uses try-catch to handle all errors
 //
 // =============================================================================
