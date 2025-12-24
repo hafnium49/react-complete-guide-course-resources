@@ -6,97 +6,81 @@
 //   2. LOADING STATE   - Are we currently fetching? (boolean)
 //   3. ERROR STATE     - Did something go wrong? (Error object or null)
 //
-// This is THE fundamental pattern for async operations in React!
-// Libraries like React Query, SWR, and TanStack Query automate this,
-// but understanding the manual approach is essential for learning.
+// NEW IN THIS LESSON: Sorting places by distance to user's location!
+//   - Using the browser's Geolocation API
+//   - Callback pattern vs async/await
+//   - Chaining async operations
 //
 // =============================================================================
 
 // =============================================================================
-// WHY DO WE NEED ERROR HANDLING?
+// CALLBACK PATTERN VS ASYNC/AWAIT
 // =============================================================================
 //
-// Things can go wrong when fetching data:
-//   - Server is down or unreachable
-//   - Network connection lost
-//   - Server returns an error (404, 500, etc.)
-//   - Response is malformed/invalid JSON
-//   - Request times out
+// Not all async APIs use Promises! Some use the older "callback pattern":
 //
-// WITHOUT error handling:
-//   - App might crash completely
-//   - User sees loading forever
-//   - User sees confusing blank state
-//   - No way for user to know what went wrong
+// PROMISE-BASED (can use async/await):
+//   const response = await fetch(url);        // Returns a Promise
+//   const data = await response.json();       // Returns a Promise
 //
-// WITH error handling:
-//   - App stays functional
-//   - User gets clear error message
-//   - User can potentially retry
-//   - Better debugging for developers
+// CALLBACK-BASED (cannot use async/await):
+//   navigator.geolocation.getCurrentPosition(
+//     (position) => { /* success callback */ },
+//     (error) => { /* error callback */ }
+//   );
+//
+// The Geolocation API is callback-based, NOT promise-based.
+// This means we CANNOT use await with it:
+//
+//   ❌ const position = await navigator.geolocation.getCurrentPosition();
+//   ✓  navigator.geolocation.getCurrentPosition((position) => { ... });
+//
+// This affects how we structure our code and where we put setIsFetching(false).
 //
 // =============================================================================
 
 // =============================================================================
-// THE THREE STATES OF ASYNC OPERATIONS
+// THE NAVIGATOR OBJECT
 // =============================================================================
 //
-//   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │                     ASYNC STATE MACHINE                                 │
-//   │                                                                         │
-//   │      ┌──────────┐                                                       │
-//   │      │   IDLE   │ ──────> Start fetch                                   │
-//   │      └──────────┘              │                                        │
-//   │                                ▼                                        │
-//   │                         ┌──────────┐                                    │
-//   │                         │ LOADING  │                                    │
-//   │                         └──────────┘                                    │
-//   │                          /        \                                     │
-//   │                    Success        Failure                               │
-//   │                        /            \                                   │
-//   │                       ▼              ▼                                  │
-//   │               ┌──────────┐    ┌──────────┐                              │
-//   │               │ SUCCESS  │    │  ERROR   │                              │
-//   │               │(has data)│    │(has err) │                              │
-//   │               └──────────┘    └──────────┘                              │
-//   └─────────────────────────────────────────────────────────────────────────┘
+// `navigator` is a GLOBAL object provided by the browser (not React!).
+// It contains information about the browser and provides access to APIs:
 //
-// Our state variables map to this:
-//   - isLoading = true   → LOADING state
-//   - isLoading = false, error = null, data exists → SUCCESS state
-//   - isLoading = false, error exists → ERROR state
+//   navigator.geolocation    - User's location (GPS/IP-based)
+//   navigator.userAgent      - Browser identification string
+//   navigator.language       - User's preferred language
+//   navigator.onLine         - Is the user connected to the internet?
+//   navigator.clipboard      - Access to system clipboard
+//   navigator.mediaDevices   - Access to camera/microphone
+//
+// navigator.geolocation.getCurrentPosition():
+//   - Asks user for permission (browser shows popup)
+//   - Gets latitude/longitude coordinates
+//   - Works via GPS, WiFi, or IP address
+//   - Takes callbacks, NOT promises
 //
 // =============================================================================
 
 import { useState, useEffect } from 'react';
 
 import Places from './Places.jsx';
-// =============================================================================
-// IMPORTANT: IMPORTING THE ERROR COMPONENT
-// =============================================================================
-// We import the Error component AS "ErrorPage" to avoid a naming conflict!
-//
-// Why? Because "Error" is a GLOBAL built-in JavaScript class:
-//
-//   const err = new Error('Something went wrong');  // Built-in Error class
-//
-// If we did: import Error from './Error.jsx';
-// Then "Error" in this file would refer to our component, NOT the built-in!
-// This would break: throw new Error('message') because Error is now a component.
-//
-// SAFE:
-//   import ErrorPage from './Error.jsx';
-//   throw new Error('message');  // Still works - uses built-in Error
-//   <ErrorPage title="..." />    // Uses our component
-//
-// RISKY:
-//   import Error from './Error.jsx';
-//   throw new Error('message');  // BROKEN! Error is now our component!
-//
-// This is called "shadowing" - a local variable/import hides a global one.
-// Always be careful with names that match JavaScript built-ins!
-// =============================================================================
 import ErrorPage from './Error.jsx';
+// =============================================================================
+// IMPORTING THE SORTING FUNCTION
+// =============================================================================
+// The sortPlacesByDistance function from loc.js calculates the distance
+// between the user's location and each place using the Haversine formula.
+//
+// It takes:
+//   - places: Array of place objects (each with lat/lon properties)
+//   - lat: User's latitude
+//   - lon: User's longitude
+//
+// It returns: A NEW array sorted by distance (closest first)
+//
+// This is a PURE function - it doesn't modify the original array.
+// =============================================================================
+import { sortPlacesByDistance } from '../loc.js';
 
 // =============================================================================
 // AVAILABLE PLACES COMPONENT
@@ -115,207 +99,220 @@ export default function AvailablePlaces({ onSelectPlace }) {
   // ===========================================================================
   // STATE #3: ERROR STATE - Did something go wrong?
   // ===========================================================================
-  // This state stores any error that occurs during fetching.
-  //
-  // Initial value: null (or undefined)
-  //   - null means "no error has occurred"
-  //   - When an error occurs, we store the Error object here
-  //
-  // The error object typically has:
-  //   - error.message: Human-readable error description
-  //   - error.name: Error type (e.g., "TypeError", "Error")
-  //   - error.stack: Stack trace for debugging
-  //
-  // We'll use error.message to display to the user.
-  // ===========================================================================
   const [error, setError] = useState();
 
   // ===========================================================================
-  // FETCHING DATA WITH ERROR HANDLING
+  // FETCHING DATA WITH GEOLOCATION SORTING
   // ===========================================================================
   useEffect(() => {
     async function fetchPlaces() {
       // -----------------------------------------------------------------------
-      // STEP 1: SET LOADING TO TRUE (before fetch)
+      // STEP 1: SET LOADING TO TRUE (before any async operations)
       // -----------------------------------------------------------------------
       setIsFetching(true);
 
       // =====================================================================
       // TRY-CATCH BLOCK FOR ERROR HANDLING
       // =====================================================================
-      // The try-catch statement lets us handle errors gracefully:
-      //
-      //   try {
-      //     // Code that might throw an error
-      //   } catch (error) {
-      //     // Handle the error
-      //   }
-      //
-      // If ANY error occurs in the try block:
-      //   1. Execution immediately jumps to the catch block
-      //   2. The error object is passed to the catch block
-      //   3. We can then handle it (log it, show to user, etc.)
-      //
-      // Without try-catch, an error would:
-      //   - Crash the function
-      //   - Potentially crash the whole app
-      //   - Leave the user with no feedback
-      // =====================================================================
       try {
         // ---------------------------------------------------------------------
-        // STEP 2: FETCH THE DATA
+        // STEP 2: FETCH THE PLACES DATA FROM THE BACKEND
         // ---------------------------------------------------------------------
         const response = await fetch('http://localhost:3000/places');
 
-        // ===================================================================
-        // CHECKING response.ok - CRITICAL FOR HTTP ERRORS!
-        // ===================================================================
-        // IMPORTANT: fetch() does NOT throw an error for HTTP error codes!
-        //
-        // This is a common gotcha with the fetch API:
-        //
-        //   fetch('http://example.com/not-found')  // Returns 404
-        //     .then(response => {
-        //       // This STILL runs! fetch() "succeeded" (got a response)
-        //       // Even though it's a 404 error!
-        //     })
-        //     .catch(error => {
-        //       // This ONLY runs for NETWORK errors
-        //       // NOT for 404, 500, or other HTTP errors!
-        //     });
-        //
-        // The fetch() Promise only rejects for:
-        //   - Network failures (no internet, DNS error, etc.)
-        //   - CORS errors
-        //   - Request aborted
-        //
-        // HTTP errors (4xx, 5xx) are considered "successful" by fetch!
-        // The server responded, so fetch() "worked". We must check manually.
-        //
-        // The response.ok property:
-        //   - true for status codes 200-299 (success)
-        //   - false for status codes 400-599 (client/server errors)
-        //
-        // So we check it manually and throw an error if it's false:
-        // ===================================================================
         if (!response.ok) {
-          // -----------------------------------------------------------------
-          // THROWING AN ERROR
-          // -----------------------------------------------------------------
-          // throw new Error(...) does two things:
-          //   1. Creates a new Error object with our message
-          //   2. Immediately exits the try block and jumps to catch
-          //
-          // We create a user-friendly message that explains what happened.
-          // This message will be shown to the user via the Error component.
-          //
-          // You could also include the status code for debugging:
-          //   throw new Error(`Failed to fetch places (${response.status})`);
-          // -----------------------------------------------------------------
           throw new Error('Failed to fetch places.');
         }
 
-        // ---------------------------------------------------------------------
-        // STEP 3: PARSE THE JSON RESPONSE
-        // ---------------------------------------------------------------------
-        // This can also throw an error if the response isn't valid JSON!
-        // Our try-catch will handle that too.
-        // ---------------------------------------------------------------------
         const resData = await response.json();
 
-        // ---------------------------------------------------------------------
-        // STEP 4: UPDATE DATA STATE (inside try block)
-        // ---------------------------------------------------------------------
-        // IMPORTANT: This line is INSIDE the try block!
+        // ===================================================================
+        // STEP 3: GET USER'S LOCATION AND SORT PLACES
+        // ===================================================================
+        // Now we have the places, but before displaying them, we want to
+        // sort them by distance to the user.
         //
-        // Why? Because we only want to update the data if everything succeeded.
-        // If we put this outside the try block, it would run even after an error,
-        // potentially trying to set invalid/undefined data.
+        // This requires getting the user's location first!
         //
-        // The flow on SUCCESS:
-        //   1. fetch() succeeds
-        //   2. response.ok is true
-        //   3. JSON parsing succeeds
-        //   4. setAvailablePlaces(resData.places) runs
-        //   5. Skip the catch block entirely
-        //   6. setIsFetching(false) runs (after try-catch)
-        // ---------------------------------------------------------------------
-        setAvailablePlaces(resData.places);
+        // navigator.geolocation.getCurrentPosition():
+        //   - First argument: SUCCESS callback (receives position object)
+        //   - Second argument: ERROR callback (optional, receives error)
+        //   - Third argument: OPTIONS object (optional)
+        //
+        // IMPORTANT: This is a CALLBACK-BASED API, not Promise-based!
+        // We cannot use async/await with it.
+        // ===================================================================
+        navigator.geolocation.getCurrentPosition(
+          // =================================================================
+          // SUCCESS CALLBACK
+          // =================================================================
+          // This function is called by the browser ONCE the user's position
+          // has been successfully determined. This happens:
+          //   1. After user grants permission (first time)
+          //   2. After location is calculated (GPS/WiFi/IP lookup)
+          //
+          // The `position` object contains:
+          //   position.coords.latitude   - User's latitude (e.g., 37.7749)
+          //   position.coords.longitude  - User's longitude (e.g., -122.4194)
+          //   position.coords.accuracy   - Accuracy in meters
+          //   position.coords.altitude   - Altitude (if available)
+          //   position.timestamp         - When the position was determined
+          // =================================================================
+          (position) => {
+            // ---------------------------------------------------------------
+            // SORT PLACES BY DISTANCE TO USER
+            // ---------------------------------------------------------------
+            // sortPlacesByDistance takes:
+            //   1. The array of places (from our fetch response)
+            //   2. User's latitude (from position.coords)
+            //   3. User's longitude (from position.coords)
+            //
+            // It returns a NEW array sorted by distance (closest first).
+            //
+            // We use position.coords.latitude and position.coords.longitude
+            // to get the user's coordinates from the position object.
+            // ---------------------------------------------------------------
+            const sortedPlaces = sortPlacesByDistance(
+              resData.places,
+              position.coords.latitude,
+              position.coords.longitude
+            );
+
+            // ---------------------------------------------------------------
+            // SET THE SORTED PLACES AS OUR AVAILABLE PLACES
+            // ---------------------------------------------------------------
+            // Now we update state with the SORTED places, not the original.
+            // This means places closer to the user appear first!
+            // ---------------------------------------------------------------
+            setAvailablePlaces(sortedPlaces);
+
+            // ===============================================================
+            // SET LOADING TO FALSE (inside the callback!)
+            // ===============================================================
+            // CRITICAL: setIsFetching(false) is NOW INSIDE THE CALLBACK!
+            //
+            // Why? Because getCurrentPosition is callback-based, not Promise-based.
+            //
+            // If we put setIsFetching(false) AFTER the getCurrentPosition call
+            // (like we did before), it would execute IMMEDIATELY, before
+            // the user's location is fetched!
+            //
+            // JavaScript execution flow with callbacks:
+            //
+            //   1. fetch() completes (we have places data)
+            //   2. getCurrentPosition() is INITIATED (not completed!)
+            //   3. JavaScript continues to next line (would be setIsFetching)
+            //   4. ... time passes ...
+            //   5. Browser gets location, calls our callback
+            //   6. Callback runs: sort places, update state
+            //
+            // If setIsFetching(false) was after getCurrentPosition():
+            //   - Loading would stop at step 3
+            //   - User sees empty places list (data hasn't been set yet!)
+            //   - Then suddenly places appear (when callback runs at step 6)
+            //
+            // By putting setIsFetching(false) IN the callback:
+            //   - Loading continues until callback runs
+            //   - User sees loading text until data is ready
+            //   - Smooth transition: loading → places list
+            //
+            // ===============================================================
+            setIsFetching(false);
+          }
+          // Note: We could add a second callback for geolocation errors:
+          // (error) => {
+          //   setError({ message: 'Could not get your location.' });
+          //   setIsFetching(false);
+          // }
+        );
+
+        // =====================================================================
+        // WHAT HAPPENS AFTER getCurrentPosition() IS CALLED?
+        // =====================================================================
+        // NOTHING! There's no code after getCurrentPosition() in the try block.
+        //
+        // This is intentional. The callback function handles everything:
+        //   - Sorting the places
+        //   - Setting availablePlaces state
+        //   - Setting isFetching to false
+        //
+        // Any code placed here would run IMMEDIATELY after initiating
+        // the geolocation request, NOT after it completes.
+        //
+        // Compare to the previous version:
+        //
+        // BEFORE (Promise-based only):
+        //   const response = await fetch(...);
+        //   const resData = await response.json();
+        //   setAvailablePlaces(resData.places);  // After fetch
+        //   setIsFetching(false);                // After everything
+        //
+        // AFTER (with callback-based geolocation):
+        //   const response = await fetch(...);
+        //   const resData = await response.json();
+        //   navigator.geolocation.getCurrentPosition((position) => {
+        //     const sortedPlaces = sortPlacesByDistance(...);
+        //     setAvailablePlaces(sortedPlaces);  // In callback
+        //     setIsFetching(false);              // In callback
+        //   });
+        //   // Nothing here! Callback handles it.
+        //
+        // =====================================================================
 
       } catch (error) {
         // =====================================================================
         // CATCH BLOCK - HANDLING ERRORS
         // =====================================================================
-        // This block runs if ANY error occurs in the try block:
-        //   - Network error (fetch failed)
-        //   - We threw an error (response.ok was false)
-        //   - JSON parsing failed
-        //   - Any other unexpected error
+        // This catches errors from:
+        //   - Network failures (fetch failed)
+        //   - HTTP errors (response.ok was false)
+        //   - JSON parsing errors
         //
-        // The 'error' parameter is the Error object that was thrown/caught.
-        // It has properties like:
-        //   - error.message: "Failed to fetch places." (our message, or system message)
-        //   - error.name: "Error"
-        //   - error.stack: Stack trace
+        // Note: Geolocation errors are NOT caught here because
+        // getCurrentPosition uses callbacks, not Promises.
+        // To handle geolocation errors, use the second callback parameter.
         // =====================================================================
-
-        // ---------------------------------------------------------------------
-        // UPDATING ERROR STATE
-        // ---------------------------------------------------------------------
-        // We store the error in state so we can display it to the user.
-        //
-        // We use setError() with an object containing a message property.
-        // This ensures we always have a user-friendly message, even if the
-        // caught error doesn't have one.
-        //
-        // The || operator provides a fallback message:
-        //   - If error.message exists and is truthy, use it
-        //   - Otherwise, use our default message
-        //
-        // This handles cases like:
-        //   - Network error: error.message = "Failed to fetch"
-        //   - Our thrown error: error.message = "Failed to fetch places."
-        //   - Unknown error: might not have a message, so use fallback
-        // ---------------------------------------------------------------------
         setError({
           message: error.message || 'Could not fetch places, please try again later.'
         });
 
-        // Note: We do NOT call setAvailablePlaces here.
-        // The places state remains empty ([]) on error.
-
-        // Note: setIsFetching(false) is called AFTER the try-catch block,
-        // so it runs whether we succeeded or failed. See below!
+        // =====================================================================
+        // SET LOADING TO FALSE (in catch block too!)
+        // =====================================================================
+        // IMPORTANT: We also need setIsFetching(false) here!
+        //
+        // Why? Because if we have an error, we never reach the success callback
+        // of getCurrentPosition (we never even call it on error).
+        //
+        // So we need to stop loading in two places:
+        //   1. In the geolocation success callback (normal flow)
+        //   2. In the catch block (error flow)
+        //
+        // This ensures loading stops regardless of success or failure.
+        //
+        // =====================================================================
+        setIsFetching(false);
       }
 
       // =====================================================================
-      // STEP 5: SET LOADING TO FALSE (after try-catch)
+      // NO setIsFetching(false) HERE ANYMORE!
       // =====================================================================
-      // IMPORTANT: This line is OUTSIDE the try-catch block!
+      // Previously, we had setIsFetching(false) here, after the try-catch.
+      // This worked when all operations were Promise-based (could await).
       //
-      // Why? Because we want to set isFetching to false regardless of
-      // whether the fetch succeeded or failed.
+      // But now, with the callback-based getCurrentPosition, this spot
+      // executes BEFORE the geolocation completes.
       //
-      // If we put it inside the try block:
-      //   - On success: isFetching becomes false ✓
-      //   - On error: isFetching stays true forever! ✗
+      // Execution order if we put it here:
+      //   1. fetch() completes
+      //   2. getCurrentPosition() initiated
+      //   3. setIsFetching(false) runs ← TOO EARLY!
+      //   4. ... later: geolocation callback runs
       //
-      // If we put it inside the catch block:
-      //   - On success: isFetching stays true forever! ✗
-      //   - On error: isFetching becomes false ✓
-      //
-      // By putting it AFTER the try-catch:
-      //   - On success: runs after try block → isFetching = false ✓
-      //   - On error: runs after catch block → isFetching = false ✓
-      //
-      // This ensures the loading state is always cleared!
-      //
-      // Alternative: You could also use finally:
-      //   try { ... } catch { ... } finally { setIsFetching(false); }
-      //
-      // But putting it after works just as well in this case.
+      // So we moved setIsFetching(false) into:
+      //   - The geolocation success callback (for success path)
+      //   - The catch block (for error path)
       // =====================================================================
-      setIsFetching(false);
     }
 
     fetchPlaces();
@@ -324,35 +321,12 @@ export default function AvailablePlaces({ onSelectPlace }) {
   // ===========================================================================
   // CONDITIONAL RENDERING: ERROR STATE
   // ===========================================================================
-  // If an error occurred, we return EARLY with the ErrorPage component.
-  // This prevents rendering the Places component with invalid/empty data.
-  //
-  // The order of checks matters:
-  //   1. Check for error first → show error UI
-  //   2. Then render normal UI (which handles loading internally)
-  //
-  // Why return early instead of conditional JSX?
-  //   - Cleaner code: no nested ternaries or complex && chains
-  //   - Clear separation of error state from normal state
-  //   - ErrorPage replaces the entire component output
-  //
-  // We pass to ErrorPage:
-  //   - title: A brief, user-friendly headline
-  //   - message: The error details (from our error state)
-  //
-  // Note: ErrorPage has an optional onConfirm prop for a button.
-  // We're not using it here, but you could add retry functionality:
-  //   onConfirm={() => { setError(null); /* refetch */ }}
-  // ===========================================================================
   if (error) {
     return <ErrorPage title="An error occurred!" message={error.message} />;
   }
 
   // ===========================================================================
   // RENDER: NORMAL STATE (Loading or Data)
-  // ===========================================================================
-  // If we reach here, there's no error.
-  // The Places component handles both loading and data states.
   // ===========================================================================
   return (
     <Places
@@ -367,140 +341,164 @@ export default function AvailablePlaces({ onSelectPlace }) {
 }
 
 // =============================================================================
-// THE COMPLETE LOADING/ERROR/DATA PATTERN
+// ASYNC OPERATION CHAINING: PROMISES VS CALLBACKS
 // =============================================================================
 //
-//   const [data, setData] = useState([]);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [error, setError] = useState(null);
+// When you chain async operations, the pattern depends on the API type:
 //
-//   useEffect(() => {
-//     async function fetchData() {
-//       setIsLoading(true);
+// CHAINING PROMISE-BASED OPERATIONS (can use async/await):
 //
-//       try {
-//         const response = await fetch(url);
+//   async function fetchData() {
+//     const response = await fetch('/api/data');      // Wait for fetch
+//     const data = await response.json();             // Wait for parse
+//     const processed = await processData(data);      // Wait for process
+//     setData(processed);                             // All done!
+//     setLoading(false);                              // Stop loading
+//   }
 //
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch data');
-//         }
+// CHAINING WHEN LAST OPERATION IS CALLBACK-BASED:
 //
-//         const result = await response.json();
-//         setData(result);
-//       } catch (error) {
-//         setError({ message: error.message || 'Something went wrong' });
-//       }
+//   async function fetchData() {
+//     const response = await fetch('/api/data');      // Wait for fetch
+//     const data = await response.json();             // Wait for parse
 //
-//       setIsLoading(false);  // Outside try-catch!
+//     callbackBasedOperation(data, (result) => {      // Callback pattern
+//       setData(result);                              // In callback!
+//       setLoading(false);                            // In callback!
+//     });
+//     // No code here - callback handles it
+//   }
+//
+// KEY INSIGHT: The "end" of your async operations determines where you
+// put your final state updates.
+//
+// =============================================================================
+
+// =============================================================================
+// BROWSER PERMISSION FLOW
+// =============================================================================
+//
+// When getCurrentPosition() is called for the first time:
+//
+//   1. Browser shows permission popup:
+//      "example.com wants to know your location"
+//      [Allow] [Block]
+//
+//   2a. If user clicks "Allow":
+//       - Permission is granted (remembered for this site)
+//       - Browser starts getting location (GPS/WiFi/IP)
+//       - Success callback is eventually called with position
+//
+//   2b. If user clicks "Block":
+//       - Permission is denied (remembered for this site)
+//       - Error callback is called (if provided)
+//       - Success callback is NEVER called
+//
+//   3. On subsequent visits:
+//       - Permission is remembered
+//       - No popup shown
+//       - Location fetched immediately (if allowed)
+//       - Error thrown immediately (if blocked)
+//
+// IMPORTANT: While waiting for user to respond to permission popup,
+// our loading state is still true! This is correct behavior.
+// The user sees "Fetching place data..." until they respond.
+//
+// =============================================================================
+
+// =============================================================================
+// WHY SORT BY DISTANCE?
+// =============================================================================
+//
+// Showing places sorted by distance provides a better user experience:
+//
+//   - Users see nearby places first (most relevant)
+//   - No need to scroll through distant locations
+//   - Personalized experience based on user's location
+//
+// This is a common pattern in location-based apps:
+//   - Google Maps: Nearby restaurants
+//   - Uber: Closest drivers
+//   - Weather apps: Local forecast first
+//   - Travel apps: Nearest attractions
+//
+// The Haversine formula (in loc.js) calculates "as the crow flies"
+// distance between two points on Earth, accounting for Earth's curvature.
+//
+// =============================================================================
+
+// =============================================================================
+// HANDLING GEOLOCATION ERRORS
+// =============================================================================
+//
+// getCurrentPosition accepts a second callback for errors:
+//
+//   navigator.geolocation.getCurrentPosition(
+//     (position) => { /* success */ },
+//     (error) => { /* failure */ }
+//   );
+//
+// Common geolocation errors:
+//   - PERMISSION_DENIED (1): User blocked location access
+//   - POSITION_UNAVAILABLE (2): Location couldn't be determined
+//   - TIMEOUT (3): Request took too long
+//
+// Enhanced error handling example:
+//
+//   navigator.geolocation.getCurrentPosition(
+//     (position) => {
+//       const sorted = sortPlacesByDistance(...);
+//       setAvailablePlaces(sorted);
+//       setIsFetching(false);
+//     },
+//     (geoError) => {
+//       // Still show places, just unsorted
+//       setAvailablePlaces(resData.places);
+//       setIsFetching(false);
+//       // Optionally warn user
+//       console.warn('Could not get location:', geoError.message);
 //     }
-//     fetchData();
-//   }, []);
+//   );
 //
-//   // Render based on state
-//   if (error) {
-//     return <ErrorDisplay message={error.message} />;
+// This graceful degradation shows unsorted places if location fails.
+//
+// =============================================================================
+
+// =============================================================================
+// ALTERNATIVE: PROMISIFYING GEOLOCATION
+// =============================================================================
+//
+// If you prefer async/await everywhere, you can wrap getCurrentPosition
+// in a Promise:
+//
+//   function getPosition() {
+//     return new Promise((resolve, reject) => {
+//       navigator.geolocation.getCurrentPosition(resolve, reject);
+//     });
 //   }
 //
-//   if (isLoading) {
-//     return <Loading />;
+//   // Now you can use async/await:
+//   async function fetchPlaces() {
+//     setIsFetching(true);
+//     try {
+//       const response = await fetch('/places');
+//       const resData = await response.json();
+//
+//       const position = await getPosition();  // Now works with await!
+//       const sorted = sortPlacesByDistance(
+//         resData.places,
+//         position.coords.latitude,
+//         position.coords.longitude
+//       );
+//
+//       setAvailablePlaces(sorted);
+//     } catch (error) {
+//       setError({ message: error.message });
+//     }
+//     setIsFetching(false);  // Can go here again!
 //   }
 //
-//   return <DataDisplay data={data} />;
-//
-// This pattern is FUNDAMENTAL to React development!
-//
-// =============================================================================
-
-// =============================================================================
-// RENDERING DECISION TREE
-// =============================================================================
-//
-//   ┌─────────────────────────────────────────────────────────────────────────┐
-//   │                                                                         │
-//   │    error exists?                                                        │
-//   │         │                                                               │
-//   │    YES  │  NO                                                           │
-//   │    ▼    │                                                               │
-//   │ [ErrorPage]                                                             │
-//   │         │                                                               │
-//   │         ▼                                                               │
-//   │    isLoading?                                                           │
-//   │         │                                                               │
-//   │    YES  │  NO                                                           │
-//   │    ▼    │                                                               │
-//   │ [Loading text]                                                          │
-//   │         │                                                               │
-//   │         ▼                                                               │
-//   │    places.length > 0?                                                   │
-//   │         │                                                               │
-//   │    YES  │  NO                                                           │
-//   │    ▼    ▼                                                               │
-//   │ [Places list]  [Fallback text]                                          │
-//   │                                                                         │
-//   └─────────────────────────────────────────────────────────────────────────┘
-//
-// =============================================================================
-
-// =============================================================================
-// TESTING ERROR HANDLING
-// =============================================================================
-//
-// To test that error handling works:
-//
-// 1. STOP THE BACKEND SERVER
-//    - Go to the terminal running the backend
-//    - Press Ctrl+C to stop it
-//    - Reload the page
-//    - You should see "An error occurred!" with an error message
-//
-// 2. CHANGE THE URL TO AN INVALID ENDPOINT
-//    - Change 'http://localhost:3000/places' to 'http://localhost:3000/invalid'
-//    - The server returns 404
-//    - Our response.ok check catches this
-//    - You should see the error message
-//
-// 3. USE BROWSER DEVTOOLS
-//    - Open DevTools (F12)
-//    - Go to Network tab
-//    - Find "places" request
-//    - Right-click → Block request URL
-//    - Reload the page
-//
-// Remember to restore the URL and restart the server when done testing!
-//
-// =============================================================================
-
-// =============================================================================
-// COMMON ERROR HANDLING PATTERNS
-// =============================================================================
-//
-// 1. RETRY FUNCTIONALITY
-//    Add a button to retry the failed request:
-//
-//    const [retryCount, setRetryCount] = useState(0);
-//    useEffect(() => { fetchData(); }, [retryCount]);
-//
-//    <ErrorPage
-//      onConfirm={() => { setError(null); setRetryCount(c => c + 1); }}
-//    />
-//
-// 2. AUTOMATIC RETRY WITH BACKOFF
-//    Retry automatically with increasing delays:
-//
-//    const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
-//    setTimeout(() => refetch(), delay);
-//
-// 3. ERROR BOUNDARY (for render errors)
-//    Wrap components in ErrorBoundary (see Section 14):
-//
-//    <ErrorBoundary fallback={<ErrorPage />}>
-//      <AvailablePlaces />
-//    </ErrorBoundary>
-//
-// 4. GLOBAL ERROR HANDLING
-//    Use Context to manage errors app-wide:
-//
-//    const { setGlobalError } = useContext(ErrorContext);
-//    catch (error) { setGlobalError(error); }
+// This is a common pattern called "promisification".
+// Libraries like 'util.promisify' (Node.js) automate this.
 //
 // =============================================================================
