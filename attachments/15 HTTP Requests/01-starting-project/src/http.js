@@ -63,6 +63,45 @@ export async function fetchAvailablePlaces() {
 }
 
 // =============================================================================
+// FETCH USER PLACES (GET Request)
+// =============================================================================
+// Fetches the USER'S saved places from the backend.
+//
+// This is almost identical to fetchAvailablePlaces, but:
+//   - Uses a different endpoint: /user-places instead of /places
+//   - Returns the user's personally saved places, not all available places
+//
+// WHY DUPLICATE THE FUNCTION?
+// ---------------------------
+// You might wonder: "Why not just have one function with a parameter?"
+//
+//   export async function fetchPlaces(endpoint) {
+//     const response = await fetch(`http://localhost:3000/${endpoint}`);
+//     ...
+//   }
+//
+// That would work! But separate functions are often clearer because:
+//   - Each function has a specific, descriptive name
+//   - Error messages can be tailored to each use case
+//   - If the endpoints diverge in the future, changes are isolated
+//   - IDE autocomplete shows exactly what operations are available
+//
+// Both approaches are valid. For a small app like this, either works.
+// For larger apps, you might create a more generic function and wrap it.
+// =============================================================================
+export async function fetchUserPlaces() {
+  // Same pattern as fetchAvailablePlaces, different endpoint
+  const response = await fetch('http://localhost:3000/user-places');
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch user places.');
+  }
+
+  const resData = await response.json();
+  return resData.places;
+}
+
+// =============================================================================
 // UPDATE USER PLACES (PUT Request)
 // =============================================================================
 //

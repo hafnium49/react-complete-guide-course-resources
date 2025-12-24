@@ -1,19 +1,23 @@
 // =============================================================================
-// APP COMPONENT - Complete CRUD Operations with Optimistic Updates
+// APP COMPONENT - Complete CRUD with Data Fetching on Load
 // =============================================================================
 //
-// This component now handles BOTH adding AND removing places:
-//   - handleSelectPlace: Add a place (optimistic update + backend sync)
-//   - handleRemovePlace: Remove a place (optimistic update + backend sync)
+// This is the FINISHED application! It now handles:
 //
-// Both use the same pattern:
-//   1. Update UI immediately (optimistic)
-//   2. Send request to backend
-//   3. If error: rollback + show error message
+//   ✓ READ:   Fetch user places when app loads (useEffect)
+//   ✓ CREATE: Add new places (optimistic update)
+//   ✓ DELETE: Remove places (optimistic update)
+//   ✓ ERRORS: Handle and display errors with rollback
+//
+// The complete data flow:
+//   1. App loads → fetch user's saved places from backend
+//   2. User adds a place → update UI + sync to backend
+//   3. User removes a place → update UI + sync to backend
+//   4. Page reload → fetch places again (data persists!)
 //
 // =============================================================================
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Places from './components/Places.jsx';
 import Modal from './components/Modal.jsx';
@@ -21,14 +25,139 @@ import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import ErrorPage from './components/Error.jsx';
 import logoImg from './assets/logo.png';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
-import { updateUserPlaces } from './http.js';
+// =============================================================================
+// IMPORTING HTTP UTILITIES
+// =============================================================================
+// We now import TWO functions:
+//   - fetchUserPlaces: GET user's saved places on load
+//   - updateUserPlaces: PUT updated places when adding/removing
+// =============================================================================
+import { fetchUserPlaces, updateUserPlaces } from './http.js';
 
 function App() {
   const selectedPlace = useRef();
 
+  // ===========================================================================
+  // STATE MANAGEMENT - THE THREE STATES FOR ASYNC OPERATIONS
+  // ===========================================================================
+  // Just like in AvailablePlaces, we need three states for fetching data:
+  //
+  //   1. DATA STATE (userPlaces) - The fetched places array
+  //   2. LOADING STATE (isFetching) - Are we currently fetching?
+  //   3. ERROR STATE (error) - Did something go wrong?
+  //
+  // This is the SAME pattern we used in AvailablePlaces!
+  // The pattern is universal for any async data fetching in React.
+  // ===========================================================================
   const [userPlaces, setUserPlaces] = useState([]);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState();
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  // This error state is specifically for UPDATE errors (add/remove)
+  // It's separate from the fetch error state
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
+
+  // ===========================================================================
+  // FETCHING USER PLACES ON COMPONENT MOUNT
+  // ===========================================================================
+  // We use useEffect to fetch data when the component first renders.
+  //
+  // WHY useEffect?
+  // --------------
+  // 1. We want to fetch data when the component mounts (first render)
+  // 2. We need to update state after fetching (triggers re-render)
+  // 3. Without useEffect, state updates would cause infinite loop!
+  //
+  // THE PATTERN:
+  // ------------
+  //   useEffect(() => {
+  //     async function fetchData() {
+  //       setLoading(true);
+  //       try {
+  //         const data = await fetchFromServer();
+  //         setData(data);
+  //       } catch (error) {
+  //         setError(error);
+  //       }
+  //       setLoading(false);
+  //     }
+  //     fetchData();
+  //   }, []);  // Empty array = run once on mount
+  //
+  // ===========================================================================
+  useEffect(() => {
+    // -------------------------------------------------------------------------
+    // ASYNC FUNCTION INSIDE useEffect
+    // -------------------------------------------------------------------------
+    // We define an async function inside and call it immediately.
+    // This is because useEffect's callback can't be async directly.
+    //
+    // Why? useEffect expects either:
+    //   - No return value
+    //   - A cleanup function
+    //
+    // But async functions always return a Promise, which would confuse React.
+    // So we create an inner async function and call it immediately.
+    // -------------------------------------------------------------------------
+    async function fetchPlaces() {
+      // -----------------------------------------------------------------------
+      // START LOADING
+      // -----------------------------------------------------------------------
+      setIsFetching(true);
+
+      // -----------------------------------------------------------------------
+      // FETCH WITH ERROR HANDLING
+      // -----------------------------------------------------------------------
+      try {
+        // Call our HTTP utility function
+        const places = await fetchUserPlaces();
+
+        // Success! Update the data state
+        setUserPlaces(places);
+      } catch (error) {
+        // Something went wrong - store the error
+        setError({ message: error.message || 'Failed to fetch user places.' });
+      }
+
+      // -----------------------------------------------------------------------
+      // STOP LOADING (after try-catch)
+      // -----------------------------------------------------------------------
+      // We put this AFTER the try-catch block (not inside) so it runs
+      // whether the fetch succeeded or failed.
+      //
+      // Unlike in AvailablePlaces (which had getCurrentPosition callback),
+      // here we don't have nested async operations, so one setIsFetching(false)
+      // after try-catch is sufficient.
+      // -----------------------------------------------------------------------
+      setIsFetching(false);
+    }
+
+    // Execute the async function
+    fetchPlaces();
+  }, []); // Empty dependency array = run once when component mounts
+
+  // ===========================================================================
+  // WHY EMPTY DEPENDENCY ARRAY?
+  // ===========================================================================
+  // The dependency array [] means this effect runs ONCE when the component
+  // mounts, and never again (unless the component unmounts and remounts).
+  //
+  // This is exactly what we want for initial data fetching:
+  //   - Fetch when the app loads
+  //   - Don't re-fetch on every render
+  //   - Don't re-fetch when state changes
+  //
+  // If we wanted to re-fetch based on some condition (like a refresh button),
+  // we could add a state variable to the dependencies:
+  //
+  //   const [refreshKey, setRefreshKey] = useState(0);
+  //   useEffect(() => { fetchPlaces(); }, [refreshKey]);
+  //
+  //   // To trigger refresh:
+  //   <button onClick={() => setRefreshKey(prev => prev + 1)}>Refresh</button>
+  //
+  // ===========================================================================
 
   function handleStartRemovePlace(place) {
     setModalIsOpen(true);
@@ -67,7 +196,7 @@ function App() {
   }
 
   // ===========================================================================
-  // CLEARING THE ERROR
+  // CLEARING THE UPDATE ERROR
   // ===========================================================================
   function handleError() {
     setErrorUpdatingPlaces(null);
@@ -76,103 +205,36 @@ function App() {
   // ===========================================================================
   // HANDLING PLACE REMOVAL - DELETE PLACE (Optimistic Update)
   // ===========================================================================
-  // This function handles removing a place from the user's selection.
-  // It follows the SAME optimistic update pattern as handleSelectPlace:
-  //   1. Update UI immediately
-  //   2. Send request to backend
-  //   3. Rollback + show error if it fails
-  //
-  // =============================================================================
-  // WHY useCallback?
-  // =============================================================================
-  // This function is passed to DeleteConfirmation as `onConfirm`.
-  // useCallback prevents unnecessary re-creation of the function,
-  // which could cause child components to re-render unnecessarily.
-  //
-  // =============================================================================
-  // IMPORTANT: DEPENDENCY ARRAY
-  // =============================================================================
-  // We now use `userPlaces` inside this function (for the backend request).
-  // Therefore, `userPlaces` MUST be in the dependency array!
-  //
-  //   const handleRemovePlace = useCallback(async function () {
-  //     await updateUserPlaces(userPlaces.filter(...));  // Uses userPlaces!
-  //   }, [userPlaces]);  // ← Must include userPlaces!
-  //
-  // Without this dependency:
-  //   - The function would be created once with the initial userPlaces value
-  //   - It would never see updated userPlaces values
-  //   - We'd send stale/incorrect data to the backend!
-  //
-  // With this dependency:
-  //   - The function is recreated whenever userPlaces changes
-  //   - It always has access to the current userPlaces value
-  //   - We send the correct data to the backend ✓
-  //
-  // This is the trade-off with useCallback:
-  //   - Prevents unnecessary function recreation
-  //   - BUT you must carefully track dependencies
-  // =============================================================================
   const handleRemovePlace = useCallback(
     async function handleRemovePlace() {
-      // =========================================================================
-      // STEP 1: OPTIMISTIC UPDATE - Remove from UI immediately
-      // =========================================================================
-      // We update the state BEFORE the backend request completes.
-      // The user sees the place disappear instantly.
-      // =========================================================================
+      // Optimistic update - remove from UI immediately
       setUserPlaces((prevPickedPlaces) =>
         prevPickedPlaces.filter(
           (place) => place.id !== selectedPlace.current.id
         )
       );
 
-      // Close the confirmation modal
       setModalIsOpen(false);
 
-      // =========================================================================
-      // STEP 2: SYNC WITH BACKEND
-      // =========================================================================
-      // We send the updated places array to the backend.
-      //
-      // Notice we're using the SAME filter logic here as in setUserPlaces above.
-      // We filter out the place with the matching ID.
-      //
-      // Why duplicate the logic?
-      //   - setUserPlaces uses the function form (gets latest state)
-      //   - updateUserPlaces needs the actual array to send
-      //   - We can't use the state right after setting it (not immediate!)
-      //
-      // So we construct the filtered array the same way:
-      //   userPlaces.filter(place => place.id !== selectedPlace.current.id)
-      // =========================================================================
+      // Sync with backend
       try {
         await updateUserPlaces(
           userPlaces.filter((place) => place.id !== selectedPlace.current.id)
         );
       } catch (error) {
-        // =======================================================================
-        // STEP 3: ROLLBACK ON ERROR
-        // =======================================================================
-        // If the backend request fails, we need to:
-        //   1. Restore the UI to its previous state (rollback)
-        //   2. Inform the user about the error
-        //
-        // We use the captured `userPlaces` value (from before the optimistic
-        // update) to restore the state.
-        // =======================================================================
+        // Rollback on error
         setUserPlaces(userPlaces);
         setErrorUpdatingPlaces({
           message: error.message || 'Failed to delete place.'
         });
       }
     },
-    [userPlaces] // ← CRITICAL: userPlaces is used inside, so it's a dependency!
+    [userPlaces]
   );
 
   return (
     <>
-      {/* Error Modal */}
+      {/* Error Modal for Update Failures */}
       <Modal open={errorUpdatingPlaces} onClose={handleError}>
         {errorUpdatingPlaces && (
           <ErrorPage
@@ -200,12 +262,45 @@ function App() {
         </p>
       </header>
       <main>
-        <Places
-          title="I'd like to visit ..."
-          fallbackText="Select the places you would like to visit below."
-          places={userPlaces}
-          onSelectPlace={handleStartRemovePlace}
-        />
+        {/* ===================================================================
+            CONDITIONAL RENDERING: ERROR vs PLACES
+            ===================================================================
+            If there's an error fetching places, show the error component.
+            Otherwise, show the Places component.
+
+            This is the standard pattern:
+              {error && <ErrorComponent />}
+              {!error && <DataComponent />}
+
+            Or using ternary:
+              {error ? <ErrorComponent /> : <DataComponent />}
+            =================================================================== */}
+        {error && (
+          <ErrorPage title="An error occurred!" message={error.message} />
+        )}
+
+        {!error && (
+          <Places
+            title="I'd like to visit ..."
+            fallbackText="Select the places you would like to visit below."
+            places={userPlaces}
+            onSelectPlace={handleStartRemovePlace}
+            // ===============================================================
+            // LOADING STATE PROPS
+            // ===============================================================
+            // We pass loading state to the Places component just like we did
+            // in AvailablePlaces. This shows "Fetching your places..." while
+            // the data is being loaded from the backend.
+            //
+            // The Places component handles this internally:
+            //   - If isLoading is true → show loadingText
+            //   - If isLoading is false and places is empty → show fallbackText
+            //   - If isLoading is false and places exist → show the places
+            // ===============================================================
+            isLoading={isFetching}
+            loadingText="Fetching your places..."
+          />
+        )}
 
         <AvailablePlaces onSelectPlace={handleSelectPlace} />
       </main>
@@ -216,107 +311,112 @@ function App() {
 export default App;
 
 // =============================================================================
-// COMPARING ADD VS REMOVE - SAME PATTERN!
+// THE COMPLETE APPLICATION - SUMMARY
 // =============================================================================
 //
-// ADD PLACE (handleSelectPlace):
-// ------------------------------
-//   1. setUserPlaces([newPlace, ...prevPlaces])     // Optimistic: add to UI
-//   2. await updateUserPlaces([newPlace, ...old])   // Sync with backend
-//   3. catch → setUserPlaces(oldPlaces)             // Rollback on error
+// DATA FLOW:
 //
-// REMOVE PLACE (handleRemovePlace):
-// ---------------------------------
-//   1. setUserPlaces(prev.filter(notThisPlace))     // Optimistic: remove from UI
-//   2. await updateUserPlaces(old.filter(...))      // Sync with backend
-//   3. catch → setUserPlaces(oldPlaces)             // Rollback on error
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │                         APP STARTUP                                     │
+//   │                                                                         │
+//   │   Component mounts                                                      │
+//   │         │                                                               │
+//   │         ▼                                                               │
+//   │   useEffect runs                                                        │
+//   │         │                                                               │
+//   │         ▼                                                               │
+//   │   setIsFetching(true) ──► UI shows "Fetching your places..."            │
+//   │         │                                                               │
+//   │         ▼                                                               │
+//   │   fetchUserPlaces() ──► Backend: GET /user-places                       │
+//   │         │                                                               │
+//   │    ┌────┴────┐                                                          │
+//   │    ▼         ▼                                                          │
+//   │ Success   Error                                                         │
+//   │    │         │                                                          │
+//   │    ▼         ▼                                                          │
+//   │ setUserPlaces(data)   setError(err)                                     │
+//   │    │         │                                                          │
+//   │    ▼         ▼                                                          │
+//   │ UI shows places   UI shows error                                        │
+//   │    │         │                                                          │
+//   │    └────┬────┘                                                          │
+//   │         ▼                                                               │
+//   │   setIsFetching(false)                                                  │
+//   └─────────────────────────────────────────────────────────────────────────┘
 //
-// The PATTERN is identical! Only the state transformation differs:
-//   - Add: [newItem, ...existingItems]
-//   - Remove: existingItems.filter(item => item.id !== targetId)
 //
-// =============================================================================
-
-// =============================================================================
-// useCallback DEPENDENCIES EXPLAINED
-// =============================================================================
-//
-// When you use values inside a useCallback function, you must list them
-// as dependencies. React needs to know when to recreate the function.
-//
-// RULE: If a value can change and is used inside the callback, it's a dependency.
-//
-//   const [count, setCount] = useState(0);
-//   const [name, setName] = useState('');
-//
-//   // Uses count → count is a dependency
-//   const handleClick = useCallback(() => {
-//     console.log(count);
-//   }, [count]);
-//
-//   // Uses name → name is a dependency
-//   const handleSubmit = useCallback(() => {
-//     console.log(name);
-//   }, [name]);
-//
-//   // Uses both → both are dependencies
-//   const handleBoth = useCallback(() => {
-//     console.log(count, name);
-//   }, [count, name]);
-//
-// WHAT ABOUT REFS?
-//   - Refs (like selectedPlace) don't need to be dependencies
-//   - The ref object itself never changes (same reference)
-//   - Only ref.current changes, and that's always the latest value
-//
-// WHAT ABOUT SET FUNCTIONS?
-//   - setState functions (like setUserPlaces) don't need to be dependencies
-//   - React guarantees they're stable (same reference across renders)
-//
-// =============================================================================
-
-// =============================================================================
-// WHAT'S STILL MISSING?
-// =============================================================================
-//
-// We can now:
-//   ✓ Add places (with backend sync)
-//   ✓ Remove places (with backend sync)
-//   ✓ Handle errors with rollback
-//
-// But we're still missing:
-//   ✗ FETCHING saved places when the app loads!
-//
-// Currently, userPlaces starts as an empty array:
-//   const [userPlaces, setUserPlaces] = useState([]);
-//
-// Even if the backend has saved places, we don't fetch them.
-// On page reload, the "I'd like to visit" section is always empty.
-//
-// Next lesson: We'll fetch user places on component mount!
+//   ┌─────────────────────────────────────────────────────────────────────────┐
+//   │                      USER ADDS A PLACE                                  │
+//   │                                                                         │
+//   │   User clicks available place                                           │
+//   │         │                                                               │
+//   │         ▼                                                               │
+//   │   setUserPlaces([new, ...old]) ──► UI updates instantly                 │
+//   │         │                                                               │
+//   │         ▼                                                               │
+//   │   updateUserPlaces() ──► Backend: PUT /user-places                      │
+//   │         │                                                               │
+//   │    ┌────┴────┐                                                          │
+//   │    ▼         ▼                                                          │
+//   │ Success   Error                                                         │
+//   │    │         │                                                          │
+//   │    ▼         ▼                                                          │
+//   │ (done)    setUserPlaces(old) ← Rollback!                                │
+//   │              │                                                          │
+//   │              ▼                                                          │
+//   │         Show error modal                                                │
+//   └─────────────────────────────────────────────────────────────────────────┘
 //
 // =============================================================================
 
 // =============================================================================
-// THE COMPLETE CRUD PATTERN
+// TWO TYPES OF ERROR STATES
 // =============================================================================
 //
-// CRUD = Create, Read, Update, Delete
+// We have TWO separate error states in this component:
 //
-// In this app:
-//   - Create/Update: handleSelectPlace (adds a place)
-//   - Delete: handleRemovePlace (removes a place)
-//   - Read: Coming next lesson! (fetch on load)
+//   1. error (for FETCH errors)
+//      - Set when initial data fetch fails
+//      - Shows error in place of the Places component
+//      - Blocking: user can't use the app until fixed
 //
-// All mutations (Create, Update, Delete) follow the optimistic pattern:
-//   1. Update UI optimistically
-//   2. Sync with backend
-//   3. Rollback on error
+//   2. errorUpdatingPlaces (for UPDATE errors)
+//      - Set when add/remove operations fail
+//      - Shows error in a modal (can be dismissed)
+//      - Non-blocking: user can dismiss and keep using the app
 //
-// Reads (fetching data) use the loading/error/data pattern:
-//   1. Set loading state
-//   2. Fetch data
-//   3. Handle success or error
-//   4. Clear loading state
+// Why separate?
+//   - Different severity (blocking vs non-blocking)
+//   - Different UI treatment (inline vs modal)
+//   - Different recovery patterns (reload vs retry)
+//
+// =============================================================================
+
+// =============================================================================
+// THE COMPLETE HTTP.JS API
+// =============================================================================
+//
+// Our http.js file now has three functions:
+//
+//   fetchAvailablePlaces()
+//     - GET /places
+//     - Returns all available places
+//     - Used by AvailablePlaces component
+//
+//   fetchUserPlaces()
+//     - GET /user-places
+//     - Returns user's saved places
+//     - Used by App component on mount
+//
+//   updateUserPlaces(places)
+//     - PUT /user-places
+//     - Saves user's places to backend
+//     - Used by App for add/remove operations
+//
+// This gives us complete CRUD operations:
+//   - Create/Update: updateUserPlaces (PUT)
+//   - Read: fetchUserPlaces, fetchAvailablePlaces (GET)
+//   - Delete: updateUserPlaces with filtered array (PUT)
 //
 // =============================================================================
