@@ -212,7 +212,7 @@ export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid E
   // ===========================================================================
 
   // ===========================================================================
-  // RETURN THE STATE VALUES
+  // RETURN THE STATE VALUES AND SETTER FUNCTION
   // ===========================================================================
   //
   // WHAT CAN CUSTOM HOOKS RETURN?
@@ -224,14 +224,14 @@ export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid E
   //
   // WHY RETURN AN OBJECT?
   // ---------------------
-  // We have 3 values to return. We could use:
+  // We have multiple values to return. We could use:
   //
-  //   Array:  return [isFetching, error, fetchedData];
-  //           Usage: const [isFetching, error, data] = useFetch(...);
+  //   Array:  return [isFetching, error, fetchedData, setFetchedData];
+  //           Usage: const [isFetching, error, data, setData] = useFetch(...);
   //           Pros: Easier to rename, familiar from useState
   //           Cons: Order matters, easy to mix up
   //
-  //   Object: return { isFetching, error, fetchedData };
+  //   Object: return { isFetching, error, fetchedData, setFetchedData };
   //           Usage: const { isFetching, error, fetchedData } = useFetch(...);
   //           Pros: Clear property names, order doesn't matter
   //           Cons: Must use exact names (or alias with :)
@@ -241,13 +241,51 @@ export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid E
   // COMPARE TO useState:
   // --------------------
   // useState returns an array: [stateValue, setStateFunction]
-  // We're doing something similar, but with an object and 3 values.
+  // We're doing something similar, but with an object and more values.
+  //
+  // ===========================================================================
+  //
+  // NEW: EXPOSING THE SETTER FUNCTION
+  // ==================================
+  //
+  // Previously, we only returned state VALUES (isFetching, error, fetchedData).
+  // But components often need to UPDATE the data after it's fetched!
+  //
+  // Examples of when you need to update fetched data:
+  //   - Adding a new item to a list (optimistic update)
+  //   - Removing an item from a list
+  //   - Editing an existing item
+  //   - Rollback on error
+  //
+  // By exposing setFetchedData, we give components full control:
+  //
+  //   const { fetchedData, setFetchedData } = useFetch(fetchItems, []);
+  //
+  //   function handleAdd(newItem) {
+  //     setFetchedData(prev => [...prev, newItem]); // Update locally
+  //     await saveToServer(newItem);                 // Sync with backend
+  //   }
+  //
+  // ALTERNATIVE: CUSTOM WRAPPER FUNCTIONS
+  // -------------------------------------
+  // If you want to restrict or validate updates, you could expose a
+  // custom function instead of the raw setter:
+  //
+  //   function updateData(newData) {
+  //     if (isValid(newData)) {
+  //       setFetchedData(newData);
+  //     }
+  //   }
+  //   return { fetchedData, updateData }; // Instead of setFetchedData
+  //
+  // But for our use case, exposing the setter directly is simpler.
   //
   // ===========================================================================
   return {
     isFetching,
     error,
     fetchedData,
+    setFetchedData,  // NEW: Expose the setter so components can update data!
   };
 }
 
@@ -333,9 +371,14 @@ export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid E
 //     fetchPlaces();
 //   }, []);
 //
-// AFTER (in App.jsx - 1 line!):
-// -----------------------------
-//   const { isFetching, error, fetchedData: userPlaces } = useFetch(fetchUserPlaces, []);
+// AFTER (in App.jsx - just a few lines!):
+// ---------------------------------------
+//   const {
+//     isFetching,
+//     error,
+//     fetchedData: userPlaces,
+//     setFetchedData: setUserPlaces,  // For updating data!
+//   } = useFetch(fetchUserPlaces, []);
 //
 // Benefits:
 //   - Component is LEANER (less code)
@@ -343,5 +386,41 @@ export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid E
 //   - Behavior is CONSISTENT (same pattern everywhere)
 //   - Bugs fixed ONCE (fix the hook, fix everywhere)
 //   - Code is TESTABLE (test the hook independently)
+//   - FULL CONTROL: Can still update the data when needed!
+//
+// =============================================================================
+
+// =============================================================================
+// INDEPENDENT STATE FOR EACH COMPONENT
+// =============================================================================
+//
+// A COMMON QUESTION:
+// ------------------
+// "If I use useFetch in App and also in AvailablePlaces, and I update the
+//  state from App, will it affect AvailablePlaces?"
+//
+// ANSWER: NO!
+//
+// Just like with components, each usage of a custom hook creates a
+// BRAND NEW, INDEPENDENT copy:
+//
+//   // In App.jsx:
+//   const { fetchedData, setFetchedData } = useFetch(fetchUserPlaces, []);
+//   // ↑ This creates state CONNECTED TO App
+//
+//   // In AvailablePlaces.jsx:
+//   const { fetchedData, setFetchedData } = useFetch(fetchAvailablePlaces, []);
+//   // ↑ This creates SEPARATE state CONNECTED TO AvailablePlaces
+//
+// Updating state in App does NOT affect AvailablePlaces, and vice versa.
+//
+// This is the same behavior as using useState directly:
+//   - Each component that uses useState gets its own state
+//   - Each component that uses useFetch gets its own state
+//
+// CONTRAST WITH CONTEXT:
+// ----------------------
+// Context is different - it SHARES state across components.
+// Custom hooks REUSE LOGIC, not state.
 //
 // =============================================================================

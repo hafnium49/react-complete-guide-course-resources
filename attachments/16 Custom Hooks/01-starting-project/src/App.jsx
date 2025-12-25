@@ -238,16 +238,15 @@
 //
 // =============================================================================
 
-// Note: useCallback temporarily not used (handleRemovePlace is commented out)
-import { useRef, useState } from 'react';
+// Note: We no longer need useEffect here - it's inside useFetch!
+import { useRef, useState, useCallback } from 'react';
 
 import Places from './components/Places.jsx';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
-// Note: updateUserPlaces temporarily not used (optimistic update functions commented out)
-import { fetchUserPlaces } from './http.js';
+import { fetchUserPlaces, updateUserPlaces } from './http.js';
 import Error from './components/Error.jsx';
 // =============================================================================
 // IMPORTING OUR CUSTOM HOOK
@@ -330,8 +329,23 @@ function App() {
   const {
     isFetching,
     error,
-    fetchedData: userPlaces,  // Alias: rename fetchedData to userPlaces
+    fetchedData: userPlaces,      // Alias: rename fetchedData to userPlaces
+    setFetchedData: setUserPlaces, // Alias: rename setFetchedData to setUserPlaces
   } = useFetch(fetchUserPlaces, []);
+  // ===========================================================================
+  // NOW WE HAVE BOTH THE DATA AND THE SETTER!
+  // ===========================================================================
+  //
+  // With setFetchedData (aliased to setUserPlaces), we can now:
+  //   - Add places (optimistic update)
+  //   - Remove places (optimistic update)
+  //   - Rollback on error
+  //
+  // This works exactly like the useState setter we had before:
+  //   setUserPlaces(newPlaces);           // Replace all places
+  //   setUserPlaces(prev => [...prev]);   // Update based on previous
+  //
+  // ===========================================================================
   // ===========================================================================
   // HOW STATE WORKS WITH CUSTOM HOOKS
   // ===========================================================================
@@ -364,80 +378,98 @@ function App() {
   }
 
   // ===========================================================================
-  // TEMPORARILY COMMENTED OUT - We'll fix these in the next lesson!
+  // FIXED! We now have setUserPlaces from useFetch
   // ===========================================================================
   //
-  // PROBLEM: These functions use setUserPlaces, but we no longer have it!
+  // PROBLEM WE HAD:
+  // ---------------
+  // Previously, useFetch only returned state VALUES (isFetching, error, fetchedData).
+  // We couldn't update the data from outside the hook!
   //
-  // When we used useState directly:
-  //   const [userPlaces, setUserPlaces] = useState([]);
-  //   ↑ We had setUserPlaces to update the state
+  // SOLUTION:
+  // ---------
+  // We modified useFetch to ALSO return setFetchedData.
+  // Now we can destructure it with an alias:
   //
-  // Now with useFetch:
-  //   const { fetchedData: userPlaces } = useFetch(...);
-  //   ↑ We only get the DATA, not a setter function!
+  //   const { fetchedData: userPlaces, setFetchedData: setUserPlaces } = useFetch(...);
   //
-  // The useFetch hook manages its state internally, but doesn't expose
-  // a way to update that state from outside the hook.
-  //
-  // SOLUTION (coming in next lesson):
-  // We need to modify useFetch to also return a setFetchedData function,
-  // so we can update the data from the component when needed.
-  //
-  // For now, we'll comment these out so the app doesn't crash.
+  // This gives us the same capabilities we had with direct useState!
   //
   // ===========================================================================
 
-  // async function handleSelectPlace(selectedPlace) {
-  //   // Optimistic update - add to UI immediately
-  //   setUserPlaces((prevPickedPlaces) => {
-  //     if (!prevPickedPlaces) {
-  //       prevPickedPlaces = [];
-  //     }
-  //     if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
-  //       return prevPickedPlaces;
-  //     }
-  //     return [selectedPlace, ...prevPickedPlaces];
-  //   });
-  //
-  //   // Sync with backend
-  //   try {
-  //     await updateUserPlaces([selectedPlace, ...userPlaces]);
-  //   } catch (error) {
-  //     // Rollback on error
-  //     setUserPlaces(userPlaces);
-  //     setErrorUpdatingPlaces({
-  //       message: error.message || 'Failed to update places.',
-  //     });
-  //   }
-  // }
+  async function handleSelectPlace(selectedPlace) {
+    // Optimistic update - add to UI immediately
+    setUserPlaces((prevPickedPlaces) => {
+      if (!prevPickedPlaces) {
+        prevPickedPlaces = [];
+      }
+      if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
+        return prevPickedPlaces;
+      }
+      return [selectedPlace, ...prevPickedPlaces];
+    });
 
-  // const handleRemovePlace = useCallback(
-  //   async function handleRemovePlace() {
-  //     // Optimistic update - remove from UI immediately
-  //     setUserPlaces((prevPickedPlaces) =>
-  //       prevPickedPlaces.filter(
-  //         (place) => place.id !== selectedPlace.current.id
-  //       )
-  //     );
+    // Sync with backend
+    try {
+      await updateUserPlaces([selectedPlace, ...userPlaces]);
+    } catch (error) {
+      // Rollback on error
+      setUserPlaces(userPlaces);
+      setErrorUpdatingPlaces({
+        message: error.message || 'Failed to update places.',
+      });
+    }
+  }
+
+  // ===========================================================================
+  // ABOUT setUserPlaces IN useCallback DEPENDENCIES
+  // ===========================================================================
   //
-  //     // Sync with backend
-  //     try {
-  //       await updateUserPlaces(
-  //         userPlaces.filter((place) => place.id !== selectedPlace.current.id)
-  //       );
-  //     } catch (error) {
-  //       // Rollback on error
-  //       setUserPlaces(userPlaces);
-  //       setErrorUpdatingPlaces({
-  //         message: error.message || 'Failed to delete place.',
-  //       });
-  //     }
+  // You might notice we added setUserPlaces to the dependencies array.
   //
-  //     setModalIsOpen(false);
-  //   },
-  //   [userPlaces]
-  // );
+  // NORMALLY, state updating functions from useState DON'T need to be in
+  // dependency arrays. React GUARANTEES they never change.
+  //
+  // But here, the linter doesn't know setUserPlaces comes from useState!
+  // All it sees is:
+  //   const { setFetchedData: setUserPlaces } = useFetch(...);
+  //
+  // It looks like any other variable that might change.
+  //
+  // TECHNICALLY, it WON'T make a difference because setUserPlaces still
+  // refers to a state updating function (from inside useFetch), and React
+  // guarantees those never change.
+  //
+  // But to satisfy the linter and be complete, we add it anyway.
+  // It doesn't hurt, and it makes the code correct by the rules.
+  //
+  // ===========================================================================
+  const handleRemovePlace = useCallback(
+    async function handleRemovePlace() {
+      // Optimistic update - remove from UI immediately
+      setUserPlaces((prevPickedPlaces) =>
+        prevPickedPlaces.filter(
+          (place) => place.id !== selectedPlace.current.id
+        )
+      );
+
+      // Sync with backend
+      try {
+        await updateUserPlaces(
+          userPlaces.filter((place) => place.id !== selectedPlace.current.id)
+        );
+      } catch (error) {
+        // Rollback on error
+        setUserPlaces(userPlaces);
+        setErrorUpdatingPlaces({
+          message: error.message || 'Failed to delete place.',
+        });
+      }
+
+      setModalIsOpen(false);
+    },
+    [userPlaces, setUserPlaces] // setUserPlaces added to satisfy linter
+  );
 
   function handleError() {
     setErrorUpdatingPlaces(null);
@@ -455,16 +487,11 @@ function App() {
         )}
       </Modal>
 
-      {/* =====================================================================
-          TEMPORARILY DISABLED - handleRemovePlace is commented out
-          =====================================================================
-          We'll re-enable this once we fix the useFetch hook to expose
-          a setFetchedData function for updating the data.
-          ===================================================================== */}
+      {/* Delete Confirmation Modal - Now working with custom hook! */}
       <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
-          onConfirm={() => setModalIsOpen(false)} // Temporary: just close modal
+          onConfirm={handleRemovePlace}
         />
       </Modal>
 
@@ -489,8 +516,7 @@ function App() {
           />
         )}
 
-        {/* TEMPORARILY DISABLED - handleSelectPlace is commented out */}
-        <AvailablePlaces onSelectPlace={() => {}} />
+        <AvailablePlaces onSelectPlace={handleSelectPlace} />
       </main>
     </>
   );
