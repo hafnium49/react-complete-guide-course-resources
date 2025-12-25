@@ -1,331 +1,347 @@
 // =============================================================================
-// CUSTOM HOOK: useFetch - Building Our First Custom Hook
+// CUSTOM HOOK: useFetch - A Complete, Reusable Data Fetching Hook
 // =============================================================================
 //
-// This file contains our first custom hook! Custom hooks are the React way
-// to extract and share stateful logic between components.
+// This file contains our first COMPLETE custom hook!
 //
-// =============================================================================
-// FILE ORGANIZATION
-// =============================================================================
+// WHAT THIS HOOK DOES:
+// --------------------
+//   1. Manages loading state (isFetching)
+//   2. Manages error state (error)
+//   3. Manages data state (fetchedData)
+//   4. Handles the async fetching logic
+//   5. Returns all state to the component that uses it
 //
-// We created a new folder structure:
-//
-//   src/
-//   ├── components/     ← UI components
-//   ├── hooks/          ← Custom hooks (NEW!)
-//   │   └── useFetch.js ← This file
-//   ├── App.jsx
-//   └── ...
-//
-// Creating a "hooks" folder is OPTIONAL but recommended because:
-//   - Keeps custom hooks organized in one place
-//   - Makes them easy to find
-//   - Follows common React project conventions
-//
-// You could also:
-//   - Put hooks in the root src/ folder
-//   - Name the folder differently (e.g., "customHooks")
-//   - Co-locate hooks with the components that use them
-//
-// =============================================================================
-// FILE NAMING CONVENTIONS
-// =============================================================================
-//
-// We named this file "useFetch.js" but you have options:
-//
-//   useFetch.js      ← camelCase (what we're using)
-//   use-fetch.js     ← kebab-case (also common)
-//   UseFetch.js      ← PascalCase (less common for hooks)
-//   fetch.js         ← Without "use" (also valid)
-//
-// The file name doesn't HAVE to start with "use" - only the FUNCTION inside
-// must start with "use" for React to recognize it as a hook.
-//
-// We're using "useFetch.js" because:
-//   - It matches the function name inside
-//   - It's immediately clear this file contains a hook
-//   - Easy to find when searching for hooks
+// HOW IT'S USED:
+// --------------
+//   const { isFetching, error, fetchedData } = useFetch(fetchUserPlaces, []);
 //
 // =============================================================================
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // =============================================================================
-// THE CUSTOM HOOK FUNCTION
+// THE useFetch CUSTOM HOOK
 // =============================================================================
 //
-// A custom hook is just a regular JavaScript function with ONE special rule:
+// PARAMETERS:
+// -----------
+//   fetchFn      - The async function that fetches data (e.g., fetchUserPlaces)
+//   initialValue - The initial value for the data state (e.g., [] for arrays)
 //
-//   THE NAME MUST START WITH "use"
-//
-// This is not just a naming convention - it's enforced by React's tooling!
-//
-// =============================================================================
-// WHY THE "use" PREFIX IS REQUIRED
-// =============================================================================
-//
-// React projects (like this one using Vite) are configured to:
-//
-//   1. DETECT functions starting with "use"
-//   2. TREAT them as hooks
-//   3. ENFORCE the Rules of Hooks on them
-//
-// This means:
-//
-//   function useFetch() {        ← React treats this as a hook
-//     useState(...)              ← Allowed! It's inside a hook
-//     useEffect(...)             ← Allowed!
-//   }
-//
-//   function fetchData() {       ← React treats this as a regular function
-//     useState(...)              ← ERROR! Can't use hooks here
-//     useEffect(...)             ← ERROR!
-//   }
-//
-// The "use" prefix is what enables your custom function to use other hooks!
+// RETURNS:
+// --------
+//   An object containing:
+//     - isFetching: boolean indicating if a request is in progress
+//     - error: error object if something went wrong, undefined otherwise
+//     - fetchedData: the data returned by fetchFn, or initialValue
 //
 // =============================================================================
-// DEMONSTRATION: WHAT HAPPENS WITHOUT "use"
-// =============================================================================
-//
-// If you renamed this function to just "fetch" (without "use"):
-//
-//   function fetch(fetchFn) {
-//     useEffect(() => { ... });   // ← Red squiggly lines! Error!
-//   }
-//
-// You would see an error:
-//   "React Hook 'useEffect' is called in function 'fetch' that is
-//    neither a React function component nor a custom React Hook function.
-//    React component names must start with an uppercase letter.
-//    React Hook names must start with the word 'use'."
-//
-// This error is ENFORCED by the project configuration (ESLint rules).
-// It protects you from using hooks incorrectly!
-//
-// =============================================================================
-// NAMING YOUR CUSTOM HOOK
-// =============================================================================
-//
-// The name after "use" is up to you:
-//
-//   useFetch          ← What we're using (describes fetching data)
-//   useData           ← Alternative name
-//   useHttp           ← Another option
-//   useAsync          ← More generic
-//   useApi            ← Also works
-//
-// Just avoid clashing with built-in hooks:
-//
-//   useState          ← TAKEN (built-in)
-//   useEffect         ← TAKEN (built-in)
-//   useContext        ← TAKEN (built-in)
-//   useRef            ← TAKEN (built-in)
-//   useCallback       ← TAKEN (built-in)
-//   useMemo           ← TAKEN (built-in)
-//   useReducer        ← TAKEN (built-in)
-//   ...
-//
-// "useFetch" is safe because there's no built-in hook with that name.
-//
-// =============================================================================
-
-export function useFetch(fetchFn) {
+export function useFetch(fetchFn, initialValue) { // Start with "use" to avoid ESLint warnings
   // ===========================================================================
-  // WHAT WE'RE EXTRACTING
+  // STATE MANAGEMENT - The Three States for Async Operations
   // ===========================================================================
   //
-  // We're moving this code from App.jsx into this custom hook:
+  // Every component that uses this hook will get its OWN copy of these states.
+  // The hook manages the state, but the state BELONGS to the component.
   //
-  //   useEffect(() => {
-  //     async function fetchPlaces() {
-  //       setIsFetching(true);
-  //       try {
-  //         const places = await fetchUserPlaces();
-  //         setUserPlaces(places);
-  //       } catch (error) {
-  //         setError({ message: error.message || '...' });
-  //       }
-  //       setIsFetching(false);
-  //     }
-  //     fetchPlaces();
-  //   }, []);
+  // KEY INSIGHT: Custom hooks don't share state between components!
+  // ---------------------------------------------------------------
+  // If ComponentA and ComponentB both use useFetch, they each get their
+  // own separate isFetching, error, and fetchedData states.
   //
-  // This way:
-  //   - App.jsx becomes LEANER (less code)
-  //   - The fetching logic is REUSABLE (other components can use it)
-  //   - The hook handles the COMPLEXITY (state, effects, async)
-  //   - Components focus on DISPLAY (what they should do)
+  // This is different from Context, which DOES share state.
   //
   // ===========================================================================
 
+  // ---------------------------------------------------------------------------
+  // isFetching - Loading State
+  // ---------------------------------------------------------------------------
+  // Tracks whether we're currently waiting for data.
+  // - true: Show loading spinner/text
+  // - false: Show data or error
+  //
+  // Starts as false because we haven't started fetching yet.
+  // ---------------------------------------------------------------------------
+  const [isFetching, setIsFetching] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // error - Error State
+  // ---------------------------------------------------------------------------
+  // Stores any error that occurred during fetching.
+  // - undefined: No error (success or not yet fetched)
+  // - { message: "..." }: An error occurred
+  //
+  // Starts as undefined because no error has occurred yet.
+  // ---------------------------------------------------------------------------
+  const [error, setError] = useState();
+
+  // ---------------------------------------------------------------------------
+  // fetchedData - Data State
+  // ---------------------------------------------------------------------------
+  // Stores the data returned by the fetch function.
+  //
+  // WHY NOT NAME IT "userPlaces"?
+  // -----------------------------
+  // Because this hook is GENERIC! It should work with ANY kind of data:
+  //   - User places
+  //   - Available places
+  //   - Blog posts
+  //   - User profiles
+  //   - Anything!
+  //
+  // Using a generic name like "fetchedData" makes the hook reusable.
+  //
+  // WHY ACCEPT initialValue AS A PARAMETER?
+  // ----------------------------------------
+  // Different use cases need different initial values:
+  //   - Arrays: [] (to avoid "undefined.length" errors)
+  //   - Objects: {} or null
+  //   - Single items: null
+  //
+  // By accepting initialValue as a parameter, we make the hook flexible.
+  //
+  // Previously, we had: useState([]) - hardcoded empty array
+  // Now, we have: useState(initialValue) - configurable!
+  //
+  // This prevents errors like:
+  //   "Cannot read property 'length' of undefined"
+  //
+  // Because if we don't pass an initial value, fetchedData would be undefined,
+  // and trying to access fetchedData.length would crash.
+  // ---------------------------------------------------------------------------
+  const [fetchedData, setFetchedData] = useState(initialValue);
+
   // ===========================================================================
-  // THE useEffect - Extracted from App.jsx
+  // THE FETCH EFFECT
   // ===========================================================================
   //
-  // This is the exact same useEffect that was in App.jsx!
-  // We just moved it here.
-  //
-  // Notice that useEffect works here because this function starts with "use".
-  // If we named this function "fetchData" instead, we'd get an error.
+  // This useEffect runs the actual data fetching.
+  // It's the same pattern we had in App.jsx and AvailablePlaces.jsx,
+  // but now it's extracted into this reusable hook.
   //
   // ===========================================================================
   useEffect(() => {
+    // -------------------------------------------------------------------------
+    // THE ASYNC FETCH FUNCTION
+    // -------------------------------------------------------------------------
+    // We define an async function inside useEffect because:
+    //   - useEffect's callback can't be async directly
+    //   - We need async/await to handle the Promise from fetchFn
+    //
+    // WHY NAME IT "fetchData" INSTEAD OF "fetchPlaces"?
+    // --------------------------------------------------
+    // Again, for genericity! This hook fetches ANY data, not just places.
+    // -------------------------------------------------------------------------
     async function fetchData() {
-      // This code will run when the hook is used
-      // But wait - we have some problems to solve:
-      //
-      // 1. Where is setIsFetching? We need state!
-      // 2. Where is setUserPlaces? We need state!
-      // 3. Where is setError? We need state!
-      // 4. What is fetchUserPlaces? We receive it as fetchFn parameter!
-      //
-      // The hook is NOT COMPLETE YET - we need to:
-      // - Add useState for isFetching, data, and error
-      // - Use the fetchFn parameter to make it flexible
-      // - Return the state values so components can use them
-      //
-      // We'll fix these in the next lessons!
+      // -----------------------------------------------------------------------
+      // START LOADING
+      // -----------------------------------------------------------------------
+      setIsFetching(true);
+
+      try {
+        // ---------------------------------------------------------------------
+        // CALL THE FETCH FUNCTION (passed as parameter)
+        // ---------------------------------------------------------------------
+        // fetchFn is the function passed to useFetch.
+        // It could be:
+        //   - fetchUserPlaces (from http.js)
+        //   - fetchAvailablePlaces (from http.js)
+        //   - Any other async function!
+        //
+        // This is what makes the hook REUSABLE:
+        //   useFetch(fetchUserPlaces, [])      - fetches user places
+        //   useFetch(fetchAvailablePlaces, []) - fetches available places
+        //   useFetch(fetchBlogPosts, [])       - fetches blog posts
+        //
+        // The hook doesn't care WHAT it's fetching - it just handles
+        // the loading/error/data pattern!
+        // ---------------------------------------------------------------------
+        const data = await fetchFn();
+
+        // ---------------------------------------------------------------------
+        // SUCCESS - Store the fetched data
+        // ---------------------------------------------------------------------
+        setFetchedData(data);
+      } catch (error) {
+        // ---------------------------------------------------------------------
+        // ERROR - Store a generic error message
+        // ---------------------------------------------------------------------
+        // We use a GENERIC error message because this hook is reusable.
+        // The specific error message from the fetch function is still
+        // available in error.message.
+        //
+        // Alternative: Accept an errorMessage parameter to customize this.
+        // ---------------------------------------------------------------------
+        setError({ message: error.message || 'Failed to fetch data.' });
+      }
+
+      // -----------------------------------------------------------------------
+      // STOP LOADING (after try-catch)
+      // -----------------------------------------------------------------------
+      // This runs whether the fetch succeeded or failed.
+      // -----------------------------------------------------------------------
+      setIsFetching(false);
     }
 
+    // -------------------------------------------------------------------------
+    // EXECUTE THE FETCH FUNCTION
+    // -------------------------------------------------------------------------
     fetchData();
-  }, []);
+  }, [fetchFn]);
+  // ===========================================================================
+  // DEPENDENCY ARRAY: [fetchFn]
+  // ===========================================================================
+  //
+  // WHY IS fetchFn A DEPENDENCY?
+  // ----------------------------
+  // fetchFn is "external data" - it's not defined inside useEffect.
+  // If fetchFn changes, we should re-run the effect to fetch new data.
+  //
+  // React's linter (ESLint) will warn you with yellow squiggly lines
+  // if you forget to add dependencies!
+  //
+  // IMPORTANT: We pass fetchFn as a VALUE, not a CALL
+  // --------------------------------------------------
+  //   [fetchFn]    ← Correct! Just the function reference
+  //   [fetchFn()]  ← Wrong! This would execute the function
+  //
+  // The dependency array checks if the VALUE has changed,
+  // not if we should call it.
+  //
+  // ===========================================================================
 
   // ===========================================================================
-  // WHAT'S STILL MISSING (To be added in next lessons)
+  // RETURN THE STATE VALUES
   // ===========================================================================
   //
-  // This hook needs more work to be functional:
+  // WHAT CAN CUSTOM HOOKS RETURN?
+  // -----------------------------
+  // Anything! Just like regular functions:
+  //   - A single value: return data;
+  //   - An array: return [data, setData];  (like useState)
+  //   - An object: return { data, error, loading };  (what we're doing)
   //
-  //   1. STATE MANAGEMENT
-  //      - useState for data (the fetched result)
-  //      - useState for isFetching (loading indicator)
-  //      - useState for error (error handling)
+  // WHY RETURN AN OBJECT?
+  // ---------------------
+  // We have 3 values to return. We could use:
   //
-  //   2. ASYNC LOGIC
-  //      - Call the fetchFn parameter
-  //      - Handle success and error cases
-  //      - Update state accordingly
+  //   Array:  return [isFetching, error, fetchedData];
+  //           Usage: const [isFetching, error, data] = useFetch(...);
+  //           Pros: Easier to rename, familiar from useState
+  //           Cons: Order matters, easy to mix up
   //
-  //   3. RETURN VALUES
-  //      - Return the state so components can use it
-  //      - Maybe return a refetch function
+  //   Object: return { isFetching, error, fetchedData };
+  //           Usage: const { isFetching, error, fetchedData } = useFetch(...);
+  //           Pros: Clear property names, order doesn't matter
+  //           Cons: Must use exact names (or alias with :)
   //
-  // Example of what the final hook might look like:
+  // We chose an object for clarity. Property names are self-documenting!
   //
-  //   export function useFetch(fetchFn) {
-  //     const [data, setData] = useState([]);
-  //     const [isFetching, setIsFetching] = useState(false);
-  //     const [error, setError] = useState();
-  //
-  //     useEffect(() => {
-  //       async function fetchData() {
-  //         setIsFetching(true);
-  //         try {
-  //           const result = await fetchFn();
-  //           setData(result);
-  //         } catch (error) {
-  //           setError({ message: error.message });
-  //         }
-  //         setIsFetching(false);
-  //       }
-  //       fetchData();
-  //     }, [fetchFn]);
-  //
-  //     return { data, isFetching, error };
-  //   }
+  // COMPARE TO useState:
+  // --------------------
+  // useState returns an array: [stateValue, setStateFunction]
+  // We're doing something similar, but with an object and 3 values.
   //
   // ===========================================================================
+  return {
+    isFetching,
+    error,
+    fetchedData,
+  };
 }
 
 // =============================================================================
-// THE IDEA BEHIND CUSTOM HOOKS
+// HOW STATE WORKS WITH CUSTOM HOOKS
 // =============================================================================
 //
-// The general programming principle:
+// KEY CONCEPT: State managed by a custom hook BELONGS to the component!
 //
-//   "Create functions once, use them in many places"
+// When you use useFetch in a component:
 //
-// Custom hooks extend this to STATEFUL logic:
+//   function App() {
+//     const { isFetching, error, fetchedData } = useFetch(fetchUserPlaces, []);
+//     ...
+//   }
 //
-//   Regular functions:
-//   - Can be reused
-//   - Can't use hooks (useState, useEffect, etc.)
-//   - Can't manage React state
+// What happens:
+//   1. useFetch creates useState hooks (isFetching, error, fetchedData)
+//   2. Those states BELONG to the App component
+//   3. When useFetch calls setIsFetching(true), App RE-RENDERS!
+//   4. The component behaves as if the state was defined directly in it
 //
-//   Custom hooks (functions starting with "use"):
-//   - Can be reused
-//   - CAN use hooks!
-//   - CAN manage React state
+// It's like the state is "lifted up" to the component automatically.
 //
-// This is why custom hooks exist:
-//   - They let you extract and reuse STATEFUL logic
-//   - The "use" prefix enables hooks inside them
-//   - React's rules ensure they're used correctly
+// This is why custom hooks are powerful:
+//   - The hook manages the LOGIC (when to update state)
+//   - The component owns the STATE (and re-renders when it changes)
+//   - It works exactly like having the code directly in the component
 //
 // =============================================================================
 
 // =============================================================================
-// HOW THIS HOOK WILL BE USED (Preview)
+// CUSTOM HOOKS DO NOT SHARE STATE
 // =============================================================================
 //
-// Once complete, components will use this hook like:
+// IMPORTANT: Each component that uses useFetch gets its OWN state!
 //
-//   // In App.jsx:
-//   function App() {
-//     const { data: userPlaces, isFetching, error } = useFetch(fetchUserPlaces);
-//
-//     // No more manual useState for data, loading, error!
-//     // No more useEffect for fetching!
-//     // The hook handles all of that!
-//
-//     return (
-//       <Places
-//         places={userPlaces}
-//         isLoading={isFetching}
-//         ...
-//       />
-//     );
+//   function ComponentA() {
+//     const { fetchedData } = useFetch(fetchUserPlaces, []);
+//     // ComponentA has its own fetchedData state
 //   }
 //
-//   // In AvailablePlaces.jsx:
-//   function AvailablePlaces() {
-//     const { data, isFetching, error } = useFetch(fetchAvailablePlaces);
-//
-//     // Same clean pattern - reused the same hook!
+//   function ComponentB() {
+//     const { fetchedData } = useFetch(fetchAvailablePlaces, []);
+//     // ComponentB has its own SEPARATE fetchedData state
 //   }
+//
+// Changing state in ComponentA does NOT affect ComponentB!
+//
+// This is DIFFERENT from Context API:
+//   - Custom hooks: Each component gets its own state copy
+//   - Context: All components share the same state
+//
+// Choose the right tool:
+//   - Need SHARED state? Use Context
+//   - Need REUSABLE LOGIC? Use Custom Hooks
+//
+// =============================================================================
+
+// =============================================================================
+// THE POWER OF CUSTOM HOOKS
+// =============================================================================
+//
+// What we achieved:
+//
+// BEFORE (in App.jsx - ~25 lines):
+// --------------------------------
+//   const [userPlaces, setUserPlaces] = useState([]);
+//   const [isFetching, setIsFetching] = useState(false);
+//   const [error, setError] = useState();
+//
+//   useEffect(() => {
+//     async function fetchPlaces() {
+//       setIsFetching(true);
+//       try {
+//         const places = await fetchUserPlaces();
+//         setUserPlaces(places);
+//       } catch (error) {
+//         setError({ message: error.message || '...' });
+//       }
+//       setIsFetching(false);
+//     }
+//     fetchPlaces();
+//   }, []);
+//
+// AFTER (in App.jsx - 1 line!):
+// -----------------------------
+//   const { isFetching, error, fetchedData: userPlaces } = useFetch(fetchUserPlaces, []);
 //
 // Benefits:
-//   - Components become SIMPLER
-//   - Fetching logic is CONSISTENT
-//   - Bug fixes apply EVERYWHERE
-//   - Code is DRY (Don't Repeat Yourself)
-//
-// =============================================================================
-
-// =============================================================================
-// RULES OF HOOKS REMINDER
-// =============================================================================
-//
-// Since this is a custom hook, the Rules of Hooks apply:
-//
-//   RULE 1: Only call hooks at the TOP LEVEL
-//   -----------------------------------------
-//   ✓ useState at the top of useFetch
-//   ✓ useEffect at the top of useFetch
-//   ✗ useState inside if statements
-//   ✗ useEffect inside loops
-//
-//   RULE 2: Only call hooks from React functions
-//   ---------------------------------------------
-//   ✓ From React component functions
-//   ✓ From custom hooks (like this one!)
-//   ✗ From regular JavaScript functions
-//   ✗ From class components
-//
-// Because this function starts with "use", React's linter will:
-//   - Verify we follow Rule 1 inside this function
-//   - Verify this function is only called from valid places
+//   - Component is LEANER (less code)
+//   - Logic is REUSABLE (use in any component)
+//   - Behavior is CONSISTENT (same pattern everywhere)
+//   - Bugs fixed ONCE (fix the hook, fix everywhere)
+//   - Code is TESTABLE (test the hook independently)
 //
 // =============================================================================

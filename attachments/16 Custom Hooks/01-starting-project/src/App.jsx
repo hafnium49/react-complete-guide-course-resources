@@ -238,87 +238,121 @@
 //
 // =============================================================================
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+// Note: useCallback temporarily not used (handleRemovePlace is commented out)
+import { useRef, useState } from 'react';
 
 import Places from './components/Places.jsx';
 import Modal from './components/Modal.jsx';
 import DeleteConfirmation from './components/DeleteConfirmation.jsx';
 import logoImg from './assets/logo.png';
 import AvailablePlaces from './components/AvailablePlaces.jsx';
-import { fetchUserPlaces, updateUserPlaces } from './http.js';
+// Note: updateUserPlaces temporarily not used (optimistic update functions commented out)
+import { fetchUserPlaces } from './http.js';
 import Error from './components/Error.jsx';
+// =============================================================================
+// IMPORTING OUR CUSTOM HOOK
+// =============================================================================
+// We import useFetch from our hooks folder.
+// This hook will handle all the fetching logic for us!
+// =============================================================================
+import { useFetch } from './hooks/useFetch.js';
 
 function App() {
   const selectedPlace = useRef();
 
   // ===========================================================================
-  // OBSERVE: This is the pattern we'll extract into a custom hook!
+  // USING THE CUSTOM HOOK - BEFORE vs AFTER
   // ===========================================================================
-  // These three states (data, loading, error) appear together whenever
-  // we fetch data. This is a perfect candidate for a custom hook.
   //
-  // Current approach:
+  // BEFORE (what we had - ~25 lines of code):
+  // -----------------------------------------
   //   const [userPlaces, setUserPlaces] = useState([]);
   //   const [isFetching, setIsFetching] = useState(false);
   //   const [error, setError] = useState();
   //
-  // After custom hook:
-  //   const { data: userPlaces, isFetching, error } = useFetch(fetchUserPlaces);
+  //   useEffect(() => {
+  //     async function fetchPlaces() {
+  //       setIsFetching(true);
+  //       try {
+  //         const places = await fetchUserPlaces();
+  //         setUserPlaces(places);
+  //       } catch (error) {
+  //         setError({ message: error.message || '...' });
+  //       }
+  //       setIsFetching(false);
+  //     }
+  //     fetchPlaces();
+  //   }, []);
+  //
+  // AFTER (what we have now - 1 line!):
+  // -----------------------------------
+  //   const { isFetching, error, fetchedData: userPlaces } = useFetch(fetchUserPlaces, []);
+  //
+  // All that logic is now inside the useFetch hook!
   //
   // ===========================================================================
-  const [userPlaces, setUserPlaces] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [error, setError] = useState();
+
+  // ===========================================================================
+  // CALLING useFetch - Our Custom Hook in Action
+  // ===========================================================================
+  //
+  // useFetch takes two parameters:
+  //   1. fetchFn: The function to call for fetching (fetchUserPlaces)
+  //   2. initialValue: The initial value for the data ([] for arrays)
+  //
+  // useFetch returns an object with three properties:
+  //   - isFetching: boolean - are we currently loading?
+  //   - error: object | undefined - any error that occurred
+  //   - fetchedData: the data returned by fetchFn
+  //
+  // OBJECT DESTRUCTURING WITH ALIAS:
+  // ---------------------------------
+  // We can rename properties when destructuring using the : syntax:
+  //
+  //   const { fetchedData: userPlaces } = useFetch(...);
+  //         ↑              ↑
+  //         │              └── New name we use in this component
+  //         └── Original property name from the hook
+  //
+  // This lets us use a name that makes sense in THIS component (userPlaces)
+  // while the hook uses a generic name (fetchedData).
+  //
+  // WHY PASS [] AS initialValue?
+  // ----------------------------
+  // Without an initial value, fetchedData would be undefined until the
+  // fetch completes. If we try to access userPlaces.length when it's
+  // undefined, we get an error: "Cannot read property 'length' of undefined"
+  //
+  // By passing [] as the initial value, userPlaces starts as an empty array,
+  // which safely handles .length, .map(), .filter(), etc.
+  //
+  // ===========================================================================
+  const {
+    isFetching,
+    error,
+    fetchedData: userPlaces,  // Alias: rename fetchedData to userPlaces
+  } = useFetch(fetchUserPlaces, []);
+  // ===========================================================================
+  // HOW STATE WORKS WITH CUSTOM HOOKS
+  // ===========================================================================
+  //
+  // Even though the state (isFetching, error, fetchedData) is created INSIDE
+  // the useFetch hook, it BELONGS to this App component!
+  //
+  // When useFetch calls setIsFetching(true):
+  //   1. The state inside the hook updates
+  //   2. This App component RE-RENDERS
+  //   3. useFetch runs again, returning the new state
+  //   4. We see the updated isFetching value
+  //
+  // It works exactly as if we had written useState directly in App!
+  // The hook is just an "extra layer" that manages the logic for us.
+  //
+  // ===========================================================================
 
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
-
-  // ===========================================================================
-  // OBSERVE: This useEffect is being EXTRACTED to useFetch custom hook!
-  // ===========================================================================
-  //
-  // SEE: src/hooks/useFetch.js - We're moving this code there!
-  //
-  // The pattern we're extracting:
-  //   1. Set loading to true
-  //   2. Try to fetch data
-  //   3. On success: set data
-  //   4. On error: set error
-  //   5. Set loading to false
-  //
-  // This EXACT pattern is also in AvailablePlaces.jsx!
-  // By extracting it to a custom hook:
-  //   - We eliminate code duplication
-  //   - Components become leaner
-  //   - The same hook can be reused everywhere we need to fetch data
-  //
-  // THE IDEA BEHIND CREATING FUNCTIONS (and hooks):
-  // ------------------------------------------------
-  // In general programming, we create functions so we can:
-  //   - Write code ONCE
-  //   - Use it in DIFFERENT PLACES
-  //   - Trigger the same logic wherever needed
-  //
-  // Custom hooks are the same idea, but with the special ability to use
-  // other hooks (useState, useEffect, etc.) inside them!
-  //
-  // ===========================================================================
-  useEffect(() => {
-    async function fetchPlaces() {
-      setIsFetching(true);
-      try {
-        const places = await fetchUserPlaces();
-        setUserPlaces(places);
-      } catch (error) {
-        setError({ message: error.message || 'Failed to fetch user places.' });
-      }
-
-      setIsFetching(false);
-    }
-
-    fetchPlaces();
-  }, []);
 
   function handleStartRemovePlace(place) {
     setModalIsOpen(true);
@@ -329,56 +363,81 @@ function App() {
     setModalIsOpen(false);
   }
 
-  async function handleSelectPlace(selectedPlace) {
-    // Optimistic update - add to UI immediately
-    setUserPlaces((prevPickedPlaces) => {
-      if (!prevPickedPlaces) {
-        prevPickedPlaces = [];
-      }
-      if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
-        return prevPickedPlaces;
-      }
-      return [selectedPlace, ...prevPickedPlaces];
-    });
+  // ===========================================================================
+  // TEMPORARILY COMMENTED OUT - We'll fix these in the next lesson!
+  // ===========================================================================
+  //
+  // PROBLEM: These functions use setUserPlaces, but we no longer have it!
+  //
+  // When we used useState directly:
+  //   const [userPlaces, setUserPlaces] = useState([]);
+  //   ↑ We had setUserPlaces to update the state
+  //
+  // Now with useFetch:
+  //   const { fetchedData: userPlaces } = useFetch(...);
+  //   ↑ We only get the DATA, not a setter function!
+  //
+  // The useFetch hook manages its state internally, but doesn't expose
+  // a way to update that state from outside the hook.
+  //
+  // SOLUTION (coming in next lesson):
+  // We need to modify useFetch to also return a setFetchedData function,
+  // so we can update the data from the component when needed.
+  //
+  // For now, we'll comment these out so the app doesn't crash.
+  //
+  // ===========================================================================
 
-    // Sync with backend
-    try {
-      await updateUserPlaces([selectedPlace, ...userPlaces]);
-    } catch (error) {
-      // Rollback on error
-      setUserPlaces(userPlaces);
-      setErrorUpdatingPlaces({
-        message: error.message || 'Failed to update places.',
-      });
-    }
-  }
+  // async function handleSelectPlace(selectedPlace) {
+  //   // Optimistic update - add to UI immediately
+  //   setUserPlaces((prevPickedPlaces) => {
+  //     if (!prevPickedPlaces) {
+  //       prevPickedPlaces = [];
+  //     }
+  //     if (prevPickedPlaces.some((place) => place.id === selectedPlace.id)) {
+  //       return prevPickedPlaces;
+  //     }
+  //     return [selectedPlace, ...prevPickedPlaces];
+  //   });
+  //
+  //   // Sync with backend
+  //   try {
+  //     await updateUserPlaces([selectedPlace, ...userPlaces]);
+  //   } catch (error) {
+  //     // Rollback on error
+  //     setUserPlaces(userPlaces);
+  //     setErrorUpdatingPlaces({
+  //       message: error.message || 'Failed to update places.',
+  //     });
+  //   }
+  // }
 
-  const handleRemovePlace = useCallback(
-    async function handleRemovePlace() {
-      // Optimistic update - remove from UI immediately
-      setUserPlaces((prevPickedPlaces) =>
-        prevPickedPlaces.filter(
-          (place) => place.id !== selectedPlace.current.id
-        )
-      );
-
-      // Sync with backend
-      try {
-        await updateUserPlaces(
-          userPlaces.filter((place) => place.id !== selectedPlace.current.id)
-        );
-      } catch (error) {
-        // Rollback on error
-        setUserPlaces(userPlaces);
-        setErrorUpdatingPlaces({
-          message: error.message || 'Failed to delete place.',
-        });
-      }
-
-      setModalIsOpen(false);
-    },
-    [userPlaces]
-  );
+  // const handleRemovePlace = useCallback(
+  //   async function handleRemovePlace() {
+  //     // Optimistic update - remove from UI immediately
+  //     setUserPlaces((prevPickedPlaces) =>
+  //       prevPickedPlaces.filter(
+  //         (place) => place.id !== selectedPlace.current.id
+  //       )
+  //     );
+  //
+  //     // Sync with backend
+  //     try {
+  //       await updateUserPlaces(
+  //         userPlaces.filter((place) => place.id !== selectedPlace.current.id)
+  //       );
+  //     } catch (error) {
+  //       // Rollback on error
+  //       setUserPlaces(userPlaces);
+  //       setErrorUpdatingPlaces({
+  //         message: error.message || 'Failed to delete place.',
+  //       });
+  //     }
+  //
+  //     setModalIsOpen(false);
+  //   },
+  //   [userPlaces]
+  // );
 
   function handleError() {
     setErrorUpdatingPlaces(null);
@@ -396,10 +455,16 @@ function App() {
         )}
       </Modal>
 
+      {/* =====================================================================
+          TEMPORARILY DISABLED - handleRemovePlace is commented out
+          =====================================================================
+          We'll re-enable this once we fix the useFetch hook to expose
+          a setFetchedData function for updating the data.
+          ===================================================================== */}
       <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
-          onConfirm={handleRemovePlace}
+          onConfirm={() => setModalIsOpen(false)} // Temporary: just close modal
         />
       </Modal>
 
@@ -424,7 +489,8 @@ function App() {
           />
         )}
 
-        <AvailablePlaces onSelectPlace={handleSelectPlace} />
+        {/* TEMPORARILY DISABLED - handleSelectPlace is commented out */}
+        <AvailablePlaces onSelectPlace={() => {}} />
       </main>
     </>
   );
