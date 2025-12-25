@@ -67,56 +67,73 @@
 // Much cleaner! And reusable across all components that fetch data.
 //
 // =============================================================================
-// THE RULES OF HOOKS
+// THE RULES OF HOOKS (Updated!)
 // =============================================================================
 //
-// Before building custom hooks, let's review the rules:
+// There are TWO important rules when working with hooks:
 //
-// RULE 1: Only call hooks at the TOP LEVEL
-// -----------------------------------------
+// =============================================================================
+// RULE 1: Only call hooks from REACT FUNCTIONS (Updated Rule!)
+// =============================================================================
+//
+// The original rule said: "Only use hooks inside React component functions."
+//
+// But this rule is actually MORE FLEXIBLE than that!
+//
+// ✓ Call hooks from React COMPONENT functions
+// ✓ Call hooks from CUSTOM HOOKS (functions starting with "use")
+// ✗ Don't call hooks from regular JavaScript functions
+// ✗ Don't call hooks from class components
+//
+// This updated rule is what ENABLES custom hooks to work!
+//
+//   // ✓ CORRECT - function component
+//   function MyComponent() {
+//     const [count, setCount] = useState(0);  // Hooks work here
+//   }
+//
+//   // ✓ CORRECT - custom hook (this is NEW!)
+//   function useCounter() {
+//     const [count, setCount] = useState(0);  // Hooks also work here!
+//     return count;
+//   }
+//
+//   // ✗ WRONG - regular function (no "use" prefix)
+//   function fetchData() {
+//     const [data, setData] = useState([]);   // NOT allowed!
+//     useEffect(() => { ... }, []);           // NOT allowed!
+//   }
+//
+// The "use" prefix is not just a naming convention - React ENFORCES it!
+// React's linter will warn you if you try to use hooks in invalid places.
+//
+// =============================================================================
+// RULE 2: Only call hooks at the TOP LEVEL
+// =============================================================================
+//
 // ✓ Call hooks at the top of your function component
 // ✓ Call hooks at the top of your custom hook
 // ✗ Don't call hooks inside loops, conditions, or nested functions
 //
 //   // ✓ CORRECT
 //   function MyComponent() {
-//     const [count, setCount] = useState(0);  // Top level
-//     useEffect(() => { ... }, []);           // Top level
+//     const [count, setCount] = useState(0);  // Top level ✓
+//     useEffect(() => { ... }, []);           // Top level ✓
 //   }
 //
 //   // ✗ WRONG
 //   function MyComponent() {
 //     if (someCondition) {
-//       const [count, setCount] = useState(0);  // Inside condition!
+//       const [count, setCount] = useState(0);  // Inside condition! ✗
+//     }
+//     for (let i = 0; i < 5; i++) {
+//       useEffect(() => { ... }, []);           // Inside loop! ✗
 //     }
 //   }
 //
 // WHY? React relies on the ORDER of hook calls to track state.
 // If hooks are called conditionally, the order might change between renders,
 // and React would get confused about which state belongs to which hook.
-//
-// RULE 2: Only call hooks from React FUNCTIONS
-// ---------------------------------------------
-// ✓ Call hooks from function components
-// ✓ Call hooks from custom hooks (functions starting with "use")
-// ✗ Don't call hooks from regular JavaScript functions
-// ✗ Don't call hooks from class components
-//
-//   // ✓ CORRECT - function component
-//   function MyComponent() {
-//     const [count, setCount] = useState(0);
-//   }
-//
-//   // ✓ CORRECT - custom hook
-//   function useCounter() {
-//     const [count, setCount] = useState(0);
-//     return count;
-//   }
-//
-//   // ✗ WRONG - regular function
-//   function calculateTotal() {
-//     const [total, setTotal] = useState(0);  // Not allowed!
-//   }
 //
 // =============================================================================
 // WHAT WE'LL BUILD IN THIS SECTION
@@ -128,6 +145,75 @@
 //   3. Make our components cleaner and more focused
 //
 // The goal: Components should focus on WHAT to display, not HOW to fetch data.
+//
+// =============================================================================
+// WHY REGULAR FUNCTIONS WON'T WORK
+// =============================================================================
+//
+// You might think: "Can't I just put this code in a regular function?"
+//
+// Let's try it:
+//
+//   // ❌ THIS APPROACH WILL FAIL!
+//   function fetchData(fetchFn) {
+//     const [data, setData] = useState([]);
+//     const [isFetching, setIsFetching] = useState(false);
+//     const [error, setError] = useState();
+//
+//     useEffect(() => {
+//       async function fetch() {
+//         setIsFetching(true);
+//         try {
+//           const result = await fetchFn();
+//           setData(result);
+//         } catch (error) {
+//           setError({ message: error.message });
+//         }
+//         setIsFetching(false);
+//       }
+//       fetch();
+//     }, [fetchFn]);
+//
+//     return { data, isFetching, error };
+//   }
+//
+// This LOOKS like it would work, but it DOESN'T because:
+//
+//   1. useState and useEffect are HOOKS
+//   2. Hooks can ONLY be called from:
+//      - React component functions
+//      - Custom hooks (functions starting with "use")
+//   3. "fetchData" is a regular function, not a hook
+//   4. React will throw an error!
+//
+// The solution: Rename it to start with "use":
+//
+//   // ✓ THIS WORKS!
+//   function useFetch(fetchFn) {
+//     const [data, setData] = useState([]);
+//     // ... same code ...
+//     return { data, isFetching, error };
+//   }
+//
+// The "use" prefix tells React:
+//   - "This function can use hooks"
+//   - "This function should only be called from valid places"
+//   - React will enforce these rules!
+//
+// =============================================================================
+// THE KEY INSIGHT
+// =============================================================================
+//
+// Custom hooks are a way to GUARANTEE that hook-using code is only used
+// in valid places (components or other hooks).
+//
+// When you name a function with "use":
+//   1. React knows it can contain hooks
+//   2. React's linter checks that it's called correctly
+//   3. The hook rules are enforced automatically
+//
+// This is why custom hooks exist - they're the safe way to share
+// stateful logic between components!
 //
 // =============================================================================
 
