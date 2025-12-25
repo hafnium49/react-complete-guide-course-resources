@@ -2,11 +2,34 @@
 // LOGIN COMPONENT - Our Form to Experiment With
 // =============================================================================
 //
-// This is a simple login form with:
+// WHAT IS A FORM?
+// ---------------
+// A form is simply a COLLECTION OF INPUT FIELDS:
+//   - Typically used with labels (for accessibility)
+//   - Wrapped by the built-in HTML <form> element
+//
+// This login form has:
 //   - Email input
 //   - Password input
 //   - Reset button
 //   - Login (submit) button
+//
+// =============================================================================
+// THE TWO MAIN CHALLENGES WITH FORMS
+// =============================================================================
+//
+// 1. HANDLE SUBMISSION & EXTRACT VALUES (Relatively Easy!)
+//    - Get the data the user entered
+//    - We have 3 approaches: State, Refs, or FormData API
+//
+// 2. VALIDATE DATA & SHOW ERRORS (The Tricky Part!)
+//    - Check if data is valid
+//    - Show helpful error messages
+//    - The challenge: WHEN to validate?
+//
+// =============================================================================
+// CURRENT STATE OF THIS FORM
+// =============================================================================
 //
 // Right now, this form doesn't DO anything. When you click Login:
 //   1. The browser's DEFAULT behavior happens
@@ -14,11 +37,10 @@
 //   3. Any data entered is lost
 //
 // This is the STARTING POINT. We'll progressively add:
-//   - Form submission handling
-//   - Input value extraction
-//   - Validation logic
-//   - Error messages
-//   - Different input handling approaches
+//   - Form submission handling (prevent reload)
+//   - Input value extraction (state, refs, FormData)
+//   - Validation logic (on change, on blur, on submit)
+//   - Error messages (when and how to show them)
 //
 // =============================================================================
 
@@ -174,20 +196,38 @@ export default function Login() {
 //
 // In the upcoming lessons, we'll add:
 //
-// 1. FORM SUBMISSION HANDLING
+// 1. FORM SUBMISSION HANDLING (Easy!)
 //    - onSubmit event handler on the <form>
 //    - event.preventDefault() to stop page reload
 //    - Extract the email and password values
 //
-// 2. DIFFERENT INPUT APPROACHES
+// 2. THREE APPROACHES TO EXTRACT DATA (Easy!)
+//    - State (controlled): useState + two-way binding
 //    - Refs (uncontrolled): useRef to access DOM elements
-//    - State (controlled): useState to manage input values
-//    - FormData API: Browser's built-in form data extraction
+//    - FormData API: Browser's built-in form data extraction (NEW!)
 //
-// 3. VALIDATION
-//    - Check if inputs are valid
-//    - Display error messages
-//    - Choose when to validate (blur, change, submit)
+// 3. VALIDATION - THE TRICKY PART!
+//    The challenge is WHEN to validate:
+//
+//    a) ON EVERY KEYSTROKE
+//       - Check as user types
+//       - Problem: Errors shown TOO EARLY!
+//       - "Invalid email" after typing just "t" - annoying!
+//
+//    b) ON BLUR (When Field Loses Focus)
+//       - Check when user tabs/clicks away
+//       - Problem: Errors may show TOO LONG!
+//       - Error stays until user leaves field again
+//
+//    c) ON FORM SUBMISSION
+//       - Check only when user clicks submit
+//       - Problem: Errors shown TOO LATE!
+//       - User fills entire form before seeing mistakes
+//
+//    SOLUTION: Combine approaches for best UX!
+//    - Submit: Initial validation
+//    - Blur: Per-field feedback
+//    - Change: Clear errors as user fixes them
 //
 // 4. USER EXPERIENCE IMPROVEMENTS
 //    - Reset button functionality
