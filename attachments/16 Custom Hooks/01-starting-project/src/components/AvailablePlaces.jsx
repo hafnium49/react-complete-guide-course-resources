@@ -1,146 +1,140 @@
 // =============================================================================
-// AVAILABLE PLACES COMPONENT - Demonstrating Code Duplication
+// AVAILABLE PLACES COMPONENT - Now Using the Custom Hook!
 // =============================================================================
 //
-// IMPORTANT: Compare this file with App.jsx!
+// This component demonstrates the POWER of custom hooks:
 //
-// Notice how SIMILAR the code structure is:
-//   - Both have the same three states (data, loading, error)
-//   - Both use useEffect to fetch data on mount
-//   - Both have the same try-catch pattern
-//   - Both manage loading state the same way
+// BEFORE: ~50 lines of state management and fetching code
+// AFTER:  ~10 lines - just one hook call!
 //
-// This is the kind of code duplication that custom hooks solve!
+// Both App.jsx and this component now use the SAME useFetch hook,
+// proving that custom hooks can be shared across components!
 //
 // =============================================================================
-// THE DUPLICATED PATTERN (appears in both files)
+// THE TRANSFORMATION
 // =============================================================================
 //
-// App.jsx:                              AvailablePlaces.jsx (this file):
-// ---------                             ---------------------------------
-// const [userPlaces, setUserPlaces]     const [availablePlaces, setAvailablePlaces]
-//   = useState([]);                       = useState([]);
-// const [isFetching, setIsFetching]     const [isFetching, setIsFetching]
-//   = useState(false);                    = useState(false);
-// const [error, setError]               const [error, setError]
-//   = useState();                         = useState();
+// BEFORE (what we had):
+// ---------------------
+//   const [isFetching, setIsFetching] = useState(false);
+//   const [availablePlaces, setAvailablePlaces] = useState([]);
+//   const [error, setError] = useState();
 //
-// useEffect(() => {                     useEffect(() => {
-//   async function fetchPlaces() {        async function fetchPlaces() {
-//     setIsFetching(true);                  setIsFetching(true);
-//     try {                                 try {
-//       const places = await                  const places = await
-//         fetchUserPlaces();                    fetchAvailablePlaces();
-//       setUserPlaces(places);               // ... process and set data
-//     } catch (error) {                    } catch (error) {
-//       setError({ message: ... });          setError({ message: ... });
-//     }                                    }
-//     setIsFetching(false);                 // setIsFetching(false);
-//   }                                     }
-//   fetchPlaces();                        fetchPlaces();
-// }, []);                               }, []);
+//   useEffect(() => {
+//     async function fetchPlaces() {
+//       setIsFetching(true);
+//       try {
+//         const places = await fetchAvailablePlaces();
+//         // ... sorting logic ...
+//         setAvailablePlaces(sortedPlaces);
+//         setIsFetching(false);
+//       } catch (error) {
+//         setError({ message: error.message || '...' });
+//         setIsFetching(false);
+//       }
+//     }
+//     fetchPlaces();
+//   }, []);
 //
-// The structure is IDENTICAL! Only the details differ:
-//   - Which fetch function to call
-//   - What to do with the data
-//   - Error messages
+// AFTER (what we have now):
+// -------------------------
+//   const {
+//     isFetching,
+//     error,
+//     fetchedData: availablePlaces,
+//     setFetchedData: setAvailablePlaces,
+//   } = useFetch(fetchAvailablePlaces, []);
+//
+// All the complexity is now hidden inside useFetch!
 //
 // =============================================================================
 
-import { useState, useEffect } from 'react';
-
+// Note: We no longer need useState or useEffect - they're inside useFetch!
 import Places from './Places.jsx';
 import Error from './Error.jsx';
 import { sortPlacesByDistance } from '../loc.js';
 import { fetchAvailablePlaces } from '../http.js';
+// =============================================================================
+// IMPORTING THE CUSTOM HOOK
+// =============================================================================
+// We import the SAME hook that App.jsx uses!
+// This is the whole point of custom hooks - reusable logic.
+// =============================================================================
+import { useFetch } from '../hooks/useFetch.js';
 
 export default function AvailablePlaces({ onSelectPlace }) {
   // ===========================================================================
-  // THE THREE STATES - Same pattern as App.jsx!
+  // USING THE CUSTOM HOOK - Same as App.jsx!
   // ===========================================================================
-  // This "trio" of states appears whenever we fetch data:
-  //   1. Data state (availablePlaces)
-  //   2. Loading state (isFetching)
-  //   3. Error state (error)
   //
-  // We're writing this AGAIN, even though App.jsx has the same pattern.
-  // This is exactly what we want to extract into a custom hook!
+  // useFetch takes:
+  //   1. fetchFn: The function to call (fetchAvailablePlaces)
+  //   2. initialValue: Starting value for the data ([])
+  //
+  // useFetch returns:
+  //   - isFetching: boolean for loading state
+  //   - error: any error that occurred
+  //   - fetchedData: the fetched data (aliased to availablePlaces)
+  //   - setFetchedData: setter function (aliased to setAvailablePlaces)
+  //
   // ===========================================================================
-  const [isFetching, setIsFetching] = useState(false);
-  const [availablePlaces, setAvailablePlaces] = useState([]);
-  const [error, setError] = useState();
+  const {
+    isFetching,
+    error,
+    fetchedData: availablePlaces,      // Alias for component-specific naming
+    setFetchedData: setAvailablePlaces, // We'll need this for sorting later
+  } = useFetch(fetchAvailablePlaces, []);
 
   // ===========================================================================
-  // THE FETCH EFFECT - Same pattern as App.jsx!
-  // ===========================================================================
-  // Compare this to the useEffect in App.jsx - it's almost identical:
-  //   1. Set loading to true
-  //   2. Try to fetch data
-  //   3. On success: set data
-  //   4. On error: set error
-  //   5. Set loading to false
-  //
-  // The ONLY differences are:
-  //   - Which function we call (fetchAvailablePlaces vs fetchUserPlaces)
-  //   - Extra processing (geolocation sorting)
-  //
-  // ===========================================================================
-  useEffect(() => {
-    async function fetchPlaces() {
-      setIsFetching(true);
-
-      try {
-        const places = await fetchAvailablePlaces();
-
-        // This component has extra logic: sort by user's location
-        // But the overall PATTERN is still the same as App.jsx
-        navigator.geolocation.getCurrentPosition((position) => {
-          const sortedPlaces = sortPlacesByDistance(
-            places,
-            position.coords.latitude,
-            position.coords.longitude
-          );
-          setAvailablePlaces(sortedPlaces);
-          setIsFetching(false);
-        });
-      } catch (error) {
-        setError({
-          message:
-            error.message || 'Could not fetch places, please try again later.',
-        });
-        setIsFetching(false);
-      }
-    }
-
-    fetchPlaces();
-  }, []);
-
-  // ===========================================================================
-  // WHY CAN'T WE JUST USE A REGULAR FUNCTION?
+  // INDEPENDENT STATE - Not Shared with App.jsx!
   // ===========================================================================
   //
-  // You might think: "Let's create a shared function!"
+  // IMPORTANT CONCEPT:
+  // Even though both App.jsx and this component use useFetch:
+  //   - App.jsx has its OWN copy of the state
+  //   - This component has its OWN SEPARATE copy
   //
-  //   // ❌ THIS WON'T WORK:
-  //   function useFetchData(fetchFn) {
-  //     const [data, setData] = useState([]);     // ERROR! Can't use hooks!
-  //     const [loading, setLoading] = useState(false);
-  //     const [error, setError] = useState();
+  // They are COMPLETELY INDEPENDENT:
+  //   - Adding a place in App.jsx does NOT affect availablePlaces here
+  //   - Fetching here does NOT affect userPlaces in App.jsx
   //
-  //     useEffect(() => { ... }, []);             // ERROR! Can't use hooks!
+  // This is because:
+  //   - Each call to useFetch creates NEW useState calls
+  //   - Each component gets its own state instances
+  //   - Custom hooks share LOGIC, not STATE
   //
-  //     return { data, loading, error };
-  //   }
+  // CONTRAST WITH CONTEXT:
+  //   - Context SHARES state across components
+  //   - Custom hooks give each component its OWN state
   //
-  // This fails because:
-  //   1. Hooks can ONLY be called from React component functions
-  //   2. Or from OTHER HOOKS (custom hooks)
-  //   3. Regular functions can't use useState, useEffect, etc.
+  // ===========================================================================
+
+  // ===========================================================================
+  // SORTING LOGIC - To Be Added Back Later
+  // ===========================================================================
   //
-  // The solution: Make it a CUSTOM HOOK by:
-  //   1. Naming it with "use" prefix (useFetch, not fetchData)
-  //   2. This tells React "this function can use hooks"
-  //   3. React will enforce that it's only called from valid places
+  // PROBLEM: We had sorting logic that ran AFTER fetching:
+  //
+  //   navigator.geolocation.getCurrentPosition((position) => {
+  //     const sortedPlaces = sortPlacesByDistance(
+  //       places,
+  //       position.coords.latitude,
+  //       position.coords.longitude
+  //     );
+  //     setAvailablePlaces(sortedPlaces);
+  //     setIsFetching(false);
+  //   });
+  //
+  // But now useFetch handles all the fetching internally!
+  // How do we sort the data AFTER it's fetched?
+  //
+  // OPTIONS (we'll explore in the next lesson):
+  //   1. Use useEffect to sort when availablePlaces changes
+  //   2. Modify useFetch to accept a "post-process" callback
+  //   3. Sort in the render (not ideal for async operations)
+  //
+  // For now, the component works - just without sorting!
+  // The places will appear in the order returned by the server.
   //
   // ===========================================================================
 
@@ -161,33 +155,78 @@ export default function AvailablePlaces({ onSelectPlace }) {
 }
 
 // =============================================================================
-// WHAT CUSTOM HOOKS WILL GIVE US
+// WHAT WE ACHIEVED
 // =============================================================================
 //
-// After we create a custom hook, this component could look like:
+// 1. MUCH LEANER COMPONENT
+//    - Removed ~20 lines of state management
+//    - Removed the entire useEffect block
+//    - Just one hook call does it all!
 //
-//   export default function AvailablePlaces({ onSelectPlace }) {
-//     const {
-//       isFetching,
-//       error,
-//       fetchedData: availablePlaces,
-//       setFetchedData: setAvailablePlaces
-//     } = useFetch(fetchAvailablePlaces, []);
+// 2. CONSISTENT BEHAVIOR
+//    - Both App.jsx and AvailablePlaces use the same fetching logic
+//    - If we fix a bug in useFetch, BOTH components benefit
+//    - Error handling is identical across the app
 //
-//     // Only the geolocation logic remains component-specific
-//     // All the boilerplate is handled by the hook!
+// 3. BETTER SEPARATION OF CONCERNS
+//    - useFetch handles: state management, fetching, error handling
+//    - This component handles: rendering, user interaction
+//    - Each piece of code has ONE job
 //
-//     if (error) {
-//       return <Error title="An error occurred!" message={error.message} />;
-//     }
+// 4. EASIER TO TEST
+//    - useFetch can be unit tested independently
+//    - This component can be tested with mocked hook data
 //
-//     return <Places ... />;
-//   }
+// =============================================================================
+
+// =============================================================================
+// THE CUSTOM HOOK REUSE PATTERN
+// =============================================================================
 //
-// Benefits:
-//   - Less code in each component
-//   - Consistent handling across all fetch operations
-//   - Bug fix in hook fixes everywhere
-//   - Easier to test
+// Now we have TWO components using the SAME custom hook:
+//
+//   App.jsx:
+//   --------
+//   const { fetchedData: userPlaces, ... } = useFetch(fetchUserPlaces, []);
+//
+//   AvailablePlaces.jsx (this file):
+//   ---------------------------------
+//   const { fetchedData: availablePlaces, ... } = useFetch(fetchAvailablePlaces, []);
+//
+// The ONLY differences are:
+//   - Which fetch function to use
+//   - What to name the resulting data
+//
+// The hook handles ALL the common logic:
+//   - Creating state (data, loading, error)
+//   - Running the effect
+//   - Handling success/error
+//   - Exposing the setter
+//
+// This is the essence of custom hooks: REUSABLE STATEFUL LOGIC!
+//
+// =============================================================================
+
+// =============================================================================
+// REMAINING CHALLENGE: Sorting by Distance
+// =============================================================================
+//
+// The original component sorted places by user's location.
+// We temporarily removed this for simplicity.
+//
+// In the next lesson, we'll learn how to:
+//   - Post-process data after it's fetched
+//   - Handle async operations (geolocation) with custom hooks
+//
+// The sorting code we need to bring back:
+//
+//   navigator.geolocation.getCurrentPosition((position) => {
+//     const sortedPlaces = sortPlacesByDistance(
+//       availablePlaces,
+//       position.coords.latitude,
+//       position.coords.longitude
+//     );
+//     setAvailablePlaces(sortedPlaces);
+//   });
 //
 // =============================================================================
