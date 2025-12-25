@@ -1,5 +1,5 @@
 // =============================================================================
-// LOGIN COMPONENT - Our Form to Experiment With
+// LOGIN COMPONENT - Handling Form Submission
 // =============================================================================
 //
 // WHAT IS A FORM?
@@ -28,100 +28,195 @@
 //    - The challenge: WHEN to validate?
 //
 // =============================================================================
-// CURRENT STATE OF THIS FORM
-// =============================================================================
-//
-// Right now, this form doesn't DO anything. When you click Login:
-//   1. The browser's DEFAULT behavior happens
-//   2. The page RELOADS (form submits to current URL)
-//   3. Any data entered is lost
-//
-// This is the STARTING POINT. We'll progressively add:
-//   - Form submission handling (prevent reload)
-//   - Input value extraction (state, refs, FormData)
-//   - Validation logic (on change, on blur, on submit)
-//   - Error messages (when and how to show them)
-//
-// =============================================================================
 
 export default function Login() {
   // ===========================================================================
-  // THE HTML FORM ELEMENT
+  // HANDLING FORM SUBMISSION
   // ===========================================================================
   //
-  // <form> is a special HTML element that:
-  //   1. Groups related inputs together
-  //   2. Handles submission via the 'submit' event
-  //   3. Supports default validation attributes
-  //   4. Can submit data to a server URL (via action/method attributes)
+  // This function is called when the form is submitted.
+  // It receives an EVENT OBJECT automatically from the browser.
   //
-  // DEFAULT BROWSER BEHAVIOR:
-  // -------------------------
-  // When a form is submitted (e.g., clicking a submit button):
-  //   1. The browser collects all form data
-  //   2. It sends an HTTP request to the form's 'action' URL
-  //   3. The page RELOADS with the server's response
+  // IMPORTANT: We could also use onClick on the button, but using onSubmit
+  // on the form is MORE ELEGANT because:
+  //   1. It works when user presses Enter in any field
+  //   2. The event object has special methods for forms
+  //   3. It's the semantically correct way to handle form submission
   //
-  // This default behavior made sense before Single Page Apps (SPAs).
-  // In React, we usually want to:
-  //   1. PREVENT the default reload
-  //   2. Handle submission with JavaScript
-  //   3. Stay on the same page
+  // ===========================================================================
+  function handleSubmit(event) {
+    // -------------------------------------------------------------------------
+    // PREVENTING DEFAULT BROWSER BEHAVIOR
+    // -------------------------------------------------------------------------
+    //
+    // WHY IS THIS NECESSARY?
+    // ----------------------
+    // When a form is submitted, the browser's DEFAULT behavior is to:
+    //   1. Collect all form data
+    //   2. Generate an HTTP request
+    //   3. Send it to the server (the form's 'action' URL, or current URL)
+    //   4. RELOAD the page with the server's response
+    //
+    // This default behavior exists because before Single Page Apps (SPAs),
+    // forms were handled by the SERVER. The browser would send the form data,
+    // and the server would respond with a new HTML page.
+    //
+    // THE PROBLEM IN REACT:
+    // ---------------------
+    // In a React app:
+    //   - The page reload would RESET all React state
+    //   - The console log would disappear (page refreshed)
+    //   - The URL gets query parameters added (?email=...&password=...)
+    //   - The development server is NOT prepared to handle form submissions
+    //   - Even a production server often just serves static files
+    //
+    // Without preventDefault(), if you click "Login":
+    //   1. You'd briefly see "Submitted!" in the console
+    //   2. The page would immediately reload
+    //   3. The console would be cleared
+    //   4. The URL would change to something like: localhost:5174/?email=&password=
+    //
+    // THE SOLUTION:
+    // -------------
+    // Call event.preventDefault() FIRST, before any other logic.
+    // This tells the browser: "Don't do your default thing, I'll handle it!"
+    //
+    // This is a VERY COMMON PATTERN in React applications:
+    //   function handleSubmit(event) {
+    //     event.preventDefault();  // Always first!
+    //     // ...rest of your submission logic
+    //   }
+    //
+    // -------------------------------------------------------------------------
+    event.preventDefault();
+
+    // -------------------------------------------------------------------------
+    // NOW WE CAN ADD OUR CUSTOM LOGIC
+    // -------------------------------------------------------------------------
+    // After preventing the default behavior, we can:
+    //   - Extract the entered values
+    //   - Validate the data
+    //   - Send our own HTTP request to a backend
+    //   - Update React state
+    //   - Navigate to another page
+    //   - etc.
+    //
+    // For now, we just log to confirm the form submission is working.
+    // The page should NOT reload, and "Submitted!" should stay in the console.
+    // -------------------------------------------------------------------------
+    console.log('Submitted!');
+
+    // TODO: Next steps we'll implement:
+    // 1. Extract the email and password values (multiple approaches)
+    // 2. Validate the input
+    // 3. Send data to a backend or process it
+  }
+
+  // ===========================================================================
+  // ALTERNATIVE APPROACH: onClick on the Button
+  // ===========================================================================
+  //
+  // You COULD handle submission by adding onClick to the button:
+  //
+  //   <button onClick={handleSubmit}>Login</button>
+  //
+  // But this has a PROBLEM: the form still submits and reloads the page!
+  //
+  // To fix that, you'd need to either:
+  //   a) Add type="button" to prevent form submission
+  //   b) Still call event.preventDefault() in the handler
+  //
+  // Using onSubmit on the <form> is BETTER because:
+  //   1. It catches ALL submission methods (button click, Enter key, etc.)
+  //   2. It's semantically correct (forms have submit events)
+  //   3. The event object is specifically for form submission
+  //
+  // ===========================================================================
+
+  // ===========================================================================
+  // BUTTON TYPE ATTRIBUTE - IMPORTANT!
+  // ===========================================================================
+  //
+  // Buttons inside forms have a DEFAULT type of "submit"!
+  //
+  //   <button>Login</button>
+  //   // Is the same as:
+  //   <button type="submit">Login</button>
+  //
+  // This means clicking the button SUBMITS THE FORM.
+  //
+  // If you DON'T want a button to submit the form, set type="button":
+  //
+  //   <button type="button">Reset</button>
+  //   // This button won't submit the form
+  //
+  // This is why our Reset button has type="button" - we don't want
+  // clicking Reset to submit the form!
+  //
+  // ===========================================================================
+
+  // ===========================================================================
+  // THE htmlFor ATTRIBUTE
+  // ===========================================================================
+  //
+  // In HTML, you use the "for" attribute on labels:
+  //   <label for="email">Email</label>
+  //
+  // But in JSX (React), "for" is a RESERVED WORD in JavaScript!
+  // (It's used for for-loops: for (let i = 0; i < 10; i++) { ... })
+  //
+  // So React uses "htmlFor" instead:
+  //   <label htmlFor="email">Email</label>
+  //
+  // This is similar to how we use "className" instead of "class"
+  // (because "class" is also reserved in JavaScript).
+  //
+  // The htmlFor/for attribute connects a label to an input:
+  //   - Clicking the label focuses the input
+  //   - Screen readers can associate them
+  //   - Better accessibility and usability
   //
   // ===========================================================================
 
   return (
-    <form>
-      {/* =====================================================================
-          FORM HEADING
-          =====================================================================
-          Just a simple heading to identify the form.
-          In a real app, this might be styled more prominently.
-          ===================================================================== */}
+    // =========================================================================
+    // THE FORM ELEMENT WITH onSubmit HANDLER
+    // =========================================================================
+    //
+    // We add onSubmit={handleSubmit} to listen for form submissions.
+    //
+    // The form's 'submit' event fires when:
+    //   - User clicks a submit button (type="submit" or no type specified)
+    //   - User presses Enter while focused on an input
+    //
+    // This is the STANDARD PATTERN for handling forms in React:
+    //   <form onSubmit={handleSubmit}>
+    //     ...inputs...
+    //     <button>Submit</button>
+    //   </form>
+    //
+    // =========================================================================
+    <form onSubmit={handleSubmit}>
       <h2>Login</h2>
 
       {/* =====================================================================
           INPUT GROUP: Email and Password
-          =====================================================================
-          We use className="control-row" for horizontal layout.
-          Each input is wrapped in a "control" div for styling.
-
-          INPUT ATTRIBUTES EXPLAINED:
-          ---------------------------
-          - id: For connecting <label> to <input> (accessibility)
-          - type: Determines input behavior and mobile keyboard
-          - name: IMPORTANT for form data extraction (we'll use this later!)
-
-          type="email":
-            - Shows email-specific keyboard on mobile
-            - Browser can provide basic email format validation
-
-          type="password":
-            - Masks the input (shows dots instead of text)
-            - Browsers may offer password managers
-
-          name="email" / name="password":
-            - These names are used when extracting form data
-            - They become property names in FormData
-            - Essential for server-side form handling
           ===================================================================== */}
       <div className="control-row">
         <div className="control no-margin">
+          {/*
+            LABEL htmlFor ATTRIBUTE:
+            -------------------------
+            In HTML it's "for", but in JSX we use "htmlFor" because
+            "for" is a reserved JavaScript keyword (used in for-loops).
+
+            Same reason we use "className" instead of "class".
+
+            This connects the label to the input with matching id.
+            Clicking the label will focus the input.
+          */}
           <label htmlFor="email">Email</label>
           <input id="email" type="email" name="email" />
-          {/*
-            LABEL + INPUT CONNECTION:
-            -------------------------
-            The htmlFor attribute connects the label to the input.
-            When users click the label, the input gets focused.
-            This is important for:
-              - Accessibility (screen readers)
-              - UX (larger click target)
-              - Mobile usability
-
-            In HTML, it's "for". In React/JSX, it's "htmlFor"
-            (because "for" is a reserved word in JavaScript).
-          */}
         </div>
 
         <div className="control no-margin">
@@ -132,57 +227,33 @@ export default function Login() {
 
       {/* =====================================================================
           FORM ACTIONS: Reset and Submit Buttons
-          =====================================================================
-
-          BUTTON TYPES IN FORMS:
-          ----------------------
-          Buttons inside forms have special behavior based on their type:
-
-          type="submit" (DEFAULT):
-            - Triggers form submission
-            - Causes the 'submit' event to fire
-            - This is the DEFAULT if no type is specified!
-
-          type="button":
-            - Does nothing by default
-            - Just a regular button
-            - Won't trigger form submission
-
-          type="reset":
-            - Resets all form inputs to their initial values
-            - Built-in browser behavior, no JavaScript needed!
-
-          IMPORTANT: If you don't specify a type, buttons default to "submit"!
-
-          In our form:
-          - Reset button: Uses type="button" (we'll add reset logic ourselves)
-          - Login button: Uses default type (submit) - triggers form submission
           ===================================================================== */}
       <p className="form-actions">
         {/*
-          RESET BUTTON
-          ------------
-          className="button-flat" gives it a less prominent style.
+          RESET BUTTON - type="button"
+          -----------------------------
+          We set type="button" explicitly so this button does NOT
+          submit the form. Without this, clicking Reset would also
+          trigger form submission!
 
-          Note: We could use type="reset" for automatic reset behavior,
-          but we're using type="button" so we can demonstrate
-          custom reset logic later.
-
-          For now, clicking this does nothing (no onClick handler yet).
+          Remember: The DEFAULT type for buttons in forms is "submit"!
         */}
-        <button className="button button-flat">Reset</button>
+        <button type="button" className="button button-flat">
+          Reset
+        </button>
 
         {/*
-          LOGIN (SUBMIT) BUTTON
-          ---------------------
+          LOGIN BUTTON - type="submit" (default)
+          --------------------------------------
           No type specified, so it defaults to type="submit".
 
-          When clicked, this will:
+          When clicked, it will:
             1. Trigger the form's 'submit' event
-            2. Currently: causes page reload (default browser behavior)
-            3. Later: we'll add an onSubmit handler to prevent this
+            2. Our handleSubmit function runs
+            3. event.preventDefault() stops the page reload
+            4. We can then process the form data
 
-          className="button" gives it the primary button styling.
+          We could explicitly write type="submit" but it's not needed.
         */}
         <button className="button">Login</button>
       </p>
@@ -191,86 +262,83 @@ export default function Login() {
 }
 
 // =============================================================================
-// WHAT'S NEXT?
+// WHY THE PAGE WAS RELOADING (Before We Fixed It)
 // =============================================================================
 //
-// In the upcoming lessons, we'll add:
+// THE PROBLEM:
+// ------------
+// Without our onSubmit handler and event.preventDefault():
 //
-// 1. FORM SUBMISSION HANDLING (Easy!)
-//    - onSubmit event handler on the <form>
-//    - event.preventDefault() to stop page reload
-//    - Extract the email and password values
+//   1. User clicks the Login button
+//   2. Button type defaults to "submit"
+//   3. Form generates an HTTP request with the form data
+//   4. Browser sends request to current URL (localhost:5174)
+//   5. Page reloads with the response
+//   6. URL changes to: localhost:5174/?email=...&password=...
+//   7. All React state is lost
+//   8. Console is cleared
 //
-// 2. THREE APPROACHES TO EXTRACT DATA (Easy!)
-//    - State (controlled): useState + two-way binding
-//    - Refs (uncontrolled): useRef to access DOM elements
-//    - FormData API: Browser's built-in form data extraction (NEW!)
-//
-// 3. VALIDATION - THE TRICKY PART!
-//    The challenge is WHEN to validate:
-//
-//    a) ON EVERY KEYSTROKE
-//       - Check as user types
-//       - Problem: Errors shown TOO EARLY!
-//       - "Invalid email" after typing just "t" - annoying!
-//
-//    b) ON BLUR (When Field Loses Focus)
-//       - Check when user tabs/clicks away
-//       - Problem: Errors may show TOO LONG!
-//       - Error stays until user leaves field again
-//
-//    c) ON FORM SUBMISSION
-//       - Check only when user clicks submit
-//       - Problem: Errors shown TOO LATE!
-//       - User fills entire form before seeing mistakes
-//
-//    SOLUTION: Combine approaches for best UX!
-//    - Submit: Initial validation
-//    - Blur: Per-field feedback
-//    - Change: Clear errors as user fixes them
-//
-// 4. USER EXPERIENCE IMPROVEMENTS
-//    - Reset button functionality
-//    - Disable submit while invalid
-//    - Loading states during submission
+// THE FIX:
+// --------
+//   1. Add onSubmit={handleSubmit} to the form
+//   2. In handleSubmit, call event.preventDefault() FIRST
+//   3. Now the form doesn't reload the page
+//   4. We can handle the data with JavaScript instead
 //
 // =============================================================================
 
 // =============================================================================
-// FORM INPUT TYPES REFERENCE
+// FORM ACTIONS (React 19+) - PREVIEW
 // =============================================================================
 //
-// HTML5 introduced many input types. Here are the most common:
+// React 19 introduced a new way to handle forms called "Form Actions".
 //
-// TEXT INPUTS:
-//   type="text"      - General text input
-//   type="email"     - Email with basic format validation
-//   type="password"  - Masked text for passwords
-//   type="tel"       - Phone number (special keyboard on mobile)
-//   type="url"       - URL with format validation
-//   type="search"    - Search input (may have clear button)
+// Instead of:
+//   <form onSubmit={handleSubmit}>
 //
-// NUMBER INPUTS:
-//   type="number"    - Numeric input with up/down buttons
-//   type="range"     - Slider control
+// You can use:
+//   <form action={handleSubmit}>
 //
-// DATE/TIME INPUTS:
-//   type="date"      - Date picker
-//   type="time"      - Time picker
-//   type="datetime-local" - Date and time picker
+// This is a more modern approach that we'll explore in the NEXT section.
 //
-// SELECTION INPUTS:
-//   type="checkbox"  - Boolean on/off toggle
-//   type="radio"     - One-of-many selection
-//   <select>         - Dropdown menu (not an input type)
+// For now, we're using the traditional onSubmit approach because:
+//   1. It works in ALL React versions
+//   2. It's what you'll see in most existing React projects
+//   3. Understanding it helps you understand Form Actions too
 //
-// FILE INPUTS:
-//   type="file"      - File upload
+// Form Actions offer some benefits like:
+//   - Automatic pending states
+//   - Progressive enhancement
+//   - Better integration with Server Components
 //
-// OTHER:
-//   type="color"     - Color picker
-//   type="hidden"    - Hidden data (not visible to user)
+// But the onSubmit approach is still perfectly valid and widely used!
 //
-// We'll explore several of these throughout this section!
+// =============================================================================
+
+// =============================================================================
+// NEXT STEPS: EXTRACTING FORM VALUES
+// =============================================================================
+//
+// Now that we can handle form submission without page reload,
+// the next step is to EXTRACT THE VALUES the user entered.
+//
+// We have THREE approaches:
+//
+//   1. STATE (Controlled Components)
+//      - Track each input's value with useState
+//      - Update state on every keystroke
+//      - Full control, but more code
+//
+//   2. REFS (Uncontrolled Components)
+//      - Use useRef to access DOM elements
+//      - Read values only when needed
+//      - Less code, but less control
+//
+//   3. FORMDATA API (Browser Built-in)
+//      - Use new FormData(event.target) to get all values
+//      - Very clean and concise
+//      - Works with the 'name' attribute on inputs
+//
+// We'll explore all three in the upcoming lessons!
 //
 // =============================================================================
