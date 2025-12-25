@@ -147,6 +147,27 @@
 // The goal: Components should focus on WHAT to display, not HOW to fetch data.
 //
 // =============================================================================
+// FILE STRUCTURE FOR CUSTOM HOOKS
+// =============================================================================
+//
+// We've created a new folder to organize our custom hooks:
+//
+//   src/
+//   ├── components/           ← UI components
+//   ├── hooks/                ← Custom hooks (NEW!)
+//   │   └── useFetch.js       ← Our first custom hook
+//   ├── http.js               ← HTTP utility functions
+//   ├── loc.js                ← Location utilities
+//   └── App.jsx               ← This file
+//
+// Creating a "hooks" folder is OPTIONAL but recommended:
+//   - Keeps custom hooks organized in one place
+//   - Makes them easy to find and import
+//   - Follows common React project conventions
+//
+// You could also name the folder "customHooks" or put hooks in src/ directly.
+//
+// =============================================================================
 // WHY REGULAR FUNCTIONS WON'T WORK
 // =============================================================================
 //
@@ -254,9 +275,12 @@ function App() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   // ===========================================================================
-  // OBSERVE: This useEffect is also part of the pattern to extract
+  // OBSERVE: This useEffect is being EXTRACTED to useFetch custom hook!
   // ===========================================================================
-  // The pattern:
+  //
+  // SEE: src/hooks/useFetch.js - We're moving this code there!
+  //
+  // The pattern we're extracting:
   //   1. Set loading to true
   //   2. Try to fetch data
   //   3. On success: set data
@@ -264,7 +288,21 @@ function App() {
   //   5. Set loading to false
   //
   // This EXACT pattern is also in AvailablePlaces.jsx!
-  // Perfect for a custom hook.
+  // By extracting it to a custom hook:
+  //   - We eliminate code duplication
+  //   - Components become leaner
+  //   - The same hook can be reused everywhere we need to fetch data
+  //
+  // THE IDEA BEHIND CREATING FUNCTIONS (and hooks):
+  // ------------------------------------------------
+  // In general programming, we create functions so we can:
+  //   - Write code ONCE
+  //   - Use it in DIFFERENT PLACES
+  //   - Trigger the same logic wherever needed
+  //
+  // Custom hooks are the same idea, but with the special ability to use
+  // other hooks (useState, useEffect, etc.) inside them!
+  //
   // ===========================================================================
   useEffect(() => {
     async function fetchPlaces() {
