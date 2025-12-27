@@ -154,28 +154,40 @@
 // =============================================================================
 
 import Header from './components/Header.jsx';
-import Signup from './components/Signup.jsx';
+import Login from './components/StateLogin.jsx';
 
 function App() {
   // ===========================================================================
   // APP STRUCTURE
   // ===========================================================================
-  // Now using the Signup component to demonstrate the FormData API.
+  // Now using the StateLogin component to demonstrate INPUT VALIDATION.
   //
-  // We've explored three approaches to handle forms:
-  //   1. STATE (StateLogin.jsx)    - Controlled components with useState
+  // We've explored three approaches to extract form data:
+  //   1. STATE (StateLogin.jsx)    - Controlled components with useState ← CURRENT
   //   2. REFS (Login.jsx)          - Uncontrolled components with useRef
-  //   3. FORMDATA (Signup.jsx)     - Browser-native FormData API ← CURRENT
+  //   3. FORMDATA (Signup.jsx)     - Browser-native FormData API
   //
-  // The Signup component demonstrates how FormData makes complex forms
-  // with many inputs much easier to manage!
+  // WHY STATE FOR VALIDATION?
+  // -------------------------
+  // To validate on EVERY KEYSTROKE, we need to listen to all input changes.
+  // This requires the STATE approach with onChange handlers.
+  //
+  // The REFS and FORMDATA approaches only give us values ON SUBMIT,
+  // so they can't be used for keystroke validation.
+  //
+  // In this section, we'll explore:
+  //   - Validating on every keystroke (as user types)
+  //   - Validating on blur (when field loses focus)
+  //   - Validating on submit (when form is submitted)
+  //   - The problems with each approach
+  //   - How to combine them for best UX
   // ===========================================================================
 
   return (
     <>
       <Header />
       <main>
-        <Signup />
+        <Login />
       </main>
     </>
   );
