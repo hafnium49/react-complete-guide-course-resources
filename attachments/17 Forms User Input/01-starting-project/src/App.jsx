@@ -154,33 +154,49 @@
 // =============================================================================
 
 import Header from './components/Header.jsx';
-import Login from './components/StateLogin.jsx';
+import Login from './components/Login.jsx';
 
 function App() {
   // ===========================================================================
   // APP STRUCTURE
   // ===========================================================================
-  // Now using the StateLogin component to demonstrate INPUT VALIDATION.
+  // Now using the Login component (refs-based) to demonstrate SUBMIT VALIDATION.
   //
-  // We've explored three approaches to extract form data:
-  //   1. STATE (StateLogin.jsx)    - Controlled components with useState ← CURRENT
-  //   2. REFS (Login.jsx)          - Uncontrolled components with useRef
-  //   3. FORMDATA (Signup.jsx)     - Browser-native FormData API
+  // We've explored three validation approaches:
+  //   1. KEYSTROKE (StateLogin.jsx) - Validate as user types (Lesson 260)
+  //   2. BLUR (StateLogin.jsx)      - Validate when field loses focus (Lesson 261)
+  //   3. SUBMIT (Login.jsx)         - Validate when form is submitted ← CURRENT (Lesson 262)
   //
-  // WHY STATE FOR VALIDATION?
-  // -------------------------
-  // To validate on EVERY KEYSTROKE, we need to listen to all input changes.
-  // This requires the STATE approach with onChange handlers.
+  // WHY SUBMIT VALIDATION WITH REFS?
+  // ---------------------------------
+  // With REFS (uncontrolled components), we can't easily validate on keystroke
+  // because we don't have onChange handlers tracking every change.
   //
-  // The REFS and FORMDATA approaches only give us values ON SUBMIT,
-  // so they can't be used for keystroke validation.
+  // We COULD add onChange handlers for validation, but then we might as well
+  // just use STATE (controlled components) instead!
   //
-  // In this section, we'll explore:
-  //   - Validating on every keystroke (as user types)
-  //   - Validating on blur (when field loses focus)
-  //   - Validating on submit (when form is submitted)
-  //   - The problems with each approach
-  //   - How to combine them for best UX
+  // So with refs, the natural validation point is ON SUBMIT.
+  //
+  // WHEN IS SUBMIT VALIDATION A GOOD CHOICE?
+  // -----------------------------------------
+  // Submit validation is great when:
+  //   ✓ Using refs or FormData (can't validate on keystroke easily)
+  //   ✓ Simple forms where instant feedback isn't critical
+  //   ✓ You want less code (no blur/keystroke tracking)
+  //   ✓ As a SAFETY NET even when you have blur/keystroke validation!
+  //
+  // IMPORTANT: ALWAYS ADD SUBMIT VALIDATION!
+  // -----------------------------------------
+  // Even if you have blur/keystroke validation, you should ALSO validate
+  // on submit as a final check before processing the data.
+  //
+  // Why? Users can bypass blur/keystroke validation by:
+  //   - Directly clicking submit without touching fields
+  //   - Using browser autofill
+  //   - Pasting invalid data and submitting immediately
+  //
+  // Submit validation is your last line of defense!
+  //
   // ===========================================================================
 
   return (
