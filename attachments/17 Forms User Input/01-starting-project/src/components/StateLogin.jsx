@@ -80,6 +80,78 @@ export default function StateLogin() {
   // without needing new useState calls!
 
   // ===========================================================================
+  // TRACKING "TOUCHED" STATE - New in Lesson 261
+  // ===========================================================================
+  //
+  // PROBLEM WE'RE SOLVING:
+  // -----------------------
+  // In Lesson 260, we validated on every keystroke by checking:
+  //   emailIsInvalid = enteredValues.email !== '' && !enteredValues.email.includes('@')
+  //
+  // This had problems:
+  //   - Error showed TOO EARLY (as soon as user started typing)
+  //   - Couldn't distinguish "never touched" from "cleared after typing"
+  //
+  // THE SOLUTION: Track Whether User Has Interacted With Each Field
+  // ----------------------------------------------------------------
+  // We need a separate piece of state to track whether the user has
+  // "touched" or "edited" each input field.
+  //
+  // "Touched" means:
+  //   - User clicked into the field (gave it focus)
+  //   - User typed something or left it empty
+  //   - User left the field (it lost focus / "blurred")
+  //
+  // We track this with a "didEdit" state object.
+  //
+  // WHY A SEPARATE STATE?
+  // ---------------------
+  // We COULD merge this into enteredValues:
+  //   {
+  //     email: { value: '', didEdit: false },
+  //     password: { value: '', didEdit: false }
+  //   }
+  //
+  // But that makes the code more complex. It's cleaner to have two states:
+  //   - enteredValues: { email: '', password: '' }
+  //   - didEdit: { email: false, password: false }
+  //
+  // ===========================================================================
+  const [didEdit, setDidEdit] = useState({
+    // -------------------------------------------------------------------------
+    // INITIAL VALUES: false (User hasn't touched these fields yet)
+    // -------------------------------------------------------------------------
+    // When the component first renders:
+    //   - User hasn't clicked on email field → email: false
+    //   - User hasn't clicked on password field → password: false
+    //
+    // These will be set to true when the user BLURS (leaves) a field.
+    // -------------------------------------------------------------------------
+    email: false,    // Has user interacted with email field? Initially: No
+    password: false, // Has user interacted with password field? Initially: No
+  });
+  //
+  // HOW THIS STATE WILL BE USED:
+  // -----------------------------
+  // 1. Initially, both are false (user hasn't touched anything)
+  //
+  // 2. User clicks on email field → nothing happens yet (still false)
+  //
+  // 3. User types in email field → we'll RESET it to false (Lesson 261 improvement)
+  //    Why? To hide error while user is actively fixing the issue
+  //
+  // 4. User tabs out of email field (blur event) → we set email to true
+  //    Now we know: "User has finished with this field, we can validate it"
+  //
+  // 5. We only show validation errors if:
+  //    - didEdit.email is true (user has interacted with it)
+  //    - AND the value is invalid
+  //
+  // This gives the user a chance to type before we show errors!
+  //
+  // ===========================================================================
+
+  // ===========================================================================
   // GENERIC INPUT CHANGE HANDLER - Works for ANY Input!
   // ===========================================================================
   //
@@ -155,7 +227,172 @@ export default function StateLogin() {
     // Note: The parentheses around the object are IMPORTANT!
     // Without them, JavaScript thinks the curly braces are the function body,
     // not an object literal. The parentheses say: "return this object".
+
+    // -------------------------------------------------------------------------
+    // NEW IN LESSON 261: Reset "didEdit" to false when user starts typing again
+    // -------------------------------------------------------------------------
+    //
+    // WHY DO THIS?
+    // ------------
+    // If the user has an error showing (from blur validation), and they start
+    // typing to fix it, we want to HIDE the error immediately.
+    //
+    // This gives immediate positive feedback:
+    //   - User sees error after leaving field
+    //   - User goes back to fix it
+    //   - Error disappears as soon as they start typing!
+    //   - User feels encouraged that they're fixing the issue
+    //
+    // HOW IT WORKS:
+    // -------------
+    // 1. User had invalid email 'test', left field → didEdit.email = true, error shows
+    // 2. User clicks back into email field
+    // 3. User types '@' → handleInputChange fires
+    // 4. We set didEdit.email = false (this line below)
+    // 5. Error disappears! (because emailIsInvalid now uses didEdit.email)
+    // 6. User continues typing 'test.com'
+    // 7. User leaves field → blur event → didEdit.email = true again
+    // 8. Now it's valid, so no error shows!
+    //
+    // WITHOUT THIS:
+    // -------------
+    // Error would stay visible WHILE user is typing the fix.
+    // This can feel discouraging - like "I'm fixing it but the error won't go away!"
+    //
+    // WITH THIS:
+    // ----------
+    // Error disappears immediately when user starts typing.
+    // This feels encouraging - "Great! I'm on the right track!"
+    //
+    // THE BEST OF BOTH WORLDS:
+    // -------------------------
+    // - Don't show error too early (wait for blur)
+    // - Don't show error too long (hide when user starts fixing)
+    // - Show error again if still invalid when they leave field
+    //
+    // -------------------------------------------------------------------------
+    setDidEdit((prevEdit) => ({
+      ...prevEdit,           // Keep other fields unchanged
+      [identifier]: false,   // Reset this field to false (user is editing now)
+    }));
+    //
+    // Example execution:
+    //   handleInputChange('email', 't')
+    //   → setDidEdit({ email: false, password: false })  (email was true, now false)
+    //
+    // This happens on EVERY KEYSTROKE in ANY input!
+    //
+    // -------------------------------------------------------------------------
   }
+
+  // ===========================================================================
+  // BLUR HANDLER - Fires when input loses focus (NEW IN LESSON 261)
+  // ===========================================================================
+  //
+  // WHAT IS "BLUR"?
+  // ---------------
+  // "Blur" is the opposite of "focus":
+  //   - User clicks on input → input gets "focus"
+  //   - User clicks outside input or presses Tab → input loses "focus" = "blur"
+  //
+  // The blur event is a BUILT-IN BROWSER EVENT, just like click or change.
+  //
+  // WHY VALIDATE ON BLUR?
+  // ---------------------
+  // Blur validation gives the user a chance to FINISH TYPING before we
+  // show an error. This avoids the "error too early" problem.
+  //
+  // Example user flow:
+  //   1. User clicks on email field → focus (nothing happens yet)
+  //   2. User types 't' → onChange fires (we reset didEdit to false)
+  //   3. User types 'e' → onChange fires (didEdit still false)
+  //   4. User types 's' → onChange fires (didEdit still false)
+  //   5. User types 't' → onChange fires (didEdit still false)
+  //   6. User tabs to next field → BLUR EVENT! (we set didEdit to true)
+  //   7. Now we validate: didEdit.email is true, email is 'test' (no @)
+  //   8. Error shows!
+  //
+  // The user had a chance to type their full email before we complained!
+  //
+  // ===========================================================================
+  function handleInputBlur(identifier) {
+    // -------------------------------------------------------------------------
+    // SET didEdit TO TRUE - Mark this field as "touched"
+    // -------------------------------------------------------------------------
+    //
+    // When this function runs, it means:
+    //   - User clicked into the field (gave it focus)
+    //   - User may or may not have typed something
+    //   - User left the field (blur event fired)
+    //
+    // Now we know the user has "touched" this field, so we can validate it!
+    //
+    // -------------------------------------------------------------------------
+    setDidEdit((prevEdit) => ({
+      // -----------------------------------------------------------------------
+      // SAME PATTERN AS handleInputChange
+      // -----------------------------------------------------------------------
+      // We use the same pattern here:
+      //   1. Function form of setState (prevEdit => ...)
+      //   2. Spread previous state (...prevEdit)
+      //   3. Update one property dynamically ([identifier]: true)
+      //
+      // This is IDENTICAL to handleInputChange, except:
+      //   - handleInputChange sets [identifier]: false (user is typing)
+      //   - handleInputBlur sets [identifier]: true (user left field)
+      //
+      // -----------------------------------------------------------------------
+      ...prevEdit,         // Keep other fields unchanged
+      [identifier]: true,  // Mark THIS field as touched/edited
+    }));
+    //
+    // Example execution:
+    //   User leaves email field → handleInputBlur('email')
+    //   → setDidEdit({ email: true, password: false })
+    //
+    // After this runs, didEdit.email is true, so we'll check if email is valid.
+    //
+    // -------------------------------------------------------------------------
+  }
+  //
+  // THE COMPLETE BLUR VALIDATION FLOW:
+  // -----------------------------------
+  //
+  // 1. Page loads
+  //    - didEdit: { email: false, password: false }
+  //    - No errors shown (didEdit.email is false)
+  //
+  // 2. User clicks on email field
+  //    - Nothing changes (no onChange yet, no onBlur yet)
+  //
+  // 3. User types 'test' (each keystroke triggers onChange)
+  //    - enteredValues.email: 'test'
+  //    - didEdit.email: false (we reset it to false on each keystroke)
+  //    - No error shown (didEdit.email is false)
+  //
+  // 4. User tabs to password field (onBlur fires on email field)
+  //    - handleInputBlur('email') runs
+  //    - didEdit.email: true
+  //    - Component re-renders
+  //    - emailIsInvalid is recalculated
+  //    - didEdit.email && !'test'.includes('@') → true && true → true
+  //    - Error appears!
+  //
+  // 5. User goes back to email field and types '@'
+  //    - onChange fires → didEdit.email set to false
+  //    - Error disappears immediately! (didEdit.email is false)
+  //
+  // 6. User types 'test.com'
+  //    - Still typing, didEdit.email still false
+  //    - No error (even though it's now valid)
+  //
+  // 7. User tabs to password field again
+  //    - onBlur fires → didEdit.email set to true
+  //    - Email is now 'test@test.com' (valid!)
+  //    - didEdit.email && !'test@test.com'.includes('@') → true && false → false
+  //    - No error shown! Success!
+  //
+  // ===========================================================================
 
   // ===========================================================================
   // INPUT VALIDATION - Computed Value (Recalculated on Every Render)
@@ -187,41 +424,59 @@ export default function StateLogin() {
   // ===========================================================================
   const emailIsInvalid =
     // -------------------------------------------------------------------------
-    // VALIDATION LOGIC - Check if email is invalid
+    // UPDATED VALIDATION LOGIC - Using didEdit instead of checking if empty
     // -------------------------------------------------------------------------
     //
-    // We want emailIsInvalid to be true IF:
-    //   - The email is NOT empty (user has started typing)
-    //   - AND the email doesn't include an @ symbol (invalid format)
+    // LESSON 260 (Old approach):
+    //   emailIsInvalid = enteredValues.email !== '' && !enteredValues.email.includes('@')
     //
-    // WHY CHECK IF EMAIL IS NOT EMPTY?
-    // --------------------------------
-    // Without this check, the error would show IMMEDIATELY when page loads!
+    // Problems with old approach:
+    //   - Error showed as soon as user started typing 't'
+    //   - Too early! User was still typing!
     //
-    // Initial state: { email: '', password: '' }
-    // ''.includes('@') is false
-    // !false is true
-    // emailIsInvalid would be true → Error shows on page load!
+    // LESSON 261 (New approach):
+    //   emailIsInvalid = didEdit.email && !enteredValues.email.includes('@')
     //
-    // That's annoying! We want to give the user a chance to type first.
-    //
-    // So we add: enteredValues.email !== ''
-    // This means: only show error if user has started typing.
-    //
-    // THE && OPERATOR (Logical AND):
-    // ------------------------------
-    // Both conditions must be true for the whole expression to be true.
-    //
-    // Examples:
-    //   email = ''          → '' !== '' is false → emailIsInvalid = false ✓
-    //   email = 't'         → 't' !== '' is true, !'t'.includes('@') is true → true ✗
-    //   email = 'test@'     → 'test@' !== '' is true, !'test@'.includes('@') is false → false ✓
-    //   email = 'test@test' → 'test@test' !== '' is true, !'test@test'.includes('@') is false → false ✓
+    // Benefits of new approach:
+    //   ✓ Wait until user has LEFT the field (blur)
+    //   ✓ Give user a chance to finish typing
+    //   ✓ Hide error while user is actively fixing it
+    //   ✓ Show error again if still invalid after leaving field
     //
     // -------------------------------------------------------------------------
-    enteredValues.email !== '' &&
+    //
+    // THE NEW CONDITION: didEdit.email
+    // ---------------------------------
+    // Instead of checking if email is not empty (enteredValues.email !== ''),
+    // we check if the user has TOUCHED/LEFT the field (didEdit.email).
+    //
+    // This is MUCH BETTER because:
+    //
+    // OLD WAY (Lesson 260):
+    //   email = ''     → error: NO  (good! not started yet)
+    //   email = 't'    → error: YES (bad! user is still typing!)
+    //   email = 'te'   → error: YES (bad! user is still typing!)
+    //   email = 'tes'  → error: YES (bad! user is still typing!)
+    //   email = 'test' → error: YES (bad! user is still typing!)
+    //
+    // NEW WAY (Lesson 261):
+    //   email = '', didEdit: false → error: NO  (good! not touched yet)
+    //   email = 't', didEdit: false → error: NO  (good! user is still typing!)
+    //   [user tabs out] didEdit becomes true
+    //   email = 't', didEdit: true → error: YES (good! now we can validate!)
+    //   [user clicks back in and types]
+    //   email = 't@', didEdit: false → error: NO  (good! user is fixing it!)
+    //   [user tabs out] didEdit becomes true
+    //   email = 't@', didEdit: true → error: YES (still invalid)
+    //   [user clicks back in and types]
+    //   email = 't@t', didEdit: false → error: NO  (good! still fixing!)
+    //   [user tabs out] didEdit becomes true
+    //   email = 't@t', didEdit: true → error: NO  (valid! has @)
+    //
     // -------------------------------------------------------------------------
-    // THE includes() METHOD
+    didEdit.email &&
+    // -------------------------------------------------------------------------
+    // THE includes() METHOD (Same as Lesson 260)
     // -------------------------------------------------------------------------
     //
     // .includes(searchString) is a JavaScript string method that checks
@@ -250,43 +505,44 @@ export default function StateLogin() {
     // -------------------------------------------------------------------------
     !enteredValues.email.includes('@');
   //
-  // SIMPLIFIED EXPLANATION:
-  // -----------------------
+  // SIMPLIFIED EXPLANATION (Updated for Lesson 261):
+  // -------------------------------------------------
   // emailIsInvalid will be true when:
-  //   1. User has typed something (email is not empty)
-  //   2. AND what they typed doesn't have an @ symbol
+  //   1. User has TOUCHED and LEFT the field (didEdit.email is true)
+  //   2. AND the email doesn't have an @ symbol (invalid format)
   //
-  // PROBLEMS WITH THIS APPROACH (We'll discuss and solve these next!):
-  // ------------------------------------------------------------------
+  // THIS SOLVES THE PROBLEMS FROM LESSON 260!
+  // ------------------------------------------
   //
-  // PROBLEM 1: Error shows TOO EARLY
-  // --------------------------------
+  // ✓ PROBLEM 1 SOLVED: Error doesn't show too early
+  // -------------------------------------------------
   // User types: 't'
-  // emailIsInvalid: true (no @ yet)
-  // Error message: "Please enter a valid email address"
-  // User thinks: "I'm not done typing yet!"
+  // didEdit.email: false (user hasn't left field yet)
+  // emailIsInvalid: false (because didEdit.email is false)
+  // Error message: NOT shown
+  // User continues typing without being annoyed!
   //
-  // This is annoying! The user barely started typing.
+  // ✓ PROBLEM 2 SOLVED: Error shows when user clears field
+  // -------------------------------------------------------
+  // User types: 'test@test.com' (valid)
+  // User tabs out: didEdit.email becomes true, no error (valid)
+  // User goes back and deletes everything: ''
+  // didEdit.email: false (we reset it when user starts typing)
+  // User tabs out again: didEdit.email becomes true
+  // emailIsInvalid: true (didEdit.email && !''.includes('@'))
+  // Error message: SHOWN! (Empty email is required)
   //
-  // PROBLEM 2: No error when user CLEARS a valid email
-  // ---------------------------------------------------
-  // User types: 'test@test.com' (valid, no error)
-  // User deletes everything, email becomes ''
-  // emailIsInvalid: false (because email === '')
-  // Error message: (not shown)
-  // Expected: Should show error! The field is required.
-  //
-  // PROBLEM 3: Can't distinguish between "untouched" and "cleared"
+  // ✓ PROBLEM 3 SOLVED: Can distinguish "untouched" from "cleared"
   // ---------------------------------------------------------------
-  // We're using email !== '' to avoid showing errors initially.
-  // But this means we also WON'T show errors if user clears the field.
+  // Untouched: didEdit.email = false → No error
+  // Touched and left: didEdit.email = true → Validate and show error if needed
   //
-  // WE'LL FIX THESE PROBLEMS IN UPCOMING LESSONS!
-  // ----------------------------------------------
-  // We'll learn about:
-  //   - Validating on BLUR (when field loses focus)
-  //   - Tracking if field has been TOUCHED
-  //   - Combining validation strategies
+  // BONUS: Error disappears while user is fixing it!
+  // -------------------------------------------------
+  // User has error showing (invalid email, left field)
+  // User clicks back into field and starts typing
+  // didEdit.email: false (we reset it in handleInputChange)
+  // Error disappears immediately! User feels encouraged!
   //
   // ===========================================================================
 
@@ -450,6 +706,33 @@ export default function StateLogin() {
             // event.target.value is the current text in the input.
             // -----------------------------------------------------------------
             onChange={(event) => handleInputChange('email', event.target.value)}
+            // -----------------------------------------------------------------
+            // onBlur PROP: Fires when input loses focus (NEW IN LESSON 261!)
+            // -----------------------------------------------------------------
+            // This fires when the user LEAVES the input field.
+            //
+            // "Blur" is the opposite of "focus":
+            //   - User clicks on input → focus
+            //   - User clicks outside or tabs to next field → blur
+            //
+            // WHY ADD onBlur?
+            // ---------------
+            // We use blur to detect when the user has FINISHED typing in this
+            // field. This is the perfect time to validate!
+            //
+            // Without onBlur, we'd have to validate on every keystroke (too early)
+            // or on submit (too late). Blur is the "Goldilocks" moment - just right!
+            //
+            // SAME PATTERN AS onChange:
+            // -------------------------
+            // We wrap handleInputBlur in an arrow function so we can pass
+            // the 'email' identifier to it.
+            //
+            // React will call this arrow function with the blur event.
+            // We ignore the event (don't need it) and just call handleInputBlur.
+            //
+            // -----------------------------------------------------------------
+            onBlur={() => handleInputBlur('email')}
           />
           {/*
             WHAT HAPPENS WHEN USER TYPES?
@@ -459,11 +742,30 @@ export default function StateLogin() {
             3. Our onChange arrow function runs
             4. It calls handleInputChange('email', 't')
             5. handleInputChange updates state: { email: 't', password: '' }
-            6. React re-renders the component with new state
-            7. Input's value becomes 't' (from value={enteredValues.email})
-            8. User sees 't' in the input
+            6. handleInputChange ALSO sets didEdit.email to false
+            7. React re-renders the component with new state
+            8. Input's value becomes 't' (from value={enteredValues.email})
+            9. User sees 't' in the input
+            10. emailIsInvalid is recalculated: didEdit.email && !email.includes('@')
+            11. didEdit.email is false, so emailIsInvalid is false
+            12. No error shows! (User is still typing)
 
             This happens for EVERY keystroke! Fast, but React is optimized for it.
+
+            WHAT HAPPENS WHEN USER LEAVES THE FIELD?
+            -----------------------------------------
+            1. User tabs out of email field or clicks elsewhere
+            2. Browser triggers 'blur' event
+            3. Our onBlur arrow function runs
+            4. It calls handleInputBlur('email')
+            5. handleInputBlur sets didEdit.email to true
+            6. React re-renders the component
+            7. emailIsInvalid is recalculated: didEdit.email && !email.includes('@')
+            8. didEdit.email is now true!
+            9. If email doesn't include '@', emailIsInvalid becomes true
+            10. Error message appears!
+
+            This gives the user a chance to finish typing before we validate!
           */}
 
           {/* ===================================================================
@@ -1118,5 +1420,314 @@ export default function StateLogin() {
 //    - Gives user a chance to finish typing
 //    - Better user experience
 //    - Still provides timely feedback
+//
+// =============================================================================
+
+// =============================================================================
+// VALIDATION ON BLUR - COMPLETE GUIDE (LESSON 261)
+// =============================================================================
+//
+// This lesson demonstrates BLUR VALIDATION (when the input loses focus).
+//
+// WHAT WE IMPLEMENTED:
+// --------------------
+// 1. A new state to track whether user has touched each field:
+//      const [didEdit, setDidEdit] = useState({ email: false, password: false });
+//
+// 2. A blur handler that marks fields as touched:
+//      function handleInputBlur(identifier) {
+//        setDidEdit(prev => ({ ...prev, [identifier]: true }));
+//      }
+//
+// 3. Updated validation logic to use didEdit:
+//      const emailIsInvalid = didEdit.email && !enteredValues.email.includes('@');
+//
+// 4. Added onBlur event handler to inputs:
+//      <input onBlur={() => handleInputBlur('email')} />
+//
+// 5. BONUS: Reset didEdit to false when user starts typing again:
+//      In handleInputChange:
+//        setDidEdit(prev => ({ ...prev, [identifier]: false }));
+//
+// =============================================================================
+// HOW BLUR VALIDATION WORKS
+// =============================================================================
+//
+// BLUR = When input loses focus
+// ------------------------------
+// The "blur" event fires when an input field loses focus:
+//   - User clicks on input → focus
+//   - User types something
+//   - User tabs to next field or clicks outside → blur
+//
+// This is the PERFECT time to validate!
+// User has finished typing, so we can check if the value is valid.
+//
+// THE COMPLETE FLOW:
+// ------------------
+//
+// 1. Page loads
+//    - enteredValues: { email: '', password: '' }
+//    - didEdit: { email: false, password: false }
+//    - emailIsInvalid: false (didEdit.email is false)
+//    - No errors shown ✓
+//
+// 2. User clicks on email field
+//    - Input gets focus
+//    - Nothing changes yet (no onChange, no onBlur)
+//
+// 3. User types 't'
+//    - onChange fires → handleInputChange('email', 't')
+//    - enteredValues.email: 't'
+//    - didEdit.email: false (we reset it to false in handleInputChange)
+//    - emailIsInvalid: false (didEdit.email is false)
+//    - No error shown ✓ (User is still typing!)
+//
+// 4. User types 'e', 's', 't' (each keystroke)
+//    - onChange fires each time
+//    - enteredValues.email: 'test'
+//    - didEdit.email: false (still false, user is typing)
+//    - No error shown ✓
+//
+// 5. User tabs to password field (OR clicks outside)
+//    - onBlur fires → handleInputBlur('email')
+//    - didEdit.email: true (marked as touched!)
+//    - Component re-renders
+//    - emailIsInvalid is recalculated:
+//      didEdit.email && !'test'.includes('@')
+//      → true && true → true
+//    - Error appears! ✗ (Invalid email)
+//
+// 6. User goes back to email field and types '@'
+//    - User clicks back into field
+//    - onChange fires → handleInputChange('email', '@')
+//    - didEdit.email: false (we reset it to false!)
+//    - emailIsInvalid: false (didEdit.email is false)
+//    - Error disappears immediately! ✓ (User feels encouraged!)
+//
+// 7. User continues typing 'test.com'
+//    - onChange fires on each keystroke
+//    - enteredValues.email: 'test@test.com'
+//    - didEdit.email: false (still typing)
+//    - No error ✓
+//
+// 8. User tabs to password field again
+//    - onBlur fires → handleInputBlur('email')
+//    - didEdit.email: true
+//    - emailIsInvalid is recalculated:
+//      didEdit.email && !'test@test.com'.includes('@')
+//      → true && false → false
+//    - No error! ✓ (Valid email!)
+//
+// =============================================================================
+// THE THREE STATES OF AN INPUT FIELD
+// =============================================================================
+//
+// An input field can be in three states:
+//
+// STATE 1: PRISTINE (Never Touched)
+// ----------------------------------
+//   - User hasn't clicked on the field yet
+//   - didEdit: false
+//   - We DON'T show errors
+//   - Give user a chance to fill it out!
+//
+// STATE 2: FOCUSED (User Is Typing)
+// ----------------------------------
+//   - User is actively typing in the field
+//   - Field has focus
+//   - didEdit: false (we reset it when user types)
+//   - We DON'T show errors
+//   - Don't interrupt the user while they're working!
+//
+// STATE 3: TOUCHED (User Left Field)
+// -----------------------------------
+//   - User has left the field (blur event)
+//   - didEdit: true
+//   - We DO validate and show errors if needed
+//   - User has finished with this field, we can give feedback!
+//
+// TRANSITIONS:
+// ------------
+//   PRISTINE → (click) → FOCUSED
+//   FOCUSED → (tab/click outside) → TOUCHED
+//   TOUCHED → (click back in) → FOCUSED
+//   FOCUSED → (tab again) → TOUCHED
+//
+// This state machine gives the best UX!
+//
+// =============================================================================
+// WHY RESET didEdit TO FALSE WHEN USER TYPES?
+// =============================================================================
+//
+// This is the KEY IMPROVEMENT in Lesson 261!
+//
+// WITHOUT RESETTING (What we might think):
+// -----------------------------------------
+//   1. User has invalid email, leaves field
+//      → didEdit.email: true, error shows
+//   2. User clicks back in to fix it
+//   3. User starts typing '@'
+//      → didEdit.email: still true (not reset!)
+//      → Error still showing while user types!
+//   4. User finishes typing 'test@test.com'
+//      → Error disappears (now valid)
+//      → But error was visible the whole time while fixing!
+//
+// This feels BAD! User is actively fixing the issue but the error stays!
+//
+// WITH RESETTING (What we implemented):
+// --------------------------------------
+//   1. User has invalid email, leaves field
+//      → didEdit.email: true, error shows
+//   2. User clicks back in to fix it
+//   3. User starts typing '@'
+//      → We set didEdit.email: false (in handleInputChange!)
+//      → Error disappears immediately! ✓
+//   4. User finishes typing 'test@test.com'
+//      → No error showing (didEdit is false while typing)
+//   5. User tabs to next field
+//      → didEdit.email: true (blur event)
+//      → We validate: it's now valid!
+//      → No error ✓
+//
+// This feels GREAT! Error disappears as soon as user starts fixing it!
+// User gets immediate positive feedback: "I'm on the right track!"
+//
+// =============================================================================
+// COMPARISON: KEYSTROKE vs BLUR VALIDATION
+// =============================================================================
+//
+// KEYSTROKE VALIDATION (Lesson 260):
+// -----------------------------------
+// Validates: On EVERY character typed
+// Shows errors: As soon as user types first character
+// Problem: TOO EARLY - user is still typing!
+//
+// Example:
+//   User types: 't' → Error! "Invalid email"
+//   User types: 'e' → Error! (still no @)
+//   User types: 's' → Error! (still no @)
+//   User types: 't' → Error! (annoying!)
+//   User types: '@' → Error disappears
+//
+// This is ANNOYING! User barely started typing.
+//
+// BLUR VALIDATION (Lesson 261):
+// ------------------------------
+// Validates: When user LEAVES the field
+// Shows errors: After user is done typing
+// Benefit: JUST RIGHT - user had a chance to finish!
+//
+// Example:
+//   User types: 't' → No error
+//   User types: 'e' → No error
+//   User types: 's' → No error
+//   User types: 't' → No error
+//   User tabs away → NOW validate → Error! "Invalid email"
+//   User goes back → Error disappears as soon as they type
+//   User types: '@test.com' → No error while typing
+//   User tabs away → Validate → No error (valid!)
+//
+// This is PERFECT! Best of both worlds.
+//
+// =============================================================================
+// THE TWO-WAY DANCE: didEdit true ↔ false
+// =============================================================================
+//
+// didEdit toggles between true and false as user interacts:
+//
+//   onBlur → set didEdit to TRUE  (user left field, validate now!)
+//   onChange → set didEdit to FALSE (user is typing, hide error!)
+//   onBlur → set didEdit to TRUE  (user left again, validate again!)
+//   onChange → set didEdit to FALSE (typing again, hide again!)
+//
+// This creates a responsive, encouraging UX:
+//   - Error appears when user leaves field (if invalid)
+//   - Error disappears when user starts fixing it
+//   - Error appears again if still invalid when they leave
+//   - Error stays hidden if valid when they leave
+//
+// =============================================================================
+// HANDLING EMPTY FIELDS
+// =============================================================================
+//
+// PROBLEM FROM LESSON 260:
+// ------------------------
+// With keystroke validation (email !== ''), we couldn't detect:
+//   - User types 'test@test.com' (valid, no error)
+//   - User deletes everything (empty)
+//   - email === '' → emailIsInvalid was false
+//   - No error shown! (But field is required!)
+//
+// SOLVED IN LESSON 261:
+// ---------------------
+// With blur validation (didEdit.email):
+//   - User types 'test@test.com' (valid)
+//   - User tabs away → didEdit.email: true, no error (valid)
+//   - User goes back and deletes everything
+//   - onChange → didEdit.email: false, email: ''
+//   - User tabs away → didEdit.email: true
+//   - emailIsInvalid: didEdit.email && !''.includes('@')
+//     → true && true → true
+//   - Error shows! ✓ (Empty email is invalid)
+//
+// Now we CAN detect when user clears a field!
+//
+// =============================================================================
+// IMPLEMENTATION SUMMARY
+// =============================================================================
+//
+// 1. CREATE didEdit STATE:
+//    const [didEdit, setDidEdit] = useState({ email: false, password: false });
+//
+// 2. CREATE BLUR HANDLER:
+//    function handleInputBlur(identifier) {
+//      setDidEdit(prev => ({ ...prev, [identifier]: true }));
+//    }
+//
+// 3. UPDATE CHANGE HANDLER (reset didEdit):
+//    function handleInputChange(identifier, value) {
+//      setEnteredValues(prev => ({ ...prev, [identifier]: value }));
+//      setDidEdit(prev => ({ ...prev, [identifier]: false }));  // NEW!
+//    }
+//
+// 4. UPDATE VALIDATION LOGIC:
+//    const emailIsInvalid = didEdit.email &&  // Was: enteredValues.email !== ''
+//                           !enteredValues.email.includes('@');
+//
+// 5. ADD onBlur TO JSX:
+//    <input
+//      value={enteredValues.email}
+//      onChange={(e) => handleInputChange('email', e.target.value)}
+//      onBlur={() => handleInputBlur('email')}  // NEW!
+//    />
+//
+// =============================================================================
+// KEY TAKEAWAYS FROM LESSON 261
+// =============================================================================
+//
+// 1. BLUR VALIDATION waits until user leaves the field
+//    - Gives user a chance to finish typing
+//    - Avoids the "error too early" problem
+//
+// 2. TRACK TOUCHED STATE with didEdit
+//    - Separate state to know if user has interacted with field
+//    - false = pristine or actively typing
+//    - true = user left field, we can validate
+//
+// 3. RESET didEdit when user starts typing again
+//    - Hides error immediately when user is fixing the issue
+//    - Provides encouraging UX
+//    - Shows error again if still invalid when they leave
+//
+// 4. THIS IS THE BEST APPROACH for most forms!
+//    - Not too early (unlike keystroke validation)
+//    - Not too late (unlike submit-only validation)
+//    - Responsive (error disappears when user starts fixing)
+//
+// 5. NEXT UP: Validate on SUBMIT (catch all errors before submission)
+//    - Combine blur validation with submit validation
+//    - The ultimate form validation strategy!
 //
 // =============================================================================
