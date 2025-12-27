@@ -158,6 +158,55 @@ export default function StateLogin() {
   }
 
   // ===========================================================================
+  // RESET HANDLER - For Controlled Components
+  // ===========================================================================
+  //
+  // With controlled components (state), resetting is EASY!
+  // Just reset the state to its initial values.
+  //
+  // ===========================================================================
+  function handleReset() {
+    // -------------------------------------------------------------------------
+    // RESETTING STATE-BASED FORMS
+    // -------------------------------------------------------------------------
+    //
+    // Since our inputs are controlled by state (value={enteredValues.email}),
+    // resetting the state AUTOMATICALLY clears the inputs!
+    //
+    // We just set the state back to the same initial value we used in useState:
+    //
+    // -------------------------------------------------------------------------
+    setEnteredValues({
+      email: '',
+      password: '',
+    });
+
+    // That's it! The inputs will now show empty strings.
+    //
+    // This works because:
+    //   1. We call setEnteredValues({ email: '', password: '' })
+    //   2. React re-renders the component with new state
+    //   3. Inputs render with value={enteredValues.email} = ''
+    //   4. User sees empty inputs!
+    //
+    // BENEFITS OF STATE-BASED RESET:
+    // -------------------------------
+    //   ✓ Clean and predictable
+    //   ✓ Follows React patterns (state controls UI)
+    //   ✓ Can reset to non-empty defaults if needed
+    //   ✓ Can reset individual fields selectively
+    //   ✓ TypeScript-friendly (type-safe)
+    //
+    // ALTERNATIVE: Reset to custom defaults
+    // --------------------------------------
+    // You can reset to non-empty values:
+    //   setEnteredValues({
+    //     email: 'default@example.com',
+    //     password: ''
+    //   });
+  }
+
+  // ===========================================================================
   // FORM SUBMISSION HANDLER
   // ===========================================================================
   function handleSubmit(event) {
@@ -179,11 +228,28 @@ export default function StateLogin() {
     // console.log('Email:', enteredValues.email);
     // console.log('Password:', enteredValues.password);
 
+    // -------------------------------------------------------------------------
+    // OPTIONAL: Reset after successful submission
+    // -------------------------------------------------------------------------
+    //
+    // After sending data to backend, you might want to clear the form:
+    //
+    //   fetch('/api/login', { method: 'POST', body: JSON.stringify(enteredValues) })
+    //     .then(response => {
+    //       if (response.ok) {
+    //         setEnteredValues({ email: '', password: '' });  // Clear form
+    //         // Show success message
+    //       }
+    //     });
+    //
+    // -------------------------------------------------------------------------
+
     // TODO: Here we would typically:
     // - Validate the data
     // - Send it to a backend API
     // - Show a loading state
     // - Handle success/error responses
+    // - Reset form on success
   }
 
   return (
@@ -303,7 +369,7 @@ export default function StateLogin() {
       </div>
 
       <p className="form-actions">
-        <button type="button" className="button button-flat">
+        <button type="button" onClick={handleReset} className="button button-flat">
           Reset
         </button>
         {/*type="button" would prevent the button from submitting the form*/}

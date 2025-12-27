@@ -42,6 +42,61 @@ export default function Signup() {
     event.preventDefault(); // Prevent page reload (as always!)
 
     // -------------------------------------------------------------------------
+    // RESETTING THE FORM - Three Approaches
+    // -------------------------------------------------------------------------
+    //
+    // APPROACH 1: Reset Button with type="reset" (What we use)
+    // ---------------------------------------------------------
+    // The simplest approach is to use a button with type="reset":
+    //   <button type="reset">Reset</button>
+    //
+    // This is BUILT INTO THE BROWSER! No JavaScript needed.
+    // When clicked, it automatically clears all form inputs.
+    //
+    // APPROACH 2: Programmatic Reset with event.target.reset() (Recommended)
+    // -----------------------------------------------------------------------
+    // You can reset the form programmatically:
+    //   event.target.reset();
+    //
+    // event.target is the <form> element.
+    // Form elements have a built-in reset() method.
+    //
+    // This is the SAME as clicking a type="reset" button!
+    //
+    // When to use this?
+    //   - After successful form submission
+    //   - After sending data to backend
+    //   - To clear form after processing
+    //
+    // Example:
+    //   fetch('/api/signup', { method: 'POST', body: formData })
+    //     .then(() => event.target.reset());  // Clear form on success
+    //
+    // APPROACH 3: Manual Reset with State (For Controlled Components)
+    // ----------------------------------------------------------------
+    // If using useState (controlled components), reset state:
+    //   setEnteredValues({ email: '', password: '' });
+    //
+    // Since inputs are controlled by state, resetting state clears inputs.
+    //
+    // See StateLogin.jsx for an example of this approach.
+    //
+    // APPROACH 4: Manual Reset with Refs (NOT RECOMMENDED!)
+    // ------------------------------------------------------
+    // With refs, you COULD do:
+    //   emailRef.current.value = '';
+    //   passwordRef.current.value = '';
+    //
+    // But this is DISCOURAGED because:
+    //   - You're directly manipulating the DOM
+    //   - React's philosophy is to let React control the UI
+    //   - Can cause bugs if React re-renders
+    //
+    // Instead, use event.target.reset() (Approach 2).
+    //
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
     // STEP 1: Create FormData Object from the Form
     // -------------------------------------------------------------------------
     //
@@ -179,12 +234,36 @@ export default function Signup() {
     // -------------------------------------------------------------------------
     console.log(data);
 
+    // -------------------------------------------------------------------------
+    // OPTIONAL: Reset the form after successful submission
+    // -------------------------------------------------------------------------
+    //
+    // After processing the data (e.g., sending to backend), you might want
+    // to clear the form so the user can submit again.
+    //
+    // Uncomment this line to reset the form after submission:
+    //   event.target.reset();
+    //
+    // In this demo, we DON'T reset so you can see the data you entered.
+    // But in a real app, you'd typically reset after successful API call:
+    //
+    //   fetch('/api/signup', { method: 'POST', body: data })
+    //     .then(response => {
+    //       if (response.ok) {
+    //         event.target.reset();  // Clear form on success
+    //         // Show success message
+    //       }
+    //     });
+    //
+    // -------------------------------------------------------------------------
+
     // TODO: In a real app, we would:
     // - Validate passwords match (data.password === data['confirm-password'])
     // - Check if terms are accepted (data.terms === 'on')
     // - Validate email format
     // - Send data to backend API
     // - Show success/error messages
+    // - Reset form on successful submission
   }
 
   return (
@@ -204,6 +283,7 @@ export default function Signup() {
           ===================================================================== */}
       <div className="control">
         <label htmlFor="email">Email</label>
+        {/* must have name attribute for FormData */}
         <input id="email" type="email" name="email" />
       </div>
 
@@ -397,22 +477,71 @@ export default function Signup() {
           FORM BUTTONS
           =====================================================================
 
-          type="reset":
-            - Built-in browser behavior
-            - Clears all form inputs to their initial values
-            - No JavaScript needed!
+          BUTTON TYPES IN FORMS:
+          ----------------------
+          Buttons inside forms can have three types:
 
-          type="submit":
-            - Triggers the form's 'submit' event
+          type="submit" (DEFAULT):
+            - Triggers form submission
+            - Fires the form's 'submit' event
             - Our handleSubmit function runs
             - FormData extracts all values
+            - This is the DEFAULT if no type specified!
+
+          type="button":
+            - Does nothing by default
+            - Just a regular button
+            - Won't submit or reset the form
+            - Useful for custom actions
+
+          type="reset":
+            - Clears all form inputs to their initial values
+            - BUILT INTO THE BROWSER - no JavaScript needed!
+            - Same as calling form.reset() in JavaScript
+            - Resets ALL inputs in the form
+
+          RESET BUTTON BEHAVIOR:
+          ----------------------
+          When you click the Reset button:
+            1. Browser finds all inputs in the form
+            2. Sets each input's value back to its initial state
+            3. Text inputs → empty string (or defaultValue if set)
+            4. Checkboxes → unchecked (or defaultChecked if set)
+            5. Radio buttons → deselected (or defaultChecked if set)
+            6. Select dropdowns → first option (or defaultValue if set)
+
+          No state changes, no React involved - pure browser behavior!
 
           ===================================================================== */}
       <p className="form-actions">
+        {/*
+          RESET BUTTON
+          ------------
+          type="reset" tells the browser to clear all form inputs.
+          This is completely automatic - no event handler needed!
+
+          When clicked:
+            - All text inputs cleared to ''
+            - All checkboxes unchecked
+            - All selects reset to first option
+
+          This is the EASIEST way to reset a form with FormData/Refs.
+        */}
         <button type="reset" className="button button-flat">
           Reset
         </button>
-        <button type="submit" className="button">
+
+        {/*
+          SUBMIT BUTTON
+          -------------
+          No type specified = defaults to type="submit"
+
+          When clicked:
+            - Triggers form's 'submit' event
+            - handleSubmit function runs
+            - FormData extracts all values
+        */}
+        <button className="button">
           Sign up
         </button>
       </p>
@@ -671,5 +800,203 @@ export default function Signup() {
 //   - ~10 lines of code
 //
 // FormData wins for large forms! 🏆
+//
+// =============================================================================
+// RESETTING FORMS - COMPLETE GUIDE
+// =============================================================================
+//
+// There are FOUR ways to reset a form in React:
+//
+// 1. RESET BUTTON (type="reset") - EASIEST
+// -----------------------------------------
+//
+//   <button type="reset">Reset</button>
+//
+// How it works:
+//   - Built into the browser (HTML standard)
+//   - NO JavaScript needed!
+//   - Automatically clears ALL form inputs
+//   - Resets to initial values (empty for text, unchecked for checkboxes)
+//
+// Pros:
+//   ✓ Zero code required
+//   ✓ Works with any form (state, refs, FormData)
+//   ✓ Browser handles everything
+//   ✓ Accessible (keyboard users can trigger with Enter/Space)
+//
+// Cons:
+//   ✗ User must click the button (not automatic)
+//   ✗ Can't customize behavior
+//
+// =============================================================================
+// 2. PROGRAMMATIC RESET: event.target.reset() - RECOMMENDED
+// =============================================================================
+//
+//   function handleSubmit(event) {
+//     event.preventDefault();
+//     // ... process form data ...
+//     event.target.reset();  // Clear the form
+//   }
+//
+// How it works:
+//   - event.target is the <form> element
+//   - Form elements have a built-in reset() method
+//   - Calling it does the SAME thing as clicking type="reset" button
+//
+// When to use:
+//   ✓ After successful form submission
+//   ✓ After sending data to backend
+//   ✓ After successful API call
+//
+// Example with fetch:
+//   fetch('/api/signup', { method: 'POST', body: formData })
+//     .then(response => {
+//       if (response.ok) {
+//         event.target.reset();  // Clear form on success
+//       }
+//     });
+//
+// Pros:
+//   ✓ Automatic (no user action needed)
+//   ✓ Same as type="reset" button
+//   ✓ Works with FormData and Refs
+//   ✓ Clean, one-line solution
+//
+// Cons:
+//   ✗ Requires access to event object
+//   ✗ Can't customize what gets reset
+//
+// =============================================================================
+// 3. STATE RESET: setEnteredValues({ ... }) - FOR CONTROLLED COMPONENTS
+// =============================================================================
+//
+//   const [enteredValues, setEnteredValues] = useState({
+//     email: '',
+//     password: ''
+//   });
+//
+//   function handleReset() {
+//     setEnteredValues({ email: '', password: '' });
+//   }
+//
+// How it works:
+//   - Controlled components have inputs bound to state
+//   - Resetting state automatically clears inputs
+//   - Because value={enteredValues.email} reflects state
+//
+// When to use:
+//   ✓ When using useState for form values
+//   ✓ When you need to reset to non-empty defaults
+//   ✓ When you want to reset some fields but not others
+//
+// Pros:
+//   ✓ Full control over what gets reset
+//   ✓ Can reset to custom default values
+//   ✓ Can reset individual fields
+//   ✓ Follows React patterns (state controls UI)
+//
+// Cons:
+//   ✗ More code (must manually set each state value)
+//   ✗ Only works with controlled components
+//   ✗ Must maintain sync between state structure and inputs
+//
+// =============================================================================
+// 4. REFS RESET: ref.current.value = '' - NOT RECOMMENDED!
+// =============================================================================
+//
+//   const emailRef = useRef();
+//   const passwordRef = useRef();
+//
+//   function handleReset() {
+//     emailRef.current.value = '';
+//     passwordRef.current.value = '';
+//   }
+//
+// How it works:
+//   - Directly manipulates DOM elements
+//   - Sets value property on each input element
+//
+// WHY NOT RECOMMENDED?
+// --------------------
+//   ✗ Violates React's declarative philosophy
+//   ✗ Directly manipulating DOM (React should control UI)
+//   ✗ Can cause bugs if React re-renders
+//   ✗ Lots of repetitive code for many inputs
+//   ✗ Can get out of sync with React's virtual DOM
+//
+// BETTER ALTERNATIVE:
+// -------------------
+// Use event.target.reset() instead (Approach 2)!
+//
+//   function handleSubmit(event) {
+//     event.preventDefault();
+//     // ... process data ...
+//     event.target.reset();  // Much cleaner!
+//   }
+//
+// =============================================================================
+// RESET STRATEGIES COMPARISON
+// =============================================================================
+//
+// SCENARIO 1: Simple form with FormData/Refs
+// -------------------------------------------
+// Best: type="reset" button OR event.target.reset()
+//
+//   <button type="reset">Reset</button>
+//   // OR
+//   event.target.reset();
+//
+// SCENARIO 2: Controlled form with useState
+// ------------------------------------------
+// Best: Reset state
+//
+//   setEnteredValues({ email: '', password: '' });
+//
+// SCENARIO 3: Reset after successful API call
+// --------------------------------------------
+// Best: event.target.reset() in the then() block
+//
+//   fetch('/api/signup', { ... })
+//     .then(() => event.target.reset());
+//
+// SCENARIO 4: Reset with custom default values
+// ---------------------------------------------
+// Best: State approach (only one that supports this)
+//
+//   setEnteredValues({
+//     email: 'default@example.com',
+//     role: 'student'
+//   });
+//
+// =============================================================================
+// BUTTON TYPE SUMMARY
+// =============================================================================
+//
+// type="submit":
+//   - Submits the form
+//   - Triggers 'submit' event
+//   - DEFAULT type (if no type specified)
+//   - Calls onSubmit handler
+//
+// type="button":
+//   - Does nothing by default
+//   - Won't submit or reset
+//   - Good for custom onClick handlers
+//   - Prevents accidental form submission
+//
+// type="reset":
+//   - Resets all form inputs
+//   - Clears text inputs to ''
+//   - Unchecks checkboxes
+//   - Resets selects to first option
+//   - NO JavaScript needed!
+//
+// IMPORTANT: If you don't specify a type, button defaults to "submit"!
+//
+//   <button>Click me</button>
+//   // ↑ This will SUBMIT THE FORM!
+//
+//   <button type="button">Click me</button>
+//   // ↑ This will NOT submit the form
 //
 // =============================================================================
