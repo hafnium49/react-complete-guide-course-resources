@@ -154,24 +154,28 @@
 // =============================================================================
 
 import Header from './components/Header.jsx';
-import Login from './components/Login.jsx';
+import Signup from './components/Signup.jsx';
 
 function App() {
   // ===========================================================================
   // APP STRUCTURE
   // ===========================================================================
-  // For now, the App is simple:
-  //   - Header: Shows the logo and title
-  //   - main: Contains the Login form
+  // Now using the Signup component to demonstrate the FormData API.
   //
-  // The Login component is where all the interesting form logic will happen!
+  // We've explored three approaches to handle forms:
+  //   1. STATE (StateLogin.jsx)    - Controlled components with useState
+  //   2. REFS (Login.jsx)          - Uncontrolled components with useRef
+  //   3. FORMDATA (Signup.jsx)     - Browser-native FormData API ← CURRENT
+  //
+  // The Signup component demonstrates how FormData makes complex forms
+  // with many inputs much easier to manage!
   // ===========================================================================
 
   return (
     <>
       <Header />
       <main>
-        <Login />
+        <Signup />
       </main>
     </>
   );
