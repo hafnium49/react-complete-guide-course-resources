@@ -18,8 +18,49 @@
 //   B) Combined state object (more scalable for large forms) ← We use this
 //
 // =============================================================================
+//
+// LESSON 265: BUILDING REUSABLE COMPONENTS TO REDUCE CODE DUPLICATION
+// =====================================================================
+//
+// In this lesson, we refactor our form to use a REUSABLE INPUT COMPONENT.
+//
+// THE PROBLEM: CODE DUPLICATION
+// ------------------------------
+// Before, we had nearly identical JSX for email and password:
+//   - Same div structure (div.control > label + input + error message)
+//   - Same CSS classes (control, control-error)
+//   - Same error display pattern ({isInvalid && <p>Error</p>})
+//   - Only differences: label text, id, type, validation logic
+//
+// This violates the DRY principle (Don't Repeat Yourself).
+//
+// THE SOLUTION: EXTRACT A REUSABLE COMPONENT
+// -------------------------------------------
+// We created Input.jsx which wraps the common structure:
+//   <Input
+//     label="Email"
+//     id="email"
+//     type="email"
+//     value={enteredValues.email}
+//     onChange={(event) => handleInputChange('email', event.target.value)}
+//     onBlur={() => handleInputBlur('email')}
+//     error={emailIsInvalid && "Please enter a valid email."}
+//   />
+//
+// This is much cleaner than repeating the entire div/label/input/error structure!
+//
+// BENEFITS:
+// ---------
+// ✓ Less code - 2 lines instead of 20+ lines per input
+// ✓ Maintainability - Fix bugs in one place
+// ✓ Consistency - All inputs have same structure
+// ✓ Scalability - Easy to add new inputs
+// ✓ Readability - Clear what props matter (label, error, etc.)
+//
+// =============================================================================
 
 import { useState } from 'react';
+import Input from './Input.jsx';
 
 export default function StateLogin() {
   // ===========================================================================
@@ -547,6 +588,112 @@ export default function StateLogin() {
   // ===========================================================================
 
   // ===========================================================================
+  // COMPUTING VALIDITY: Is the password invalid? (NEW IN LESSON 265!)
+  // ===========================================================================
+  //
+  // SAME PATTERN AS EMAIL VALIDATION
+  // ---------------------------------
+  // We use the exact same pattern for password validation:
+  //   1. Check if user has left the field (didEdit.password)
+  //   2. Check if password is actually invalid
+  //
+  // DIFFERENCE: PASSWORD VALIDATION RULE
+  // -------------------------------------
+  // For email, we checked: !email.includes('@')
+  // For password, we check: password.trim().length < 6
+  //
+  // WHY .trim()?
+  // ------------
+  // .trim() removes leading and trailing whitespace.
+  //
+  // Examples:
+  //   'abc123'.trim()       → 'abc123' (no change)
+  //   '  abc123  '.trim()   → 'abc123' (spaces removed)
+  //   '   '.trim()          → '' (all whitespace removed)
+  //
+  // Why do we need this?
+  //   - Prevents user from submitting password with only spaces
+  //   - '      ' has length 6, but it's not a valid password!
+  //   - '      '.trim() has length 0, so validation catches it
+  //
+  // THE COMPLETE VALIDATION:
+  // ------------------------
+  // enteredValues.password.trim().length < 6
+  //
+  // Step by step:
+  //   1. Get password from state: enteredValues.password
+  //   2. Remove whitespace: .trim()
+  //   3. Get length: .length
+  //   4. Check if too short: < 6
+  //
+  // Examples:
+  //   Password: ''          → ''.trim().length = 0 → 0 < 6 → true (INVALID)
+  //   Password: 'abc'       → 'abc'.trim().length = 3 → 3 < 6 → true (INVALID)
+  //   Password: '   '       → '   '.trim().length = 0 → 0 < 6 → true (INVALID)
+  //   Password: 'abc123'    → 'abc123'.trim().length = 6 → 6 < 6 → false (VALID)
+  //   Password: 'abcdefgh'  → 'abcdefgh'.trim().length = 8 → 8 < 6 → false (VALID)
+  //
+  // WHY MINIMUM 6 CHARACTERS?
+  // --------------------------
+  // This is a common security requirement:
+  //   - Too short passwords are easier to crack
+  //   - 6 is a reasonable minimum (many sites use 8+)
+  //   - Prevents weak passwords like "123", "abc", "pass"
+  //
+  // In a real app, you might also check:
+  //   - Must have uppercase letter
+  //   - Must have lowercase letter
+  //   - Must have number
+  //   - Must have special character
+  //
+  // COMBINING BOTH CONDITIONS WITH &&:
+  // -----------------------------------
+  // didEdit.password && enteredValues.password.trim().length < 6
+  //
+  // This is true ONLY when BOTH conditions are met:
+  //   1. User has left the password field (didEdit.password = true)
+  //   2. Password is too short (< 6 characters after trimming)
+  //
+  // VALIDATION FLOW EXAMPLES:
+  // --------------------------
+  // User types 'abc' and tabs away:
+  //   didEdit.password: true (left field)
+  //   'abc'.trim().length: 3
+  //   3 < 6: true
+  //   passwordIsInvalid: true && true → true
+  //   → Error shows!
+  //
+  // User types 'abc123' and tabs away:
+  //   didEdit.password: true (left field)
+  //   'abc123'.trim().length: 6
+  //   6 < 6: false
+  //   passwordIsInvalid: true && false → false
+  //   → No error!
+  //
+  // User types 'abc' but stays in field:
+  //   didEdit.password: false (still in field)
+  //   'abc'.trim().length: 3
+  //   3 < 6: true
+  //   passwordIsInvalid: false && true → false
+  //   → No error yet! (User still typing)
+  //
+  // ===========================================================================
+  const passwordIsInvalid =
+    didEdit.password &&
+    enteredValues.password.trim().length < 6;
+  //
+  // Now we have BOTH email and password validation!
+  // Both use the same pattern (didEdit + validation rule).
+  //
+  // This makes it easy to add more validations:
+  //   const usernameIsInvalid = didEdit.username && validation...
+  //   const phoneIsInvalid = didEdit.phone && validation...
+  //
+  // The pattern is consistent and predictable!
+  //
+  // ===========================================================================
+
+  // ===========================================================================
   // RESET HANDLER - For Controlled Components
   // ===========================================================================
   //
@@ -647,261 +794,181 @@ export default function StateLogin() {
     <form onSubmit={handleSubmit}>
       <h2>Login</h2>
 
+      {/* =====================================================================
+          USING THE REUSABLE INPUT COMPONENT (NEW IN LESSON 265!)
+          =====================================================================
+
+          BEFORE (Direct JSX - lots of duplication):
+          ------------------------------------------
+          We had to write out the full structure for each input:
+            <div className="control no-margin">
+              <label htmlFor="email">Email</label>
+              <input ... />
+              <div className="control-error">
+                {emailIsInvalid && <p>Error</p>}
+              </div>
+            </div>
+
+          This was repeated for email, password, and any other inputs!
+
+          AFTER (Using Input component - clean and DRY):
+          -----------------------------------------------
+          Now we can use our reusable Input component:
+            <Input
+              label="Email"
+              id="email"
+              type="email"
+              ...other props...
+              error={emailIsInvalid && "Error message"}
+            />
+
+          The Input component handles:
+            ✓ Wrapping div with correct className
+            ✓ Label with correct htmlFor
+            ✓ Input element with all forwarded props
+            ✓ Error message div with conditional rendering
+
+          BENEFITS OF THIS APPROACH:
+          ---------------------------
+          ✓ Less code - 8 lines instead of 30+ per input
+          ✓ Consistency - All inputs have same structure
+          ✓ Maintainability - Fix bugs in one place (Input.jsx)
+          ✓ Scalability - Easy to add 10 more inputs
+          ✓ Readability - Clear what props matter
+
+          PROPS WE'RE PASSING:
+          --------------------
+          Explicit props (pulled out in Input component):
+            - label: Text for the <label>
+            - id: For label htmlFor AND input id
+            - error: Error message (or false if no error)
+
+          Forwarded props (spread onto <input> via {...props}):
+            - type: Input type (email, password, text, etc.)
+            - name: Form field name
+            - value: Controlled component value
+            - onChange: Change handler
+            - onBlur: Blur handler (for validation timing)
+
+          HOW ERROR PROP WORKS:
+          ---------------------
+          We use a clever pattern with &&:
+            error={emailIsInvalid && "Please enter a valid email."}
+
+          If emailIsInvalid is false:
+            error = false && "..." = false
+            → Input component gets error={false}
+            → {error && <p>{error}</p>} renders nothing
+
+          If emailIsInvalid is true:
+            error = true && "..." = "Please enter a valid email."
+            → Input component gets error="Please enter a valid email."
+            → {error && <p>{error}</p>} renders the <p> with message
+
+          This is cleaner than passing both isInvalid and errorMessage!
+
+          ===================================================================== */}
       <div className="control-row">
-        <div className="control no-margin">
-          <label htmlFor="email">Email</label>
+        {/* ===================================================================
+            EMAIL INPUT - Using Reusable Component
+            ===================================================================
 
-          {/* ===================================================================
-              CONTROLLED INPUT: Email
-              ===================================================================
+            BEFORE (90+ lines of JSX and comments):
+              <div className="control no-margin">
+                <label htmlFor="email">Email</label>
+                <input ... all the props ... />
+                <div className="control-error">
+                  {emailIsInvalid && <p>Error</p>}
+                </div>
+              </div>
 
-              This is a CONTROLLED COMPONENT because:
-                1. value={enteredValues.email} - React controls the displayed value
-                2. onChange updates state - React knows about every change
+            AFTER (8 clean lines):
+              <Input
+                label="Email"
+                id="email"
+                type="email"
+                name="email"
+                value={enteredValues.email}
+                onChange={(event) => handleInputChange('email', event.target.value)}
+                onBlur={() => handleInputBlur('email')}
+                error={emailIsInvalid && "Please enter a valid email."}
+              />
 
-              TWO-WAY BINDING:
-              ----------------
-              value={enteredValues.email}
-                ↓
-                State flows DOWN to the input (displayed value)
+            All the complexity is now encapsulated in Input.jsx!
 
-              onChange={(event) => ...}
-                ↑
-                User input flows UP to state (updates value)
+            WHAT GETS FORWARDED:
+            --------------------
+            The Input component receives these props and:
+              - Uses 'label' for the <label> text
+              - Uses 'id' for <label htmlFor> AND <input id>
+              - Uses 'error' for conditional error message
+              - Spreads type, name, value, onChange, onBlur onto <input>
 
-              This creates a "single source of truth" - the state.
-              The input always shows what's in state, nothing more, nothing less.
+            The result is the EXACT SAME HTML structure as before,
+            but with much cleaner React code!
 
-              =================================================================== */}
-          <input
-            id="email"
-            type="email"
-            name="email"
-            // -----------------------------------------------------------------
-            // VALUE PROP: Display the current state value
-            // -----------------------------------------------------------------
-            // This makes React CONTROL the input's value.
-            // The input will ALWAYS show whatever is in enteredValues.email.
-            //
-            // Try this: Comment out this line and the onChange.
-            // You won't be able to type in the input! (It stays at '')
-            // -----------------------------------------------------------------
-            value={enteredValues.email}
-            // -----------------------------------------------------------------
-            // onChange PROP: Update state when user types
-            // -----------------------------------------------------------------
-            // This fires on EVERY keystroke!
-            //
-            // We can't just do: onChange={handleInputChange}
-            // Because React would only pass the EVENT object, not our
-            // custom 'identifier' parameter.
-            //
-            // So we wrap it in an arrow function that:
-            //   1. Receives the event from React
-            //   2. Calls handleInputChange with custom arguments
-            //   3. Passes 'email' as identifier
-            //   4. Passes event.target.value as the new value
-            //
-            // event.target is the input element itself.
-            // event.target.value is the current text in the input.
-            // -----------------------------------------------------------------
-            onChange={(event) => handleInputChange('email', event.target.value)}
-            // -----------------------------------------------------------------
-            // onBlur PROP: Fires when input loses focus (NEW IN LESSON 261!)
-            // -----------------------------------------------------------------
-            // This fires when the user LEAVES the input field.
-            //
-            // "Blur" is the opposite of "focus":
-            //   - User clicks on input → focus
-            //   - User clicks outside or tabs to next field → blur
-            //
-            // WHY ADD onBlur?
-            // ---------------
-            // We use blur to detect when the user has FINISHED typing in this
-            // field. This is the perfect time to validate!
-            //
-            // Without onBlur, we'd have to validate on every keystroke (too early)
-            // or on submit (too late). Blur is the "Goldilocks" moment - just right!
-            //
-            // SAME PATTERN AS onChange:
-            // -------------------------
-            // We wrap handleInputBlur in an arrow function so we can pass
-            // the 'email' identifier to it.
-            //
-            // React will call this arrow function with the blur event.
-            // We ignore the event (don't need it) and just call handleInputBlur.
-            //
-            // -----------------------------------------------------------------
-            onBlur={() => handleInputBlur('email')}
-          />
-          {/*
-            WHAT HAPPENS WHEN USER TYPES?
-            ------------------------------
-            1. User types 't' in the email input
-            2. Browser triggers 'change' event
-            3. Our onChange arrow function runs
-            4. It calls handleInputChange('email', 't')
-            5. handleInputChange updates state: { email: 't', password: '' }
-            6. handleInputChange ALSO sets didEdit.email to false
-            7. React re-renders the component with new state
-            8. Input's value becomes 't' (from value={enteredValues.email})
-            9. User sees 't' in the input
-            10. emailIsInvalid is recalculated: didEdit.email && !email.includes('@')
-            11. didEdit.email is false, so emailIsInvalid is false
-            12. No error shows! (User is still typing)
+            =================================================================== */}
+        <Input
+          label="Email"
+          id="email"
+          type="email"
+          name="email"
+          value={enteredValues.email}
+          onChange={(event) => handleInputChange('email', event.target.value)}
+          onBlur={() => handleInputBlur('email')}
+          error={emailIsInvalid && "Please enter a valid email."}
+        />
 
-            This happens for EVERY keystroke! Fast, but React is optimized for it.
+        {/* ===================================================================
+            PASSWORD INPUT - Using Reusable Component (NEW IN LESSON 265!)
+            ===================================================================
 
-            WHAT HAPPENS WHEN USER LEAVES THE FIELD?
-            -----------------------------------------
-            1. User tabs out of email field or clicks elsewhere
-            2. Browser triggers 'blur' event
-            3. Our onBlur arrow function runs
-            4. It calls handleInputBlur('email')
-            5. handleInputBlur sets didEdit.email to true
-            6. React re-renders the component
-            7. emailIsInvalid is recalculated: didEdit.email && !email.includes('@')
-            8. didEdit.email is now true!
-            9. If email doesn't include '@', emailIsInvalid becomes true
-            10. Error message appears!
+            Same pattern as email, but:
+              - Different label: "Password"
+              - Different id: "password"
+              - Different type: "password" (hides characters)
+              - Different identifier in handlers: 'password'
+              - Different validation: passwordIsInvalid
+              - Different error message: "Please enter a valid password."
 
-            This gives the user a chance to finish typing before we validate!
-          */}
+            IMPORTANT: onBlur Handler Added!
+            ---------------------------------
+            In the transcript, the instructor mentioned:
+              "And for onBlur, onChange, and value, I can again copy the code
+               from down there, though here I don't even have an onBlur listener
+               yet, which I'll change now though."
 
-          {/* ===================================================================
-              CONDITIONAL ERROR MESSAGE - Shown only when email is invalid
-              ===================================================================
+            So we're adding the onBlur handler that was missing before!
 
-              CONDITIONAL RENDERING IN REACT:
-              -------------------------------
-              We use the && (logical AND) operator to conditionally render JSX.
+            This means password will now have the SAME blur validation as email:
+              - User types in password field (didEdit.password stays false)
+              - User tabs away → onBlur fires → didEdit.password becomes true
+              - passwordIsInvalid is recalculated
+              - If password < 6 characters → error shows!
 
-              Syntax:
-                {condition && <JSX to render>}
+            CONSISTENCY:
+            ------------
+            Now BOTH inputs have:
+              ✓ onChange (updates state on every keystroke)
+              ✓ onBlur (marks field as touched when user leaves)
+              ✓ value (controlled by state)
+              ✓ error (shows when invalid AND touched)
 
-              How it works:
-                - If condition is true: React renders the JSX
-                - If condition is false: React renders nothing (null)
+            This is the complete blur validation pattern!
 
-              This is called "short-circuit evaluation":
-                - JavaScript evaluates left to right
-                - If left side is false, right side is never evaluated
-                - If left side is true, right side is evaluated and returned
-
-              Examples:
-                {true && <p>Shown</p>}     → Renders <p>Shown</p>
-                {false && <p>Hidden</p>}   → Renders nothing
-                {5 > 3 && <p>Math!</p>}    → Renders <p>Math!</p>
-
-              WHY USE && INSTEAD OF IF STATEMENT?
-              -----------------------------------
-              You CAN'T use if statements directly in JSX:
-                ❌ {if (emailIsInvalid) <div>Error</div>}  // Syntax error!
-
-              But you CAN use:
-                ✓ {emailIsInvalid && <div>Error</div>}     // Works!
-                ✓ {emailIsInvalid ? <div>Error</div> : null}  // Also works
-
-              The && approach is cleaner when you only render something
-              if the condition is true (no "else" case needed).
-
-              =================================================================== */}
-          <div className="control-error">
-            {/* -----------------------------------------------------------------
-                THE className PROP
-                -----------------------------------------------------------------
-                "control-error" is a CSS class defined in index.css.
-
-                It styles the error message container with:
-                  - Red text color
-                  - Appropriate spacing
-                  - Error icon or styling
-
-                ----------------------------------------------------------------- */}
-
-            {/* -----------------------------------------------------------------
-                CONDITIONAL RENDERING: Show error only if emailIsInvalid is true
-                -----------------------------------------------------------------
-
-                Remember: emailIsInvalid is our computed value from above.
-
-                When emailIsInvalid is true:
-                  - The && short-circuits to evaluate the right side
-                  - React renders the <p> element
-                  - User sees the error message
-
-                When emailIsInvalid is false:
-                  - The && short-circuits and returns false
-                  - React doesn't render anything
-                  - User sees no error message
-
-                IMPORTANT: This recalculates on EVERY RENDER!
-                ---------------------------------------------
-                Every time the user types a character:
-                  1. State updates (enteredValues.email changes)
-                  2. Component re-renders
-                  3. emailIsInvalid is recalculated
-                  4. This condition is re-evaluated
-                  5. Error appears or disappears based on new value
-
-                This gives INSTANT FEEDBACK as the user types!
-
-                ----------------------------------------------------------------- */}
-            {emailIsInvalid && (
-              <p>
-                {/* -------------------------------------------------------------
-                    ERROR MESSAGE TEXT
-                    -------------------------------------------------------------
-                    This message appears when:
-                      - User has typed something (email !== '')
-                      - AND email doesn't include '@'
-
-                    Example scenarios when this shows:
-                      - Email: 't'          → Shows error
-                      - Email: 'test'       → Shows error
-                      - Email: 'test.com'   → Shows error
-                      - Email: 'test@'      → Error disappears!
-                      - Email: 'test@test'  → No error
-
-                    ------------------------------------------------------------- */}
-                Please enter a valid email address.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="control no-margin">
-          <label htmlFor="password">Password</label>
-
-          {/* ===================================================================
-              CONTROLLED INPUT: Password
-              ===================================================================
-
-              Same pattern as email, but:
-                - value={enteredValues.password} - different state property
-                - handleInputChange('password', ...) - different identifier
-
-              THE POWER OF THE GENERIC HANDLER:
-              ----------------------------------
-              Notice we're using the SAME handleInputChange function!
-              We just pass a different identifier ('password' vs 'email').
-
-              This is much cleaner than having separate functions:
-                handleEmailChange, handlePasswordChange, etc.
-
-              For a form with 20 inputs, we still only need ONE handler!
-
-              =================================================================== */}
-          <input
-            id="password"
-            type="password"
-            name="password"
-            value={enteredValues.password}
-            onChange={(event) =>
-              handleInputChange('password', event.target.value)
-            }
-          />
-        </div>
+            =================================================================== */}
+        <Input
+          label="Password"
+          id="password"
+          type="password"
+          name="password"
+          value={enteredValues.password}
+          onChange={(event) =>
+            handleInputChange('password', event.target.value)
+          }
+          onBlur={() => handleInputBlur('password')}
+          error={passwordIsInvalid && "Please enter a valid password."}
+        />
       </div>
 
       <p className="form-actions">

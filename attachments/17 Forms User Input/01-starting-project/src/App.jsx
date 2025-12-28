@@ -154,14 +154,14 @@
 // =============================================================================
 
 import Header from './components/Header.jsx';
-import Signup from './components/Signup.jsx';
+import StateLogin from './components/StateLogin.jsx';
 
 function App() {
   // ===========================================================================
-  // APP STRUCTURE - LESSON 263: BUILT-IN BROWSER VALIDATION
+  // APP STRUCTURE - LESSON 265: BUILDING REUSABLE COMPONENTS
   // ===========================================================================
   //
-  // Now using the Signup component to demonstrate BUILT-IN HTML FORM VALIDATION.
+  // Now using the StateLogin component to demonstrate REUSABLE COMPONENTS.
   //
   // VALIDATION APPROACHES WE'VE EXPLORED SO FAR:
   // ---------------------------------------------
@@ -180,10 +180,15 @@ function App() {
   //      - Runs when user clicks submit (onSubmit)
   //      - Natural fit for refs/FormData
   //
-  //   4. BUILT-IN VALIDATION (Signup.jsx) - Browser handles validation ← NEW! (Lesson 263)
+  //   4. BUILT-IN VALIDATION (Signup.jsx) - Browser handles validation (Lesson 263)
   //      - NO custom JavaScript needed!
   //      - Browser validates automatically
   //      - Uses HTML attributes like 'required', 'minLength', etc.
+  //
+  //   5. REUSABLE COMPONENTS (StateLogin.jsx) - Reduce code duplication ← NEW! (Lesson 265)
+  //      - Extract common JSX into reusable components
+  //      - Input.jsx wraps label + input + error message
+  //      - Clean, maintainable, scalable code
   //
   // ===========================================================================
   // WHAT IS BUILT-IN BROWSER VALIDATION?
@@ -304,7 +309,7 @@ function App() {
     <>
       <Header />
       <main>
-        <Signup />
+        <StateLogin />
       </main>
     </>
   );
