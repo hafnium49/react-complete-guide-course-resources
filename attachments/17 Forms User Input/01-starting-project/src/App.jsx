@@ -154,48 +154,149 @@
 // =============================================================================
 
 import Header from './components/Header.jsx';
-import Login from './components/Login.jsx';
+import Signup from './components/Signup.jsx';
 
 function App() {
   // ===========================================================================
-  // APP STRUCTURE
+  // APP STRUCTURE - LESSON 263: BUILT-IN BROWSER VALIDATION
   // ===========================================================================
-  // Now using the Login component (refs-based) to demonstrate SUBMIT VALIDATION.
   //
-  // We've explored three validation approaches:
+  // Now using the Signup component to demonstrate BUILT-IN HTML FORM VALIDATION.
+  //
+  // VALIDATION APPROACHES WE'VE EXPLORED SO FAR:
+  // ---------------------------------------------
   //   1. KEYSTROKE (StateLogin.jsx) - Validate as user types (Lesson 260)
-  //   2. BLUR (StateLogin.jsx)      - Validate when field loses focus (Lesson 261)
-  //   3. SUBMIT (Login.jsx)         - Validate when form is submitted ← CURRENT (Lesson 262)
+  //      - Custom JavaScript validation
+  //      - Runs on every keystroke (onChange)
+  //      - Shows errors immediately
   //
-  // WHY SUBMIT VALIDATION WITH REFS?
-  // ---------------------------------
-  // With REFS (uncontrolled components), we can't easily validate on keystroke
-  // because we don't have onChange handlers tracking every change.
+  //   2. BLUR (StateLogin.jsx) - Validate when field loses focus (Lesson 261)
+  //      - Custom JavaScript validation
+  //      - Runs when user leaves field (onBlur)
+  //      - Better UX timing
   //
-  // We COULD add onChange handlers for validation, but then we might as well
-  // just use STATE (controlled components) instead!
+  //   3. SUBMIT (Login.jsx) - Validate when form is submitted (Lesson 262)
+  //      - Custom JavaScript validation
+  //      - Runs when user clicks submit (onSubmit)
+  //      - Natural fit for refs/FormData
   //
-  // So with refs, the natural validation point is ON SUBMIT.
+  //   4. BUILT-IN VALIDATION (Signup.jsx) - Browser handles validation ← NEW! (Lesson 263)
+  //      - NO custom JavaScript needed!
+  //      - Browser validates automatically
+  //      - Uses HTML attributes like 'required', 'minLength', etc.
   //
-  // WHEN IS SUBMIT VALIDATION A GOOD CHOICE?
-  // -----------------------------------------
-  // Submit validation is great when:
-  //   ✓ Using refs or FormData (can't validate on keystroke easily)
-  //   ✓ Simple forms where instant feedback isn't critical
-  //   ✓ You want less code (no blur/keystroke tracking)
-  //   ✓ As a SAFETY NET even when you have blur/keystroke validation!
+  // ===========================================================================
+  // WHAT IS BUILT-IN BROWSER VALIDATION?
+  // ===========================================================================
   //
-  // IMPORTANT: ALWAYS ADD SUBMIT VALIDATION!
-  // -----------------------------------------
-  // Even if you have blur/keystroke validation, you should ALSO validate
-  // on submit as a final check before processing the data.
+  // Browsers have BUILT-IN validation features that you can enable by adding
+  // special HTML attributes to your form inputs.
   //
-  // Why? Users can bypass blur/keystroke validation by:
-  //   - Directly clicking submit without touching fields
-  //   - Using browser autofill
-  //   - Pasting invalid data and submitting immediately
+  // Examples:
+  //   <input type="email" required />
+  //   <input type="password" required minLength={6} />
+  //   <input type="text" required maxLength={50} />
   //
-  // Submit validation is your last line of defense!
+  // When you add these attributes:
+  //   - The BROWSER validates the input (not React, not JavaScript!)
+  //   - The BROWSER shows error messages (not you!)
+  //   - The BROWSER prevents form submission if validation fails
+  //
+  // This is the EASIEST way to add validation because you don't write ANY code!
+  //
+  // ===========================================================================
+  // BROWSER VALIDATION vs CUSTOM JAVASCRIPT VALIDATION
+  // ===========================================================================
+  //
+  // CUSTOM JAVASCRIPT VALIDATION (What we did in Lessons 260-262):
+  // ---------------------------------------------------------------
+  //   - YOU write the validation logic
+  //   - YOU write the error messages
+  //   - YOU show/hide errors
+  //   - YOU prevent form submission
+  //   - Full control, but more work
+  //
+  //   Example:
+  //     const emailIsInvalid = didEdit.email && !email.includes('@');
+  //     {emailIsInvalid && <p>Please enter a valid email</p>}
+  //
+  // BROWSER VALIDATION (What we'll do in Lesson 263):
+  // --------------------------------------------------
+  //   - BROWSER writes the validation logic (built-in!)
+  //   - BROWSER writes the error messages (automatic!)
+  //   - BROWSER shows/hides errors (no state needed!)
+  //   - BROWSER prevents form submission (automatic!)
+  //   - Less control, but MUCH less work!
+  //
+  //   Example:
+  //     <input type="email" required />
+  //     // That's it! Browser does everything!
+  //
+  // ===========================================================================
+  // WHY USE BUILT-IN BROWSER VALIDATION?
+  // ===========================================================================
+  //
+  // PROS:
+  // -----
+  //   ✓ ZERO code required - just add HTML attributes
+  //   ✓ Automatic validation - browser handles everything
+  //   ✓ Automatic error messages - browser provides them
+  //   ✓ Works without JavaScript - accessible fallback
+  //   ✓ Consistent UX - users familiar with browser errors
+  //   ✓ Less code to maintain - no custom validation logic
+  //   ✓ Better accessibility - screen readers understand it
+  //
+  // CONS:
+  // -----
+  //   ✗ Less control - can't customize error messages easily
+  //   ✗ Styling limitations - error styling varies by browser
+  //   ✗ Limited validation rules - only basic checks
+  //   ✗ Can't do complex validation (e.g., "passwords must match")
+  //   ✗ Error messages vary by browser language
+  //
+  // ===========================================================================
+  // WHEN TO USE BUILT-IN VALIDATION?
+  // ===========================================================================
+  //
+  // USE BUILT-IN VALIDATION WHEN:
+  // ------------------------------
+  //   ✓ You have simple validation requirements
+  //   ✓ You want minimal code
+  //   ✓ Browser error messages are acceptable
+  //   ✓ You're building a quick prototype
+  //   ✓ Accessibility is important (it just works!)
+  //
+  // USE CUSTOM VALIDATION WHEN:
+  // ---------------------------
+  //   ✗ You need custom error messages
+  //   ✗ You need complex validation logic
+  //   ✗ You want consistent cross-browser styling
+  //   ✗ You need to validate against backend data
+  //   ✗ You want instant feedback while typing
+  //
+  // BEST APPROACH: COMBINE BOTH!
+  // -----------------------------
+  //   1. Add built-in validation for basic checks (required, minLength, etc.)
+  //   2. Add custom JavaScript validation for complex rules
+  //   3. This gives you BOTH easy setup AND full control!
+  //
+  // ===========================================================================
+  // IMPORTANT: ALWAYS VALIDATE ON SERVER TOO!
+  // ===========================================================================
+  //
+  // Whether you use built-in validation OR custom JavaScript validation,
+  // you MUST ALWAYS validate on the server as well!
+  //
+  // Why?
+  // ----
+  //   - Users can disable JavaScript
+  //   - Users can bypass client-side validation
+  //   - Malicious users can send HTTP requests directly
+  //
+  // Client-side validation = UX (User Experience)
+  // Server-side validation = SECURITY
+  //
+  // NEVER trust client-side validation alone!
   //
   // ===========================================================================
 
@@ -203,7 +304,7 @@ function App() {
     <>
       <Header />
       <main>
-        <Login />
+        <Signup />
       </main>
     </>
   );
