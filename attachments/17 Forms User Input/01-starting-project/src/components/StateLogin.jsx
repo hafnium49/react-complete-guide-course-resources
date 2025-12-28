@@ -62,6 +62,66 @@
 import { useState } from 'react';
 import Input from './Input.jsx';
 
+// =============================================================================
+// NEW IN LESSON 266: IMPORTING REUSABLE VALIDATION FUNCTIONS
+// =============================================================================
+//
+// Instead of writing validation logic directly in this component, we now
+// import REUSABLE VALIDATION FUNCTIONS from our util/validation.js file.
+//
+// WHY IS THIS BETTER?
+// -------------------
+// BEFORE (Inline validation):
+//   const emailIsInvalid = didEdit.email && !enteredValues.email.includes('@');
+//
+// Problems:
+//   - This exact validation logic would be repeated in Login.jsx, Signup.jsx, etc.
+//   - If we want to improve email validation, we'd have to update EVERY component
+//   - Code duplication violates the DRY principle
+//
+// AFTER (Reusable functions):
+//   const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
+//
+// Benefits:
+//   ✓ Write validation logic ONCE in validation.js
+//   ✓ Use it EVERYWHERE (Login, Signup, Profile, Contact forms, etc.)
+//   ✓ Fix bugs or improve validation in ONE place
+//   ✓ More readable: "isEmail" is clearer than ".includes('@')"
+//   ✓ Easier to test: Test the function once, use it everywhere
+//
+// WHAT ARE WE IMPORTING?
+// -----------------------
+// isEmail(value)
+//   - Checks if value contains '@' symbol
+//   - Returns true if valid, false if invalid
+//   - Usage: !isEmail(email) checks if email is INVALID
+//
+// isNotEmpty(value)
+//   - Checks if value is not empty after trimming whitespace
+//   - Returns true if has content, false if empty or only spaces
+//   - Usage: !isNotEmpty(name) checks if name is empty
+//
+// hasMinLength(value, minLength)
+//   - Checks if value has at least minLength characters
+//   - Returns true if meets requirement, false if too short
+//   - Usage: !hasMinLength(password, 6) checks if password is too short
+//
+// HOW TO USE THEM:
+// ----------------
+// These functions return TRUE when valid, FALSE when invalid.
+//
+// So we use them with the ! (NOT) operator to check if INVALID:
+//
+//   const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
+//   const passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6);
+//
+// This reads naturally:
+//   "Email is invalid if user touched it AND it's not a valid email"
+//   "Password is invalid if user touched it AND it doesn't have min length"
+//
+// =============================================================================
+import { isEmail, isNotEmpty, hasMinLength } from '../util/validation.js';
+
 export default function StateLogin() {
   // ===========================================================================
   // APPROACH A: SEPARATE STATE FOR EACH INPUT (Commented Out)
@@ -458,93 +518,120 @@ export default function StateLogin() {
   //   3. React re-renders this component
   //   4. useState returns the new state: { email: 't', password: '' }
   //   5. This line runs again: emailIsInvalid = ...
-  //   6. It checks if 't' includes '@' (it doesn't)
+  //   6. It checks if 't' is a valid email (it's not)
   //   7. emailIsInvalid becomes true
   //   8. React renders the error message (see JSX below)
   //
   // ===========================================================================
   const emailIsInvalid =
     // -------------------------------------------------------------------------
-    // UPDATED VALIDATION LOGIC - Using didEdit instead of checking if empty
+    // LESSON 266: USING REUSABLE VALIDATION FUNCTIONS
     // -------------------------------------------------------------------------
     //
-    // LESSON 260 (Old approach):
+    // EVOLUTION OF EMAIL VALIDATION ACROSS LESSONS:
+    // ----------------------------------------------
+    //
+    // LESSON 260 (Keystroke validation - inline):
     //   emailIsInvalid = enteredValues.email !== '' && !enteredValues.email.includes('@')
+    //   Problem: Error showed too early (as soon as user started typing)
     //
-    // Problems with old approach:
-    //   - Error showed as soon as user started typing 't'
-    //   - Too early! User was still typing!
-    //
-    // LESSON 261 (New approach):
+    // LESSON 261 (Blur validation - inline):
     //   emailIsInvalid = didEdit.email && !enteredValues.email.includes('@')
+    //   Improvement: Wait until user leaves field before showing error
     //
-    // Benefits of new approach:
-    //   ✓ Wait until user has LEFT the field (blur)
-    //   ✓ Give user a chance to finish typing
-    //   ✓ Hide error while user is actively fixing it
-    //   ✓ Show error again if still invalid after leaving field
+    // LESSON 266 (Blur validation - reusable function): ← WE ARE HERE NOW!
+    //   emailIsInvalid = didEdit.email && !isEmail(enteredValues.email)
+    //   Further improvement: Extract validation logic into reusable function
     //
-    // -------------------------------------------------------------------------
+    // WHAT CHANGED IN LESSON 266?
+    // ----------------------------
+    // We replaced the INLINE validation logic:
+    //   !enteredValues.email.includes('@')
     //
-    // THE NEW CONDITION: didEdit.email
+    // With a REUSABLE FUNCTION call:
+    //   !isEmail(enteredValues.email)
+    //
+    // SAME FUNCTIONALITY, BETTER CODE!
     // ---------------------------------
-    // Instead of checking if email is not empty (enteredValues.email !== ''),
-    // we check if the user has TOUCHED/LEFT the field (didEdit.email).
+    // The validation logic is identical, but now it's:
+    //   ✓ Reusable across multiple components
+    //   ✓ More readable (function name is self-documenting)
+    //   ✓ Easier to maintain (fix bugs in one place)
+    //   ✓ Easier to test (test the function independently)
     //
-    // This is MUCH BETTER because:
+    // HOW isEmail() WORKS:
+    // --------------------
+    // isEmail(value) checks if value contains '@' symbol.
     //
-    // OLD WAY (Lesson 260):
-    //   email = ''     → error: NO  (good! not started yet)
-    //   email = 't'    → error: YES (bad! user is still typing!)
-    //   email = 'te'   → error: YES (bad! user is still typing!)
-    //   email = 'tes'  → error: YES (bad! user is still typing!)
-    //   email = 'test' → error: YES (bad! user is still typing!)
+    // Returns:
+    //   true = valid email (has @)
+    //   false = invalid email (no @)
     //
-    // NEW WAY (Lesson 261):
-    //   email = '', didEdit: false → error: NO  (good! not touched yet)
-    //   email = 't', didEdit: false → error: NO  (good! user is still typing!)
-    //   [user tabs out] didEdit becomes true
-    //   email = 't', didEdit: true → error: YES (good! now we can validate!)
-    //   [user clicks back in and types]
-    //   email = 't@', didEdit: false → error: NO  (good! user is fixing it!)
-    //   [user tabs out] didEdit becomes true
-    //   email = 't@', didEdit: true → error: YES (still invalid)
-    //   [user clicks back in and types]
-    //   email = 't@t', didEdit: false → error: NO  (good! still fixing!)
-    //   [user tabs out] didEdit becomes true
-    //   email = 't@t', didEdit: true → error: NO  (valid! has @)
+    // Examples:
+    //   isEmail('test@test.com') → true
+    //   isEmail('testtest.com')  → false
+    //   isEmail('t')             → false
+    //   isEmail('')              → false
+    //
+    // WHY USE ! (NOT OPERATOR)?
+    // --------------------------
+    // isEmail() returns TRUE when valid.
+    // But we want emailIsInvalid to be TRUE when INVALID.
+    //
+    // So we use ! to flip it:
+    //   !isEmail('test@test.com') → !true  → false (email is NOT invalid)
+    //   !isEmail('testtest.com')  → !false → true  (email IS invalid)
+    //
+    // COMBINING MULTIPLE VALIDATIONS (Optional):
+    // -------------------------------------------
+    // The instructor mentioned we could also check if email is not empty:
+    //
+    //   emailIsInvalid =
+    //     didEdit.email &&
+    //     (!isEmail(enteredValues.email) || !isNotEmpty(enteredValues.email))
+    //
+    // This would ensure email is BOTH:
+    //   - Not empty
+    //   - Contains @
+    //
+    // For now, we keep it simple with just the email format check.
     //
     // -------------------------------------------------------------------------
     didEdit.email &&
     // -------------------------------------------------------------------------
-    // THE includes() METHOD (Same as Lesson 260)
+    // THE REUSABLE VALIDATION FUNCTION CALL (NEW IN LESSON 266!)
     // -------------------------------------------------------------------------
     //
-    // .includes(searchString) is a JavaScript string method that checks
-    // if a string contains a specific substring.
+    // OLD (Inline - Lesson 261):
+    //   !enteredValues.email.includes('@')
     //
-    // Returns true if found, false if not:
-    //   'hello'.includes('h')     → true
-    //   'hello'.includes('z')     → false
-    //   'test@test.com'.includes('@') → true
-    //   'testtest.com'.includes('@')  → false
+    // NEW (Reusable function - Lesson 266):
+    //   !isEmail(enteredValues.email)
     //
-    // THE ! OPERATOR (Logical NOT):
-    // -----------------------------
-    // The exclamation mark negates (flips) the boolean value:
-    //   !true  → false
-    //   !false → true
+    // Benefits of the reusable function approach:
     //
-    // So: !enteredValues.email.includes('@')
-    // Means: "email DOES NOT include @"
+    // 1. WRITE ONCE, USE EVERYWHERE
+    //    - If we have Login, Signup, Profile, Contact forms...
+    //    - They ALL can use isEmail() instead of repeating .includes('@')
     //
-    // This is equivalent to:
-    //   enteredValues.email.includes('@') === false
+    // 2. FIX BUGS IN ONE PLACE
+    //    - If we want to improve email validation later (check for .com, etc.)
+    //    - We only update validation.js, not every component!
     //
-    // But !includes() is more concise and idiomatic.
+    // 3. MORE READABLE
+    //    - "isEmail" is immediately clear
+    //    - ".includes('@')" requires understanding what we're checking for
+    //
+    // 4. EASIER TO TEST
+    //    - We can test isEmail() function independently
+    //    - Write unit tests: expect(isEmail('test@test.com')).toBe(true)
+    //
+    // 5. SELF-DOCUMENTING
+    //    - Function name explains what it does
+    //    - No need for comments explaining the validation logic
     //
     // -------------------------------------------------------------------------
-    !enteredValues.email.includes('@');
+    !isEmail(enteredValues.email);
   //
   // SIMPLIFIED EXPLANATION (Updated for Lesson 261):
   // -------------------------------------------------
@@ -599,88 +686,144 @@ export default function StateLogin() {
   //
   // DIFFERENCE: PASSWORD VALIDATION RULE
   // -------------------------------------
-  // For email, we checked: !email.includes('@')
-  // For password, we check: password.trim().length < 6
-  //
-  // WHY .trim()?
-  // ------------
-  // .trim() removes leading and trailing whitespace.
-  //
-  // Examples:
-  //   'abc123'.trim()       → 'abc123' (no change)
-  //   '  abc123  '.trim()   → 'abc123' (spaces removed)
-  //   '   '.trim()          → '' (all whitespace removed)
-  //
-  // Why do we need this?
-  //   - Prevents user from submitting password with only spaces
-  //   - '      ' has length 6, but it's not a valid password!
-  //   - '      '.trim() has length 0, so validation catches it
-  //
-  // THE COMPLETE VALIDATION:
-  // ------------------------
-  // enteredValues.password.trim().length < 6
-  //
-  // Step by step:
-  //   1. Get password from state: enteredValues.password
-  //   2. Remove whitespace: .trim()
-  //   3. Get length: .length
-  //   4. Check if too short: < 6
-  //
-  // Examples:
-  //   Password: ''          → ''.trim().length = 0 → 0 < 6 → true (INVALID)
-  //   Password: 'abc'       → 'abc'.trim().length = 3 → 3 < 6 → true (INVALID)
-  //   Password: '   '       → '   '.trim().length = 0 → 0 < 6 → true (INVALID)
-  //   Password: 'abc123'    → 'abc123'.trim().length = 6 → 6 < 6 → false (VALID)
-  //   Password: 'abcdefgh'  → 'abcdefgh'.trim().length = 8 → 8 < 6 → false (VALID)
-  //
-  // WHY MINIMUM 6 CHARACTERS?
-  // --------------------------
-  // This is a common security requirement:
-  //   - Too short passwords are easier to crack
-  //   - 6 is a reasonable minimum (many sites use 8+)
-  //   - Prevents weak passwords like "123", "abc", "pass"
-  //
-  // In a real app, you might also check:
-  //   - Must have uppercase letter
-  //   - Must have lowercase letter
-  //   - Must have number
-  //   - Must have special character
-  //
-  // COMBINING BOTH CONDITIONS WITH &&:
-  // -----------------------------------
-  // didEdit.password && enteredValues.password.trim().length < 6
-  //
-  // This is true ONLY when BOTH conditions are met:
-  //   1. User has left the password field (didEdit.password = true)
-  //   2. Password is too short (< 6 characters after trimming)
-  //
-  // VALIDATION FLOW EXAMPLES:
-  // --------------------------
-  // User types 'abc' and tabs away:
-  //   didEdit.password: true (left field)
-  //   'abc'.trim().length: 3
-  //   3 < 6: true
-  //   passwordIsInvalid: true && true → true
-  //   → Error shows!
-  //
-  // User types 'abc123' and tabs away:
-  //   didEdit.password: true (left field)
-  //   'abc123'.trim().length: 6
-  //   6 < 6: false
-  //   passwordIsInvalid: true && false → false
-  //   → No error!
-  //
-  // User types 'abc' but stays in field:
-  //   didEdit.password: false (still in field)
-  //   'abc'.trim().length: 3
-  //   3 < 6: true
-  //   passwordIsInvalid: false && true → false
-  //   → No error yet! (User still typing)
+  // For email, we used: !isEmail(value)
+  // For password, we use: !hasMinLength(value, 6)
   //
   // ===========================================================================
   const passwordIsInvalid =
+    // -------------------------------------------------------------------------
+    // LESSON 266: USING REUSABLE VALIDATION FUNCTION FOR PASSWORD
+    // -------------------------------------------------------------------------
+    //
+    // EVOLUTION OF PASSWORD VALIDATION ACROSS LESSONS:
+    // -------------------------------------------------
+    //
+    // LESSON 265 (Inline validation):
+    //   passwordIsInvalid = didEdit.password && enteredValues.password.trim().length < 6
+    //
+    // LESSON 266 (Reusable function): ← WE ARE HERE NOW!
+    //   passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6)
+    //
+    // WHAT CHANGED IN LESSON 266?
+    // ----------------------------
+    // We replaced the INLINE validation logic:
+    //   enteredValues.password.trim().length < 6
+    //
+    // With a REUSABLE FUNCTION call:
+    //   !hasMinLength(enteredValues.password, 6)
+    //
+    // SAME FUNCTIONALITY, BETTER CODE!
+    // ---------------------------------
+    // The validation logic is similar, but now it's:
+    //   ✓ Reusable across multiple components
+    //   ✓ More readable (function name is self-documenting)
+    //   ✓ Easier to maintain (fix bugs in one place)
+    //   ✓ Easier to test (test the function independently)
+    //
+    // HOW hasMinLength() WORKS:
+    // -------------------------
+    // hasMinLength(value, minLength) checks if value has at least minLength characters.
+    //
+    // Returns:
+    //   true = valid (has minimum length)
+    //   false = invalid (too short)
+    //
+    // Examples:
+    //   hasMinLength('abc123', 6)   → true  (6 characters, meets requirement)
+    //   hasMinLength('abcdefgh', 6) → true  (8 characters, exceeds requirement)
+    //   hasMinLength('abc', 6)      → false (3 characters, too short)
+    //   hasMinLength('', 6)         → false (0 characters, too short)
+    //
+    // WHY USE ! (NOT OPERATOR)?
+    // --------------------------
+    // hasMinLength() returns TRUE when valid (has minimum length).
+    // But we want passwordIsInvalid to be TRUE when INVALID.
+    //
+    // So we use ! to flip it:
+    //   !hasMinLength('abc123', 6) → !true  → false (password is NOT invalid)
+    //   !hasMinLength('abc', 6)    → !false → true  (password IS invalid)
+    //
+    // IMPORTANT NOTE ABOUT .trim():
+    // ------------------------------
+    // The instructor's implementation uses hasMinLength(value, 6) directly,
+    // which checks value.length >= 6.
+    //
+    // This means it does NOT trim whitespace like the inline version did!
+    //
+    //   enteredValues.password.trim().length < 6  (OLD - trims whitespace)
+    //   !hasMinLength(enteredValues.password, 6)  (NEW - does NOT trim)
+    //
+    // If you want to trim whitespace, you can do:
+    //   !hasMinLength(enteredValues.password.trim(), 6)
+    //
+    // Or create a separate validation:
+    //   !hasMinLength(enteredValues.password, 6) || !isNotEmpty(enteredValues.password)
+    //
+    // For this lesson, we follow the instructor's approach (no trimming).
+    //
+    // THE FLEXIBILITY OF hasMinLength():
+    // -----------------------------------
+    // The second parameter (6) makes this function very flexible!
+    //
+    // Same function, different use cases:
+    //   !hasMinLength(password, 6)     // Password must be at least 6 chars
+    //   !hasMinLength(username, 3)     // Username must be at least 3 chars
+    //   !hasMinLength(code, 4)         // Code must be at least 4 chars
+    //
+    // WHY MINIMUM 6 CHARACTERS?
+    // --------------------------
+    // This is a common security requirement:
+    //   - Too short passwords are easier to crack
+    //   - 6 is a reasonable minimum (many sites use 8+)
+    //   - Prevents weak passwords like "123", "abc", "pass"
+    //
+    // In a real app, you might also combine with other checks:
+    //   - Must have uppercase letter: !containsUppercase(password)
+    //   - Must have lowercase letter: !containsLowercase(password)
+    //   - Must have number: !containsNumber(password)
+    //   - Must have special character: !containsSpecialChar(password)
+    //
+    // COMPARISON: INLINE vs REUSABLE FUNCTION
+    // ----------------------------------------
+    //
+    // OLD (Inline - Lesson 265):
+    //   const passwordIsInvalid =
+    //     didEdit.password &&
+    //     enteredValues.password.trim().length < 6;
+    //
+    // Problems:
+    //   - This exact logic repeated in every form with password
+    //   - ".trim().length < 6" requires understanding the logic
+    //   - If we want to change minimum length to 8, update every component
+    //
+    // NEW (Reusable function - Lesson 266):
+    //   const passwordIsInvalid =
+    //     didEdit.password &&
+    //     !hasMinLength(enteredValues.password, 6);
+    //
+    // Benefits:
+    //   ✓ Function name "hasMinLength" is self-documenting
+    //   ✓ Can reuse in Signup, ChangePassword, ResetPassword forms
+    //   ✓ Easy to change: just update the 6 to 8 if requirements change
+    //   ✓ Easy to test: expect(hasMinLength('abc', 6)).toBe(false)
+    //
+    // -------------------------------------------------------------------------
     didEdit.password &&
-    enteredValues.password.trim().length < 6;
+    // -------------------------------------------------------------------------
+    // THE REUSABLE VALIDATION FUNCTION CALL (NEW IN LESSON 266!)
+    // -------------------------------------------------------------------------
+    //
+    // OLD (Inline - Lesson 265):
+    //   enteredValues.password.trim().length < 6
+    //
+    // NEW (Reusable function - Lesson 266):
+    //   !hasMinLength(enteredValues.password, 6)
+    //
+    // This reads naturally:
+    //   "Password is invalid if user touched it AND it doesn't have minimum length of 6"
+    //
+    // -------------------------------------------------------------------------
+    !hasMinLength(enteredValues.password, 6);
   //
   // Now we have BOTH email and password validation!
   // Both use the same pattern (didEdit + validation rule).

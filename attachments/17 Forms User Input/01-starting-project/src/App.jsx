@@ -158,10 +158,11 @@ import StateLogin from './components/StateLogin.jsx';
 
 function App() {
   // ===========================================================================
-  // APP STRUCTURE - LESSON 265: BUILDING REUSABLE COMPONENTS
+  // APP STRUCTURE - LESSONS 265-266: REUSABLE COMPONENTS & VALIDATION FUNCTIONS
   // ===========================================================================
   //
-  // Now using the StateLogin component to demonstrate REUSABLE COMPONENTS.
+  // Now using the StateLogin component to demonstrate REUSABLE COMPONENTS
+  // and REUSABLE VALIDATION FUNCTIONS.
   //
   // VALIDATION APPROACHES WE'VE EXPLORED SO FAR:
   // ---------------------------------------------
@@ -185,10 +186,15 @@ function App() {
   //      - Browser validates automatically
   //      - Uses HTML attributes like 'required', 'minLength', etc.
   //
-  //   5. REUSABLE COMPONENTS (StateLogin.jsx) - Reduce code duplication ← NEW! (Lesson 265)
+  //   5. REUSABLE COMPONENTS (StateLogin.jsx) - Reduce code duplication (Lesson 265)
   //      - Extract common JSX into reusable components
   //      - Input.jsx wraps label + input + error message
   //      - Clean, maintainable, scalable code
+  //
+  //   6. REUSABLE VALIDATION FUNCTIONS (StateLogin.jsx) - Reduce logic duplication ← NEW! (Lesson 266)
+  //      - Extract validation logic into utility functions
+  //      - util/validation.js exports isEmail(), hasMinLength(), etc.
+  //      - Write once, use everywhere
   //
   // ===========================================================================
   // WHAT IS BUILT-IN BROWSER VALIDATION?
