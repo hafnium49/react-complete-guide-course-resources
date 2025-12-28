@@ -33,8 +33,71 @@
 // The ONLY requirement: All inputs must have a 'name' attribute!
 //
 // =============================================================================
+// LESSON 264: COMBINING BUILT-IN AND CUSTOM VALIDATION
+// =============================================================================
+//
+// In Lesson 263, we added BUILT-IN HTML validation (required, minLength, etc.)
+// In Lesson 264, we're adding CUSTOM JavaScript validation ON TOP of that!
+//
+// WHY COMBINE BOTH?
+// -----------------
+// Built-in validation is great for:
+//   ✓ Simple checks (required, minLength, email format)
+//   ✓ Automatic browser error messages
+//   ✓ No JavaScript needed
+//
+// But built-in validation CANNOT:
+//   ✗ Check if two fields match (password confirmation)
+//   ✗ Check against backend data (username availability)
+//   ✗ Implement complex business rules
+//
+// So we COMBINE:
+//   1. Built-in validation handles simple checks
+//   2. Custom JavaScript validation handles complex checks
+//
+// THE VALIDATION FLOW:
+// --------------------
+// 1. User clicks Submit button
+// 2. BROWSER checks built-in validation (required, minLength, etc.)
+// 3. If browser validation FAILS → Browser shows error, stops here
+// 4. If browser validation PASSES → Our handleSubmit runs
+// 5. WE check custom validation (passwords match, etc.)
+// 6. If custom validation FAILS → We show error, stop submission
+// 7. If custom validation PASSES → Process the form data
+//
+// This gives us the BEST of both worlds!
+//
+// =============================================================================
+
+import { useState } from 'react';
 
 export default function Signup() {
+  // ===========================================================================
+  // STATE FOR CUSTOM VALIDATION (NEW IN LESSON 264!)
+  // ===========================================================================
+  //
+  // Even though we're using FormData (no state for input values),
+  // we still need STATE to track custom validation errors!
+  //
+  // WHY?
+  // ----
+  // We need to show/hide error messages based on validation.
+  // When an error message appears/disappears, the UI must update.
+  // UI updates in React = state changes!
+  //
+  // WHAT WE'RE TRACKING:
+  // --------------------
+  // passwordsAreNotEqual: true if password and confirm-password don't match
+  //
+  // This is CUSTOM validation because the browser CAN'T check this!
+  // The browser can validate each field individually (required, minLength),
+  // but it CANNOT compare two fields to see if they match.
+  //
+  // ===========================================================================
+
+  const [passwordsAreNotEqual, setPasswordsAreNotEqual] = useState(false);
+  // Initially false = no error
+  // Will be set to true if user submits with mismatched passwords
   // ===========================================================================
   // FORM SUBMISSION HANDLER - Using FormData API
   // ===========================================================================
@@ -232,6 +295,254 @@ export default function Signup() {
     //   - Process it however we need
     //
     // -------------------------------------------------------------------------
+
+    // =========================================================================
+    // CUSTOM VALIDATION: Check if Passwords Match (NEW IN LESSON 264!)
+    // =========================================================================
+    //
+    // IMPORTANT: This is where we COMBINE built-in and custom validation!
+    //
+    // THE VALIDATION FLOW SO FAR:
+    // ---------------------------
+    // 1. User fills out form and clicks "Sign up" button
+    // 2. BROWSER checks BUILT-IN validation (required, minLength, type="email")
+    // 3. If built-in validation FAILS:
+    //      - Browser shows error message
+    //      - Browser prevents form submission
+    //      - Our handleSubmit NEVER runs!
+    // 4. If built-in validation PASSES:
+    //      - Browser allows form submission
+    //      - Our handleSubmit function runs (we're here now!)
+    //      - FormData extracts all values
+    //      - We NOW check CUSTOM validation
+    //
+    // CUSTOM VALIDATION: PASSWORDS MUST MATCH
+    // ----------------------------------------
+    // This is something the browser CAN'T check!
+    //
+    // Why?
+    //   - Built-in validation checks ONE field at a time
+    //   - It can check: "Is password at least 6 characters?" ✓
+    //   - It CANNOT check: "Does password match confirm-password?" ✗
+    //   - This requires COMPARING TWO FIELDS - custom JavaScript needed!
+    //
+    // HOW WE CHECK IF PASSWORDS MATCH:
+    // --------------------------------
+    // We compare two properties from our data object:
+    //   1. data.password           → The password field value
+    //   2. data['confirm-password'] → The confirm-password field value
+    //
+    // IMPORTANT: BRACKET NOTATION for 'confirm-password'
+    // --------------------------------------------------
+    // Notice we use data['confirm-password'] instead of data.confirm-password
+    //
+    // Why?
+    //   data.confirm-password  ✗ SYNTAX ERROR! JavaScript sees this as:
+    //                            data.confirm minus password
+    //                            The minus sign (-) is a subtraction operator!
+    //
+    //   data['confirm-password']  ✓ CORRECT! Bracket notation works with ANY string
+    //                               Including strings with hyphens, spaces, etc.
+    //
+    // WHEN TO USE DOT vs BRACKET NOTATION:
+    // -------------------------------------
+    // Dot notation (data.password):
+    //   ✓ Works for: letters, numbers, underscores, $
+    //   ✗ Does NOT work for: hyphens, spaces, special characters
+    //   ✓ Must start with letter, underscore, or $
+    //
+    // Examples:
+    //   data.password         ✓ Works
+    //   data.email            ✓ Works
+    //   data.first_name       ✓ Works (underscore is valid)
+    //   data.$value           ✓ Works ($ is valid)
+    //
+    //   data.first-name       ✗ Syntax error (hyphen not allowed)
+    //   data.confirm-password ✗ Syntax error (hyphen not allowed)
+    //   data.123              ✗ Syntax error (can't start with number)
+    //
+    // Bracket notation (data['key']):
+    //   ✓ Works for ANY string!
+    //   ✓ Hyphens, spaces, special characters all OK
+    //
+    // Examples:
+    //   data['confirm-password']  ✓ Works
+    //   data['first-name']        ✓ Works
+    //   data['my field']          ✓ Works (spaces OK)
+    //   data['123']               ✓ Works (numbers OK)
+    //
+    // WHY OUR PROPERTY NAMES HAVE HYPHENS:
+    // ------------------------------------
+    // Because our HTML inputs have name attributes with hyphens:
+    //   <input name="confirm-password" />   → Creates property 'confirm-password'
+    //   <input name="first-name" />         → Creates property 'first-name'
+    //
+    // FormData uses the 'name' attribute EXACTLY as written.
+    // So if name="confirm-password", the property is 'confirm-password'.
+    //
+    // ACCESSING WITH VARIABLES:
+    // --------------------------
+    // Bracket notation also works with variables:
+    //   const fieldName = 'confirm-password';
+    //   data[fieldName]  ✓ Works
+    //
+    // Dot notation does NOT work with variables:
+    //   data.fieldName  ✗ This looks for a property literally named "fieldName"
+    //
+    // COMPARING THE PASSWORDS:
+    // ------------------------
+    // We use the strict inequality operator (!==) to check if they're different:
+    //
+    //   if (data.password !== data['confirm-password'])
+    //
+    // This returns true if passwords DON'T match.
+    //
+    // Examples:
+    //   data.password = 'abc123'
+    //   data['confirm-password'] = 'abc123'
+    //   → 'abc123' !== 'abc123' → false (they match, condition is false)
+    //
+    //   data.password = 'abc123'
+    //   data['confirm-password'] = 'xyz789'
+    //   → 'abc123' !== 'xyz789' → true (they don't match, condition is true!)
+    //
+    // WHAT HAPPENS IF PASSWORDS DON'T MATCH:
+    // ---------------------------------------
+    // 1. Set passwordsAreNotEqual state to true
+    //      - This triggers a re-render
+    //      - The error message will appear (see JSX below)
+    //      - The UI updates to show the error
+    //
+    // 2. return; (stop execution)
+    //      - Prevents console.log(data) from running
+    //      - Prevents form submission from proceeding
+    //      - User must fix the error and try again
+    //
+    // THE COMPLETE VALIDATION FLOW (Built-in + Custom):
+    // --------------------------------------------------
+    // SCENARIO 1: User submits with empty password
+    //   1. User clicks "Sign up"
+    //   2. BROWSER checks: password is required → EMPTY! ✗
+    //   3. BROWSER shows: "Please fill out this field"
+    //   4. BROWSER prevents submission
+    //   5. handleSubmit NEVER runs (stopped at step 3)
+    //   ✗ Form not submitted
+    //
+    // SCENARIO 2: User submits with short password (3 chars)
+    //   1. User clicks "Sign up"
+    //   2. BROWSER checks: password is required → filled ✓
+    //   3. BROWSER checks: password minLength={6} → only 3 chars ✗
+    //   4. BROWSER shows: "Please lengthen this text to 6 characters..."
+    //   5. BROWSER prevents submission
+    //   6. handleSubmit NEVER runs (stopped at step 4)
+    //   ✗ Form not submitted
+    //
+    // SCENARIO 3: User submits with valid password but they don't match
+    //   1. User clicks "Sign up"
+    //   2. BROWSER checks: password is required → filled ✓
+    //   3. BROWSER checks: password minLength={6} → 8 chars ✓
+    //   4. BROWSER checks: confirm-password is required → filled ✓
+    //   5. BROWSER checks: confirm-password minLength={6} → 8 chars ✓
+    //   6. BROWSER allows submission (all built-in validation passed!)
+    //   7. handleSubmit runs
+    //   8. FormData extracts values
+    //   9. WE check: do passwords match? → NO! ✗
+    //   10. WE set passwordsAreNotEqual to true
+    //   11. WE return (stop submission)
+    //   12. React re-renders, error message appears
+    //   ✗ Form not submitted
+    //
+    // SCENARIO 4: Everything valid and passwords match
+    //   1. User clicks "Sign up"
+    //   2. BROWSER checks all built-in validation → all pass ✓
+    //   3. BROWSER allows submission
+    //   4. handleSubmit runs
+    //   5. FormData extracts values
+    //   6. WE check: do passwords match? → YES! ✓
+    //   7. WE set passwordsAreNotEqual to false (clear any previous error)
+    //   8. WE continue execution
+    //   9. console.log(data) runs
+    //   10. In real app, we'd send data to backend here
+    //   ✓ Form successfully submitted!
+    //
+    // WHY THIS IS THE BEST APPROACH:
+    // -------------------------------
+    // ✓ Browser handles simple checks (required, minLength) automatically
+    // ✓ We handle complex checks (passwords match) with JavaScript
+    // ✓ User gets immediate feedback for simple errors (built-in validation)
+    // ✓ User gets custom feedback for complex errors (our validation)
+    // ✓ Less code than doing ALL validation manually
+    // ✓ Better accessibility (built-in validation is accessible)
+    // ✓ Progressive enhancement (built-in validation works without JavaScript)
+    //
+    // REAL-WORLD USE CASES FOR CUSTOM VALIDATION:
+    // --------------------------------------------
+    // 1. Passwords must match (this example)
+    // 2. Email confirmation must match email
+    // 3. Start date must be before end date
+    // 4. Age must be 18+ based on birthdate
+    // 5. Username must be unique (check with API)
+    // 6. Coupon code must be valid (check with API)
+    // 7. Credit card number must pass Luhn algorithm
+    // 8. Phone number must match country-specific format
+    //
+    // All of these require custom JavaScript because the browser can't check them!
+    //
+    // =========================================================================
+
+    if (data.password !== data['confirm-password']) {
+      // Passwords don't match!
+      // Set state to true to show error message
+      setPasswordsAreNotEqual(true);
+
+      // STOP HERE! Don't submit the form.
+      // User must fix the passwords and try again.
+      return;
+    }
+
+    // If we reach here, passwords DO match!
+    // Clear any previous error (in case user fixed it after a failed attempt)
+    setPasswordsAreNotEqual(false);
+
+    // =========================================================================
+    // SUBMISSION SUCCESSFUL (All validation passed!)
+    // =========================================================================
+    //
+    // If we reach this point, it means:
+    //   ✓ Built-in validation passed (required, minLength, type="email", etc.)
+    //   ✓ Custom validation passed (passwords match)
+    //
+    // In a real application, you would now:
+    //   1. Send the data to your backend API
+    //   2. Show a loading spinner
+    //   3. Handle the response (success or error)
+    //   4. Reset the form on success
+    //   5. Show a success message
+    //
+    // Example:
+    //   try {
+    //     const response = await fetch('https://api.example.com/signup', {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify(data)
+    //     });
+    //
+    //     if (response.ok) {
+    //       // Success!
+    //       event.target.reset();  // Clear the form
+    //       alert('Account created successfully!');
+    //     } else {
+    //       // Server error
+    //       const error = await response.json();
+    //       alert('Error: ' + error.message);
+    //     }
+    //   } catch (error) {
+    //     // Network error
+    //     alert('Network error. Please try again.');
+    //   }
+    //
+    // =========================================================================
+
     console.log(data);
 
     // -------------------------------------------------------------------------
@@ -591,6 +902,270 @@ export default function Signup() {
             required // NEW! Must be filled out
             minLength={6} // NEW! Must be at least 6 characters
           />
+          {/* ==================================================================
+              CUSTOM VALIDATION ERROR MESSAGE (NEW IN LESSON 264!)
+              ==================================================================
+
+              This is where we show our CUSTOM validation error!
+
+              CONDITIONAL RENDERING WITH && OPERATOR:
+              ---------------------------------------
+              We use the && (logical AND) operator to conditionally show the error:
+
+                {passwordsAreNotEqual && <p>Passwords must match.</p>}
+
+              How this works:
+                1. React evaluates the left side: passwordsAreNotEqual
+                2. If it's FALSE (falsy):
+                     - React stops evaluating (short-circuit)
+                     - Nothing is rendered
+                     - No error message appears
+                3. If it's TRUE (truthy):
+                     - React evaluates the right side: <p>Passwords must match.</p>
+                     - React renders the <p> element
+                     - Error message appears!
+
+              WHY THIS PATTERN WORKS:
+              -----------------------
+              The && operator in JavaScript returns:
+                - The FIRST falsy value it encounters, OR
+                - The LAST value if all are truthy
+
+              Examples:
+                false && <p>Hello</p>  → false (stops at false, renders nothing)
+                true && <p>Hello</p>   → <p>Hello</p> (both truthy, returns last)
+                0 && <p>Hello</p>      → 0 (0 is falsy, but React doesn't render 0!)
+                '' && <p>Hello</p>     → '' (empty string is falsy, renders nothing)
+
+              IMPORTANT: React's rendering rules
+              -----------------------------------
+              React renders:
+                ✓ Strings      → 'hello' renders as "hello"
+                ✓ Numbers      → 5 renders as "5" (except 0 is SPECIAL!)
+                ✓ JSX elements → <p>hi</p> renders as <p>hi</p>
+                ✓ Arrays       → [1, 2, 3] renders as "123"
+
+              React DOES NOT render (ignores):
+                ✗ null       → Renders nothing
+                ✗ undefined  → Renders nothing
+                ✗ false      → Renders nothing
+                ✗ true       → Renders nothing
+                ✗ 0          → TRICKY! Should render "0" but React treats as nothing
+
+              This is why the && pattern works:
+                false && <p>Error</p>  → React gets false, ignores it ✓
+                true && <p>Error</p>   → React gets <p>Error</p>, renders it ✓
+
+              ALTERNATIVE: Using Ternary Operator (More Explicit)
+              ----------------------------------------------------
+              You could also write:
+                {passwordsAreNotEqual ? <p>Passwords must match.</p> : null}
+
+              This is more explicit (shows BOTH branches):
+                - If true: render <p>
+                - If false: render null (nothing)
+
+              But the && pattern is more concise and idiomatic in React!
+
+              COMPARISON TO BUILT-IN VALIDATION ERRORS:
+              ------------------------------------------
+              Built-in validation (required, minLength):
+                - Browser shows error automatically
+                - Error message: "Please fill out this field"
+                - Error styling: Browser default (varies by browser)
+                - We don't control when it shows
+                - We don't control what it says
+
+              Custom validation (passwords match):
+                - WE show error manually (this <p> element)
+                - Error message: Whatever we write ("Passwords must match.")
+                - Error styling: Our CSS (.control-error class)
+                - WE control when it shows (passwordsAreNotEqual state)
+                - WE control what it says (our custom message)
+
+              THE COMPLETE FLOW (Step by Step):
+              ----------------------------------
+              1. User fills out form:
+                   password: "abc123"
+                   confirm-password: "xyz789"
+
+              2. User clicks "Sign up"
+
+              3. BROWSER validates (built-in):
+                   ✓ Both fields filled (required)
+                   ✓ Both at least 6 chars (minLength)
+                   ✓ Browser allows submission
+
+              4. handleSubmit runs
+
+              5. FormData extracts:
+                   data.password = "abc123"
+                   data['confirm-password'] = "xyz789"
+
+              6. WE validate (custom):
+                   data.password !== data['confirm-password']
+                   "abc123" !== "xyz789"
+                   true → Passwords DON'T match!
+
+              7. WE update state:
+                   setPasswordsAreNotEqual(true)
+
+              8. WE return (stop submission)
+
+              9. React re-renders because state changed
+
+              10. React evaluates this conditional:
+                    {passwordsAreNotEqual && <p>Passwords must match.</p>}
+                    {true && <p>Passwords must match.</p>}
+                    Returns: <p>Passwords must match.</p>
+
+              11. React renders the <p> element → Error appears!
+
+              12. User sees error message below confirm-password field
+
+              13. User fixes passwords to match and resubmits
+
+              14. Validation passes this time:
+                    data.password !== data['confirm-password']
+                    "abc123" !== "abc123"
+                    false → Passwords match!
+
+              15. WE update state:
+                    setPasswordsAreNotEqual(false)
+
+              16. React re-renders
+
+              17. React evaluates:
+                    {passwordsAreNotEqual && <p>Passwords must match.</p>}
+                    {false && <p>Passwords must match.</p>}
+                    Returns: false
+
+              18. React doesn't render false → Error disappears!
+
+              19. Submission continues, console.log(data) runs
+
+              WHY USE STATE FOR VALIDATION ERRORS?
+              ------------------------------------
+              Even though we're using FormData (no state for INPUT values),
+              we STILL need state to track VALIDATION ERRORS!
+
+              Why?
+                - Error messages need to appear/disappear based on validation
+                - UI changes in React = state changes
+                - When state changes, React re-renders
+                - Re-render updates the DOM to show/hide error
+
+              Without state:
+                ✗ Can't trigger re-render
+                ✗ Can't show/hide error message
+                ✗ Error would be static or require manual DOM manipulation
+
+              With state:
+                ✓ Changing state triggers re-render
+                ✓ Conditional rendering shows/hides error automatically
+                ✓ React manages DOM updates for us
+                ✓ Declarative code (we describe WHAT to show, not HOW)
+
+              STATE vs FORMDATA:
+              ------------------
+              FormData approach:
+                - No state for INPUT VALUES
+                - Read values once on submit with FormData
+                - Clean, minimal code
+                - Works great for reading data
+
+              State approach (for ERRORS):
+                - State for ERROR FLAGS (true/false)
+                - Triggers re-renders to show/hide errors
+                - Necessary for dynamic UI changes
+                - Complements FormData perfectly!
+
+              HYBRID APPROACH (Best Practice):
+              ---------------------------------
+              ✓ Use FormData for extracting input values (no state needed)
+              ✓ Use state for tracking validation errors (re-renders needed)
+              ✓ Use built-in validation for simple checks (browser handles it)
+              ✓ Use custom validation for complex checks (we handle it)
+
+              This is exactly what we're doing in this component!
+
+              THE COMPLETE VALIDATION STRATEGY:
+              ---------------------------------
+              Layer 1: Built-in HTML Validation (Browser)
+                - required, minLength, type="email"
+                - Runs BEFORE our JavaScript
+                - Free, automatic, accessible
+                - For simple checks
+
+              Layer 2: Custom JavaScript Validation (handleSubmit)
+                - Passwords match, complex business rules
+                - Runs AFTER built-in validation passes
+                - Full control, custom messages
+                - For complex checks
+
+              Layer 3: Server-Side Validation (Backend)
+                - ALWAYS validate on server too!
+                - Users can bypass client-side validation
+                - Final authority on data validity
+                - For security
+
+              CLIENT-SIDE (Layers 1 & 2) = User Experience
+              SERVER-SIDE (Layer 3) = Security
+
+              NEVER trust client-side validation alone!
+
+              CSS STYLING:
+              ------------
+              Notice the className="control-error":
+                - This is a CSS class (defined in index.css or similar)
+                - Styles the error container and text
+                - Typically makes text red, adds spacing
+                - Matches built-in error styling for consistency
+
+              Example CSS (typical):
+                .control-error
+                  - color: #f44336 (Red text)
+                  - font-size: 0.875rem (Smaller font)
+                  - margin-top: 0.5rem (Space above)
+
+                .control-error p
+                  - margin: 0 (Remove default margin)
+
+              USER EXPERIENCE CONSIDERATIONS:
+              --------------------------------
+              ✓ Error appears IMMEDIATELY after submit attempt (fast feedback)
+              ✓ Error is NEXT TO the field causing the problem (clear association)
+              ✓ Error message is SPECIFIC ("Passwords must match" not just "Invalid")
+              ✓ Error DISAPPEARS when fixed (positive reinforcement)
+              ✓ Color coding (red) makes error obvious
+              ✓ Positioned below input (standard pattern)
+
+              ACCESSIBILITY NOTES:
+              --------------------
+              For better accessibility, you could add:
+                1. aria-invalid="true" on the input when error shows
+                2. aria-describedby linking error to input
+                3. role="alert" on error message for screen readers
+                4. Focus management (focus invalid field)
+
+              Example (more accessible):
+                <input
+                  id="confirm-password"
+                  aria-invalid={passwordsAreNotEqual}
+                  aria-describedby={passwordsAreNotEqual ? 'password-error' : undefined}
+                />
+                {passwordsAreNotEqual && (
+                  <div id="password-error" role="alert">
+                    <p>Passwords must match.</p>
+                  </div>
+                )}
+
+              But for this tutorial, we keep it simple!
+
+              ================================================================== */}
+          <div className="control-error">
+            {passwordsAreNotEqual && <p>Passwords must match.</p>}
+          </div>
         </div>
       </div>
 
