@@ -158,11 +158,11 @@ import StateLogin from './components/StateLogin.jsx';
 
 function App() {
   // ===========================================================================
-  // APP STRUCTURE - LESSONS 265-266: REUSABLE COMPONENTS & VALIDATION FUNCTIONS
+  // APP STRUCTURE - LESSONS 265-267: REUSABLE COMPONENTS & CUSTOM HOOKS
   // ===========================================================================
   //
-  // Now using the StateLogin component to demonstrate REUSABLE COMPONENTS
-  // and REUSABLE VALIDATION FUNCTIONS.
+  // Now using the StateLogin component to demonstrate REUSABLE COMPONENTS,
+  // REUSABLE VALIDATION FUNCTIONS, and CUSTOM HOOKS.
   //
   // VALIDATION APPROACHES WE'VE EXPLORED SO FAR:
   // ---------------------------------------------
@@ -191,10 +191,98 @@ function App() {
   //      - Input.jsx wraps label + input + error message
   //      - Clean, maintainable, scalable code
   //
-  //   6. REUSABLE VALIDATION FUNCTIONS (StateLogin.jsx) - Reduce logic duplication ← NEW! (Lesson 266)
+  //   6. REUSABLE VALIDATION FUNCTIONS (StateLogin.jsx) - Reduce logic duplication (Lesson 266)
   //      - Extract validation logic into utility functions
   //      - util/validation.js exports isEmail(), hasMinLength(), etc.
   //      - Write once, use everywhere
+  //
+  //   7. CUSTOM HOOKS (StateLogin.jsx) - Extract state management logic ← NEW! (Lesson 267)
+  //      - Extract ALL state management into a reusable custom hook
+  //      - hooks/useInput.js manages value, didEdit, handlers, and validation
+  //      - Call useInput() once per input field
+  //      - Component code reduced by 90%!
+  //
+  // ===========================================================================
+  // WHAT IS A CUSTOM HOOK? (LESSON 267)
+  // ===========================================================================
+  //
+  // A custom hook is a JAVASCRIPT FUNCTION that:
+  //   - Starts with "use" (useInput, useForm, useAuth, etc.)
+  //   - Can call other React hooks (useState, useEffect, etc.)
+  //   - Extracts reusable logic from components
+  //   - Returns values and functions for the component to use
+  //
+  // WHY CREATE A CUSTOM HOOK?
+  // -------------------------
+  // BEFORE (Lessons 260-266):
+  //   Every form component had to repeat:
+  //     - const [enteredValues, setEnteredValues] = useState({ ... });
+  //     - const [didEdit, setDidEdit] = useState({ ... });
+  //     - function handleInputChange(identifier, value) { ... }
+  //     - function handleInputBlur(identifier) { ... }
+  //     - const emailIsInvalid = didEdit.email && !validationFn(email);
+  //
+  //   This is ~200 lines of code that we had to copy to every form!
+  //
+  // AFTER (Lesson 267):
+  //   We extracted all of this into the useInput hook:
+  //     const { value, handleInputChange, handleInputBlur, hasError } = useInput('', validationFn);
+  //
+  //   This is ~1 line of code! 90% reduction!
+  //
+  // THE useInput HOOK:
+  // ------------------
+  // Location: hooks/useInput.js
+  //
+  // What it does:
+  //   - Manages value state for ONE input
+  //   - Manages didEdit state for ONE input
+  //   - Provides handleInputChange function
+  //   - Provides handleInputBlur function
+  //   - Computes hasError based on validation
+  //
+  // How to use it:
+  //   1. Call useInput() once per input field
+  //   2. Pass defaultValue (initial value)
+  //   3. Pass validationFn (function that validates the value)
+  //   4. Destructure the returned values
+  //   5. Use them in your JSX!
+  //
+  // Example:
+  //   const {
+  //     value: emailValue,
+  //     handleInputChange: handleEmailChange,
+  //     handleInputBlur: handleEmailBlur,
+  //     hasError: emailHasError
+  //   } = useInput('', (value) => isEmail(value) && isNotEmpty(value));
+  //
+  //   <Input
+  //     value={emailValue}
+  //     onChange={handleEmailChange}
+  //     onBlur={handleEmailBlur}
+  //     error={emailHasError && "Please enter a valid email."}
+  //   />
+  //
+  // BENEFITS OF CUSTOM HOOKS:
+  // --------------------------
+  //   ✓ Code Reusability - Write once, use in ANY form component
+  //   ✓ Less Code - 90% reduction in component code
+  //   ✓ Easier Testing - Test hook independently
+  //   ✓ Easier Maintenance - Fix bugs in one place
+  //   ✓ Better Organization - Logic separated from UI
+  //   ✓ Composability - Combine multiple hooks
+  //
+  // KEY INSIGHT:
+  // ------------
+  // Custom hooks are to LOGIC what components are to UI!
+  //   - Components extract reusable UI (JSX)
+  //   - Hooks extract reusable logic (state, effects, etc.)
+  //
+  // Together they make React code:
+  //   - DRY (Don't Repeat Yourself)
+  //   - Clean (easy to read)
+  //   - Maintainable (easy to change)
+  //   - Scalable (easy to grow)
   //
   // ===========================================================================
   // WHAT IS BUILT-IN BROWSER VALIDATION?

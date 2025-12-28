@@ -59,876 +59,652 @@
 //
 // =============================================================================
 
-import { useState } from 'react';
+// =============================================================================
+// LESSON 267: USING CUSTOM HOOK FOR INPUT MANAGEMENT (NEW!)
+// =============================================================================
+//
+// In Lessons 265-266, we improved our code by:
+//   - Extracting common JSX into Input component (Lesson 265)
+//   - Extracting validation logic into utility functions (Lesson 266)
+//
+// But we still have a lot of repetitive STATE MANAGEMENT code:
+//   - useState for enteredValues (email, password)
+//   - useState for didEdit (email, password)
+//   - handleInputChange function
+//   - handleInputBlur function
+//
+// If we create 10 different forms (Login, Signup, Profile, etc.),
+// we'd have to COPY all this state management code into each one!
+//
+// LESSON 267 SOLUTION: CUSTOM HOOK (useInput)
+// --------------------------------------------
+// We extract ALL the state management logic into a custom hook!
+//
+// WHAT WE'RE REMOVING:
+// --------------------
+// ✗ const [enteredValues, setEnteredValues] = useState({ email: '', password: '' });
+// ✗ const [didEdit, setDidEdit] = useState({ email: false, password: false });
+// ✗ function handleInputChange(identifier, value) { ... }
+// ✗ function handleInputBlur(identifier) { ... }
+// ✗ const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
+// ✗ const passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6);
+//
+// WHAT WE'RE ADDING:
+// ------------------
+// ✓ import useInput from '../hooks/useInput.js';
+// ✓ const { value: emailValue, ..., hasError: emailHasError } = useInput('', validationFn);
+// ✓ const { value: passwordValue, ..., hasError: passwordHasError } = useInput('', validationFn);
+//
+// BENEFITS:
+// ---------
+// ✓ Much less code in this component (went from ~200 lines to ~50 lines)
+// ✓ State management logic is reusable (can use in ANY form)
+// ✓ Easier to test (test the hook independently)
+// ✓ Easier to maintain (fix bugs in one place)
+// ✓ Cleaner, more readable component code
+//
+// =============================================================================
+
 import Input from './Input.jsx';
 
 // =============================================================================
-// NEW IN LESSON 266: IMPORTING REUSABLE VALIDATION FUNCTIONS
+// IMPORTS: CUSTOM HOOK AND VALIDATION FUNCTIONS
 // =============================================================================
 //
-// Instead of writing validation logic directly in this component, we now
-// import REUSABLE VALIDATION FUNCTIONS from our util/validation.js file.
+// useInput: Our custom hook for managing input state
+//   - Manages value state (what user typed)
+//   - Manages didEdit state (has user touched this field?)
+//   - Provides handleInputChange and handleInputBlur functions
+//   - Provides hasError boolean (should we show validation error?)
 //
-// WHY IS THIS BETTER?
-// -------------------
-// BEFORE (Inline validation):
-//   const emailIsInvalid = didEdit.email && !enteredValues.email.includes('@');
-//
-// Problems:
-//   - This exact validation logic would be repeated in Login.jsx, Signup.jsx, etc.
-//   - If we want to improve email validation, we'd have to update EVERY component
-//   - Code duplication violates the DRY principle
-//
-// AFTER (Reusable functions):
-//   const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
-//
-// Benefits:
-//   ✓ Write validation logic ONCE in validation.js
-//   ✓ Use it EVERYWHERE (Login, Signup, Profile, Contact forms, etc.)
-//   ✓ Fix bugs or improve validation in ONE place
-//   ✓ More readable: "isEmail" is clearer than ".includes('@')"
-//   ✓ Easier to test: Test the function once, use it everywhere
-//
-// WHAT ARE WE IMPORTING?
-// -----------------------
-// isEmail(value)
-//   - Checks if value contains '@' symbol
-//   - Returns true if valid, false if invalid
-//   - Usage: !isEmail(email) checks if email is INVALID
-//
-// isNotEmpty(value)
-//   - Checks if value is not empty after trimming whitespace
-//   - Returns true if has content, false if empty or only spaces
-//   - Usage: !isNotEmpty(name) checks if name is empty
-//
-// hasMinLength(value, minLength)
-//   - Checks if value has at least minLength characters
-//   - Returns true if meets requirement, false if too short
-//   - Usage: !hasMinLength(password, 6) checks if password is too short
-//
-// HOW TO USE THEM:
-// ----------------
-// These functions return TRUE when valid, FALSE when invalid.
-//
-// So we use them with the ! (NOT) operator to check if INVALID:
-//
-//   const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
-//   const passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6);
-//
-// This reads naturally:
-//   "Email is invalid if user touched it AND it's not a valid email"
-//   "Password is invalid if user touched it AND it doesn't have min length"
+// Validation functions: For checking if values are valid
+//   - isEmail: Checks if value contains '@'
+//   - isNotEmpty: Checks if value is not empty after trimming
+//   - hasMinLength: Checks if value meets minimum length requirement
 //
 // =============================================================================
+import useInput from '../hooks/useInput.js';
 import { isEmail, isNotEmpty, hasMinLength } from '../util/validation.js';
 
 export default function StateLogin() {
   // ===========================================================================
-  // APPROACH A: SEPARATE STATE FOR EACH INPUT (Commented Out)
+  // LESSON 267: USING THE useInput CUSTOM HOOK (NEW!)
   // ===========================================================================
   //
-  // You COULD create separate state for each input:
+  // BEFORE (Lessons 260-266):
+  // --------------------------
+  // We managed state manually in this component:
+  //   - const [enteredValues, setEnteredValues] = useState({ email: '', password: '' });
+  //   - const [didEdit, setDidEdit] = useState({ email: false, password: false });
+  //   - function handleInputChange(identifier, value) { ... }
+  //   - function handleInputBlur(identifier) { ... }
+  //   - const emailIsInvalid = didEdit.email && !isEmail(enteredValues.email);
+  //   - const passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6);
   //
-  //   const [enteredEmail, setEnteredEmail] = useState('');
-  //   const [enteredPassword, setEnteredPassword] = useState('');
+  // This was ~200 lines of code!
   //
-  // Then create separate handlers:
-  //
-  //   function handleEmailChange(event) {
-  //     setEnteredEmail(event.target.value);
-  //   }
-  //
-  //   function handlePasswordChange(event) {
-  //     setEnteredPassword(event.target.value);
-  //   }
-  //
-  // PROS:
-  //   ✓ Simple and straightforward
-  //   ✓ Easy to understand
-  //   ✓ Good for small forms (2-3 inputs)
-  //
-  // CONS:
-  //   ✗ Lots of repetitive code
-  //   ✗ Many state slices for large forms
-  //   ✗ Many handler functions
-  //
-  // For a form with 10 inputs, you'd need:
-  //   - 10 useState calls
-  //   - 10 handler functions
-  //   - That's a LOT of code!
-  //
-  // ===========================================================================
-
-  // ===========================================================================
-  // APPROACH B: COMBINED STATE OBJECT (What We're Using)
-  // ===========================================================================
-  //
-  // Instead, we use ONE state object to hold ALL form values:
-  //
-  //   {
-  //     email: '',
-  //     password: ''
-  //   }
-  //
-  // This scales better! For 10 inputs, we still have just ONE state object.
-  //
-  // ===========================================================================
-  const [enteredValues, setEnteredValues] = useState({
-    email: '',    // Initial value for email input
-    password: '', // Initial value for password input
-  });
-  // We could add more properties here for additional inputs
-  // without needing new useState calls!
-
-  // ===========================================================================
-  // TRACKING "TOUCHED" STATE - New in Lesson 261
-  // ===========================================================================
-  //
-  // PROBLEM WE'RE SOLVING:
-  // -----------------------
-  // In Lesson 260, we validated on every keystroke by checking:
-  //   emailIsInvalid = enteredValues.email !== '' && !enteredValues.email.includes('@')
-  //
-  // This had problems:
-  //   - Error showed TOO EARLY (as soon as user started typing)
-  //   - Couldn't distinguish "never touched" from "cleared after typing"
-  //
-  // THE SOLUTION: Track Whether User Has Interacted With Each Field
-  // ----------------------------------------------------------------
-  // We need a separate piece of state to track whether the user has
-  // "touched" or "edited" each input field.
-  //
-  // "Touched" means:
-  //   - User clicked into the field (gave it focus)
-  //   - User typed something or left it empty
-  //   - User left the field (it lost focus / "blurred")
-  //
-  // We track this with a "didEdit" state object.
-  //
-  // WHY A SEPARATE STATE?
-  // ---------------------
-  // We COULD merge this into enteredValues:
-  //   {
-  //     email: { value: '', didEdit: false },
-  //     password: { value: '', didEdit: false }
-  //   }
-  //
-  // But that makes the code more complex. It's cleaner to have two states:
-  //   - enteredValues: { email: '', password: '' }
-  //   - didEdit: { email: false, password: false }
-  //
-  // ===========================================================================
-  const [didEdit, setDidEdit] = useState({
-    // -------------------------------------------------------------------------
-    // INITIAL VALUES: false (User hasn't touched these fields yet)
-    // -------------------------------------------------------------------------
-    // When the component first renders:
-    //   - User hasn't clicked on email field → email: false
-    //   - User hasn't clicked on password field → password: false
-    //
-    // These will be set to true when the user BLURS (leaves) a field.
-    // -------------------------------------------------------------------------
-    email: false,    // Has user interacted with email field? Initially: No
-    password: false, // Has user interacted with password field? Initially: No
-  });
-  //
-  // HOW THIS STATE WILL BE USED:
-  // -----------------------------
-  // 1. Initially, both are false (user hasn't touched anything)
-  //
-  // 2. User clicks on email field → nothing happens yet (still false)
-  //
-  // 3. User types in email field → we'll RESET it to false (Lesson 261 improvement)
-  //    Why? To hide error while user is actively fixing the issue
-  //
-  // 4. User tabs out of email field (blur event) → we set email to true
-  //    Now we know: "User has finished with this field, we can validate it"
-  //
-  // 5. We only show validation errors if:
-  //    - didEdit.email is true (user has interacted with it)
-  //    - AND the value is invalid
-  //
-  // This gives the user a chance to type before we show errors!
-  //
-  // ===========================================================================
-
-  // ===========================================================================
-  // GENERIC INPUT CHANGE HANDLER - Works for ANY Input!
-  // ===========================================================================
-  //
-  // This single function can handle changes for ALL inputs in the form.
-  //
-  // HOW IT WORKS:
-  // -------------
-  // 1. Takes an 'identifier' parameter (e.g., 'email' or 'password')
-  // 2. Takes the new 'value' that was entered
-  // 3. Updates ONLY that field in the state object
-  // 4. Preserves all other fields unchanged
-  //
-  // WHY USE THE FUNCTION FORM OF setState?
-  // --------------------------------------
-  // We use: setEnteredValues(prevValues => ({ ...prevValues, ... }))
-  // Instead of: setEnteredValues({ ...enteredValues, ... })
-  //
-  // Because:
-  //   - React state updates can be batched (async)
-  //   - If you call setState twice in quick succession, the second might
-  //     not see the first update yet
-  //   - The function form GUARANTEES you get the latest state
-  //   - Always use function form when new state depends on old state!
-  //
-  // ===========================================================================
-  function handleInputChange(identifier, value) {
-    // -------------------------------------------------------------------------
-    // UPDATING STATE IMMUTABLY
-    // -------------------------------------------------------------------------
-    // We MUST NOT mutate the state object directly:
-    //   ❌ BAD: enteredValues[identifier] = value;
-    //   ❌ BAD: enteredValues.email = value;
-    //
-    // Instead, we create a NEW object with the updated value.
-    // -------------------------------------------------------------------------
-
-    setEnteredValues((prevValues) => ({
-      // -----------------------------------------------------------------------
-      // THE SPREAD OPERATOR: ...prevValues
-      // -----------------------------------------------------------------------
-      // This copies ALL existing properties from the previous state.
-      //
-      // If prevValues is { email: 'test@test.com', password: 'abc123' }
-      // Then ...prevValues gives us: email: 'test@test.com', password: 'abc123'
-      //
-      // We do this because we only want to UPDATE one field, not REPLACE
-      // the entire object. We must preserve the other field's value!
-      // -----------------------------------------------------------------------
-      ...prevValues,
-
-      // -----------------------------------------------------------------------
-      // DYNAMIC PROPERTY ACCESS: [identifier]
-      // -----------------------------------------------------------------------
-      // Square brackets allow us to use a VARIABLE as a property name!
-      //
-      // If identifier is 'email', this becomes:  email: value
-      // If identifier is 'password', this becomes:  password: value
-      //
-      // This is called "computed property name" syntax in JavaScript.
-      //
-      // Without this, we'd need separate handlers for each input:
-      //   function handleEmailChange(value) {
-      //     setEnteredValues(prev => ({ ...prev, email: value }));
-      //   }
-      //   function handlePasswordChange(value) {
-      //     setEnteredValues(prev => ({ ...prev, password: value }));
-      //   }
-      //
-      // With dynamic property access, ONE function works for ALL inputs!
-      // -----------------------------------------------------------------------
-      [identifier]: value,
-    }));
-    // Note: The parentheses around the object are IMPORTANT!
-    // Without them, JavaScript thinks the curly braces are the function body,
-    // not an object literal. The parentheses say: "return this object".
-
-    // -------------------------------------------------------------------------
-    // NEW IN LESSON 261: Reset "didEdit" to false when user starts typing again
-    // -------------------------------------------------------------------------
-    //
-    // WHY DO THIS?
-    // ------------
-    // If the user has an error showing (from blur validation), and they start
-    // typing to fix it, we want to HIDE the error immediately.
-    //
-    // This gives immediate positive feedback:
-    //   - User sees error after leaving field
-    //   - User goes back to fix it
-    //   - Error disappears as soon as they start typing!
-    //   - User feels encouraged that they're fixing the issue
-    //
-    // HOW IT WORKS:
-    // -------------
-    // 1. User had invalid email 'test', left field → didEdit.email = true, error shows
-    // 2. User clicks back into email field
-    // 3. User types '@' → handleInputChange fires
-    // 4. We set didEdit.email = false (this line below)
-    // 5. Error disappears! (because emailIsInvalid now uses didEdit.email)
-    // 6. User continues typing 'test.com'
-    // 7. User leaves field → blur event → didEdit.email = true again
-    // 8. Now it's valid, so no error shows!
-    //
-    // WITHOUT THIS:
-    // -------------
-    // Error would stay visible WHILE user is typing the fix.
-    // This can feel discouraging - like "I'm fixing it but the error won't go away!"
-    //
-    // WITH THIS:
-    // ----------
-    // Error disappears immediately when user starts typing.
-    // This feels encouraging - "Great! I'm on the right track!"
-    //
-    // THE BEST OF BOTH WORLDS:
-    // -------------------------
-    // - Don't show error too early (wait for blur)
-    // - Don't show error too long (hide when user starts fixing)
-    // - Show error again if still invalid when they leave field
-    //
-    // -------------------------------------------------------------------------
-    setDidEdit((prevEdit) => ({
-      ...prevEdit,           // Keep other fields unchanged
-      [identifier]: false,   // Reset this field to false (user is editing now)
-    }));
-    //
-    // Example execution:
-    //   handleInputChange('email', 't')
-    //   → setDidEdit({ email: false, password: false })  (email was true, now false)
-    //
-    // This happens on EVERY KEYSTROKE in ANY input!
-    //
-    // -------------------------------------------------------------------------
-  }
-
-  // ===========================================================================
-  // BLUR HANDLER - Fires when input loses focus (NEW IN LESSON 261)
-  // ===========================================================================
-  //
-  // WHAT IS "BLUR"?
-  // ---------------
-  // "Blur" is the opposite of "focus":
-  //   - User clicks on input → input gets "focus"
-  //   - User clicks outside input or presses Tab → input loses "focus" = "blur"
-  //
-  // The blur event is a BUILT-IN BROWSER EVENT, just like click or change.
-  //
-  // WHY VALIDATE ON BLUR?
-  // ---------------------
-  // Blur validation gives the user a chance to FINISH TYPING before we
-  // show an error. This avoids the "error too early" problem.
-  //
-  // Example user flow:
-  //   1. User clicks on email field → focus (nothing happens yet)
-  //   2. User types 't' → onChange fires (we reset didEdit to false)
-  //   3. User types 'e' → onChange fires (didEdit still false)
-  //   4. User types 's' → onChange fires (didEdit still false)
-  //   5. User types 't' → onChange fires (didEdit still false)
-  //   6. User tabs to next field → BLUR EVENT! (we set didEdit to true)
-  //   7. Now we validate: didEdit.email is true, email is 'test' (no @)
-  //   8. Error shows!
-  //
-  // The user had a chance to type their full email before we complained!
-  //
-  // ===========================================================================
-  function handleInputBlur(identifier) {
-    // -------------------------------------------------------------------------
-    // SET didEdit TO TRUE - Mark this field as "touched"
-    // -------------------------------------------------------------------------
-    //
-    // When this function runs, it means:
-    //   - User clicked into the field (gave it focus)
-    //   - User may or may not have typed something
-    //   - User left the field (blur event fired)
-    //
-    // Now we know the user has "touched" this field, so we can validate it!
-    //
-    // -------------------------------------------------------------------------
-    setDidEdit((prevEdit) => ({
-      // -----------------------------------------------------------------------
-      // SAME PATTERN AS handleInputChange
-      // -----------------------------------------------------------------------
-      // We use the same pattern here:
-      //   1. Function form of setState (prevEdit => ...)
-      //   2. Spread previous state (...prevEdit)
-      //   3. Update one property dynamically ([identifier]: true)
-      //
-      // This is IDENTICAL to handleInputChange, except:
-      //   - handleInputChange sets [identifier]: false (user is typing)
-      //   - handleInputBlur sets [identifier]: true (user left field)
-      //
-      // -----------------------------------------------------------------------
-      ...prevEdit,         // Keep other fields unchanged
-      [identifier]: true,  // Mark THIS field as touched/edited
-    }));
-    //
-    // Example execution:
-    //   User leaves email field → handleInputBlur('email')
-    //   → setDidEdit({ email: true, password: false })
-    //
-    // After this runs, didEdit.email is true, so we'll check if email is valid.
-    //
-    // -------------------------------------------------------------------------
-  }
-  //
-  // THE COMPLETE BLUR VALIDATION FLOW:
-  // -----------------------------------
-  //
-  // 1. Page loads
-  //    - didEdit: { email: false, password: false }
-  //    - No errors shown (didEdit.email is false)
-  //
-  // 2. User clicks on email field
-  //    - Nothing changes (no onChange yet, no onBlur yet)
-  //
-  // 3. User types 'test' (each keystroke triggers onChange)
-  //    - enteredValues.email: 'test'
-  //    - didEdit.email: false (we reset it to false on each keystroke)
-  //    - No error shown (didEdit.email is false)
-  //
-  // 4. User tabs to password field (onBlur fires on email field)
-  //    - handleInputBlur('email') runs
-  //    - didEdit.email: true
-  //    - Component re-renders
-  //    - emailIsInvalid is recalculated
-  //    - didEdit.email && !'test'.includes('@') → true && true → true
-  //    - Error appears!
-  //
-  // 5. User goes back to email field and types '@'
-  //    - onChange fires → didEdit.email set to false
-  //    - Error disappears immediately! (didEdit.email is false)
-  //
-  // 6. User types 'test.com'
-  //    - Still typing, didEdit.email still false
-  //    - No error (even though it's now valid)
-  //
-  // 7. User tabs to password field again
-  //    - onBlur fires → didEdit.email set to true
-  //    - Email is now 'test@test.com' (valid!)
-  //    - didEdit.email && !'test@test.com'.includes('@') → true && false → false
-  //    - No error shown! Success!
-  //
-  // ===========================================================================
-
-  // ===========================================================================
-  // INPUT VALIDATION - Computed Value (Recalculated on Every Render)
-  // ===========================================================================
-  //
-  // WHAT IS A COMPUTED VALUE?
-  // -------------------------
-  // A computed value is a variable that's calculated based on state or props.
-  //
-  // It's NOT state itself - we don't use useState for it.
-  // It's simply a regular variable that we compute inside the component.
-  //
-  // WHY DOES THIS WORK?
+  // AFTER (Lesson 267):
   // -------------------
-  // Every time the component re-renders (e.g., when state changes),
-  // this component function runs again from top to bottom.
-  // So this emailIsInvalid variable gets recalculated with the NEW state values!
+  // We use the useInput custom hook:
+  //   - Call useInput() once for email
+  //   - Call useInput() once for password
+  //   - Get back everything we need (value, handlers, error state)
   //
-  // Example flow:
-  //   1. User types 't' in email input
-  //   2. handleInputChange updates state to { email: 't', password: '' }
-  //   3. React re-renders this component
-  //   4. useState returns the new state: { email: 't', password: '' }
-  //   5. This line runs again: emailIsInvalid = ...
-  //   6. It checks if 't' is a valid email (it's not)
-  //   7. emailIsInvalid becomes true
-  //   8. React renders the error message (see JSX below)
+  // This is ~20 lines of code!
+  //
+  // 90% CODE REDUCTION! 🎉
   //
   // ===========================================================================
-  const emailIsInvalid =
+
+  // ===========================================================================
+  // EMAIL INPUT: USING useInput HOOK
+  // ===========================================================================
+  //
+  // CALLING THE HOOK:
+  // -----------------
+  // useInput(defaultValue, validationFn)
+  //
+  // PARAMETER 1: defaultValue = ''
+  //   - We start with an empty string
+  //   - Could be pre-populated: useInput('test@test.com', ...)
+  //
+  // PARAMETER 2: validationFn = (value) => isEmail(value) && isNotEmpty(value)
+  //   - This is a FUNCTION that validates the value
+  //   - It receives the current value as a parameter
+  //   - It must return true (valid) or false (invalid)
+  //
+  // WHY AN ARROW FUNCTION?
+  // ----------------------
+  // Because we want to run TWO validation functions!
+  //
+  // We could pass just one:
+  //   useInput('', isEmail)
+  //   → Would only check if email contains '@'
+  //
+  // But we want to check BOTH:
+  //   - Email contains '@' (isEmail)
+  //   - Email is not empty (isNotEmpty)
+  //
+  // So we wrap them in an arrow function:
+  //   (value) => isEmail(value) && isNotEmpty(value)
+  //
+  // This arrow function:
+  //   1. Gets called by the hook with the current value
+  //   2. Calls isEmail(value) → returns true/false
+  //   3. Calls isNotEmpty(value) → returns true/false
+  //   4. Combines with && → returns true only if BOTH are true
+  //   5. Returns the result to the hook
+  //
+  // WHAT THE HOOK RETURNS:
+  // ----------------------
+  // An object with:
+  //   - value: The current input value (what user typed)
+  //   - handleInputChange: Function to call onChange
+  //   - handleInputBlur: Function to call onBlur
+  //   - hasError: Boolean (should we show error?)
+  //
+  // DESTRUCTURING WITH ALIASES:
+  // ----------------------------
+  // We destructure the returned object and rename the properties!
+  //
+  // Why rename?
+  //   - We'll call useInput() twice (email and password)
+  //   - We can't have two variables named "value"
+  //   - So we rename: value: emailValue, value: passwordValue
+  //
+  // Syntax:
+  //   { originalName: newName } = object
+  //
+  // Examples:
+  //   { value: emailValue } → Creates variable emailValue from object.value
+  //   { handleInputChange: handleEmailChange } → Creates handleEmailChange from object.handleInputChange
+  //
+  // ===========================================================================
+  const {
+    value: emailValue,
     // -------------------------------------------------------------------------
-    // LESSON 266: USING REUSABLE VALIDATION FUNCTIONS
+    // emailValue: The current email input value
     // -------------------------------------------------------------------------
+    // This is what the user has typed in the email field.
+    // We'll use this for the input's value prop:
+    //   <Input value={emailValue} />
+    // -------------------------------------------------------------------------
+
+    handleInputChange: handleEmailChange,
+    // -------------------------------------------------------------------------
+    // handleEmailChange: Function to update email value
+    // -------------------------------------------------------------------------
+    // This function is called when user types in the email field.
+    // We'll use this for the input's onChange prop:
+    //   <Input onChange={handleEmailChange} />
     //
-    // EVOLUTION OF EMAIL VALIDATION ACROSS LESSONS:
-    // ----------------------------------------------
+    // React automatically passes the event object to this function.
+    // -------------------------------------------------------------------------
+
+    handleInputBlur: handleEmailBlur,
+    // -------------------------------------------------------------------------
+    // handleEmailBlur: Function to mark email as "touched"
+    // -------------------------------------------------------------------------
+    // This function is called when user leaves the email field.
+    // We'll use this for the input's onBlur prop:
+    //   <Input onBlur={handleEmailBlur} />
     //
-    // LESSON 260 (Keystroke validation - inline):
-    //   emailIsInvalid = enteredValues.email !== '' && !enteredValues.email.includes('@')
-    //   Problem: Error showed too early (as soon as user started typing)
+    // This sets the internal didEdit state to true in the hook.
+    // -------------------------------------------------------------------------
+
+    hasError: emailHasError,
+    // -------------------------------------------------------------------------
+    // emailHasError: Boolean indicating if email is invalid
+    // -------------------------------------------------------------------------
+    // This is true when:
+    //   1. User has touched and left the field (didEdit = true)
+    //   2. AND the value is invalid (!valueIsValid = true)
     //
-    // LESSON 261 (Blur validation - inline):
-    //   emailIsInvalid = didEdit.email && !enteredValues.email.includes('@')
-    //   Improvement: Wait until user leaves field before showing error
+    // We'll use this for conditional error rendering:
+    //   error={emailHasError && "Please enter a valid email."}
+    // -------------------------------------------------------------------------
+  } = useInput(
+    '',  // Start with empty string
+    // -------------------------------------------------------------------------
+    // VALIDATION FUNCTION: Combined email validation
+    // -------------------------------------------------------------------------
+    // This arrow function will be called by the hook with the current value.
+    // It returns true if BOTH conditions are met:
+    //   1. Value is a valid email (contains '@')
+    //   2. Value is not empty (after trimming whitespace)
     //
-    // LESSON 266 (Blur validation - reusable function): ← WE ARE HERE NOW!
-    //   emailIsInvalid = didEdit.email && !isEmail(enteredValues.email)
-    //   Further improvement: Extract validation logic into reusable function
-    //
-    // WHAT CHANGED IN LESSON 266?
-    // ----------------------------
-    // We replaced the INLINE validation logic:
-    //   !enteredValues.email.includes('@')
-    //
-    // With a REUSABLE FUNCTION call:
-    //   !isEmail(enteredValues.email)
-    //
-    // SAME FUNCTIONALITY, BETTER CODE!
-    // ---------------------------------
-    // The validation logic is identical, but now it's:
-    //   ✓ Reusable across multiple components
-    //   ✓ More readable (function name is self-documenting)
-    //   ✓ Easier to maintain (fix bugs in one place)
-    //   ✓ Easier to test (test the function independently)
-    //
-    // HOW isEmail() WORKS:
-    // --------------------
-    // isEmail(value) checks if value contains '@' symbol.
-    //
-    // Returns:
-    //   true = valid email (has @)
-    //   false = invalid email (no @)
+    // The && operator means: "true only if BOTH are true"
     //
     // Examples:
-    //   isEmail('test@test.com') → true
-    //   isEmail('testtest.com')  → false
-    //   isEmail('t')             → false
-    //   isEmail('')              → false
+    //   value = 'test@test.com'
+    //     isEmail('test@test.com') → true
+    //     isNotEmpty('test@test.com') → true
+    //     true && true → true (VALID!)
     //
-    // WHY USE ! (NOT OPERATOR)?
-    // --------------------------
-    // isEmail() returns TRUE when valid.
-    // But we want emailIsInvalid to be TRUE when INVALID.
+    //   value = 'test'
+    //     isEmail('test') → false (no @)
+    //     isNotEmpty('test') → true
+    //     false && true → false (INVALID!)
     //
-    // So we use ! to flip it:
-    //   !isEmail('test@test.com') → !true  → false (email is NOT invalid)
-    //   !isEmail('testtest.com')  → !false → true  (email IS invalid)
+    //   value = ''
+    //     isEmail('') → false
+    //     isNotEmpty('') → false
+    //     false && false → false (INVALID!)
     //
-    // COMBINING MULTIPLE VALIDATIONS (Optional):
-    // -------------------------------------------
-    // The instructor mentioned we could also check if email is not empty:
-    //
-    //   emailIsInvalid =
-    //     didEdit.email &&
-    //     (!isEmail(enteredValues.email) || !isNotEmpty(enteredValues.email))
-    //
-    // This would ensure email is BOTH:
-    //   - Not empty
-    //   - Contains @
-    //
-    // For now, we keep it simple with just the email format check.
-    //
+    //   value = '   ' (only spaces)
+    //     isEmail('   ') → false
+    //     isNotEmpty('   ') → false (trim makes it empty)
+    //     false && false → false (INVALID!)
     // -------------------------------------------------------------------------
-    didEdit.email &&
-    // -------------------------------------------------------------------------
-    // THE REUSABLE VALIDATION FUNCTION CALL (NEW IN LESSON 266!)
-    // -------------------------------------------------------------------------
-    //
-    // OLD (Inline - Lesson 261):
-    //   !enteredValues.email.includes('@')
-    //
-    // NEW (Reusable function - Lesson 266):
-    //   !isEmail(enteredValues.email)
-    //
-    // Benefits of the reusable function approach:
-    //
-    // 1. WRITE ONCE, USE EVERYWHERE
-    //    - If we have Login, Signup, Profile, Contact forms...
-    //    - They ALL can use isEmail() instead of repeating .includes('@')
-    //
-    // 2. FIX BUGS IN ONE PLACE
-    //    - If we want to improve email validation later (check for .com, etc.)
-    //    - We only update validation.js, not every component!
-    //
-    // 3. MORE READABLE
-    //    - "isEmail" is immediately clear
-    //    - ".includes('@')" requires understanding what we're checking for
-    //
-    // 4. EASIER TO TEST
-    //    - We can test isEmail() function independently
-    //    - Write unit tests: expect(isEmail('test@test.com')).toBe(true)
-    //
-    // 5. SELF-DOCUMENTING
-    //    - Function name explains what it does
-    //    - No need for comments explaining the validation logic
-    //
-    // -------------------------------------------------------------------------
-    !isEmail(enteredValues.email);
-  //
-  // SIMPLIFIED EXPLANATION (Updated for Lesson 261):
-  // -------------------------------------------------
-  // emailIsInvalid will be true when:
-  //   1. User has TOUCHED and LEFT the field (didEdit.email is true)
-  //   2. AND the email doesn't have an @ symbol (invalid format)
-  //
-  // THIS SOLVES THE PROBLEMS FROM LESSON 260!
-  // ------------------------------------------
-  //
-  // ✓ PROBLEM 1 SOLVED: Error doesn't show too early
-  // -------------------------------------------------
-  // User types: 't'
-  // didEdit.email: false (user hasn't left field yet)
-  // emailIsInvalid: false (because didEdit.email is false)
-  // Error message: NOT shown
-  // User continues typing without being annoyed!
-  //
-  // ✓ PROBLEM 2 SOLVED: Error shows when user clears field
-  // -------------------------------------------------------
-  // User types: 'test@test.com' (valid)
-  // User tabs out: didEdit.email becomes true, no error (valid)
-  // User goes back and deletes everything: ''
-  // didEdit.email: false (we reset it when user starts typing)
-  // User tabs out again: didEdit.email becomes true
-  // emailIsInvalid: true (didEdit.email && !''.includes('@'))
-  // Error message: SHOWN! (Empty email is required)
-  //
-  // ✓ PROBLEM 3 SOLVED: Can distinguish "untouched" from "cleared"
-  // ---------------------------------------------------------------
-  // Untouched: didEdit.email = false → No error
-  // Touched and left: didEdit.email = true → Validate and show error if needed
-  //
-  // BONUS: Error disappears while user is fixing it!
-  // -------------------------------------------------
-  // User has error showing (invalid email, left field)
-  // User clicks back into field and starts typing
-  // didEdit.email: false (we reset it in handleInputChange)
-  // Error disappears immediately! User feels encouraged!
-  //
-  // ===========================================================================
+    (value) => isEmail(value) && isNotEmpty(value)
+  );
 
   // ===========================================================================
-  // COMPUTING VALIDITY: Is the password invalid? (NEW IN LESSON 265!)
+  // PASSWORD INPUT: USING useInput HOOK
   // ===========================================================================
   //
-  // SAME PATTERN AS EMAIL VALIDATION
-  // ---------------------------------
-  // We use the exact same pattern for password validation:
-  //   1. Check if user has left the field (didEdit.password)
-  //   2. Check if password is actually invalid
+  // SAME PATTERN AS EMAIL!
+  // ----------------------
+  // We call useInput() again for the password field.
   //
-  // DIFFERENCE: PASSWORD VALIDATION RULE
-  // -------------------------------------
-  // For email, we used: !isEmail(value)
-  // For password, we use: !hasMinLength(value, 6)
+  // This creates a COMPLETELY INDEPENDENT state!
+  //   - Email has its own value, didEdit, handlers
+  //   - Password has its own value, didEdit, handlers
+  //   - They don't interfere with each other
+  //
+  // VALIDATION FUNCTION:
+  // --------------------
+  // (value) => hasMinLength(value, 6)
+  //
+  // This checks if the password is at least 6 characters long.
+  //
+  // We COULD add more validations:
+  //   (value) => hasMinLength(value, 6) && isNotEmpty(value)
+  //
+  // But hasMinLength already returns false for empty strings:
+  //   hasMinLength('', 6) → ''.length >= 6 → 0 >= 6 → false
+  //
+  // So we only need the one check here.
+  //
+  // DIFFERENT ALIASES:
+  // ------------------
+  // We rename all the properties to "password" versions:
+  //   - value: passwordValue
+  //   - handleInputChange: handlePasswordChange
+  //   - handleInputBlur: handlePasswordBlur
+  //   - hasError: passwordHasError
+  //
+  // Now we have separate variables for email and password!
   //
   // ===========================================================================
-  const passwordIsInvalid =
+  const {
+    value: passwordValue,
+    handleInputChange: handlePasswordChange,
+    handleInputBlur: handlePasswordBlur,
+    hasError: passwordHasError,
+  } = useInput(
+    '',  // Start with empty string
     // -------------------------------------------------------------------------
-    // LESSON 266: USING REUSABLE VALIDATION FUNCTION FOR PASSWORD
+    // VALIDATION FUNCTION: Password length validation
     // -------------------------------------------------------------------------
+    // This arrow function checks if password is at least 6 characters.
     //
-    // EVOLUTION OF PASSWORD VALIDATION ACROSS LESSONS:
-    // -------------------------------------------------
+    // Why pass the minLength parameter (6)?
+    //   - hasMinLength needs TWO parameters: (value, minLength)
+    //   - The hook only passes ONE parameter: value
+    //   - We use an arrow function to add the second parameter!
     //
-    // LESSON 265 (Inline validation):
-    //   passwordIsInvalid = didEdit.password && enteredValues.password.trim().length < 6
-    //
-    // LESSON 266 (Reusable function): ← WE ARE HERE NOW!
-    //   passwordIsInvalid = didEdit.password && !hasMinLength(enteredValues.password, 6)
-    //
-    // WHAT CHANGED IN LESSON 266?
-    // ----------------------------
-    // We replaced the INLINE validation logic:
-    //   enteredValues.password.trim().length < 6
-    //
-    // With a REUSABLE FUNCTION call:
-    //   !hasMinLength(enteredValues.password, 6)
-    //
-    // SAME FUNCTIONALITY, BETTER CODE!
-    // ---------------------------------
-    // The validation logic is similar, but now it's:
-    //   ✓ Reusable across multiple components
-    //   ✓ More readable (function name is self-documenting)
-    //   ✓ Easier to maintain (fix bugs in one place)
-    //   ✓ Easier to test (test the function independently)
-    //
-    // HOW hasMinLength() WORKS:
-    // -------------------------
-    // hasMinLength(value, minLength) checks if value has at least minLength characters.
-    //
-    // Returns:
-    //   true = valid (has minimum length)
-    //   false = invalid (too short)
+    // How it works:
+    //   1. Hook calls: validationFn(enteredValue)
+    //   2. Our arrow function receives: (value)
+    //   3. We call: hasMinLength(value, 6)
+    //   4. hasMinLength returns: value.length >= 6
+    //   5. We return that result to the hook
     //
     // Examples:
-    //   hasMinLength('abc123', 6)   → true  (6 characters, meets requirement)
-    //   hasMinLength('abcdefgh', 6) → true  (8 characters, exceeds requirement)
-    //   hasMinLength('abc', 6)      → false (3 characters, too short)
-    //   hasMinLength('', 6)         → false (0 characters, too short)
+    //   value = 'abc123'
+    //     hasMinLength('abc123', 6) → 6 >= 6 → true (VALID!)
     //
-    // WHY USE ! (NOT OPERATOR)?
-    // --------------------------
-    // hasMinLength() returns TRUE when valid (has minimum length).
-    // But we want passwordIsInvalid to be TRUE when INVALID.
+    //   value = 'abc'
+    //     hasMinLength('abc', 6) → 3 >= 6 → false (INVALID!)
     //
-    // So we use ! to flip it:
-    //   !hasMinLength('abc123', 6) → !true  → false (password is NOT invalid)
-    //   !hasMinLength('abc', 6)    → !false → true  (password IS invalid)
-    //
-    // IMPORTANT NOTE ABOUT .trim():
-    // ------------------------------
-    // The instructor's implementation uses hasMinLength(value, 6) directly,
-    // which checks value.length >= 6.
-    //
-    // This means it does NOT trim whitespace like the inline version did!
-    //
-    //   enteredValues.password.trim().length < 6  (OLD - trims whitespace)
-    //   !hasMinLength(enteredValues.password, 6)  (NEW - does NOT trim)
-    //
-    // If you want to trim whitespace, you can do:
-    //   !hasMinLength(enteredValues.password.trim(), 6)
-    //
-    // Or create a separate validation:
-    //   !hasMinLength(enteredValues.password, 6) || !isNotEmpty(enteredValues.password)
-    //
-    // For this lesson, we follow the instructor's approach (no trimming).
-    //
-    // THE FLEXIBILITY OF hasMinLength():
-    // -----------------------------------
-    // The second parameter (6) makes this function very flexible!
-    //
-    // Same function, different use cases:
-    //   !hasMinLength(password, 6)     // Password must be at least 6 chars
-    //   !hasMinLength(username, 3)     // Username must be at least 3 chars
-    //   !hasMinLength(code, 4)         // Code must be at least 4 chars
-    //
-    // WHY MINIMUM 6 CHARACTERS?
-    // --------------------------
-    // This is a common security requirement:
-    //   - Too short passwords are easier to crack
-    //   - 6 is a reasonable minimum (many sites use 8+)
-    //   - Prevents weak passwords like "123", "abc", "pass"
-    //
-    // In a real app, you might also combine with other checks:
-    //   - Must have uppercase letter: !containsUppercase(password)
-    //   - Must have lowercase letter: !containsLowercase(password)
-    //   - Must have number: !containsNumber(password)
-    //   - Must have special character: !containsSpecialChar(password)
-    //
-    // COMPARISON: INLINE vs REUSABLE FUNCTION
-    // ----------------------------------------
-    //
-    // OLD (Inline - Lesson 265):
-    //   const passwordIsInvalid =
-    //     didEdit.password &&
-    //     enteredValues.password.trim().length < 6;
-    //
-    // Problems:
-    //   - This exact logic repeated in every form with password
-    //   - ".trim().length < 6" requires understanding the logic
-    //   - If we want to change minimum length to 8, update every component
-    //
-    // NEW (Reusable function - Lesson 266):
-    //   const passwordIsInvalid =
-    //     didEdit.password &&
-    //     !hasMinLength(enteredValues.password, 6);
-    //
-    // Benefits:
-    //   ✓ Function name "hasMinLength" is self-documenting
-    //   ✓ Can reuse in Signup, ChangePassword, ResetPassword forms
-    //   ✓ Easy to change: just update the 6 to 8 if requirements change
-    //   ✓ Easy to test: expect(hasMinLength('abc', 6)).toBe(false)
-    //
+    //   value = ''
+    //     hasMinLength('', 6) → 0 >= 6 → false (INVALID!)
     // -------------------------------------------------------------------------
-    didEdit.password &&
-    // -------------------------------------------------------------------------
-    // THE REUSABLE VALIDATION FUNCTION CALL (NEW IN LESSON 266!)
-    // -------------------------------------------------------------------------
-    //
-    // OLD (Inline - Lesson 265):
-    //   enteredValues.password.trim().length < 6
-    //
-    // NEW (Reusable function - Lesson 266):
-    //   !hasMinLength(enteredValues.password, 6)
-    //
-    // This reads naturally:
-    //   "Password is invalid if user touched it AND it doesn't have minimum length of 6"
-    //
-    // -------------------------------------------------------------------------
-    !hasMinLength(enteredValues.password, 6);
+    (value) => hasMinLength(value, 6)
+  );
   //
-  // Now we have BOTH email and password validation!
-  // Both use the same pattern (didEdit + validation rule).
+  // ===========================================================================
+  // LESSON 267: ALL VALIDATION IS NOW IN THE HOOK!
+  // ===========================================================================
   //
-  // This makes it easy to add more validations:
-  //   const usernameIsInvalid = didEdit.username && validation...
-  //   const phoneIsInvalid = didEdit.phone && validation...
+  // BEFORE (Lessons 265-266):
+  // --------------------------
+  // We had to manually compute validation in this component:
   //
-  // The pattern is consistent and predictable!
+  //   const emailIsInvalid =
+  //     didEdit.email &&
+  //     !isEmail(enteredValues.email);
+  //
+  //   const passwordIsInvalid =
+  //     didEdit.password &&
+  //     !hasMinLength(enteredValues.password, 6);
+  //
+  // AFTER (Lesson 267):
+  // -------------------
+  // The hook does all of this for us!
+  //
+  // Inside useInput hook:
+  //   const valueIsValid = validationFn(enteredValue);
+  //   const hasError = didEdit && !valueIsValid;
+  //
+  // We just get back the hasError boolean:
+  //   - emailHasError (from useInput for email)
+  //   - passwordHasError (from useInput for password)
+  //
+  // NO MORE VALIDATION CODE IN THIS COMPONENT!
+  // -------------------------------------------
+  // The hook handles:
+  //   ✓ Tracking the value (enteredValue state)
+  //   ✓ Tracking if touched (didEdit state)
+  //   ✓ Running validation (validationFn)
+  //   ✓ Computing hasError (didEdit && !valueIsValid)
+  //
+  // We just consume the result!
   //
   // ===========================================================================
 
   // ===========================================================================
-  // RESET HANDLER - For Controlled Components
+  // LESSON 267: RESET FUNCTIONALITY REMOVED (FOR NOW)
   // ===========================================================================
   //
-  // With controlled components (state), resetting is EASY!
-  // Just reset the state to its initial values.
+  // BEFORE (Lessons 260-266):
+  // --------------------------
+  // We had a handleReset function that reset the enteredValues state:
+  //
+  //   function handleReset() {
+  //     setEnteredValues({ email: '', password: '' });
+  //   }
+  //
+  // This worked because we managed the state ourselves.
+  //
+  // AFTER (Lesson 267):
+  // -------------------
+  // We no longer have direct access to setEnteredValues!
+  // The state is managed INSIDE the useInput hook.
+  //
+  // HOW TO ADD RESET FUNCTIONALITY WITH HOOKS:
+  // -------------------------------------------
+  // We would need to update the useInput hook to expose a reset function:
+  //
+  //   Inside useInput.js:
+  //     function reset() {
+  //       setEnteredValue(defaultValue);
+  //       setDidEdit(false);
+  //     }
+  //
+  //     return {
+  //       value: enteredValue,
+  //       handleInputChange,
+  //       handleInputBlur,
+  //       hasError,
+  //       reset  // NEW! Expose reset function
+  //     };
+  //
+  //   In this component:
+  //     const {
+  //       value: emailValue,
+  //       ...,
+  //       reset: resetEmail  // Get reset function
+  //     } = useInput('', emailValidation);
+  //
+  //     const {
+  //       value: passwordValue,
+  //       ...,
+  //       reset: resetPassword  // Get reset function
+  //     } = useInput('', passwordValidation);
+  //
+  //     function handleReset() {
+  //       resetEmail();
+  //       resetPassword();
+  //     }
+  //
+  // This will be covered in a future lesson!
+  // For now, we'll comment out the reset button.
   //
   // ===========================================================================
-  function handleReset() {
-    // -------------------------------------------------------------------------
-    // RESETTING STATE-BASED FORMS
-    // -------------------------------------------------------------------------
-    //
-    // Since our inputs are controlled by state (value={enteredValues.email}),
-    // resetting the state AUTOMATICALLY clears the inputs!
-    //
-    // We just set the state back to the same initial value we used in useState:
-    //
-    // -------------------------------------------------------------------------
-    setEnteredValues({
-      email: '',
-      password: '',
-    });
-
-    // That's it! The inputs will now show empty strings.
-    //
-    // This works because:
-    //   1. We call setEnteredValues({ email: '', password: '' })
-    //   2. React re-renders the component with new state
-    //   3. Inputs render with value={enteredValues.email} = ''
-    //   4. User sees empty inputs!
-    //
-    // BENEFITS OF STATE-BASED RESET:
-    // -------------------------------
-    //   ✓ Clean and predictable
-    //   ✓ Follows React patterns (state controls UI)
-    //   ✓ Can reset to non-empty defaults if needed
-    //   ✓ Can reset individual fields selectively
-    //   ✓ TypeScript-friendly (type-safe)
-    //
-    // ALTERNATIVE: Reset to custom defaults
-    // --------------------------------------
-    // You can reset to non-empty values:
-    //   setEnteredValues({
-    //     email: 'default@example.com',
-    //     password: ''
-    //   });
-  }
 
   // ===========================================================================
-  // FORM SUBMISSION HANDLER
+  // FORM SUBMISSION HANDLER - LESSON 267 UPDATED
+  // ===========================================================================
+  //
+  // WHAT CHANGED IN LESSON 267:
+  // ----------------------------
+  // BEFORE: We accessed form values from enteredValues state
+  //   console.log(enteredValues.email);
+  //   console.log(enteredValues.password);
+  //
+  // AFTER: We access form values from the hook return values
+  //   console.log(emailValue);
+  //   console.log(passwordValue);
+  //
+  // The hook gives us the values directly, no need for a combined state object!
+  //
   // ===========================================================================
   function handleSubmit(event) {
     event.preventDefault(); // Prevent page reload on form submission
 
-    // -------------------------------------------------------------------------
-    // ACCESSING THE FORM VALUES
-    // -------------------------------------------------------------------------
-    // With the state approach, we have access to the values at ALL times!
-    // We can use them here in handleSubmit, or anywhere else in the component.
+    // =========================================================================
+    // LESSON 267: VALIDATION CHECK BEFORE SUBMISSION
+    // =========================================================================
     //
-    // This is one of the main benefits of controlled components - you always
-    // know what the current values are.
+    // NEW IN LESSON 267: Check if there are validation errors!
+    // --------------------------------------------------------
+    //
+    // The useInput hook gives us hasError for each field:
+    //   - emailHasError: true if email is invalid AND user has touched it
+    //   - passwordHasError: true if password is invalid AND user has touched it
+    //
+    // We should NOT submit the form if ANY field has an error!
+    //
+    // WHY CHECK HERE?
+    // ---------------
+    // Even though we show error messages in the UI, we want a final check here
+    // to prevent submission with invalid data.
+    //
+    // Scenario:
+    //   1. User fills out email with invalid value
+    //   2. User tabs away → Error shows (didEdit.email = true)
+    //   3. User ignores error and clicks Submit button
+    //   4. Without this check, invalid data would be sent!
+    //   5. WITH this check, submission is prevented ✓
+    //
+    // THE CHECK:
+    // ----------
+    // if (emailHasError || passwordHasError) {
+    //   return;  // Stop execution, don't submit
+    // }
+    //
+    // EXPLANATION:
+    // ------------
+    // The || operator means "OR":
+    //   - If emailHasError is true → condition is true → return early
+    //   - If passwordHasError is true → condition is true → return early
+    //   - Only if BOTH are false → condition is false → continue to submission
+    //
+    // EXAMPLES:
+    // ---------
+    // emailHasError = true, passwordHasError = false
+    //   → true || false → true → return (don't submit)
+    //
+    // emailHasError = false, passwordHasError = true
+    //   → false || true → true → return (don't submit)
+    //
+    // emailHasError = true, passwordHasError = true
+    //   → true || true → true → return (don't submit)
+    //
+    // emailHasError = false, passwordHasError = false
+    //   → false || false → false → continue (submit!)
+    //
+    // EARLY RETURN:
+    // -------------
+    // The return statement EXITS the function immediately.
+    // None of the code below runs if we return early.
+    //
+    // This is a common pattern called a "guard clause":
+    //   - Check for invalid conditions first
+    //   - Return early if invalid
+    //   - Continue with normal flow if valid
+    //
+    // ALTERNATIVE: Show a message
+    // ----------------------------
+    // You could also show a message to the user:
+    //
+    //   if (emailHasError || passwordHasError) {
+    //     alert('Please fix the errors before submitting');
+    //     return;
+    //   }
+    //
+    // Or focus the first invalid field:
+    //
+    //   if (emailHasError) {
+    //     emailInputRef.current.focus();
+    //     return;
+    //   }
+    //
+    // But for now, we just prevent submission silently.
+    // The error messages in the UI are enough feedback!
+    //
+    // =========================================================================
+    if (emailHasError || passwordHasError) {
+      return; // Don't submit if there are validation errors
+    }
+
+    // -------------------------------------------------------------------------
+    // LESSON 267: ACCESSING THE FORM VALUES FROM HOOKS
+    // -------------------------------------------------------------------------
+    //
+    // BEFORE (Lessons 260-266):
+    // --------------------------
+    // We accessed values from the enteredValues state:
+    //   const email = enteredValues.email;
+    //   const password = enteredValues.password;
+    //
+    // AFTER (Lesson 267):
+    // -------------------
+    // We access values directly from the hook return values:
+    //   const email = emailValue;
+    //   const password = passwordValue;
+    //
+    // WHY IS THIS BETTER?
+    // -------------------
+    // The hook encapsulates the state management!
+    //   - We don't need to know HOW the value is stored
+    //   - We don't need to know the state structure
+    //   - The hook handles everything internally
+    //   - We just use the values it gives us
+    //
+    // BENEFITS:
+    // ---------
+    // ✓ Simpler - just use emailValue, not enteredValues.email
+    // ✓ More flexible - hook can change internal implementation
+    // ✓ Better separation of concerns - component doesn't manage state
+    // ✓ Easier to test - component receives values as props from hook
+    //
+    // WHAT WE HAVE ACCESS TO:
+    // -----------------------
+    // From the email hook:
+    //   - emailValue: The current email input value
+    //   - handleEmailChange: Function to call onChange
+    //   - handleEmailBlur: Function to call onBlur
+    //   - emailHasError: Boolean (is email invalid?)
+    //
+    // From the password hook:
+    //   - passwordValue: The current password input value
+    //   - handlePasswordChange: Function to call onChange
+    //   - handlePasswordBlur: Function to call onBlur
+    //   - passwordHasError: Boolean (is password invalid?)
+    //
+    // We can use these values anywhere in the component!
+    //
     // -------------------------------------------------------------------------
     console.log('Submitted!');
-    console.log(enteredValues); // { email: '...', password: '...' }
+    console.log('Email:', emailValue);
+    console.log('Password:', passwordValue);
 
-    // We could also access individual values:
-    // console.log('Email:', enteredValues.email);
-    // console.log('Password:', enteredValues.password);
+    // We could also log them as an object if we want:
+    // console.log({ email: emailValue, password: passwordValue });
 
     // -------------------------------------------------------------------------
-    // OPTIONAL: Reset after successful submission
+    // WHAT HAPPENS NEXT IN A REAL APP
     // -------------------------------------------------------------------------
     //
-    // After sending data to backend, you might want to clear the form:
+    // In a real application, we would:
     //
-    //   fetch('/api/login', { method: 'POST', body: JSON.stringify(enteredValues) })
-    //     .then(response => {
-    //       if (response.ok) {
-    //         setEnteredValues({ email: '', password: '' });  // Clear form
-    //         // Show success message
-    //       }
-    //     });
+    // 1. SEND DATA TO BACKEND:
+    //    --------------------------------------------------------------------
+    //    Send the validated data to your server:
+    //
+    //      fetch('/api/login', {
+    //        method: 'POST',
+    //        headers: { 'Content-Type': 'application/json' },
+    //        body: JSON.stringify({
+    //          email: emailValue,
+    //          password: passwordValue
+    //        })
+    //      })
+    //
+    // 2. SHOW LOADING STATE:
+    //    --------------------------------------------------------------------
+    //    Disable the submit button and show a spinner:
+    //
+    //      const [isSubmitting, setIsSubmitting] = useState(false);
+    //
+    //      setIsSubmitting(true);
+    //      // ... send request ...
+    //      setIsSubmitting(false);
+    //
+    //      <button disabled={isSubmitting}>
+    //        {isSubmitting ? 'Logging in...' : 'Login'}
+    //      </button>
+    //
+    // 3. HANDLE SUCCESS:
+    //    --------------------------------------------------------------------
+    //    On successful login:
+    //
+    //      .then(response => {
+    //        if (response.ok) {
+    //          // Store auth token
+    //          localStorage.setItem('token', response.token);
+    //          // Redirect to dashboard
+    //          navigate('/dashboard');
+    //        }
+    //      })
+    //
+    // 4. HANDLE ERRORS:
+    //    --------------------------------------------------------------------
+    //    On failed login:
+    //
+    //      .catch(error => {
+    //        // Show error message
+    //        setErrorMessage('Invalid email or password');
+    //        // Or use a toast notification
+    //      })
+    //
+    // 5. RESET FORM (optional):
+    //    --------------------------------------------------------------------
+    //    Clear the form after successful submission:
+    //
+    //      // With hooks, we'd need to expose a reset function!
+    //      // See next lesson on adding reset functionality to the hook
     //
     // -------------------------------------------------------------------------
 
     // TODO: Here we would typically:
-    // - Validate the data
-    // - Send it to a backend API
+    // - Send data to a backend API
     // - Show a loading state
     // - Handle success/error responses
-    // - Reset form on success
+    // - Navigate to another page on success
   }
 
   return (
@@ -1013,42 +789,141 @@ export default function StateLogin() {
           ===================================================================== */}
       <div className="control-row">
         {/* ===================================================================
-            EMAIL INPUT - Using Reusable Component
+            EMAIL INPUT - LESSON 267: USING VALUES FROM useInput HOOK
             ===================================================================
 
-            BEFORE (90+ lines of JSX and comments):
-              <div className="control no-margin">
-                <label htmlFor="email">Email</label>
-                <input ... all the props ... />
-                <div className="control-error">
-                  {emailIsInvalid && <p>Error</p>}
-                </div>
-              </div>
-
-            AFTER (8 clean lines):
+            BEFORE (Lessons 265-266): Using manual state management
+            --------------------------------------------------------
+            We passed values and handlers from our component state:
               <Input
-                label="Email"
-                id="email"
-                type="email"
-                name="email"
                 value={enteredValues.email}
                 onChange={(event) => handleInputChange('email', event.target.value)}
                 onBlur={() => handleInputBlur('email')}
                 error={emailIsInvalid && "Please enter a valid email."}
               />
 
-            All the complexity is now encapsulated in Input.jsx!
+            We had to:
+              - Manage enteredValues state manually
+              - Create handleInputChange function
+              - Create handleInputBlur function
+              - Compute emailIsInvalid manually
+              - Pass 'email' identifier to generic handlers
 
-            WHAT GETS FORWARDED:
+            AFTER (Lesson 267): Using useInput custom hook
+            -----------------------------------------------
+            We pass values and handlers directly from the hook:
+              <Input
+                value={emailValue}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                error={emailHasError && "Please enter a valid email."}
+              />
+
+            The hook provides:
+              - emailValue: Current email input value
+              - handleEmailChange: Specific handler for email changes
+              - handleEmailBlur: Specific handler for email blur
+              - emailHasError: Boolean indicating if email is invalid
+
+            BENEFITS OF THE HOOK APPROACH:
+            -------------------------------
+            ✓ SIMPLER PROPS:
+              - value={emailValue} instead of value={enteredValues.email}
+              - No need to pass 'email' identifier
+              - Cleaner, more readable code
+
+            ✓ DEDICATED HANDLERS:
+              - onChange={handleEmailChange} is email-specific
+              - No wrapper arrow function needed!
+              - React passes the event directly to handleEmailChange
+              - Inside the hook, handleEmailChange receives the event
+
+            ✓ AUTOMATIC ERROR TRACKING:
+              - emailHasError is computed automatically by the hook
+              - No need to write validation logic in this component
+              - Hook handles didEdit state internally
+
+            ✓ ENCAPSULATED STATE:
+              - All email-related state is managed by one hook call
+              - Component doesn't need to know about internal state structure
+              - Hook can change implementation without affecting component
+
+            HOW THE HANDLERS WORK:
+            ----------------------
+            BEFORE: We needed arrow functions to pass the identifier
+              onChange={(event) => handleInputChange('email', event.target.value)}
+
+              Why?
+              - handleInputChange needed TWO parameters: (identifier, value)
+              - React only passes ONE parameter: event
+              - Arrow function "wraps" the call to add 'email' identifier
+              - We extract event.target.value and pass it
+
+            AFTER: We pass the handler directly
+              onChange={handleEmailChange}
+
+              Why this works:
+              - handleEmailChange INSIDE THE HOOK expects ONE parameter: event
+              - React passes the event to handleEmailChange
+              - Hook extracts event.target.value internally
+              - No wrapper needed! Direct reference!
+
+            This is cleaner and more performant (no arrow function created on each render).
+
+            PROPS WE'RE PASSING:
             --------------------
-            The Input component receives these props and:
-              - Uses 'label' for the <label> text
-              - Uses 'id' for <label htmlFor> AND <input id>
-              - Uses 'error' for conditional error message
-              - Spreads type, name, value, onChange, onBlur onto <input>
+            Explicit props (used by Input component):
+              - label="Email": Text for the <label>
+              - id="email": For label htmlFor AND input id
+              - error={emailHasError && "..."}: Error message or false
 
-            The result is the EXACT SAME HTML structure as before,
-            but with much cleaner React code!
+            Forwarded props (spread onto <input>):
+              - type="email": Input type for HTML validation
+              - name="email": Form field name (for FormData if needed)
+              - value={emailValue}: Controlled component value FROM HOOK
+              - onChange={handleEmailChange}: Change handler FROM HOOK
+              - onBlur={handleEmailBlur}: Blur handler FROM HOOK
+
+            THE ERROR PROP PATTERN:
+            -----------------------
+            error={emailHasError && "Please enter a valid email."}
+
+            This uses the && operator for conditional values:
+              - If emailHasError is false: false && "..." → false
+              - If emailHasError is true: true && "..." → "Please enter a valid email."
+
+            In Input.jsx:
+              {error && <p>{error}</p>}
+
+            If error is false: {false && ...} → renders nothing
+            If error is a string: {string && ...} → renders the <p>
+
+            COMPLETE FLOW:
+            --------------
+            1. User types in email field
+               → Input component calls onChange={handleEmailChange}
+               → handleEmailChange receives event from React
+               → Inside hook: setEnteredValue(event.target.value)
+               → Inside hook: setDidEdit(false)
+               → Hook re-runs, returns new emailValue
+               → Component re-renders with new emailValue
+               → Input shows new value
+
+            2. User leaves email field (tabs away)
+               → Input component calls onBlur={handleEmailBlur}
+               → handleEmailBlur runs inside hook
+               → Inside hook: setDidEdit(true)
+               → Hook re-runs, computes hasError = didEdit && !valueIsValid
+               → Component re-renders with emailHasError = true/false
+               → Error shows if emailHasError is true
+
+            3. User goes back and types in email field
+               → onChange fires again
+               → Inside hook: setDidEdit(false)
+               → hasError becomes false (didEdit is now false)
+               → Error disappears immediately!
+
+            This is the complete blur validation pattern powered by a custom hook!
 
             =================================================================== */}
         <Input
@@ -1056,48 +931,144 @@ export default function StateLogin() {
           id="email"
           type="email"
           name="email"
-          value={enteredValues.email}
-          onChange={(event) => handleInputChange('email', event.target.value)}
-          onBlur={() => handleInputBlur('email')}
-          error={emailIsInvalid && "Please enter a valid email."}
+          value={emailValue}
+          onChange={handleEmailChange}
+          onBlur={handleEmailBlur}
+          error={emailHasError && "Please enter a valid email."}
         />
 
         {/* ===================================================================
-            PASSWORD INPUT - Using Reusable Component (NEW IN LESSON 265!)
+            PASSWORD INPUT - LESSON 267: USING VALUES FROM useInput HOOK
             ===================================================================
 
-            Same pattern as email, but:
-              - Different label: "Password"
-              - Different id: "password"
-              - Different type: "password" (hides characters)
-              - Different identifier in handlers: 'password'
-              - Different validation: passwordIsInvalid
-              - Different error message: "Please enter a valid password."
+            BEFORE (Lessons 265-266): Using manual state management
+            --------------------------------------------------------
+            We passed values and handlers from our component state:
+              <Input
+                value={enteredValues.password}
+                onChange={(event) => handleInputChange('password', event.target.value)}
+                onBlur={() => handleInputBlur('password')}
+                error={passwordIsInvalid && "Please enter a valid password."}
+              />
 
-            IMPORTANT: onBlur Handler Added!
-            ---------------------------------
-            In the transcript, the instructor mentioned:
-              "And for onBlur, onChange, and value, I can again copy the code
-               from down there, though here I don't even have an onBlur listener
-               yet, which I'll change now though."
+            We had to:
+              - Manage enteredValues.password state manually
+              - Call handleInputChange with 'password' identifier
+              - Call handleInputBlur with 'password' identifier
+              - Compute passwordIsInvalid manually
+              - Wrap handlers in arrow functions
 
-            So we're adding the onBlur handler that was missing before!
+            AFTER (Lesson 267): Using useInput custom hook
+            -----------------------------------------------
+            We pass values and handlers directly from the hook:
+              <Input
+                value={passwordValue}
+                onChange={handlePasswordChange}
+                onBlur={handlePasswordBlur}
+                error={passwordHasError && "Please enter a valid password."}
+              />
 
-            This means password will now have the SAME blur validation as email:
-              - User types in password field (didEdit.password stays false)
-              - User tabs away → onBlur fires → didEdit.password becomes true
-              - passwordIsInvalid is recalculated
-              - If password < 6 characters → error shows!
+            The hook provides:
+              - passwordValue: Current password input value
+              - handlePasswordChange: Specific handler for password changes
+              - handlePasswordBlur: Specific handler for password blur
+              - passwordHasError: Boolean indicating if password is invalid
 
-            CONSISTENCY:
-            ------------
-            Now BOTH inputs have:
-              ✓ onChange (updates state on every keystroke)
-              ✓ onBlur (marks field as touched when user leaves)
-              ✓ value (controlled by state)
-              ✓ error (shows when invalid AND touched)
+            SAME PATTERN AS EMAIL, INDEPENDENT STATE:
+            ------------------------------------------
+            We called useInput() TWICE:
+              1. const { ... } = useInput('', emailValidation);
+              2. const { ... } = useInput('', passwordValidation);
 
-            This is the complete blur validation pattern!
+            Each call creates INDEPENDENT state:
+              - Email has its own enteredValue, didEdit
+              - Password has its own enteredValue, didEdit
+              - They don't interfere with each other
+              - Each has its own handlers
+              - Each has its own validation
+
+            This is POWERFUL! We can:
+              - Use the same hook for any number of inputs
+              - Each input gets its own state management
+              - No need to manage a combined state object
+              - No need to pass identifiers to generic handlers
+
+            DIFFERENT VALIDATION:
+            ---------------------
+            Email validation: (value) => isEmail(value) && isNotEmpty(value)
+              - Checks for '@' symbol
+              - Checks that value is not empty
+
+            Password validation: (value) => hasMinLength(value, 6)
+              - Checks that password is at least 6 characters
+              - Already handles empty case (0 >= 6 → false)
+
+            Each input can have COMPLETELY DIFFERENT validation logic!
+            The hook doesn't care what the validation function does,
+            it just calls it and uses the result.
+
+            PROPS WE'RE PASSING:
+            --------------------
+            Explicit props (used by Input component):
+              - label="Password": Text for the <label>
+              - id="password": For label htmlFor AND input id
+              - error={passwordHasError && "..."}: Error message or false
+
+            Forwarded props (spread onto <input>):
+              - type="password": Hides characters for security
+              - name="password": Form field name (for FormData if needed)
+              - value={passwordValue}: Controlled component value FROM HOOK
+              - onChange={handlePasswordChange}: Change handler FROM HOOK
+              - onBlur={handlePasswordBlur}: Blur handler FROM HOOK
+
+            VALIDATION ERROR MESSAGE:
+            -------------------------
+            error={passwordHasError && "Please enter a valid password."}
+
+            passwordHasError is true when:
+              1. User has left the password field (didEdit = true inside hook)
+              2. AND password validation failed (hasMinLength(value, 6) → false)
+
+            Examples:
+              - User types "abc" and tabs away → passwordHasError = true → Error shows
+              - User types "abc123" and tabs away → passwordHasError = false → No error
+              - User hasn't touched field yet → passwordHasError = false → No error
+
+            COMPLETE FLOW (SAME AS EMAIL):
+            ------------------------------
+            1. User types in password field
+               → onChange={handlePasswordChange} fires
+               → Inside hook: setEnteredValue(event.target.value)
+               → Inside hook: setDidEdit(false)
+               → passwordHasError becomes false
+               → No error while typing
+
+            2. User leaves password field
+               → onBlur={handlePasswordBlur} fires
+               → Inside hook: setDidEdit(true)
+               → Hook re-computes: hasError = didEdit && !valueIsValid
+               → passwordHasError = true/false
+               → Error shows if invalid
+
+            3. User goes back and types
+               → onChange fires
+               → Inside hook: setDidEdit(false)
+               → passwordHasError becomes false
+               → Error disappears immediately
+
+            CONSISTENCY ACROSS INPUTS:
+            --------------------------
+            Both email and password now use the EXACT SAME PATTERN:
+              ✓ Same hook: useInput()
+              ✓ Same props: value, onChange, onBlur, error
+              ✓ Same flow: type → no error, leave → validate, type → clear error
+              ✓ Different validation: email checks '@', password checks length
+
+            This consistency makes the code:
+              - Easy to understand (one pattern to learn)
+              - Easy to extend (add more inputs with same pattern)
+              - Easy to maintain (fix once, works everywhere)
+              - Easy to test (same behavior for all inputs)
 
             =================================================================== */}
         <Input
@@ -1105,19 +1076,36 @@ export default function StateLogin() {
           id="password"
           type="password"
           name="password"
-          value={enteredValues.password}
-          onChange={(event) =>
-            handleInputChange('password', event.target.value)
-          }
-          onBlur={() => handleInputBlur('password')}
-          error={passwordIsInvalid && "Please enter a valid password."}
+          value={passwordValue}
+          onChange={handlePasswordChange}
+          onBlur={handlePasswordBlur}
+          error={passwordHasError && "Please enter a valid password."}
         />
       </div>
 
       <p className="form-actions">
-        <button type="button" onClick={handleReset} className="button button-flat">
+        {/* ===================================================================
+            LESSON 267: RESET BUTTON TEMPORARILY REMOVED
+            ===================================================================
+
+            The Reset button has been commented out for this lesson because:
+              - We no longer have direct access to the state
+              - The state is managed inside the useInput hook
+              - We would need the hook to expose a reset() function
+
+            How to add it back:
+              1. Update useInput.js to return a reset function
+              2. Destructure reset from each useInput call
+              3. Create handleReset function that calls both reset functions
+              4. Uncomment this button
+
+            For now, the focus is on understanding how the custom hook works!
+
+            =================================================================== */}
+        {/* <button type="button" onClick={handleReset} className="button button-flat">
           Reset
-        </button>
+        </button> */}
+
         {/*type="button" would prevent the button from submitting the form*/}
         <button className="button">Login</button>
       </p>
