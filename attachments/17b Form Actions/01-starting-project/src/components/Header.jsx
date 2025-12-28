@@ -1,3 +1,12 @@
+// =============================================================================
+// HEADER COMPONENT
+// =============================================================================
+// A simple header component that displays the app logo and title.
+//
+// This component is not directly related to form actions, but it provides
+// a consistent header for the application.
+// =============================================================================
+
 import logoImg from '../assets/logo.jpg';
 
 export default function Header() {
