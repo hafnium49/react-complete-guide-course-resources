@@ -2,7 +2,7 @@ import { useActionState } from 'react'; // a new hook introduced in React 19
 import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/validation.js';
 
 // =============================================================================
-// SIGNUP COMPONENT & FIRST FORM ACTION
+// SIGNUP COMPONENT & FORM ACTIONS - SYNCHRONOUS EXAMPLE
 // =============================================================================
 //
 // In the previous course section, you learned how to handle form submissions
@@ -18,6 +18,17 @@ import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/
 //
 // In this section, however, you're learning about an **alternative**:
 // React's **Form Actions** feature, which is built into **React 19+**.
+//
+// Up to this point (Lesson 274), you've learned how to:
+//   ✓ Set up and use a **synchronous** form action (no `async` / `await`)
+//   ✓ Wire it to a form via the `action` prop
+//   ✓ Use the `useActionState` hook to manage form-related state
+//   ✓ Validate input and collect / show error messages
+//   ✓ Preserve user-entered values on failed submissions
+//
+// Next, the course will move on to more **advanced** use cases (e.g. async
+// actions), but first it's important to understand **where** form action
+// functions can live and why moving them out of the component can be helpful.
 //
 // =============================================================================
 // WHAT ARE FORM ACTIONS (HIGH LEVEL)?
@@ -358,6 +369,61 @@ function signUpAction(previousState, formData) {
   return { errors: null };
 }
 
+// =============================================================================
+// NOTE: ACTION FUNCTION LOCATION (INSIDE VS OUTSIDE THE COMPONENT)
+// =============================================================================
+//
+// IMPORTANT TAKEAWAY FROM THIS LESSON:
+// ------------------------------------
+// Our `signUpAction` function is defined **outside** of the `Signup` component
+// function. This is **intentional** and has a couple of advantages:
+//
+//   1. CLEANER COMPONENT FUNCTION
+//      - Keeping heavy logic (like validation & form processing) out of the
+//        component body makes the component easier to read and maintain.
+//
+//   2. POTENTIAL PERFORMANCE BENEFITS
+//      - If you define the action function **inside** the component, it will be
+//        recreated every time the component function runs (i.e. on every render).
+//      - In small apps this is usually fine, but in larger apps or frequently
+//        re-rendering components, this can add unnecessary overhead.
+//      - By defining `signUpAction` outside, it is created **once** when the
+//        module is loaded, not on every render.
+//
+//   3. REUSABILITY & ORGANIZATION
+//      - Because `signUpAction` doesn’t use props or local component state,
+//        it could even be moved into a separate file (e.g. `signup-actions.js`)
+//        and imported where needed.
+//      - This can help you keep components lean and separate “action logic”
+//        from “rendering logic”.
+//
+// WHEN TO KEEP ACTIONS OUTSIDE THE COMPONENT:
+// ------------------------------------------//
+//   - If the action does **not** need access to:
+//       • Component props
+//       • Component-local state (e.g. values from `useState`, `useReducer`)
+//   - Then it’s a good idea to keep it outside (like we do here).
+//
+// WHEN THEY MUST BE INSIDE:
+// -------------------------//
+//   - If your action needs:
+//       • Props passed into the component
+//       • State managed by hooks inside the component
+//   - Then you must define the action **inside** the component function so it
+//     can “see” those values.
+//
+// SUMMARY:
+// --------
+//   - Form actions are just functions – they do **not** have to live inside
+//     the component that uses them.\n//   - As long as they don't depend on props or component-local state, you can
+//     (and often should) move them out for clarity and potential performance
+//     benefits.\n//   - You could even place them in separate modules to share them across
+//     different components or routes.\n//
+// The rest of this file continues to demonstrate how this *externally-defined*
+// `signUpAction` is wired up via `useActionState` and `<form action={formAction}>`.
+//
+// =============================================================================
+
 export default function Signup() {
   // ===========================================================================
   // COMPONENT FUNCTION WITH useActionState HOOK
@@ -606,6 +672,7 @@ export default function Signup() {
             defaultChecked={formState.enteredValues?.acquisitionChannel?.includes(
               'google',
             )}
+            // "?" in .acquisitionChannel?. is optional chaining to avoid null errors
           />
           <label htmlFor="google">Google</label>
         </div>
