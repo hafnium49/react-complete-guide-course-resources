@@ -1,108 +1,200 @@
 // =============================================================================
-// SIGNUP COMPONENT - Starting Point for Form Actions
+// SIGNUP COMPONENT & FIRST FORM ACTION
 // =============================================================================
 //
-// This is the Signup component that we'll be working with throughout this
-// section. Currently, it's a basic form without any form handling logic.
+// In the previous course section, you learned how to handle form submissions
+// and user input in React apps **manually**, by:
+//   - Adding an `onSubmit` prop to the `<form>` element
+//   - Pointing `onSubmit` at a handler function, e.g. `handleSubmit`
+//   - Receiving an **event object** inside that handler
+//   - Calling `event.preventDefault()` to prevent the browser's default behavior
+//   - Optionally constructing a `FormData` object from `event.target`
+//
+// That approach is still 100% valid and you'll see it used in many projects,
+// regardless of the React version.
+//
+// In this section, however, you're learning about an **alternative**:
+// React's **Form Actions** feature, which is built into **React 19+**.
 //
 // =============================================================================
-// WHAT YOU'LL LEARN HERE
+// WHAT ARE FORM ACTIONS (HIGH LEVEL)?
 // =============================================================================
 //
-// In the lessons ahead, you'll learn how to transform this basic form into
-// a form that uses React's form actions feature. You'll discover:
+// - Only available in **React 19 or higher**.
+// - Instead of `<form onSubmit={handleSubmit}>`, you use `<form action={fn}>`.
+// - The function you pass to `action` is your **form action**.
+// - React:
+//     ✓ Listens for the submit event
+//     ✓ Calls `preventDefault()` behind the scenes
+//     ✓ Automatically creates a **FormData** object for you
+//     ✓ Calls your action function with that FormData object
 //
-//   1. How to add a form action function
-//   2. How to extract form values using form actions
-//   3. How to handle form submission with form actions
-//   4. How to manage form state and validation
-//   5. How to work with asynchronous actions (like API calls)
-//   6. How to implement optimistic updating
+// So instead of:
 //
-// =============================================================================
-// CURRENT STATE OF THIS FORM
-// =============================================================================
+//   function handleSubmit(event) {
+//     event.preventDefault();
+//     const formData = new FormData(event.target);
+//     const email = formData.get('email');
+//   }
 //
-// Right now, this form is just a plain HTML form with:
-//   - No form submission handler
-//   - No value extraction logic
-//   - No validation
-//   - No state management
+//   <form onSubmit={handleSubmit}> … </form>
 //
-// If you click the "Sign up" button right now, the form will submit in the
-// traditional HTML way (causing a page reload), which is NOT what we want
-// in a React application.
+// you can now write:
 //
-// In the previous section, you learned how to handle this manually using:
-//   - useState for controlled components
-//   - useRef for uncontrolled components
-//   - FormData API for extracting values
-//   - Manual event.preventDefault() in onSubmit handlers
+//   function signUpAction(formData) {
+//     const email = formData.get('email');
+//   }
 //
-// In THIS section, you'll learn a DIFFERENT approach using React's built-in
-// form actions feature, which can simplify form handling significantly!
+//   <form action={signUpAction}> … </form>
 //
-// =============================================================================
-// FORM STRUCTURE
-// =============================================================================
-//
-// This signup form contains various types of form inputs:
-//
-//   TEXT INPUTS:
-//   - Email (type="email")
-//   - Password (type="password")
-//   - Confirm Password (type="password")
-//   - First Name (type="text")
-//   - Last Name (type="text")
-//
-//   SELECT DROPDOWN:
-//   - Role selection (Student, Teacher, Employee, Founder, Other)
-//
-//   CHECKBOXES:
-//   - Multiple checkboxes for "How did you find us?" (can select multiple)
-//   - Single checkbox for terms and conditions agreement
-//
-//   BUTTONS:
-//   - Reset button (type="reset") - clears the form
-//   - Sign up button (type="submit" by default) - submits the form
-//
-// Notice that all inputs have a `name` attribute. This is important because
-// form actions (and the FormData API) use the `name` attribute to identify
-// and extract values from form fields.
+// Key differences:
+//   - You **no longer** receive the event object.
+//   - You **do not** call `event.preventDefault()` yourself.
+//   - You work with **FormData** directly.
 //
 // =============================================================================
-// WHY THIS FORM IS A GOOD LEARNING EXAMPLE
+// REACT 19 REQUIREMENT (CHECKING `package.json`)
 // =============================================================================
 //
-// This form is perfect for learning form actions because it includes:
+// Form Actions are a **React feature**, but they only exist starting with
+// React 19. If you look at this project's `package.json`, you'll see:
 //
-//   ✓ Multiple input types (text, email, password, select, checkboxes)
-//   ✓ Both single and multiple value inputs
-//   ✓ A good mix of required and optional fields
-//   ✓ Real-world complexity (not too simple, not too complex)
+//   "react": "^19.0.0",
+//   "react-dom": "^19.0.0"
 //
-// As you learn form actions, you'll see how React's form actions feature
-// can handle all of these input types elegantly.
+// That `^19.0.0` indicates that this project is allowed to use React 19+,
+// so using Form Actions here is safe.
+//
+// In other projects, always **inspect `package.json` first** before assuming
+// that Form Actions are available.
 //
 // =============================================================================
+// A NOTE ON THE `action` ATTRIBUTE / PROP
+// =============================================================================
+//
+// In plain HTML (no React), a `<form>` can have an `action` **attribute**:
+//
+//   <form action="/some-endpoint" method="POST">
+//
+// That tells the browser **where** to send the form data when the form is
+// submitted. The browser then:
+//   - Builds a request
+//   - Sends the data to that URL
+//   - Navigates / reloads the page
+//
+// In React 19, we are instead using the `action` **prop** in JSX:
+//
+//   <form action={signUpAction}>
+//
+// Here, React **overrides** the original meaning:
+//   - It does NOT send the data to some URL automatically.
+//   - Instead, it **executes the function** you provide.
+//   - It still suppresses the browser's default behavior for you.
+//
+// So: In React 19+, think of `action={someFunction}` as
+//   "call this function when the form is submitted (with FormData)".
+//
+// =============================================================================
+// WHY `name` ATTRIBUTES ARE CRITICAL
+// =============================================================================
+//
+// This form already uses `name` attributes on all relevant inputs:
+//   - `name="email"`, `name="password"`, `name="confirm-password"`, ...
+//
+// The `name` string becomes the **key** inside the FormData object.
+// That’s why, in the action function, we can do:
+//
+//   formData.get('email')
+//
+// and expect to get the value of the field with `name="email"`.
+//
+// If you forget to add a `name` attribute, that field’s value will not be
+// included in the FormData object.
+//
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// FIRST FORM ACTION IMPLEMENTATION
+// -----------------------------------------------------------------------------
+// According to the lesson, we now:
+//   - Create a function (initially called `handleSubmit` in the video)
+//   - Then rename it to `signUpAction` to better reflect its purpose
+//
+// We'll skip the temporary `handleSubmit` name here and go straight to the
+// final name that the instructor ends up with: `signUpAction`.
+// -----------------------------------------------------------------------------
+function signUpAction(formData) {
+  // ---------------------------------------------------------------------------
+  // `formData` PARAMETER
+  // ---------------------------------------------------------------------------
+  // This is an instance of the built-in `FormData` class, automatically
+  // created and provided by React when the form is submitted.
+  //
+  // In the previous section, you saw:
+  //   const formData = new FormData(event.target);
+  //
+  // where `event.target` was the submitted form element. That manual step is
+  // no longer needed when using Form Actions – React does it for you.
+  // ---------------------------------------------------------------------------
+
+  // Extract the submitted email value.
+  //
+  // IMPORTANT:
+  //   - The string `'email'` below MUST match the `name="email"` attribute
+  //     on the corresponding `<input>` field.
+  //   - If you rename the `name` attribute in the JSX, you must update the
+  //     key used here as well.
+  const enteredEmail = formData.get('email');
+
+  // For this first step, the instructor only extracts the email and logs it.
+  // You could also extract all other fields here in the same way:
+  //   const password = formData.get('password');
+  //   const firstName = formData.get('first-name');
+  //   const role = formData.get('role');
+  //
+  // Logging helps you verify that the form action is called correctly and that
+  // the FormData object contains the values you expect.
+  console.log('Submitted email via form action:', enteredEmail);
+
+  // NOTE (from the lesson):
+  // After submission, you might notice that the form fields are cleared.
+  // That's because React **automatically resets the form** after the action
+  // has been executed.
+  //
+  // Later in this section, you’ll learn how to **keep** the user-entered
+  // values (instead of resetting them) if that’s the behavior you want.
+}
 
 export default function Signup() {
   // ===========================================================================
   // COMPONENT FUNCTION
   // ===========================================================================
-  // Currently, this component is very simple - it just returns JSX for the form.
+  // This component now demonstrates:
+  //   - How to register a **form action** via the `action` prop on `<form>`.
+  //   - How React 19+ calls `signUpAction(formData)` on submit.
   //
-  // In the upcoming lessons, we'll add:
-  //   - A form action function
-  //   - State management for form validation and feedback
-  //   - Logic to handle form submission
-  //   - Optimistic updating capabilities
-  //
-  // But for now, this is our starting point - a clean, simple form structure.
+  // Mentally compare this with the older `onSubmit` + `event` + `preventDefault`
+  // pattern you learned before – both are useful and valid.
   // ===========================================================================
 
   return (
-    <form>
+    // -------------------------------------------------------------------------
+    // THE `action` PROP (FORM ACTIONS IN ACTION!)
+    // -------------------------------------------------------------------------
+    // By setting `action={signUpAction}`, we tell React:
+    //   "When this form is submitted, build a FormData object and pass it
+    //    into `signUpAction`."
+    //
+    // React will:
+    //   - Intercept the submit event
+    //   - Call `preventDefault()` internally
+    //   - Create a FormData object from all form inputs that have a `name`
+    //   - Invoke `signUpAction(formData)`
+    //
+    // You do NOT write any event-handling or `preventDefault()` code yourself
+    // here – that’s the core convenience of the Form Actions feature.
+    // -------------------------------------------------------------------------
+    <form action={signUpAction}>
       {/* =======================================================================
           FORM HEADER
           =======================================================================
@@ -257,9 +349,8 @@ export default function Signup() {
           
           2. SIGN UP BUTTON (type="submit" by default)
              - No explicit `type` attribute, so it defaults to "submit"
-             - This button will trigger form submission
-             - Currently, this will cause a page reload (not what we want!)
-             - In upcoming lessons, we'll use form actions to handle this properly
+             - This button will trigger our **form action**
+             - React will call `signUpAction(formData)` when this is clicked
           ======================================================================= */}
       <p className="form-actions">
         <button type="reset" className="button button-flat">
@@ -275,19 +366,18 @@ export default function Signup() {
 // WHAT'S NEXT?
 // =============================================================================
 //
-// In the upcoming lessons, you'll learn how to:
+// In the upcoming lessons, you'll build on this foundation and:
 //
-//   1. Add a form action function to handle form submission
-//   2. Extract form values using form actions
-//   3. Validate form data
-//   4. Handle asynchronous operations (like API calls)
-//   5. Implement optimistic updating for better user experience
+//   1. Extract more than just the email value
+//   2. Add validation using utility functions
+//   3. Handle asynchronous actions (e.g. sending the data to a server)
+//   4. Implement optimistic updating for a snappy UX
 //
-// All of this will be done using React's form actions feature, which is
-// built into React 19+. This approach can be simpler and more declarative
-// than the manual form handling you learned in the previous section.
-//
-// Stay tuned for the next lessons where we'll transform this basic form
-// into a fully functional form using React's form actions!
+// Remember: Form Actions are **one** way of handling forms in React 19+.
+// The "classic" `onSubmit` + `event` + `preventDefault` approach is still
+// valid and important to understand – you will encounter both patterns
+// in real-world React codebases.
 //
 // =============================================================================
+
+
