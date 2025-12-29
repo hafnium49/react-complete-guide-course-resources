@@ -1,3 +1,5 @@
+import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/validation.js';
+
 // =============================================================================
 // SIGNUP COMPONENT & FIRST FORM ACTION
 // =============================================================================
@@ -114,7 +116,7 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
-// FIRST FORM ACTION IMPLEMENTATION
+// FIRST FORM ACTION IMPLEMENTATION (NOW WITH MORE FIELDS + VALIDATION)
 // -----------------------------------------------------------------------------
 // According to the lesson, we now:
 //   - Create a function (initially called `handleSubmit` in the video)
@@ -137,32 +139,165 @@ function signUpAction(formData) {
   // no longer needed when using Form Actions – React does it for you.
   // ---------------------------------------------------------------------------
 
-  // Extract the submitted email value.
+  // ---------------------------------------------------------------------------
+  // 1) EXTRACTING ALL RELEVANT VALUES FROM FORMDATA
+  // ---------------------------------------------------------------------------
+  // In the previous lesson we only extracted the email.
+  // Now we extract ALL the fields we care about, using the `name` values
+  // from the JSX as keys for FormData.
   //
-  // IMPORTANT:
-  //   - The string `'email'` below MUST match the `name="email"` attribute
-  //     on the corresponding `<input>` field.
-  //   - If you rename the `name` attribute in the JSX, you must update the
-  //     key used here as well.
-  const enteredEmail = formData.get('email');
+  // IMPORTANT: The strings used below (e.g. 'email', 'password', 'first-name')
+  // MUST match the `name="..."` attributes from the form inputs exactly.
+  // ---------------------------------------------------------------------------
 
-  // For this first step, the instructor only extracts the email and logs it.
-  // You could also extract all other fields here in the same way:
-  //   const password = formData.get('password');
-  //   const firstName = formData.get('first-name');
-  //   const role = formData.get('role');
-  //
-  // Logging helps you verify that the form action is called correctly and that
-  // the FormData object contains the values you expect.
-  console.log('Submitted email via form action:', enteredEmail);
+  // Shorten the constant name from `enteredEmail` to just `email`,
+  // as done in the lesson.
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const confirmPassword = formData.get('confirm-password');
+  const firstName = formData.get('first-name');
+  const lastName = formData.get('last-name');
+  const role = formData.get('role');
+  const terms = formData.get('terms');
 
-  // NOTE (from the lesson):
-  // After submission, you might notice that the form fields are cleared.
-  // That's because React **automatically resets the form** after the action
-  // has been executed.
+  // Special case: Multiple checkboxes with the same `name="acquisition"`.
   //
-  // Later in this section, you’ll learn how to **keep** the user-entered
-  // values (instead of resetting them) if that’s the behavior you want.
+  // Here, the user can select zero, one, or multiple "acquisition" options.
+  // Therefore we use **getAll** (not `get`) so that we always get an **array**
+  // of selected values (even if it's empty).
+  const acquisitionChannel = formData.getAll('acquisition');
+
+  // ---------------------------------------------------------------------------
+  // 2) PREPARING VALIDATION (COLLECTING ERRORS)
+  // ---------------------------------------------------------------------------
+  // We now want to validate these extracted values.
+  //
+  // There are many ways of structuring validation logic. In this lesson,
+  // we:
+  //   - Create an `errors` array
+  //   - Run a series of checks
+  //   - Push **human-readable error messages** into that array
+  //
+  // Later, we’ll use these messages to give feedback to the user.
+  // ---------------------------------------------------------------------------
+  const errors = [];
+
+  // ---------------------------------------------------------------------------
+  // 3) IMPORTED VALIDATION HELPERS
+  // ---------------------------------------------------------------------------
+  // We use helper functions defined in `src/util/validation.js`:
+  //   - isEmail(value)
+  //   - isNotEmpty(value)
+  //   - hasMinLength(value, minLength)
+  //   - isEqualToOtherValue(value, otherValue)
+  //
+  // These helpers keep the validation logic readable and reusable.
+  // ---------------------------------------------------------------------------
+
+  // EMAIL VALIDATION
+  // ----------------
+  // Check if the email **is not** a valid email.
+  // `isEmail` currently just checks for the presence of '@', which is simple
+  // but good enough for demonstration purposes.
+  if (!isEmail(email)) {
+    errors.push('Invalid email address.');
+  }
+
+  // PASSWORD VALIDATION
+  // -------------------
+  // Here we validate the password in two ways:
+  //   1) It must not be empty.
+  //   2) It must have at least 6 characters.
+  //
+  // We only have an `isNotEmpty` function, so we invert its result with `!`
+  // to detect the "empty" case.
+  if (!isNotEmpty(password) || !hasMinLength(password, 6)) {
+    errors.push('You must provide a password with at least six characters.');
+  }
+
+  // PASSWORD MATCH VALIDATION
+  // -------------------------
+  // Check whether `password` and `confirmPassword` match.
+  // Again, we invert the helper result (`!isEqualToOtherValue`) to detect
+  // the "invalid" case.
+  if (!isEqualToOtherValue(password, confirmPassword)) {
+    errors.push('Passwords do not match.');
+  }
+
+  // NAME VALIDATION
+  // ---------------
+  // Ensure that BOTH first and last name are provided (not just one of them).
+  if (!isNotEmpty(firstName) || !isNotEmpty(lastName)) {
+    errors.push('Please provide both your first and last name.');
+  }
+
+  // ROLE VALIDATION
+  // ---------------
+  // The user must pick a role from the dropdown.
+  // An empty or missing role value is considered invalid.
+  if (!isNotEmpty(role)) {
+    errors.push('Please select a role.');
+  }
+
+  // TERMS & CONDITIONS VALIDATION
+  // -----------------------------
+  // The "terms" value will be:
+  //   - `null` / falsy if the checkbox was NOT checked
+  //   - a string (e.g. 'on') if it was checked
+  //
+  // So we can simply check for "falsy" to validate this.
+  if (!terms) {
+    errors.push('You must agree to the terms and conditions.');
+  }
+
+  // ACQUISITION CHANNEL VALIDATION
+  // ------------------------------
+  // `acquisitionChannel` is an array returned by `formData.getAll('acquisition')`.
+  //   - []      → user selected no channels
+  //   - ['x']   → one channel selected
+  //   - ['x','y'] → multiple channels selected
+  //
+  // We want to enforce "at least one channel".
+  if (acquisitionChannel.length === 0) {
+    errors.push('Please select at least one acquisition channel.');
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4) WHAT DO WE DO WITH THE ERRORS (FOR NOW)?
+  // ---------------------------------------------------------------------------
+  // At this stage in the course, we’re just **collecting** the errors.
+  // In the next lesson, we'll focus on actually **showing** these messages
+  // to the user.
+  //
+  // For now, logging them helps you verify that the validation works as
+  // expected when you submit the form in different states.
+  // ---------------------------------------------------------------------------
+  if (errors.length > 0) {
+    console.log('Validation errors:', errors);
+    // In a real app, we might:
+    //   - Return these errors from the action (for use in the UI)
+    //   - Prevent further processing (e.g. skip sending data to a server)
+    return;
+  }
+
+  // If we reach this point, the data passed all validation checks.
+  // You could now:
+  //   - Send the data to a backend API
+  //   - Trigger a state update
+  //   - Navigate the user somewhere else, etc.
+  console.log('Form submission is valid! Collected data:', {
+    email,
+    password,
+    confirmPassword,
+    firstName,
+    lastName,
+    role,
+    termsAccepted: !!terms,
+    acquisitionChannel,
+  });
+
+  // Reminder: React will still reset the form fields automatically after the
+  // action finishes. Later you'll see how to keep values around if needed.
 }
 
 export default function Signup() {
