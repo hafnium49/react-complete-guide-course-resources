@@ -1,4 +1,4 @@
-import { useActionState } from 'react';
+import { useActionState } from 'react'; // a new hook introduced in React 19
 import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/validation.js';
 
 // =============================================================================
@@ -307,20 +307,54 @@ function signUpAction(previousState, formData) {
   if (errors.length > 0) {
     // We have validation errors. Return them so they can be displayed to the user.
     //
-    // JavaScript shortcut: `{ errors }` is equivalent to `{ errors: errors }`
-    // This is called "shorthand property names" in ES6.
-    return { errors };
+    // In addition to the `errors` array, we now also return the values that were
+    // entered by the user. This allows us to RE-POPULATE the form fields after
+    // React resets the form (which it does automatically when a form action
+    // finishes).
+    //
+    // Shape of returned state when there ARE errors:
+    //   {
+    //     errors: [ 'message1', 'message2', ... ],
+    //     enteredValues: {
+    //       email,
+    //       password,
+    //       confirmPassword,
+    //       firstName,
+    //       lastName,
+    //       role,
+    //       acquisitionChannel,
+    //       terms: !!terms, // store as boolean
+    //     }
+    //   }
+    //
+    // Thanks to this, the component can use `formState.enteredValues` to
+    // pre-fill the inputs with the last submitted values.
+    return {
+      errors,
+      enteredValues: {
+        email,
+        password,
+        confirmPassword,
+        firstName,
+        lastName,
+        role,
+        acquisitionChannel,
+        terms: !!terms,
+      },
+    };
   }
 
   // If we reach this point, the data passed all validation checks.
   // Return `{ errors: null }` to indicate "no errors" (form is valid).
   //
-  // You could now:
-  //   - Send the data to a backend API
-  //   - Trigger a state update
-  //   - Navigate the user somewhere else, etc.
-  //
-  // For now, we just return the "no errors" state.
+  // NOTE: We intentionally do NOT include `enteredValues` here.
+  //   - This means that after a successful submission, the form fields
+  //     will be cleared (because there are no values to repopulate).
+  //   - This is the desired behavior for a successful form submission in
+  //     many apps: After sending data to a backend, you typically clear
+  //     the form or navigate away.
+  //   - If you wanted to KEEP the values even after a successful submission,
+  //     you could return an `enteredValues` object here as well.
   return { errors: null };
 }
 
@@ -382,6 +416,13 @@ export default function Signup() {
   //   - `pending` - Not used in this lesson (but available for async actions)
   // ---------------------------------------------------------------------------
   const [formState, formAction, pending] = useActionState(signUpAction, {
+    // Initially, the form has not been submitted yet, so:
+    //   - `errors` is null (no errors to show)
+    //   - `enteredValues` is undefined / not present (no submitted values yet)
+    //
+    // We ONLY add `enteredValues` when the form has been submitted with errors.
+    // In that case, the action function returns an object that **does** have
+    // an `enteredValues` key.
     errors: null,
   });
 
@@ -419,7 +460,28 @@ export default function Signup() {
           ======================================================================= */}
       <div className="control">
         <label htmlFor="email">Email</label>
-        <input id="email" type="email" name="email" />
+        <input
+          id="email"
+          type="email"
+          name="email"
+          // -------------------------------------------------------------------
+          // defaultValue (NOT value!)
+          // -------------------------------------------------------------------
+          // We use `defaultValue` instead of `value` because:
+          //   - React form actions automatically reset the form after the
+          //     action function finishes.
+          //   - `defaultValue` controls what value the input resets TO.
+          //   - By setting `defaultValue` based on `formState.enteredValues`,
+          //     we can "remember" what the user typed, even after a reset.
+          //
+          // Optional chaining (`?.`) ensures that before the first submission
+          // (or after a successful, error-free submission), where
+          // `formState.enteredValues` might be undefined, we don't crash. In
+          // that case, `defaultValue` becomes `undefined`, which means the
+          // input is simply empty.
+          // -------------------------------------------------------------------
+          defaultValue={formState.enteredValues?.email}
+        />
       </div>
 
       {/* =======================================================================
@@ -434,7 +496,14 @@ export default function Signup() {
       <div className="control-row">
         <div className="control">
           <label htmlFor="password">Password</label>
-          <input id="password" type="password" name="password" />
+          <input
+            id="password"
+            type="password"
+            name="password"
+            // Use `defaultValue` so the last entered password is restored
+            // after a failed submission.
+            defaultValue={formState.enteredValues?.password}
+          />
         </div>
 
         <div className="control">
@@ -443,6 +512,8 @@ export default function Signup() {
             id="confirm-password"
             type="password"
             name="confirm-password"
+            // Restore the last entered confirmation password after failed submit
+            defaultValue={formState.enteredValues?.confirmPassword}
           />
         </div>
       </div>
@@ -457,12 +528,24 @@ export default function Signup() {
       <div className="control-row">
         <div className="control">
           <label htmlFor="first-name">First Name</label>
-          <input type="text" id="first-name" name="first-name" />
+          <input
+            type="text"
+            id="first-name"
+            name="first-name"
+            // Restore the last entered first name after failed submit
+            defaultValue={formState.enteredValues?.firstName}
+          />
         </div>
 
         <div className="control">
           <label htmlFor="last-name">Last Name</label>
-          <input type="text" id="last-name" name="last-name" />
+          <input
+            type="text"
+            id="last-name"
+            name="last-name"
+            // Restore the last entered last name after failed submit
+            defaultValue={formState.enteredValues?.lastName}
+          />
         </div>
       </div>
 
@@ -478,7 +561,19 @@ export default function Signup() {
           ======================================================================= */}
       <div className="control">
         <label htmlFor="phone">What best describes your role?</label>
-        <select id="role" name="role">
+        <select
+          id="role"
+          name="role"
+          // Attempt to keep the selected role after a failed submission by
+          // setting the `defaultValue` of the `<select>` element.
+          //
+          // NOTE: As mentioned in the lesson, there appears to be a React bug
+          // (or limitation) where this defaultValue is not always honored in
+          // combination with form actions + automatic resets. Therefore, this
+          // might not behave as expected for now, even though the code is
+          // conceptually correct.
+          defaultValue={formState.enteredValues?.role}
+        >
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
           <option value="employee">Employee</option>
@@ -506,6 +601,11 @@ export default function Signup() {
             id="google"
             name="acquisition"
             value="google"
+            // Keep this checkbox checked if \"google\" was part of the last
+            // submitted acquisition channel array.
+            defaultChecked={formState.enteredValues?.acquisitionChannel?.includes(
+              'google',
+            )}
           />
           <label htmlFor="google">Google</label>
         </div>
@@ -516,12 +616,27 @@ export default function Signup() {
             id="friend"
             name="acquisition"
             value="friend"
+            // Keep this checkbox checked if \"friend\" was part of the last
+            // submitted acquisition channel array.
+            defaultChecked={formState.enteredValues?.acquisitionChannel?.includes(
+              'friend',
+            )}
           />
           <label htmlFor="friend">Referred by friend</label>
         </div>
 
         <div className="control">
-          <input type="checkbox" id="other" name="acquisition" value="other" />
+          <input
+            type="checkbox"
+            id="other"
+            name="acquisition"
+            value="other"
+            // Keep this checkbox checked if \"other\" was part of the last
+            // submitted acquisition channel array.
+            defaultChecked={formState.enteredValues?.acquisitionChannel?.includes(
+              'other',
+            )}
+          />
           <label htmlFor="other">Other</label>
         </div>
       </fieldset>
@@ -538,7 +653,15 @@ export default function Signup() {
           ======================================================================= */}
       <div className="control">
         <label htmlFor="terms-and-conditions">
-          <input type="checkbox" id="terms-and-conditions" name="terms" />I
+          <input
+            type="checkbox"
+            id="terms-and-conditions"
+            name="terms"
+            // Keep this checkbox checked if the user had agreed to the terms
+            // in the last (failed) submission.
+            defaultChecked={formState.enteredValues?.terms}
+          />
+          I
           agree to the terms and conditions
         </label>
       </div>
