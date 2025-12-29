@@ -1,3 +1,4 @@
+import { useActionState } from 'react';
 import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/validation.js';
 
 // =============================================================================
@@ -116,27 +117,42 @@ import { isEmail, isNotEmpty, hasMinLength, isEqualToOtherValue } from '../util/
 // =============================================================================
 
 // -----------------------------------------------------------------------------
-// FIRST FORM ACTION IMPLEMENTATION (NOW WITH MORE FIELDS + VALIDATION)
+// FORM ACTION FUNCTION (NOW WITH STATE MANAGEMENT VIA useActionState)
 // -----------------------------------------------------------------------------
-// According to the lesson, we now:
-//   - Create a function (initially called `handleSubmit` in the video)
-//   - Then rename it to `signUpAction` to better reflect its purpose
+// This function serves as our form action. When used with `useActionState`,
+// React calls it with TWO parameters:
 //
-// We'll skip the temporary `handleSubmit` name here and go straight to the
-// final name that the instructor ends up with: `signUpAction`.
+//   1. `previousState` - The previous form state (or initial state on first call)
+//   2. `formData` - The FormData object containing all form values
+//
+// IMPORTANT: When you use `useActionState`, the action function signature
+// CHANGES compared to when you use it directly on a form:
+//
+//   WITHOUT useActionState:
+//     function signUpAction(formData) { ... }
+//     <form action={signUpAction}>
+//
+//   WITH useActionState:
+//     function signUpAction(previousState, formData) { ... }
+//     const [formState, formAction] = useActionState(signUpAction, initialState);
+//     <form action={formAction}>
+//
+// This is because `useActionState` needs to pass the previous state to your
+// action function so you can build new state based on it (if needed).
 // -----------------------------------------------------------------------------
-function signUpAction(formData) {
+function signUpAction(previousState, formData) {
   // ---------------------------------------------------------------------------
-  // `formData` PARAMETER
+  // PARAMETER EXPLANATION
   // ---------------------------------------------------------------------------
-  // This is an instance of the built-in `FormData` class, automatically
-  // created and provided by React when the form is submitted.
+  // `previousState` (first parameter):
+  //   - Contains the last state returned by this action (or initial state)
+  //   - Useful if you want to build new state based on old state
+  //   - In this lesson, we don't use it, but we must accept it
   //
-  // In the previous section, you saw:
-  //   const formData = new FormData(event.target);
-  //
-  // where `event.target` was the submitted form element. That manual step is
-  // no longer needed when using Form Actions – React does it for you.
+  // `formData` (second parameter):
+  //   - The FormData object automatically created by React
+  //   - Contains all form values keyed by their `name` attributes
+  //   - This is what we use to extract user input
   // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
@@ -263,73 +279,128 @@ function signUpAction(formData) {
   }
 
   // ---------------------------------------------------------------------------
-  // 4) WHAT DO WE DO WITH THE ERRORS (FOR NOW)?
+  // 4) RETURNING STATE FROM THE ACTION FUNCTION
   // ---------------------------------------------------------------------------
-  // At this stage in the course, we’re just **collecting** the errors.
-  // In the next lesson, we'll focus on actually **showing** these messages
-  // to the user.
+  // When using `useActionState`, your action function can return a value.
+  // This return value becomes the new form state that React will store.
   //
-  // For now, logging them helps you verify that the validation works as
-  // expected when you submit the form in different states.
+  // You can return:
+  //   - Any value (object, array, string, number, null, etc.)
+  //   - Or nothing at all (undefined)
+  //
+  // In this lesson, we return an object with an `errors` key:
+  //   - If there ARE errors: `{ errors: ['error1', 'error2', ...] }`
+  //   - If there are NO errors: `{ errors: null }`
+  //
+  // This pattern lets us distinguish between:
+  //   - "Form hasn't been submitted yet" (initial state: `{ errors: null }`)
+  //   - "Form was submitted and has errors" (`{ errors: [...] }`)
+  //   - "Form was submitted and is valid" (`{ errors: null }`)
+  //
+  // NOTE: The shape of this object is entirely up to you! You could return:
+  //   - `{ errors: [...] }` (what we're doing)
+  //   - `{ validationErrors: [...] }`
+  //   - `{ messages: { errors: [...] } }`
+  //   - Or any other structure that fits your needs
   // ---------------------------------------------------------------------------
+  
   if (errors.length > 0) {
-    console.log('Validation errors:', errors);
-    // In a real app, we might:
-    //   - Return these errors from the action (for use in the UI)
-    //   - Prevent further processing (e.g. skip sending data to a server)
-    return;
+    // We have validation errors. Return them so they can be displayed to the user.
+    //
+    // JavaScript shortcut: `{ errors }` is equivalent to `{ errors: errors }`
+    // This is called "shorthand property names" in ES6.
+    return { errors };
   }
 
   // If we reach this point, the data passed all validation checks.
+  // Return `{ errors: null }` to indicate "no errors" (form is valid).
+  //
   // You could now:
   //   - Send the data to a backend API
   //   - Trigger a state update
   //   - Navigate the user somewhere else, etc.
-  console.log('Form submission is valid! Collected data:', {
-    email,
-    password,
-    confirmPassword,
-    firstName,
-    lastName,
-    role,
-    termsAccepted: !!terms,
-    acquisitionChannel,
-  });
-
-  // Reminder: React will still reset the form fields automatically after the
-  // action finishes. Later you'll see how to keep values around if needed.
+  //
+  // For now, we just return the "no errors" state.
+  return { errors: null };
 }
 
 export default function Signup() {
   // ===========================================================================
-  // COMPONENT FUNCTION
+  // COMPONENT FUNCTION WITH useActionState HOOK
   // ===========================================================================
-  // This component now demonstrates:
-  //   - How to register a **form action** via the `action` prop on `<form>`.
-  //   - How React 19+ calls `signUpAction(formData)` on submit.
+  // This component now demonstrates how to use `useActionState` to:
+  //   1. Connect a form action function to form state management
+  //   2. Access the return value from the action function
+  //   3. Display validation errors to the user
   //
-  // Mentally compare this with the older `onSubmit` + `event` + `preventDefault`
-  // pattern you learned before – both are useful and valid.
   // ===========================================================================
+  // THE useActionState HOOK
+  // ===========================================================================
+  // `useActionState` is a **new hook introduced in React 19**.
+  // It's specifically designed to work with form actions.
+  //
+  // Purpose:
+  //   - Manages state related to form actions
+  //   - Gives you access to the return value from your action function
+  //   - Provides a "pending" flag for async operations (useful later)
+  //
+  // Syntax:
+  //   const [formState, formAction, pending] = useActionState(actionFunction, initialState);
+  //
+  // Parameters:
+  //   1. `actionFunction` - Your form action function (e.g. `signUpAction`)
+  //   2. `initialState` - The initial state before the form is submitted
+  //
+  // Returns (array with 3 elements):
+  //   1. `formState` - Current form state (starts as `initialState`, then becomes
+  //                    whatever your action function returns)
+  //   2. `formAction` - Enhanced version of your action function (use this in JSX)
+  //   3. `pending` - Boolean indicating if the action is currently executing
+  //                  (useful for async actions, which we'll cover later)
+  //
+  // IMPORTANT: You MUST use the `formAction` returned by `useActionState` in your
+  // JSX, NOT the original `signUpAction` function directly!
+  //
+  // Why? Because React wraps your original function to:
+  //   - Track when it's called
+  //   - Update `formState` with the return value
+  //   - Set `pending` appropriately
+  // ===========================================================================
+
+  // ---------------------------------------------------------------------------
+  // SETTING UP useActionState
+  // ---------------------------------------------------------------------------
+  // We pass:
+  //   1. `signUpAction` - Our action function (defined above)
+  //   2. `{ errors: null }` - Initial state (no errors before submission)
+  //
+  // We get back:
+  //   - `formState` - Will contain `{ errors: null }` initially, then whatever
+  //                   `signUpAction` returns (either `{ errors: [...] }` or
+  //                   `{ errors: null }`)
+  //   - `formAction` - Enhanced version of `signUpAction` to use in JSX
+  //   - `pending` - Not used in this lesson (but available for async actions)
+  // ---------------------------------------------------------------------------
+  const [formState, formAction, pending] = useActionState(signUpAction, {
+    errors: null,
+  });
 
   return (
     // -------------------------------------------------------------------------
-    // THE `action` PROP (FORM ACTIONS IN ACTION!)
+    // THE `action` PROP (NOW USING formAction FROM useActionState)
     // -------------------------------------------------------------------------
-    // By setting `action={signUpAction}`, we tell React:
-    //   "When this form is submitted, build a FormData object and pass it
-    //    into `signUpAction`."
+    // IMPORTANT: We use `formAction` here, NOT `signUpAction` directly!
     //
-    // React will:
-    //   - Intercept the submit event
-    //   - Call `preventDefault()` internally
-    //   - Create a FormData object from all form inputs that have a `name`
-    //   - Invoke `signUpAction(formData)`
+    // `formAction` is the "enhanced" version of `signUpAction` that React
+    // creates internally. It:
+    //   - Calls your original `signUpAction` function
+    //   - Updates `formState` with the return value
+    //   - Manages the `pending` flag
     //
-    // You do NOT write any event-handling or `preventDefault()` code yourself
-    // here – that’s the core convenience of the Form Actions feature.
+    // If you used `signUpAction` directly here, `useActionState` wouldn't
+    // know when the action runs, and `formState` would never update!
     // -------------------------------------------------------------------------
-    <form action={signUpAction}>
+    <form action={formAction}>
       {/* =======================================================================
           FORM HEADER
           =======================================================================
@@ -473,6 +544,43 @@ export default function Signup() {
       </div>
 
       {/* =======================================================================
+          ERROR MESSAGES DISPLAY
+          =======================================================================
+          Display validation errors to the user if any exist.
+          
+          HOW IT WORKS:
+          ------------
+          When the form is submitted:
+            1. `signUpAction` runs and validates the form data
+            2. If there are errors, it returns `{ errors: ['error1', 'error2', ...] }`
+            3. If there are no errors, it returns `{ errors: null }`
+            4. React updates `formState` with this return value
+            5. We check `formState.errors` here to conditionally render errors
+          
+          CONDITIONAL RENDERING:
+          ----------------------
+          `formState.errors` can be:
+            - `null` → No errors (or form hasn't been submitted yet)
+            - `['error1', 'error2', ...]` → Array of error messages
+          
+          We use `formState.errors && ...` to check if errors exist.
+          This works because:
+            - `null && <ul>...</ul>` → `null` (nothing renders)
+            - `['error1'] && <ul>...</ul>` → `<ul>...</ul>` (errors render)
+          
+          NOTE: The CSS class is "error" (singular), not "errors" (plural).
+          This matches the styling defined in the project's CSS file.
+          ======================================================================= */}
+      {formState.errors && (
+        <ul className="error">
+          {/* Map through each error message and display it as a list item */}
+          {formState.errors.map((error) => (
+            <li key={error}>{error}</li>
+          ))}
+        </ul>
+      )}
+
+      {/* =======================================================================
           FORM ACTION BUTTONS
           =======================================================================
           Two buttons at the bottom of the form:
@@ -485,7 +593,8 @@ export default function Signup() {
           2. SIGN UP BUTTON (type="submit" by default)
              - No explicit `type` attribute, so it defaults to "submit"
              - This button will trigger our **form action**
-             - React will call `signUpAction(formData)` when this is clicked
+             - React will call `formAction` (from useActionState) when clicked
+             - `formAction` internally calls `signUpAction` and updates `formState`
           ======================================================================= */}
       <p className="form-actions">
         <button type="reset" className="button button-flat">
@@ -498,15 +607,65 @@ export default function Signup() {
 }
 
 // =============================================================================
+// WHAT WE LEARNED IN THIS LESSON
+// =============================================================================
+//
+// In this lesson, we learned how to:
+//
+//   1. RETURN VALUES FROM FORM ACTIONS
+//      - Form actions can return any value (object, array, string, null, etc.)
+//      - We return `{ errors: [...] }` when there are errors
+//      - We return `{ errors: null }` when the form is valid
+//
+//   2. USE THE useActionState HOOK
+//      - Import `useActionState` from 'react'
+//      - Call it with: `useActionState(actionFunction, initialState)`
+//      - Get back: `[formState, formAction, pending]`
+//      - Use `formAction` (not the original function) in your JSX
+//
+//   3. ACCESS ACTION RETURN VALUES
+//      - `formState` contains whatever your action function returns
+//      - Initially, it's the `initialState` you provided
+//      - After submission, it becomes the return value from your action
+//
+//   4. DISPLAY ERRORS TO THE USER
+//      - Check if `formState.errors` is truthy (not null)
+//      - Conditionally render an error list
+//      - Map through the errors array to display each message
+//
+//   5. UNDERSTAND THE ACTION FUNCTION SIGNATURE CHANGE
+//      - WITHOUT useActionState: `function signUpAction(formData) { ... }`
+//      - WITH useActionState: `function signUpAction(previousState, formData) { ... }`
+//      - The first parameter is the previous state (even if you don't use it)
+//
+// =============================================================================
+// CURRENT LIMITATION: FORM RESETS AFTER SUBMISSION
+// =============================================================================
+//
+// Right now, there's a UX problem:
+//   - When you submit the form (even with errors), React automatically resets
+//     all form fields
+//   - This means valid values you entered get cleared, which is frustrating!
+//
+// Example:
+//   - User enters a valid email: "test@example.com"
+//   - User forgets to enter a password
+//   - User clicks "Sign up"
+//   - Errors appear, BUT the email field is now empty (cleared by React)
+//   - User has to re-enter the email, which is annoying
+//
+// In the next lesson, we'll learn how to prevent this automatic reset and
+// keep user-entered values in the form fields even after submission.
+//
+// =============================================================================
 // WHAT'S NEXT?
 // =============================================================================
 //
-// In the upcoming lessons, you'll build on this foundation and:
+// In upcoming lessons, you'll learn:
 //
-//   1. Extract more than just the email value
-//   2. Add validation using utility functions
-//   3. Handle asynchronous actions (e.g. sending the data to a server)
-//   4. Implement optimistic updating for a snappy UX
+//   1. How to prevent automatic form reset (keep user values)
+//   2. Handle asynchronous actions (e.g. sending data to a server)
+//   3. Implement optimistic updating for a snappy UX
 //
 // Remember: Form Actions are **one** way of handling forms in React 19+.
 // The "classic" `onSubmit` + `event` + `preventDefault` approach is still
