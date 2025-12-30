@@ -1,13 +1,14 @@
 /**
  * ============================================================================
- * LESSON 276: FORM ACTIONS WITH VALIDATION - COMPLETE IMPLEMENTATION
+ * LESSON 277: ASYNC FORM ACTIONS - BACKEND INTEGRATION
  * ============================================================================
  *
- * This component demonstrates React 19's Form Actions feature with:
+ * This component demonstrates React 19's ASYNC Form Actions feature with:
  * - Client-side form validation
  * - Error display with user feedback
  * - Form state management using useActionState hook
  * - Preservation of user input when validation fails
+ * - ASYNC backend communication (NEW IN LESSON 277!)
  * - Automatic form reset on successful submission
  *
  * KEY LEARNING OBJECTIVES:
@@ -19,16 +20,21 @@
  * 5. Displaying validation errors to users
  * 6. Preserving user input with defaultValue
  * 7. Form reset behavior on success
+ * 8. ASYNC form actions that communicate with backend (NEW!)
+ * 9. Using React Context to access backend functions (NEW!)
+ * 10. Waiting for backend operations before form reset (NEW!)
  *
- * WHAT'S NEW IN LESSON 276:
+ * WHAT'S NEW IN LESSON 277:
  * ==========================
- * Compared to Lesson 275's basic form structure, we now have:
- * ✓ Form action handler (shareOpinionAction)
+ * Compared to Lesson 276 (validation only), we now have:
+ * ✓ Form action handler (shareOpinionAction) - NOW ASYNC!
  * ✓ State management (useActionState hook)
  * ✓ Validation logic (required fields, min/max lengths)
  * ✓ Error handling and display
  * ✓ Input value preservation on validation failure
- * ✓ Form reset on successful submission
+ * ✓ BACKEND SUBMISSION via OpinionsContext (NEW!)
+ * ✓ ASYNC/AWAIT for backend operations (NEW!)
+ * ✓ Form reset AFTER backend confirms success (NEW!)
  *
  * REACT 19 FORM ACTIONS - HOW IT WORKS:
  * ======================================
@@ -103,6 +109,14 @@
 /**
  * IMPORTS
  * =======
+ */
+
+/**
+ * REACT HOOKS IMPORT (React 19)
+ * ==============================
+ * We import two hooks from React:
+ * 1. useActionState - For managing form action state (Lesson 276)
+ * 2. use - For consuming Context (NEW in Lesson 277)
  */
 
 /**
@@ -183,7 +197,107 @@
  * - Built-in support for progressive enhancement
  * - Works seamlessly with Server Actions in Next.js
  */
-import { useActionState } from 'react';
+
+/**
+ * use() HOOK (React 19) - NEW IN LESSON 277
+ * ==========================================
+ * The use() hook is a new React 19 feature that can consume Context.
+ *
+ * WHAT IT DOES:
+ * -------------
+ * use() is a more flexible alternative to useContext() that can:
+ * - Consume Context (what we're using it for here)
+ * - Unwrap Promises (for async data)
+ * - Be called conditionally (unlike traditional hooks)
+ *
+ * HOW IT DIFFERS FROM useContext:
+ * --------------------------------
+ * OLD WAY (React 18):
+ * import { useContext } from 'react';
+ * const { addOpinion } = useContext(OpinionsContext);
+ *
+ * NEW WAY (React 19):
+ * import { use } from 'react';
+ * const { addOpinion } = use(OpinionsContext);
+ *
+ * Benefits of use():
+ * - Can be called conditionally (if statements, loops)
+ * - Part of React's future direction
+ * - Cleaner syntax
+ * - Can also unwrap Promises (not used here)
+ *
+ * WHY WE NEED IT:
+ * ---------------
+ * We need to access the addOpinion function from OpinionsContext
+ * so we can send validated form data to the backend.
+ *
+ * The OpinionsContext provides:
+ * - opinions: Array of all opinions
+ * - addOpinion: Function to add a new opinion (sends to backend)
+ * - upvoteOpinion: Function to upvote an opinion
+ * - downvoteOpinion: Function to downvote an opinion
+ *
+ * We only need addOpinion for this form.
+ */
+import { useActionState, use } from 'react';
+
+/**
+ * OPINIONS CONTEXT IMPORT - NEW IN LESSON 277
+ * ============================================
+ * We import the OpinionsContext so we can access the addOpinion function.
+ *
+ * WHAT IS OpinionsContext?
+ * ------------------------
+ * OpinionsContext is a React Context created in store/opinions-context.jsx
+ * that manages all opinion-related data and backend communication.
+ *
+ * The Context Provider:
+ * - Loads opinions from backend on mount
+ * - Stores opinions in state
+ * - Provides functions to add, upvote, downvote opinions
+ * - Handles all backend API calls
+ *
+ * WHY USE CONTEXT HERE?
+ * ---------------------
+ * Instead of making the fetch request directly in this component, we use
+ * the Context's addOpinion function because:
+ * 1. CENTRALIZED LOGIC: All backend communication is in one place
+ * 2. STATE MANAGEMENT: Context automatically updates the opinions list
+ * 3. CODE REUSE: Same addOpinion function could be used by other components
+ * 4. SEPARATION OF CONCERNS: Form handles validation, Context handles data
+ *
+ * THE addOpinion FUNCTION:
+ * ------------------------
+ * Location: store/opinions-context.jsx
+ *
+ * What it does:
+ * async function addOpinion(enteredOpinionData) {
+ *   const response = await fetch('http://localhost:3000/opinions', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify(enteredOpinionData),
+ *   });
+ *   if (!response.ok) return;
+ *   const savedOpinion = await response.json();
+ *   setOpinions((prevOpinions) => [savedOpinion, ...prevOpinions]);
+ * }
+ *
+ * Notice it's ASYNC:
+ * - Uses await to wait for backend response
+ * - Returns a Promise
+ * - We need to await it in our form action too!
+ *
+ * What it expects:
+ * An object with { userName, title, body }
+ *
+ * What it does:
+ * 1. Sends POST request to backend
+ * 2. Waits for response
+ * 3. If successful, gets saved opinion (with ID from backend)
+ * 4. Updates opinions state to include new opinion
+ * 5. UI automatically updates to show new opinion
+ */
+import { OpinionsContext } from '../store/opinions-context';
 
 /**
  * NEW OPINION COMPONENT
@@ -231,17 +345,125 @@ import { useActionState } from 'react';
 export function NewOpinion() {
   /**
    * ============================================================================
-   * FORM ACTION FUNCTION: shareOpinionAction
+   * CONSUMING CONTEXT - NEW IN LESSON 277
+   * ============================================================================
+   *
+   * We use the use() hook to access the OpinionsContext and get the
+   * addOpinion function.
+   *
+   * HOOK USAGE:
+   * -----------
+   * const { addOpinion } = use(OpinionsContext);
+   *
+   * WHAT HAPPENS:
+   * -------------
+   * 1. use(OpinionsContext) accesses the context value provided by
+   *    OpinionsContextProvider in App.jsx
+   *
+   * 2. It returns the contextValue object:
+   *    {
+   *      opinions: array,
+   *      addOpinion: function,
+   *      upvoteOpinion: function,
+   *      downvoteOpinion: function
+   *    }
+   *
+   * 3. We destructure to extract only what we need: { addOpinion }
+   *
+   * 4. We ignore the other properties because this component only needs
+   *    to ADD opinions, not display or vote on them.
+   *
+   * WHY HERE (INSIDE COMPONENT)?
+   * ----------------------------
+   * The use() hook must be called inside the component function, just like
+   * any other React hook (useState, useEffect, etc.).
+   *
+   * We can't call it:
+   * - Outside the component
+   * - Inside callbacks or regular functions
+   * - Inside loops or conditions (for traditional hooks - use() is more flexible)
+   *
+   * WHAT WE GET:
+   * ------------
+   * addOpinion is an async function that:
+   * - Accepts an object with { userName, title, body }
+   * - Sends it to the backend via POST request
+   * - Waits for the backend response
+   * - Updates the opinions state in Context
+   * - Returns a Promise (which we need to await!)
+   *
+   * WHY WE NEED IT:
+   * ---------------
+   * After validating the form data, we need to:
+   * 1. Send it to the backend to persist it
+   * 2. Update the UI to show the new opinion
+   *
+   * addOpinion does both of these for us!
+   */
+  const { addOpinion } = use(OpinionsContext);
+
+  /**
+   * ============================================================================
+   * FORM ACTION FUNCTION: shareOpinionAction (NOW ASYNC!)
    * ============================================================================
    *
    * This function is called automatically by React when the form is submitted.
-   * It receives form data, validates it, and returns the new state.
+   * It receives form data, validates it, sends it to the backend, and returns
+   * the new state.
    *
-   * FUNCTION SIGNATURE:
+   * WHAT'S NEW IN LESSON 277:
+   * --------------------------
+   * This function is now ASYNC! We added the async keyword so we can use await
+   * to wait for the backend operation to complete before resetting the form.
+   *
+   * FUNCTION SIGNATURE (UPDATED):
+   * ------------------------------
+   * async function shareOpinionAction(prevState, formData)
+   *                ↑
+   *          NEW! async keyword
+   *
+   * ASYNC FORM ACTIONS:
    * -------------------
-   * function shareOpinionAction(prevState, formData)
+   * Form actions can be either synchronous OR asynchronous functions.
+   * React supports both!
    *
-   * CRITICAL: The parameter order is IMPORTANT and FIXED:
+   * Why async?
+   * - We need to wait for the backend operation (addOpinion)
+   * - Backend operations take time (network request)
+   * - We want to wait for completion before resetting the form
+   *
+   * What does async do?
+   * - Allows us to use the await keyword inside the function
+   * - Makes the function return a Promise automatically
+   * - React waits for this Promise to resolve before marking form as submitted
+   *
+   * HOW REACT HANDLES ASYNC FORM ACTIONS:
+   * --------------------------------------
+   * When your form action is async, React:
+   * 1. Calls your async function when form is submitted
+   * 2. Gets back a Promise (because async functions return Promises)
+   * 3. WAITS for the Promise to resolve
+   * 4. Only THEN marks the form as "submitted" internally
+   * 5. This will be important in the next lesson for showing loading states!
+   *
+   * SYNCHRONOUS vs ASYNCHRONOUS:
+   * -----------------------------
+   * SYNCHRONOUS (Lesson 276):
+   * function shareOpinionAction(prevState, formData) {
+   *   // validate
+   *   if (errors.length > 0) return { errors, enteredValues };
+   *   return { errors: null };  ← Returns immediately
+   * }
+   *
+   * ASYNCHRONOUS (Lesson 277):
+   * async function shareOpinionAction(prevState, formData) {
+   *   // validate
+   *   if (errors.length > 0) return { errors, enteredValues };
+   *   await addOpinion({ userName, title, body });  ← Waits for backend!
+   *   return { errors: null };  ← Returns only after backend succeeds
+   * }
+   *
+   * CRITICAL: The parameter order is STILL IMPORTANT and FIXED:
    * 1. prevState - The previous state (from the last action call)
    * 2. formData - The FormData object extracted from the form
    *
@@ -293,7 +515,7 @@ export function NewOpinion() {
    *
    * The returned object is what you access via formState in your JSX.
    */
-  function shareOpinionAction(prevState, formData) {
+  async function shareOpinionAction(prevState, formData) {
     /**
      * STEP 1: EXTRACT FORM DATA
      * =========================
@@ -538,20 +760,137 @@ export function NewOpinion() {
     }
 
     /**
-     * VALIDATION SUCCEEDED CASE
-     * =========================
-     * If there are no validation errors (errors array is empty), return
-     * an object with errors: null to indicate success.
+     * VALIDATION SUCCEEDED CASE - NOW WITH BACKEND SUBMISSION!
+     * =========================================================
+     * If there are no validation errors (errors array is empty), we:
+     * 1. Send the data to the backend (NEW!)
+     * 2. Wait for the backend to confirm success (NEW!)
+     * 3. Return success state to reset the form
+     *
+     * WHAT'S NEW IN LESSON 277:
+     * --------------------------
+     * We now call addOpinion to send data to the backend BEFORE returning!
+     */
+
+    /**
+     * STEP 5: SUBMIT TO BACKEND (NEW IN LESSON 277!)
+     * ================================================
+     * Call the addOpinion function from Context to send the validated data
+     * to the backend.
+     *
+     * THE await KEYWORD:
+     * ------------------
+     * await addOpinion({ userName, title, body });
+     *       ↑
+     * The await keyword makes JavaScript PAUSE here until addOpinion completes.
+     *
+     * What happens:
+     * 1. addOpinion is called with our validated data
+     * 2. addOpinion sends POST request to backend
+     * 3. JavaScript execution PAUSES here (function waits)
+     * 4. Backend processes the request (this takes time!)
+     * 5. Backend sends response back
+     * 6. addOpinion receives response
+     * 7. If successful, addOpinion updates opinions state in Context
+     * 8. ONLY THEN does execution continue to the next line
+     *
+     * WHY AWAIT?
+     * ----------
+     * We MUST await addOpinion because:
+     *
+     * 1. TIMING: We want to wait for backend confirmation before resetting form
+     *    - WITHOUT await: Form resets immediately, even if backend fails
+     *    - WITH await: Form only resets if backend succeeds
+     *
+     * 2. STATE CONSISTENCY: We want UI to update before form resets
+     *    - addOpinion updates the opinions list in Context
+     *    - This triggers re-render of Opinions component
+     *    - New opinion appears in the list
+     *    - THEN form resets
+     *    - User sees their opinion appear, then form clears (good UX!)
+     *
+     * 3. ERROR HANDLING: If backend fails, we stay in "pending" state
+     *    - In next lesson, we'll add loading indicators
+     *    - React tracks when async actions are pending
+     *    - We can show "Submitting..." while waiting
+     *    - We can disable submit button to prevent double-submission
+     *
+     * WHAT GETS SENT TO BACKEND:
+     * --------------------------
+     * { userName, title, body }
+     *
+     * This object contains the validated form data:
+     * - userName: The user's name (required, not empty)
+     * - title: Opinion title (min 5 characters)
+     * - body: Opinion content (10-300 characters)
+     *
+     * All values have been validated and trimmed!
+     *
+     * WHAT THE BACKEND DOES:
+     * ----------------------
+     * The backend (running on localhost:3000):
+     * 1. Receives the POST request
+     * 2. Generates a unique ID for the opinion
+     * 3. Adds initial votes count (0)
+     * 4. Stores the opinion in db.json file
+     * 5. Returns the saved opinion (with ID and votes)
+     *
+     * Example response:
+     * {
+     *   id: "abc123",
+     *   userName: "Alice",
+     *   title: "React is amazing",
+     *   body: "I love how declarative it is!",
+     *   votes: 0
+     * }
+     *
+     * WHAT HAPPENS IN CONTEXT:
+     * -------------------------
+     * After backend responds, addOpinion:
+     * 1. Parses the JSON response to get the saved opinion
+     * 2. Updates opinions state: setOpinions(prev => [savedOpinion, ...prev])
+     * 3. This adds the new opinion to the FRONT of the array
+     * 4. The Opinions component re-renders and shows the new opinion at the top!
+     *
+     * BACKEND DELAY:
+     * --------------
+     * The backend code has an artificial delay (setTimeout) to simulate a
+     * slow network connection. This helps us see the loading state later.
+     * In a real app, network requests naturally take time.
+     *
+     * ERROR HANDLING (NOT IMPLEMENTED YET):
+     * --------------------------------------
+     * Currently, if the backend request fails:
+     * - addOpinion checks if (!response.ok) and returns early
+     * - Our await completes but no state update happens
+     * - Form still resets (we return { errors: null })
+     * - In future lessons, we might want to show an error message
+     *
+     * Better approach (future):
+     * try {
+     *   await addOpinion({ userName, title, body });
+     *   return { errors: null };
+     * } catch (error) {
+     *   return { errors: ['Failed to submit opinion. Please try again.'] };
+     * }
+     */
+    await addOpinion({ userName, title, body });
+
+    /**
+     * STEP 6: RETURN SUCCESS STATE
+     * =============================
+     * After the backend operation completes successfully, return the success
+     * state to reset the form.
      *
      * WHY RETURN { errors: null }?
      * ----------------------------
-     * - Signals to the component that validation passed
+     * - Signals to the component that submission succeeded
      * - In the JSX, we check if formState.errors exists to show error messages
      * - null means "no errors", so error messages won't display
      *
      * WHY NOT RETURN enteredValues?
      * ------------------------------
-     * When validation succeeds, we DON'T include enteredValues because:
+     * When submission succeeds, we DON'T include enteredValues because:
      * - We want the form to RESET (clear all inputs)
      * - Without enteredValues, defaultValue props get undefined
      * - Undefined defaultValue means inputs show as empty
@@ -561,27 +900,47 @@ export function NewOpinion() {
      * ---------------------
      * This is how form reset works with Form Actions:
      *
-     * FAILURE:
+     * FAILURE (validation errors):
      * return { errors: [...], enteredValues: {...} }
      * → formState.enteredValues exists
      * → defaultValue={formState.enteredValues?.title} has a value
      * → Input shows the value (preserved)
      *
-     * SUCCESS:
+     * SUCCESS (after backend confirms):
      * return { errors: null }  (no enteredValues property)
      * → formState.enteredValues is undefined
      * → defaultValue={formState.enteredValues?.title} is undefined
      * → Input defaults to empty (form resets)
      *
-     * FUTURE ENHANCEMENT:
-     * -------------------
-     * In the next lesson, we'll add backend submission here:
-     * if (errors.length === 0) {
-     *   await addOpinion({ userName, title, body });
-     *   return { errors: null };
-     * }
+     * EXECUTION ORDER SUMMARY:
+     * ------------------------
+     * 1. User fills form and clicks Submit
+     * 2. shareOpinionAction is called
+     * 3. Form data is extracted
+     * 4. Validation runs
+     * 5. If validation fails → return { errors, enteredValues } → STOP
+     * 6. If validation passes → continue
+     * 7. await addOpinion() → PAUSE until backend responds
+     * 8. Backend processes request (takes time due to artificial delay)
+     * 9. Backend returns saved opinion
+     * 10. addOpinion updates Context state
+     * 11. Opinions component re-renders with new opinion
+     * 12. THEN this line executes → return { errors: null }
+     * 13. formState updates to { errors: null }
+     * 14. Component re-renders
+     * 15. Form inputs reset to empty (defaultValue becomes undefined)
+     * 16. User sees: new opinion in list + empty form (ready for another!)
      *
-     * For now, we just validate and return success.
+     * WHAT'S NEXT (LESSON 278):
+     * --------------------------
+     * In the next lesson, we'll add:
+     * - Loading state indicator while form is submitting
+     * - Disable submit button during submission
+     * - Show "Submitting..." text
+     * - Prevent double-submission
+     *
+     * React tracks when async form actions are pending, and we can access
+     * this state using the useFormStatus hook!
      */
     return { errors: null };
   }
