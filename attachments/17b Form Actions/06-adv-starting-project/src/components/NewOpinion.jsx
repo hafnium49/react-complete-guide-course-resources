@@ -59,7 +59,7 @@
  *
  * Example of what we'll add:
  * <form action={submitOpinionAction}>
- *   {/* inputs with name attributes */}
+ *   (inputs with name attributes)
  * </form>
  *
  * The action function will receive the form data automatically!
