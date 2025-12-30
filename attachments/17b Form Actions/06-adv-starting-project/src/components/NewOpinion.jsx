@@ -1,15 +1,18 @@
 /**
  * ============================================================================
- * LESSON 277: ASYNC FORM ACTIONS - BACKEND INTEGRATION
+ * LESSON 278: FORM SUBMISSION LOADING STATES - useFormStatus HOOK
  * ============================================================================
  *
- * This component demonstrates React 19's ASYNC Form Actions feature with:
+ * This component demonstrates React 19's complete Form Actions workflow with:
  * - Client-side form validation
  * - Error display with user feedback
  * - Form state management using useActionState hook
  * - Preservation of user input when validation fails
- * - ASYNC backend communication (NEW IN LESSON 277!)
+ * - ASYNC backend communication
  * - Automatic form reset on successful submission
+ * - LOADING STATE with useFormStatus hook (NEW IN LESSON 278!)
+ * - Disabled submit button during submission (NEW!)
+ * - Dynamic button text ("Submit" → "Submitting...") (NEW!)
  *
  * KEY LEARNING OBJECTIVES:
  * ========================
@@ -20,21 +23,27 @@
  * 5. Displaying validation errors to users
  * 6. Preserving user input with defaultValue
  * 7. Form reset behavior on success
- * 8. ASYNC form actions that communicate with backend (NEW!)
- * 9. Using React Context to access backend functions (NEW!)
- * 10. Waiting for backend operations before form reset (NEW!)
+ * 8. ASYNC form actions that communicate with backend
+ * 9. Using React Context to access backend functions
+ * 10. Waiting for backend operations before form reset
+ * 11. Using useFormStatus hook for loading states (NEW!)
+ * 12. Creating reusable submit button components (NEW!)
+ * 13. Preventing double-submission with disabled state (NEW!)
  *
- * WHAT'S NEW IN LESSON 277:
+ * LESSON PROGRESSION:
+ * ===================
+ * LESSON 276: Client-side validation with Form Actions
+ * LESSON 277: Async backend integration with await
+ * LESSON 278: Loading states with useFormStatus hook ← YOU ARE HERE!
+ *
+ * WHAT'S NEW IN LESSON 278:
  * ==========================
- * Compared to Lesson 276 (validation only), we now have:
- * ✓ Form action handler (shareOpinionAction) - NOW ASYNC!
- * ✓ State management (useActionState hook)
- * ✓ Validation logic (required fields, min/max lengths)
- * ✓ Error handling and display
- * ✓ Input value preservation on validation failure
- * ✓ BACKEND SUBMISSION via OpinionsContext (NEW!)
- * ✓ ASYNC/AWAIT for backend operations (NEW!)
- * ✓ Form reset AFTER backend confirms success (NEW!)
+ * Compared to Lesson 277, we now have:
+ * ✓ Submit component with useFormStatus hook (NEW!)
+ * ✓ Disabled button during form submission (NEW!)
+ * ✓ Dynamic button text based on pending state (NEW!)
+ * ✓ Prevention of double-submission (NEW!)
+ * ✓ Better user feedback during async operations (NEW!)
  *
  * REACT 19 FORM ACTIONS - HOW IT WORKS:
  * ======================================
@@ -298,6 +307,36 @@ import { useActionState, use } from 'react';
  * 5. UI automatically updates to show new opinion
  */
 import { OpinionsContext } from '../store/opinions-context';
+
+/**
+ * SUBMIT COMPONENT IMPORT - NEW IN LESSON 278
+ * ============================================
+ * We import the Submit component which handles the submit button with
+ * loading state management using the useFormStatus hook.
+ *
+ * WHY A SEPARATE COMPONENT?
+ * --------------------------
+ * The useFormStatus hook MUST be used in a component that is rendered
+ * INSIDE the <form> element, not in the component that renders the form.
+ *
+ * By creating a separate Submit component, we:
+ * 1. Can use useFormStatus correctly (nested inside form)
+ * 2. Keep the submit button logic isolated and reusable
+ * 3. Make this form component cleaner and more focused
+ * 4. Can reuse Submit in other forms throughout the app
+ *
+ * WHAT SUBMIT COMPONENT DOES:
+ * ----------------------------
+ * - Uses useFormStatus hook to detect form submission state
+ * - Automatically disables button when form is submitting
+ * - Changes button text from "Submit" to "Submitting..."
+ * - Prevents double-submission by keeping button disabled
+ * - Re-enables button when submission completes
+ *
+ * This provides automatic, built-in loading states without any manual
+ * state management in this component!
+ */
+import Submit from './Submit.jsx';
 
 /**
  * NEW OPINION COMPONENT
@@ -1498,86 +1537,132 @@ export function NewOpinion() {
         )}
 
         {/*
-          FORM ACTIONS (SUBMIT BUTTON)
-          =============================
-          Contains the button to submit the form.
+          SUBMIT COMPONENT - NEW IN LESSON 278
+          ====================================
+          We now use a separate Submit component instead of a plain button.
 
-          THE <p className="actions"> WRAPPER:
-          -------------------------------------
-          This is a common pattern for form buttons:
-          - Groups all action buttons together
-          - The "actions" class likely styles it (centering, spacing, etc.)
-          - Separates buttons from inputs visually
+          WHY A SEPARATE COMPONENT?
+          --------------------------
+          The useFormStatus hook (used by Submit component) MUST be called
+          in a component that is rendered INSIDE the form, not in the
+          component that renders the form itself.
 
-          In more complex forms, you might have multiple buttons here:
-          <p className="actions">
-            <button type="submit">Submit</button>
-            <button type="button" onClick={handleCancel}>Cancel</button>
-            <button type="reset">Clear Form</button>
-          </p>
+          WHAT THE SUBMIT COMPONENT DOES:
+          --------------------------------
+          Inside Submit.jsx:
+          1. Calls useFormStatus() hook from 'react-dom'
+          2. Extracts the 'pending' state (true when form is submitting)
+          3. Renders a button that:
+             - Is disabled when pending = true
+             - Shows "Submitting..." when pending = true
+             - Shows "Submit" when pending = false
+             - Prevents double-submission
 
-          THE SUBMIT BUTTON:
+          COMPONENT NESTING REQUIREMENT:
+          -------------------------------
+          <form action="...">          ← Form level (this component)
+            <input ... />
+            <input ... />
+            <Submit />                        ← Nested component
+              └─ useFormStatus() ← Works!    ← Hook called inside form
+          </form>
+
+          If we tried to call useFormStatus() in THIS component (NewOpinion),
+          it wouldn't work because the <form> hasn't been rendered yet when
+          the hook runs. React looks UP the tree for a parent form, but it
+          can't find one.
+
+          THE PENDING STATE:
           ------------------
-          <button type="submit">Submit</button>
+          The 'pending' state from useFormStatus is automatically managed
+          by React based on the form action's execution:
 
-          - type="submit": This is the key part!
-          - When clicked, it triggers the form's submit event
-          - With Form Actions, this will call the action function
-          - Without an action, it would do a traditional form submission
+          1. User clicks Submit
+             → pending = true
+             → Button becomes disabled
+             → Text changes to "Submitting..."
 
-          BUTTON TYPE ATTRIBUTE:
-          ----------------------
-          Always specify type on buttons inside forms:
+          2. Form action executes
+             → Validation runs
+             → await addOpinion(...) sends backend request
+             → pending STAYS true during entire backend request
+             → Button STAYS disabled
 
-          - type="submit" → Submits the form (what we want here)
-          - type="button" → Does nothing by itself (for custom onClick handlers)
-          - type="reset" → Clears all form inputs (rarely used)
+          3. Backend responds and addOpinion completes
+             → Form action returns success state
+             → pending = false
+             → Button becomes enabled
+             → Text changes back to "Submit"
+             → Form resets (inputs clear)
 
-          Why specify?
-          If you don't specify type, browsers default to type="submit", which
-          can cause accidental form submissions if you have multiple buttons.
+          WHY THE await KEYWORD IS CRITICAL:
+          -----------------------------------
+          In our form action (shareOpinionAction above), we have:
 
-          Example of a bug if you don't specify type:
-          <button onClick={handleSomething}>Do Thing</button>
-          ↑ This would ALSO submit the form! (unwanted)
+          await addOpinion(...data...);
 
-          <button type="button" onClick={handleSomething}>Do Thing</button>
-          ↑ This does NOT submit the form (correct)
+          This 'await' makes React WAIT for the backend request to finish
+          before setting pending = false.
 
-          BUTTON CONTENT:
-          ---------------
-          "Submit" is clear and action-oriented. Alternatives:
-          - "Share Opinion" (more specific to our app)
-          - "Post" (shorter)
-          - "Submit Opinion" (more explicit)
+          WITHOUT await:
+          - Function returns immediately
+          - pending = false instantly
+          - Button re-enables before backend responds
+          - User could click again (double submission!)
+          - Bad UX
 
-          WHAT HAPPENS ON CLICK (FUTURE LESSONS):
-          ----------------------------------------
-          Once we add Form Actions, clicking this button will:
-          1. Trigger the form's action function
-          2. React extracts all input values into a FormData object
-          3. React calls our action function with the FormData
-          4. Our action sends the data to the backend
-          5. React shows loading state automatically
-          6. If errors, our action returns them for display
-          7. If success, we can reset the form or show confirmation
+          WITH await:
+          - Function waits for backend
+          - pending = true during entire request
+          - Button stays disabled
+          - No double-submission
+          - Great UX!
 
-          LOADING STATE (COMING LATER):
-          ------------------------------
-          When using useActionState, React tracks whether the form is
-          submitting. We can use that to:
-          - Disable the button during submission
-          - Show a spinner
-          - Change the button text to "Submitting..."
+          REUSABILITY:
+          ------------
+          This Submit component can now be used in ANY form that uses
+          Form Actions! Just drop it in:
 
-          Example:
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+          <form action="...">
+            ... form fields ...
+            <Submit />
+          </form>
+
+          And it will automatically show loading states for that form.
+
+          ALTERNATIVE APPROACH (NOT USED):
+          ---------------------------------
+          We could have used the third return value from useActionState:
+
+          const [formState, formAction, pending] = useActionState(...);
+
+          Then:
+          <button disabled="...">
+            ... conditional text ...
           </button>
+
+          This works, but:
+          - Less reusable (logic is coupled to this component)
+          - Less organized (submit button logic mixed with form logic)
+          - Doesn't follow React 19's recommended patterns
+
+          The Submit component approach is cleaner and more maintainable!
+
+          WHAT YOU'LL SEE WHEN TESTING:
+          ------------------------------
+          1. Fill out the form with valid data
+          2. Click Submit
+          3. Button immediately becomes grayed out and says "Submitting..."
+          4. (~1 second wait for backend with artificial delay)
+          5. New opinion appears in the list
+          6. Form inputs clear
+          7. Button returns to normal "Submit" state
+
+          Try clicking Submit rapidly before it re-enables - you'll see
+          that only ONE submission goes through! This prevents duplicate
+          opinions in the database.
         */}
-        <p className="actions">
-          <button type="submit">Submit</button>
-        </p>
+        <Submit />
       </form>
     </div>
   );
@@ -1585,8 +1670,14 @@ export function NewOpinion() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS - LESSON 276
+ * SUMMARY & KEY CONCEPTS - LESSON 278
  * ============================================================================
+ *
+ * LESSON PROGRESSION:
+ * ===================
+ * LESSON 276: Client-side validation with Form Actions
+ * LESSON 277: Async backend integration with await
+ * LESSON 278: Loading states with useFormStatus hook ← YOU ARE HERE!
  *
  * WHAT WE'VE IMPLEMENTED:
  * =======================
@@ -1597,6 +1688,12 @@ export function NewOpinion() {
  * ✓ Error display components (ul with mapped error messages)
  * ✓ Form reset functionality (automatic on successful validation)
  * ✓ Input value preservation (defaultValue with formState.enteredValues)
+ * ✓ ASYNC backend submission with await (LESSON 277)
+ * ✓ Context integration for backend communication (LESSON 277)
+ * ✓ Submit component with useFormStatus hook (LESSON 278 - NEW!)
+ * ✓ Loading state with disabled button (LESSON 278 - NEW!)
+ * ✓ Dynamic button text ("Submit" / "Submitting...") (LESSON 278 - NEW!)
+ * ✓ Double-submission prevention (LESSON 278 - NEW!)
  *
  * KEY CONCEPTS LEARNED:
  * =====================
@@ -1644,6 +1741,42 @@ export function NewOpinion() {
  *    - Map over errors array to create list items
  *    - Use error message as key (acceptable for simple string arrays)
  *    - Show errors before submit button for better visibility
+ *
+ * 8. ASYNC FORM ACTIONS (LESSON 277):
+ *    - Add 'async' keyword to form action function
+ *    - Use 'await' to wait for backend operations
+ *    - React waits for Promise resolution before marking form as done
+ *    - Enables proper loading states (pending stays true during backend request)
+ *    - Integration with Context API for centralized backend communication
+ *
+ * 9. useFormStatus HOOK (LESSON 278 - NEW!):
+ *    - Import from 'react-dom' (not 'react')
+ *    - MUST be used in a component INSIDE the form (nested component requirement)
+ *    - Returns an object with: pending, data, method, action
+ *    - pending = true when form is submitting, false otherwise
+ *    - Automatically managed by React based on form action execution
+ *
+ * 10. SUBMIT COMPONENT PATTERN (LESSON 278 - NEW!):
+ *     - Created separate Submit.jsx component for submit button
+ *     - Uses useFormStatus hook inside the component
+ *     - Automatically disables button when pending = true
+ *     - Changes button text from "Submit" to "Submitting..."
+ *     - Prevents double-submission by keeping button disabled
+ *     - Highly reusable across any form that uses Form Actions
+ *     - Clean separation of concerns (submit button logic isolated)
+ *
+ * 11. LOADING STATE MANAGEMENT (LESSON 278 - NEW!):
+ *     - No manual state management needed (React tracks it automatically)
+ *     - pending state updates automatically based on form action execution
+ *     - Button disabled when pending = true (form is submitting)
+ *     - Button enabled when pending = false (form is idle)
+ *     - Works seamlessly with async form actions and await
+ *
+ * 12. DOUBLE-SUBMISSION PREVENTION (LESSON 278 - NEW!):
+ *     - Disabled button prevents multiple clicks during submission
+ *     - User cannot submit form twice by accident
+ *     - Critical for operations like payments, account creation, etc.
+ *     - Automatic with useFormStatus pattern (no manual tracking needed)
  *
  * COMPARISON WITH TRADITIONAL REACT (React 18):
  * ==============================================
@@ -1708,55 +1841,149 @@ export function NewOpinion() {
  * - aria-live region for announcing errors dynamically
  * - Error icons for colorblind users
  *
- * EXECUTION FLOW SUMMARY:
- * =======================
+ * EXECUTION FLOW SUMMARY (UPDATED FOR LESSONS 277-278):
+ * =======================================================
  * 1. User fills in form fields (userName, title, body)
  * 2. User clicks Submit button
- * 3. React prevents default browser submission
- * 4. React creates FormData from all inputs with name attributes
- * 5. React calls formAction (which calls shareOpinionAction)
- * 6. shareOpinionAction extracts and validates data
- * 7. IF VALIDATION FAILS:
+ * 3. Submit button becomes disabled, text changes to "Submitting..." (LESSON 278!)
+ * 4. React prevents default browser submission
+ * 5. React creates FormData from all inputs with name attributes
+ * 6. React calls formAction (which calls shareOpinionAction)
+ * 7. shareOpinionAction extracts and validates data
+ * 8. IF VALIDATION FAILS:
  *    - Returns { errors: [...], enteredValues: {...} }
  *    - formState updates with errors and values
  *    - Component re-renders
  *    - Errors display, inputs preserve user input
+ *    - Button re-enables, text changes back to "Submit"
  *    - User fixes errors and resubmits
- * 8. IF VALIDATION SUCCEEDS:
- *    - Returns { errors: null }
+ * 9. IF VALIDATION SUCCEEDS:
+ *    - await addOpinion({ userName, title, body }) sends to backend (LESSON 277!)
+ *    - Button STAYS disabled during backend request (~1 second)
+ *    - Backend processes request, generates ID, saves opinion
+ *    - Backend returns saved opinion
+ *    - Context updates opinions state with new opinion
+ *    - Opinions component re-renders, new opinion appears in list
+ *    - Form action returns { errors: null }
  *    - formState updates with no errors, no enteredValues
  *    - Component re-renders
  *    - No errors display, inputs reset to empty
+ *    - Button re-enables, text changes back to "Submit" (LESSON 278!)
  *    - Form is ready for new submission
  *
- * WHAT'S NEXT (LESSON 277):
- * ==========================
- * In the next lesson, we'll add backend integration:
- * - Use OpinionsContext's addOpinion function
- * - Send validated data to the backend
- * - Handle backend errors (network failures, server errors)
- * - Show success feedback to users
- * - Make the action async (await backend response)
- * - Optimistic updates (show opinion immediately, remove if backend fails)
+ * COMPLETE FLOW WITH TIMING (LESSONS 276-278):
+ * ==============================================
+ * t=0ms: User clicks Submit
+ * t=0ms: Button → disabled, "Submitting..."
+ * t=0ms: Validation runs
+ * t=0ms (if valid): Backend request starts
+ * t=0ms-1000ms: Button stays disabled, shows "Submitting..."
+ * t=1000ms: Backend responds
+ * t=1000ms: Context updates with new opinion
+ * t=1000ms: New opinion appears in list
+ * t=1000ms: Form resets, inputs clear
+ * t=1000ms: Button → enabled, "Submit"
  *
- * TESTING THIS COMPONENT:
- * =======================
- * Try these scenarios to see the validation in action:
+ * WHAT WE'VE COMPLETED:
+ * ======================
+ * ✓ LESSON 276: Client-side validation with Form Actions
+ * ✓ LESSON 277: Async backend integration with Context and await
+ * ✓ LESSON 278: Loading states with useFormStatus hook
  *
+ * WHAT'S NEXT:
+ * ============
+ * In future lessons, we might add:
+ * - Error handling for failed backend requests
+ * - Retry logic for network failures
+ * - Toast notifications for success/error feedback
+ * - Optimistic updates for voting (instant UI feedback)
+ * - Form reset functionality exposed from useInput hooks
+ * - File upload support
+ * - Rich text editor for opinion body
+ * - Character count display
+ * - Save draft functionality
+ *
+ * TESTING THIS COMPONENT (LESSONS 276-278):
+ * ===========================================
+ * Try these scenarios to see all features in action:
+ *
+ * VALIDATION TESTS (LESSON 276):
+ * -------------------------------
  * 1. Submit empty form:
  *    - See all 3 error messages
+ *    - Button does NOT become disabled (validation fails immediately)
  *
  * 2. Enter short title (e.g., "Hi"):
  *    - See "Title must be at least five characters long"
  *    - Note: userName and body inputs preserve your values
+ *    - Button does NOT become disabled
  *
  * 3. Enter valid title but short body (e.g., "Hello"):
  *    - See "Opinion must be between 10 and 300 characters long"
+ *    - Button does NOT become disabled
  *
- * 4. Fill all fields correctly:
- *    - No errors display
- *    - Form resets (all inputs clear)
- *
- * 5. Test trimming by entering "     " (spaces) in any field:
+ * 4. Test trimming by entering "     " (spaces) in any field:
  *    - Validation treats it as empty
+ *    - Error messages appear
+ *
+ * BACKEND INTEGRATION TESTS (LESSON 277):
+ * ----------------------------------------
+ * 5. Fill all fields correctly:
+ *    - No errors display
+ *    - New opinion appears in the list above
+ *    - Form resets (all inputs clear)
+ *    - Backend successfully saved the opinion
+ *
+ * 6. Check the opinions list:
+ *    - Your new opinion should be at the TOP of the list
+ *    - It should have all the data you entered
+ *    - Vote count should be 0 initially
+ *
+ * LOADING STATE TESTS (LESSON 278 - NEW!):
+ * -----------------------------------------
+ * 7. Watch the submit button during submission:
+ *    - Fill form with valid data
+ *    - Click Submit
+ *    - Button IMMEDIATELY becomes disabled and grayed out
+ *    - Button text changes to "Submitting..."
+ *    - Button stays disabled for ~1 second (backend delay)
+ *    - New opinion appears in list
+ *    - Form clears
+ *    - Button becomes enabled and shows "Submit" again
+ *
+ * 8. Try double-submission (testing prevention):
+ *    - Fill form with valid data
+ *    - Click Submit rapidly multiple times
+ *    - Only ONE opinion should be created
+ *    - Button disabled after first click prevents duplicates
+ *    - Check opinions list - no duplicates!
+ *
+ * 9. Test button during validation failure:
+ *    - Leave a field empty
+ *    - Click Submit
+ *    - Button does NOT become disabled
+ *    - Error messages appear immediately
+ *    - Button stays enabled as "Submit"
+ *    - Can immediately try again
+ *
+ * 10. Watch the complete flow:
+ *     - Fill form: userName, title (min 5 chars), body (10-300 chars)
+ *     - Click Submit
+ *     - Observe the sequence:
+ *       → Button: "Submit" → "Submitting..." (disabled)
+ *       → ~1 second wait
+ *       → New opinion appears at top of list
+ *       → Form inputs clear
+ *       → Button: "Submitting..." → "Submit" (enabled)
+ *       → Ready for next submission!
+ *
+ * WHAT TO OBSERVE:
+ * ----------------
+ * ✓ Validation happens instantly (no backend call if invalid)
+ * ✓ Button only disables for VALID submissions
+ * ✓ Button stays disabled during entire backend request
+ * ✓ Cannot click button multiple times (double-submission prevented)
+ * ✓ Form resets only AFTER backend confirms success
+ * ✓ New opinion appears BEFORE form resets (see it, then form clears)
+ * ✓ Smooth UX: clear feedback at every step
  */
