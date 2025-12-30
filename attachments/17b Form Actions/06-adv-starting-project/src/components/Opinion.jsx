@@ -1,480 +1,650 @@
 /**
  * ============================================================================
- * LESSON 275: OPINION COMPONENT - DISPLAYING & VOTING ON OPINIONS
+ * LESSON 279: MULTIPLE FORM ACTIONS - VOTING WITH formAction ON BUTTONS
  * ============================================================================
  *
- * This component displays a single opinion along with voting buttons to
- * upvote or downvote it. It demonstrates component composition, props
- * destructuring, and sets up the structure for Form Actions on buttons.
+ * This component demonstrates a powerful React 19 Form Actions feature:
+ * using DIFFERENT form actions for DIFFERENT buttons within the SAME form.
  *
  * KEY LEARNING OBJECTIVES:
  * ========================
- * 1. Nested object destructuring in function parameters
- * 2. Semantic HTML for content structure (article, header, etc.)
- * 3. Using forms and buttons for actions (even single buttons)
- * 4. Displaying dynamic data from props
- * 5. SVG icons in React components
+ * 1. Using formAction prop on individual buttons (not just on forms)
+ * 2. Having multiple form actions in a single form
+ * 3. Triggering different logic based on which button was clicked
+ * 4. Accessing Context data from form action functions
+ * 5. Preparing for backend integration with voting
  *
- * CURRENT STATE (LESSON 275):
+ * THE PROBLEM WE'RE SOLVING:
  * ===========================
- * In this introductory lesson, the vote buttons are non-functional:
- * - They don't have action handlers
- * - Clicking them does nothing (yet)
- * - The vote count is display-only
+ * We have ONE form with TWO buttons:
+ * - Upvote button → Should increase vote count
+ * - Downvote button → Should decrease vote count
  *
- * WHAT'S COMING IN FUTURE LESSONS:
- * =================================
- * We'll enhance this component to:
- * 1. Use Form Actions on the vote buttons
- * 2. Call upvoteOpinion/downvoteOpinion from Context
- * 3. Show optimistic updates (instant vote count changes)
- * 4. Possibly show loading states during voting
- * 5. Handle vote persistence to backend
+ * CHALLENGE:
+ * ----------
+ * How do we trigger DIFFERENT actions for DIFFERENT buttons in the SAME form?
  *
- * COMPONENT ARCHITECTURE:
- * =======================
- * This is a "presentational" component that:
- * - Receives opinion data via props
- * - Displays that data in a structured format
- * - Provides UI for voting (buttons)
- * - Will integrate with Context for vote functionality
+ * TRADITIONAL APPROACH (Won't work well here):
+ * ---------------------------------------------
+ * <form action={handleVote}>
+ *   <button name="action" value="upvote">↑</button>
+ *   <button name="action" value="downvote">↓</button>
+ * </form>
  *
- * SEMANTIC HTML:
- * ==============
- * This component uses semantic HTML elements:
- * - <article>: Independent, self-contained content
- * - <header>: Introductory content (title, author)
- * - <h3>: Section heading (opinion title)
- * - <form>: Groups related buttons (vote actions)
+ * Then in handleVote:
+ * function handleVote(prevState, formData) {
+ *   const action = formData.get('action');
+ *   if (action === 'upvote') { ... }
+ *   else if (action === 'downvote') { ... }
+ * }
  *
- * Why semantic HTML matters:
- * - Screen readers can navigate by landmarks
- * - Search engines understand content structure
- * - Developers can understand code faster
- * - CSS can target elements more meaningfully
+ * This works, but it's less clean and harder to maintain.
+ *
+ * REACT 19 SOLUTION: formAction ON BUTTONS
+ * =========================================
+ * React 19 allows you to set formAction on individual buttons!
+ *
+ * <form>
+ *   <button formAction={upvoteAction}>↑</button>
+ *   <button formAction={downvoteAction}>↓</button>
+ * </form>
+ *
+ * Now each button has its own dedicated action function!
+ *
+ * BENEFITS:
+ * ---------
+ * ✓ Cleaner separation of concerns (separate functions for separate actions)
+ * ✓ Easier to understand (upvoteAction is clearly for upvoting)
+ * ✓ Easier to test (can test upvote and downvote logic independently)
+ * ✓ More maintainable (changes to upvote logic don't affect downvote)
+ * ✓ Type-safe (if using TypeScript, each function has clear purpose)
+ *
+ * HOW IT WORKS:
+ * =============
+ * 1. User clicks upvote button
+ * 2. React calls upvoteAction (NOT a shared form action)
+ * 3. upvoteAction updates the vote count
+ * 4. Component re-renders with new vote count
+ *
+ * 1. User clicks downvote button
+ * 2. React calls downvoteAction (different function!)
+ * 3. downvoteAction updates the vote count
+ * 4. Component re-renders with new vote count
+ *
+ * CURRENT STATE (LESSON 279):
+ * ============================
+ * In this lesson, we:
+ * ✓ Created upvoteAction and downvoteAction functions
+ * ✓ Added formAction prop to each button
+ * ✓ Added console.log to verify which action is triggered
+ * ✓ Prepared the structure for backend integration
+ *
+ * Right now, the actions just log to console. This helps us verify:
+ * - The correct action is called for each button
+ * - The buttons work as expected
+ * - We're ready to add real functionality
+ *
+ * WHAT'S COMING NEXT:
+ * ===================
+ * In the next lessons, we'll:
+ * 1. Actually update the vote count (call Context functions)
+ * 2. Send vote updates to the backend
+ * 3. Add optimistic updates (instant visual feedback)
+ * 4. Handle errors gracefully
+ * 5. Prevent duplicate votes
+ *
+ * FORM DATA IN VOTING:
+ * ====================
+ * Notice that our form action functions accept formData parameter:
+ * function upvoteAction(prevState, formData) { ... }
+ *
+ * But we don't use formData! Why?
+ * - Our form has NO inputs (just buttons)
+ * - We don't need to extract any data from the form
+ * - We just need the action to be triggered
+ *
+ * The opinion data (id, votes) comes from props/Context, not from form inputs.
+ *
+ * However, we COULD include data in the form if needed:
+ * <input type="hidden" name="opinionId" value={id} />
+ *
+ * Then in the action:
+ * const opinionId = formData.get('opinionId');
+ *
+ * But in our case, we have direct access to the id via props/closure,
+ * so we don't need to use formData.
+ *
+ * CONTEXT INTEGRATION:
+ * ====================
+ * In this lesson, we also access OpinionsContext to get:
+ * - upvoteOpinion function (to increase votes)
+ * - downvoteOpinion function (to decrease votes)
+ *
+ * These functions will:
+ * 1. Update the local state (Context state)
+ * 2. Send the update to the backend
+ * 3. Keep the UI in sync with the database
+ *
+ * WHY USE CONTEXT?
+ * ----------------
+ * - Centralized vote logic (all voting goes through Context)
+ * - Other components can trigger votes too
+ * - Easy to add features (vote notifications, analytics, etc.)
+ * - State management is in one place
  */
+
+/**
+ * IMPORTS
+ * =======
+ */
+
+/**
+ * use() HOOK FROM REACT 19
+ * ========================
+ * We import the use() hook to consume Context.
+ *
+ * This is the same pattern we saw in NewOpinion.jsx:
+ * - Import use from 'react'
+ * - Call use(OpinionsContext) to get context value
+ * - Destructure to extract what we need
+ *
+ * WHY use() INSTEAD OF useContext?
+ * --------------------------------
+ * Both work, but use() is the new React 19 approach:
+ * - More flexible (can be called conditionally)
+ * - Can also unwrap Promises (for async data)
+ * - Future-proof (React's recommended pattern going forward)
+ *
+ * WHAT WE'LL GET FROM CONTEXT:
+ * -----------------------------
+ * The OpinionsContext provides:
+ * - opinions: Array of all opinions
+ * - addOpinion: Function to add new opinion
+ * - upvoteOpinion: Function to upvote ← We need this!
+ * - downvoteOpinion: Function to downvote ← We need this!
+ */
+import { use } from 'react';
+
+/**
+ * OPINIONS CONTEXT IMPORT
+ * =======================
+ * We import the OpinionsContext so we can access the voting functions.
+ *
+ * The Context is defined in store/opinions-context.jsx and provides:
+ * - State: opinions array
+ * - Actions: addOpinion, upvoteOpinion, downvoteOpinion
+ *
+ * In NewOpinion.jsx, we used addOpinion to submit new opinions.
+ * Here in Opinion.jsx, we'll use upvoteOpinion and downvoteOpinion.
+ *
+ * CENTRALIZED STATE MANAGEMENT:
+ * ------------------------------
+ * By using Context, we ensure:
+ * - All opinion-related state is in one place
+ * - All opinion-related logic is in one place
+ * - Components don't need to know about the backend
+ * - Easy to switch backend implementations
+ * - Consistent behavior across the app
+ */
+import { OpinionsContext } from '../store/opinions-context';
 
 /**
  * OPINION COMPONENT
  * =================
  * Displays a single opinion with its metadata and voting controls.
  *
+ * WHAT'S NEW IN LESSON 279:
+ * --------------------------
+ * - Added Context consumption (upvoteOpinion, downvoteOpinion)
+ * - Added upvoteAction form action function
+ * - Added downvoteAction form action function
+ * - Added formAction props to buttons
+ * - Buttons are now functional!
+ *
  * PROPS:
  * ------
  * @param {Object} props
  * @param {Object} props.opinion - The opinion data object
- * @param {string} props.opinion.id - Unique identifier
+ * @param {string} props.opinion.id - Unique identifier (needed for voting!)
  * @param {string} props.opinion.title - Opinion title
  * @param {string} props.opinion.body - Opinion content
  * @param {string} props.opinion.userName - Author's name
  * @param {number} props.opinion.votes - Current vote count
  *
- * NESTED DESTRUCTURING EXPLANATION:
- * ==================================
- * Look at the function parameter:
- * function Opinion({ opinion: { id, title, body, userName, votes } })
+ * NESTED DESTRUCTURING:
+ * ---------------------
+ * { opinion: { id, title, body, userName, votes } }
  *
- * This is "nested destructuring" - we're destructuring in two levels:
- *
- * LEVEL 1: Destructure props
- * { opinion } extracts the opinion prop from the props object
- *
- * LEVEL 2: Destructure opinion
- * { id, title, body, userName, votes } extracts these properties from opinion
- *
- * WITHOUT DESTRUCTURING:
- * ----------------------
- * function Opinion(props) {
- *   const opinion = props.opinion;
- *   const id = opinion.id;
- *   const title = opinion.title;
- *   const body = opinion.body;
- *   const userName = opinion.userName;
- *   const votes = opinion.votes;
- *   // ... use id, title, body, etc.
- * }
- *
- * WITH SINGLE-LEVEL DESTRUCTURING:
- * --------------------------------
- * function Opinion({ opinion }) {
- *   const { id, title, body, userName, votes } = opinion;
- *   // ... use id, title, body, etc.
- * }
- *
- * WITH NESTED DESTRUCTURING (what we have):
- * ------------------------------------------
- * function Opinion({ opinion: { id, title, body, userName, votes } }) {
- *   // Variables id, title, body, userName, votes are directly available
- * }
- *
- * BENEFITS OF NESTED DESTRUCTURING:
- * ----------------------------------
- * ✓ More concise (one line instead of multiple)
- * ✓ Makes it clear what data the component uses
- * ✓ No need to reference opinion.title, just use title
- * ✓ Self-documenting (shows the opinion object structure)
- *
- * POTENTIAL DRAWBACKS:
- * --------------------
- * ✗ Can be confusing for beginners
- * ✗ Deeply nested destructuring can be hard to read
- * ✗ Can't access the full opinion object if needed
- *
- * WHEN TO USE NESTED DESTRUCTURING:
- * ----------------------------------
- * - When you use most/all properties of the nested object
- * - When the nesting is only 1-2 levels deep
- * - When you don't need the parent object
- *
- * In our case, we use all 5 properties of opinion and don't need the
- * opinion object itself, so nested destructuring is a good choice.
+ * This extracts all opinion properties directly into variables.
+ * We need the id for identifying which opinion to vote on!
  */
 export function Opinion({ opinion: { id, title, body, userName, votes } }) {
   /**
+   * ============================================================================
+   * CONSUMING CONTEXT - ACCESSING VOTE FUNCTIONS
+   * ============================================================================
+   *
+   * We use the use() hook to access OpinionsContext and extract the
+   * voting functions.
+   *
+   * HOOK USAGE:
+   * -----------
+   * const { upvoteOpinion, downvoteOpinion } = use(OpinionsContext);
+   *
+   * WHAT HAPPENS:
+   * -------------
+   * 1. use(OpinionsContext) accesses the context value provided by
+   *    OpinionsContextProvider in App.jsx
+   *
+   * 2. It returns the contextValue object:
+   *    {
+   *      opinions: array,
+   *      addOpinion: function,
+   *      upvoteOpinion: function,
+   *      downvoteOpinion: function
+   *    }
+   *
+   * 3. We destructure to extract only what we need:
+   *    { upvoteOpinion, downvoteOpinion }
+   *
+   * 4. We ignore opinions and addOpinion because this component doesn't
+   *    need them. We only need the voting functions.
+   *
+   * WHAT ARE THESE FUNCTIONS?
+   * --------------------------
+   * upvoteOpinion(id):
+   * - Accepts an opinion ID
+   * - Increases the vote count for that opinion
+   * - Updates Context state
+   * - (Later) Sends update to backend
+   *
+   * downvoteOpinion(id):
+   * - Accepts an opinion ID
+   * - Decreases the vote count for that opinion
+   * - Updates Context state
+   * - (Later) Sends update to backend
+   *
+   * CONTEXT FUNCTION SIGNATURES:
+   * -----------------------------
+   * From opinions-context.jsx:
+   *
+   * function upvoteOpinion(id) {
+   *   setOpinions((prevOpinions) =>
+   *     prevOpinions.map((opinion) =>
+   *       opinion.id === id
+   *         ? { ...opinion, votes: opinion.votes + 1 }
+   *         : opinion
+   *     )
+   *   );
+   *   // Later: Send to backend
+   * }
+   *
+   * function downvoteOpinion(id) {
+   *   setOpinions((prevOpinions) =>
+   *     prevOpinions.map((opinion) =>
+   *       opinion.id === id
+   *         ? { ...opinion, votes: opinion.votes - 1 }
+   *         : opinion
+   *     )
+   *   );
+   *   // Later: Send to backend
+   * }
+   *
+   * HOW THEY WORK:
+   * --------------
+   * 1. Find the opinion with matching id
+   * 2. Create new opinion object with updated votes
+   * 3. Keep all other opinions unchanged
+   * 4. Update state (triggers re-render)
+   * 5. This component re-renders with new votes value
+   *
+   * WHY WE NEED THE id:
+   * -------------------
+   * The voting functions need to know WHICH opinion to update.
+   * That's why we destructured id from the opinion prop!
+   * We'll pass id to these functions in our form actions.
+   */
+  const { upvoteOpinion, downvoteOpinion } = use(OpinionsContext);
+
+  /**
+   * ============================================================================
+   * FORM ACTION FUNCTION: upvoteAction
+   * ============================================================================
+   *
+   * This function is called when the user clicks the upvote button.
+   *
+   * FORM ACTION SIGNATURE:
+   * ----------------------
+   * Form actions always receive two parameters:
+   * 1. prevState - The previous state (we don't use it here)
+   * 2. formData - FormData object from the form (we don't use it here)
+   *
+   * Even though we don't use these parameters, React still provides them.
+   * Form actions must have this signature to work with Form Actions system.
+   *
+   * WHY WE DON'T USE THE PARAMETERS:
+   * ---------------------------------
+   * prevState:
+   * - Useful for forms that maintain state (like NewOpinion with errors)
+   * - Our voting buttons don't need state management
+   * - The vote count is managed by Context, not form state
+   *
+   * formData:
+   * - Useful for extracting input values from a form
+   * - Our form has NO inputs (just buttons!)
+   * - We get the opinion id from props, not from form data
+   *
+   * CURRENT IMPLEMENTATION (LESSON 279):
+   * -------------------------------------
+   * Right now, we just console.log('UPVOTE') to verify the action works.
+   *
+   * This is a good development practice:
+   * - Start simple (just logging)
+   * - Verify the wiring is correct
+   * - Then add real functionality
+   *
+   * WHAT'S COMING NEXT (LESSON 280+):
+   * ----------------------------------
+   * We'll replace console.log with:
+   * upvoteOpinion(id);
+   *
+   * This will:
+   * 1. Call the Context function
+   * 2. Update the vote count in Context state
+   * 3. Trigger re-render with new vote count
+   * 4. (Later) Send update to backend
+   *
+   * TESTING THE CURRENT VERSION:
+   * -----------------------------
+   * 1. Open browser developer tools
+   * 2. Go to Console tab
+   * 3. Click the upvote button
+   * 4. You should see "UPVOTE" logged
+   *
+   * This proves:
+   * ✓ The formAction prop is working
+   * ✓ React is calling this function
+   * ✓ The button is properly connected
+   * ✓ We're ready to add real functionality
+   *
+   * WHY START WITH CONSOLE.LOG?
+   * ----------------------------
+   * It's a best practice for development:
+   * - Quick feedback (did the button click work?)
+   * - Easy debugging (which action was called?)
+   * - No side effects (won't break anything)
+   * - Clear next step (replace log with real code)
+   *
+   * CLOSURE AND VARIABLE ACCESS:
+   * -----------------------------
+   * Notice that this function can access:
+   * - id (from props destructuring)
+   * - upvoteOpinion (from Context)
+   *
+   * This works because of JavaScript closures:
+   * - upvoteAction is defined inside the Opinion component
+   * - It "closes over" variables from its outer scope
+   * - When upvoteAction runs, it can access those variables
+   *
+   * This is why we don't need to pass id via formData - we already have it!
+   */
+  function upvoteAction(prevState, formData) {
+    console.log('UPVOTE');
+    // Next lesson: upvoteOpinion(id);
+  }
+
+  /**
+   * ============================================================================
+   * FORM ACTION FUNCTION: downvoteAction
+   * ============================================================================
+   *
+   * This function is called when the user clicks the downvote button.
+   *
+   * EXACT SAME STRUCTURE AS upvoteAction:
+   * --------------------------------------
+   * - Accepts prevState and formData (don't use them)
+   * - Currently just logs to console
+   * - Will call downvoteOpinion(id) in next lesson
+   *
+   * SEPARATE FUNCTION = BETTER CODE ORGANIZATION:
+   * ----------------------------------------------
+   * We could have used ONE function for both actions:
+   *
+   * BAD APPROACH (Don't do this):
+   * function voteAction(prevState, formData) {
+   *   const action = formData.get('action');
+   *   if (action === 'upvote') {
+   *     console.log('UPVOTE');
+   *   } else if (action === 'downvote') {
+   *     console.log('DOWNVOTE');
+   *   }
+   * }
+   *
+   * Then on buttons:
+   * <button formAction={voteAction} name="action" value="upvote">
+   * <button formAction={voteAction} name="action" value="downvote">
+   *
+   * Why is this BAD?
+   * - More complex (if/else logic)
+   * - Harder to test (both actions in one function)
+   * - Less clear intent (what does voteAction do?)
+   * - Couples upvote and downvote logic together
+   *
+   * BETTER APPROACH (What we have):
+   * --------------------------------
+   * Two separate functions:
+   * - upvoteAction → clearly for upvoting
+   * - downvoteAction → clearly for downvoting
+   *
+   * Benefits:
+   * ✓ Clear purpose (function name describes what it does)
+   * ✓ Easy to test (test each function independently)
+   * ✓ Easy to modify (change upvote without affecting downvote)
+   * ✓ Better type safety (if using TypeScript)
+   * ✓ Matches React 19's design (formAction on buttons)
+   *
+   * CURRENT IMPLEMENTATION:
+   * -----------------------
+   * console.log('DOWNVOTE');
+   *
+   * This helps us verify the downvote button works correctly.
+   *
+   * TESTING:
+   * --------
+   * 1. Open browser console
+   * 2. Click downvote button
+   * 3. Should see "DOWNVOTE" logged
+   *
+   * WHAT'S NEXT:
+   * ------------
+   * In the next lesson, we'll change this to:
+   * downvoteOpinion(id);
+   *
+   * This will actually decrease the vote count!
+   */
+  function downvoteAction(prevState, formData) {
+    console.log('DOWNVOTE');
+    // Next lesson: downvoteOpinion(id);
+  }
+
+  /**
+   * ============================================================================
    * COMPONENT RENDER
-   * ================
+   * ============================================================================
+   *
    * We render the opinion in a structured, semantic layout.
+   *
+   * WHAT'S CHANGED FROM PREVIOUS LESSONS:
+   * --------------------------------------
+   * The buttons now have formAction props!
+   * This makes them functional instead of decorative.
    */
   return (
-    /**
-     * ARTICLE ELEMENT
-     * ===============
-     * <article> is a semantic HTML element that represents a self-contained
-     * composition that could be independently distributed or reused.
-     *
-     * Perfect for:
-     * - Blog posts
-     * - Forum posts
-     * - News articles
-     * - User comments
-     * - Product cards
-     * - Social media posts
-     *
-     * Our opinion fits this definition - it's a complete, standalone piece
-     * of content that makes sense on its own.
-     *
-     * BENEFITS OF <article>:
-     * ----------------------
-     * - Screen readers can identify and navigate to articles
-     * - Search engines understand this is main content (not navigation/ads)
-     * - RSS readers can extract article elements
-     * - Clear semantic meaning for developers
-     *
-     * ALTERNATIVE:
-     * ------------
-     * We could use <div>, but it has no semantic meaning:
-     * <div> ← Just a container, no meaning
-     * <article> ← "This is an independent piece of content"
-     */
     <article>
-      {/*
-        HEADER ELEMENT
-        ==============
-        <header> represents introductory content for its parent (the article).
-
-        NOT THE SAME AS <head>:
-        -----------------------
-        <head> ← Document metadata (in HTML, not React)
-        <header> ← Section introduction (what we use here)
-
-        Inside an article's header, we typically include:
-        - Title or heading
-        - Author information
-        - Publication date
-        - Category/tags
-        - Metadata
-
-        In our case, we show:
-        - Opinion title
-        - Author's name
-
-        MULTIPLE HEADERS:
-        -----------------
-        You can have multiple <header> elements on a page:
-        - One for the main page header (nav, logo)
-        - One for each article
-        - One for each section
-
-        Each header provides context for its parent element.
-      */}
       <header>
-        {/*
-          OPINION TITLE
-          =============
-          <h3> is a third-level heading.
-
-          HEADING LEVELS:
-          ---------------
-          <h1> - Main page title (usually one per page)
-          <h2> - Major section titles (like "User Opinions")
-          <h3> - Subsection titles (like individual opinion titles)
-          <h4-h6> - Further sub-levels (less common)
-
-          WHY H3?
-          -------
-          In our app, the heading hierarchy is:
-          <h1> - App title (in Header component)
-          <h2> - Section titles ("User Opinions", "Share your opinion!")
-          <h3> - Individual opinion titles (this)
-
-          This creates a logical outline:
-          1. App Title
-             1.1. Share your opinion!
-             1.2. User Opinions
-                 1.2.1. Opinion 1 Title ← We are here
-                 1.2.2. Opinion 2 Title
-                 ...
-
-          HEADING HIERARCHY IMPORTANCE:
-          -----------------------------
-          - Screen readers use headings for navigation
-          - Users can jump between headings with shortcuts
-          - Search engines use heading structure for SEO
-          - Should not skip levels (h1→h3 without h2 is bad)
-
-          DISPLAYING THE TITLE:
-          ---------------------
-          {title}
-
-          This is a JSX expression that outputs the title variable.
-          Remember, title came from destructuring the opinion prop.
-
-          If title = "React is amazing", this renders:
-          <h3>React is amazing</h3>
-        */}
         <h3>{title}</h3>
-
-        {/*
-          AUTHOR INFORMATION
-          ==================
-          A paragraph showing who shared this opinion.
-
-          TEXT WITH DYNAMIC DATA:
-          -----------------------
-          "Shared by {userName}"
-
-          This combines static text ("Shared by ") with dynamic data (userName).
-
-          Example:
-          If userName = "Alice", this renders:
-          <p>Shared by Alice</p>
-
-          ALTERNATIVE APPROACHES:
-          -----------------------
-          Could also be written as:
-          - <p>By {userName}</p> (shorter)
-          - <p>Author: {userName}</p> (more formal)
-          - <p className="author">{userName}</p> (just the name)
-
-          The current approach is friendly and clear about the relationship
-          (this person shared/created this opinion).
-        */}
         <p>Shared by {userName}</p>
       </header>
 
-      {/*
-        OPINION BODY
-        ============
-        The main content of the opinion - the full text.
-
-        {body}
-
-        This outputs the body variable (from opinion prop destructuring).
-
-        WHY A PARAGRAPH?
-        ----------------
-        <p> is the semantic element for paragraphs of text.
-        Even if the body is multiple sentences or short, <p> is appropriate.
-
-        If the body could contain multiple paragraphs, you might render it as:
-        <div dangerouslySetInnerHTML={{ __html: body }} />
-        or parse it and create multiple <p> elements.
-
-        But for our simple case, a single <p> is fine.
-
-        TEXT FORMATTING:
-        ----------------
-        Any text in body will be displayed as-is:
-        - Line breaks in the text won't create <br> elements
-        - HTML tags in the text won't be parsed (they'll show as text)
-        - Whitespace will be collapsed
-
-        If you need to preserve formatting, you could use:
-        - <pre> element (preserves whitespace/line breaks)
-        - CSS: white-space: pre-wrap
-        - Markdown parser (convert markdown to HTML)
-      */}
       <p>{body}</p>
 
       {/*
-        VOTING FORM
-        ===========
-        A form that contains the upvote and downvote buttons.
+        VOTING FORM WITH MULTIPLE FORM ACTIONS
+        =======================================
+        This form demonstrates React 19's ability to have DIFFERENT form actions
+        for DIFFERENT buttons within the SAME form.
 
-        WHY A FORM FOR BUTTONS?
-        -----------------------
-        You might wonder: "Why wrap buttons in a <form>? Can't we just have
-        buttons directly?"
+        THE KEY INSIGHT:
+        ----------------
+        In traditional forms, you'd have:
+        <form action={handleSubmit}>
+          <button type="submit">Submit</button>
+        </form>
 
-        Yes, we could, but using a form provides benefits:
+        ONE form = ONE action
 
-        1. SEMANTIC GROUPING: The form shows these buttons are related actions
-        2. FORM ACTIONS: In future lessons, we can add action={handleVote}
-        3. STYLING: Easy to style related buttons together
-        4. ACCESSIBILITY: Screen readers understand this is an action group
+        But with React 19's formAction, you can have:
+        <form>
+          <button formAction={action1}>Button 1</button>
+          <button formAction={action2}>Button 2</button>
+        </form>
 
-        FORM WITHOUT ACTION:
-        --------------------
+        ONE form = MULTIPLE actions (one per button!)
+
+        WHY THIS IS USEFUL:
+        -------------------
+        Perfect for scenarios like:
+        - Vote buttons (upvote vs downvote)
+        - Form with "Save" and "Save & Exit" buttons
+        - Multi-step wizards with "Back" and "Next" buttons
+        - Search with different search types
+        - Any form where buttons trigger different logic
+
+        OUR USE CASE:
+        -------------
+        - Upvote button → calls upvoteAction → increases votes
+        - Downvote button → calls downvoteAction → decreases votes
+        - Same form, different actions!
+
+        NO FORM ACTION ON THE FORM:
+        ----------------------------
+        Notice the <form> itself has NO action prop:
         <form className="votes">
 
-        Right now, this form has no action prop. The buttons inside won't
-        submit the form because they don't have type="submit".
+        We don't need it because each button has its own formAction.
 
-        WHAT'S COMING:
-        --------------
-        In future lessons, we might refactor this to use Form Actions:
-        - Create separate forms for upvote/downvote, each with an action
-        - Or use a single form with different button names/values
-        - Connect to upvoteOpinion/downvoteOpinion from Context
+        If we added action to the form:
+        <form action={defaultAction} className="votes">
 
-        THE "votes" CLASS:
-        ------------------
+        Then:
+        - Buttons WITH formAction use their specific action
+        - Buttons WITHOUT formAction use the form's default action
+
+        But in our case, both buttons have formAction, so we don't need
+        a default action on the form.
+
+        NO INPUTS = NO FORMDATA:
+        ------------------------
+        This form has no <input> elements, just buttons.
+
+        That's OK! Forms don't require inputs.
+        They can just be containers for buttons with actions.
+
+        Our form action functions get formData, but it's empty:
+        formData.entries() → [] (no fields)
+
+        We don't need formData because we have the opinion data from props.
+
+        FORM STYLING:
+        -------------
         className="votes"
 
-        This CSS class likely styles the form to:
-        - Display buttons horizontally (flexbox/grid)
-        - Add spacing between buttons and vote count
-        - Style the vote display area
+        This CSS class styles the voting controls:
+        - Horizontal layout (flexbox/grid)
+        - Spacing between buttons and count
+        - Alignment of vote elements
 
-        CSS might look like:
+        The CSS might look like:
         .votes {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.5rem;
         }
       */}
       <form className="votes">
         {/*
-          UPVOTE BUTTON
-          =============
-          A button to increase the vote count for this opinion.
+          UPVOTE BUTTON WITH formAction
+          ==============================
+          This button now has the formAction prop, making it functional!
 
-          BUTTON WITHOUT TYPE:
+          THE formAction PROP:
           --------------------
-          <button>
+          formAction={upvoteAction}
 
-          Notice we don't specify type="submit" or type="button".
+          This tells React:
+          "When this button is clicked, call the upvoteAction function"
+
+          HOW IT WORKS:
+          -------------
+          1. User clicks this button
+          2. React prevents default form submission
+          3. React calls upvoteAction(currentState, formData)
+          4. upvoteAction executes (currently logs "UPVOTE")
+          5. (Next lesson) Vote count updates
+
+          WHY formAction INSTEAD OF onClick?
+          -----------------------------------
+          We COULD use onClick:
+          <button onClick={() => upvoteOpinion(id)}>
+
+          But formAction has benefits:
+          ✓ Consistent with Form Actions pattern
+          ✓ Works without JavaScript (progressive enhancement)
+          ✓ Better accessibility (semantic form submission)
+          ✓ Integrates with form features (validation, reset, etc.)
+          ✓ Can use useFormStatus for loading states
+          ✓ Matches React 19's design philosophy
+
+          BUTTON TYPE:
+          ------------
+          Notice we still don't specify type="submit" or type="button".
+
           Inside a form:
-          - Default type is "submit"
-          - But we don't have a form action yet, so it does nothing
+          - Default button type is "submit"
+          - Clicking triggers form submission
+          - formAction handles the submission
 
-          This is OK for now since the button is non-functional in this lesson.
-          In future lessons, we'll add proper type and functionality.
+          We could be explicit:
+          <button type="submit" formAction={upvoteAction}>
 
-          ICON-ONLY BUTTON:
-          -----------------
-          This button contains only an SVG icon, no text.
+          But it's optional since "submit" is the default.
 
-          ACCESSIBILITY CONCERN:
-          ----------------------
-          Icon-only buttons can be problematic for accessibility:
-          - Screen readers can't describe what the button does
-          - Users might not understand the icon's meaning
+          ACCESSIBILITY IMPROVEMENT:
+          ---------------------------
+          We should add an aria-label for screen readers:
+          <button formAction={upvoteAction} aria-label="Upvote this opinion">
 
-          SOLUTIONS:
-          ----------
-          We should add one of these:
-          1. aria-label="Upvote" (for screen readers)
-          2. <span className="sr-only">Upvote</span> (visually hidden text)
-          3. title="Upvote" (shows tooltip on hover)
+          This would help users who can't see the arrow icon understand
+          what the button does.
 
-          Example:
-          <button type="button" aria-label="Upvote this opinion">
-            <svg>...</svg>
-          </button>
+          We'll add this in a future lesson focused on accessibility.
 
-          We'll add this in future lessons when implementing functionality.
+          TESTING THIS BUTTON:
+          --------------------
+          1. Open browser console
+          2. Click the upvote button
+          3. You should see "UPVOTE" logged
+          4. This proves formAction is working!
 
-          SVG ICON:
-          ---------
-          The button contains an SVG (Scalable Vector Graphics) icon.
-          SVGs are perfect for icons because:
-          - They scale to any size without pixelation
-          - Can be styled with CSS (color, stroke, etc.)
-          - Small file size
-          - Can be animated
+          WHAT YOU'LL SEE:
+          ----------------
+          - Click: Page doesn't reload (React prevents default)
+          - Click: Console shows "UPVOTE"
+          - Click: Vote count doesn't change yet (next lesson!)
+
+          The button is now "wired up" and ready for real functionality.
         */}
-        <button>
-          {/*
-            SVG ELEMENT - UPVOTE ICON
-            =========================
-            An SVG icon showing an upward arrow in a box.
-
-            SVG ATTRIBUTES:
-            ---------------
-            xmlns="http://www.w3.org/2000/svg" - XML namespace (standard)
-            width="24" height="24" - Size in pixels
-            viewBox="0 0 24 24" - Coordinate system (0-24 on both axes)
-            fill="none" - No fill color (just outlines)
-            stroke="currentColor" - Outline color matches text color
-            strokeWidth="2" - Line thickness
-            strokeLinecap="round" - Rounded line ends
-            strokeLinejoin="round" - Rounded corners
-
-            WHY currentColor?
-            -----------------
-            stroke="currentColor"
-
-            This is a special CSS value that means:
-            "Use the current text color"
-
-            Benefits:
-            - Icon automatically matches surrounding text color
-            - Easy to change color with CSS (just set color on button)
-            - Responsive to themes (dark mode, etc.)
-            - No need to hardcode colors
-
-            Example:
-            button { color: blue; } → Icon is blue
-            button:hover { color: green; } → Icon turns green on hover
-
-            SVG SHAPES:
-            -----------
-            This SVG contains two shapes:
-
-            1. <rect> - The box/square
-               width="18" height="18" - Size of the box
-               x="3" y="3" - Position (centered in 24x24 viewBox)
-               rx="2" - Rounded corners (radius of 2)
-
-            2. <path> - The arrow
-               "m16 12-4-4-4 4" - Downward V shape (arrow pointing up cap)
-               "M12 16V8" - Vertical line (arrow shaft)
-
-            PATH COMMANDS:
-            --------------
-            SVG paths use letter commands:
-            M = Move to (absolute position)
-            m = Move to (relative position)
-            L = Line to
-            V = Vertical line
-            H = Horizontal line
-
-            The arrow is drawn with:
-            - Move to (16,12), line to (12,8), line to (8,12) - Makes ^
-            - Move to (12,16), vertical line to (12,8) - Makes |
-
-            Together: An up arrow ↑
-
-            ICON SOURCE:
-            ------------
-            These icons appear to be from a popular icon set like:
-            - Lucide Icons
-            - Feather Icons
-            - Heroicons
-
-            Such icon sets provide consistent, well-designed icons for UIs.
-          */}
+        <button formAction={upvoteAction}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -492,132 +662,70 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
           </svg>
         </button>
 
-        {/*
-          VOTE COUNT DISPLAY
-          ==================
-          Shows the current number of votes for this opinion.
-
-          {votes}
-
-          This outputs the votes variable (from opinion prop).
-
-          VOTE COUNT BEHAVIOR:
-          --------------------
-          - Can be positive (more upvotes than downvotes)
-          - Can be zero (equal votes or no votes)
-          - Can be NEGATIVE (more downvotes than upvotes)
-
-          Example values:
-          - 5 → This opinion has 5 net upvotes
-          - 0 → Neutral (or no votes yet)
-          - -3 → This opinion has 3 net downvotes
-
-          NEGATIVE VOTES:
-          ---------------
-          Showing negative votes is a design choice:
-
-          Pros:
-          - Clearly shows unpopular opinions
-          - Full transparency of community sentiment
-          - Simple to implement
-
-          Cons:
-          - Might discourage users from posting
-          - Can create pile-on effects
-          - Some platforms hide or floor at 0
-
-          Alternatives:
-          - Show separate up/down counts: "5 up, 8 down"
-          - Show percentage: "38% upvoted"
-          - Floor at 0: Math.max(0, votes)
-
-          SPAN ELEMENT:
-          -------------
-          <span> is used because:
-          - It's inline (doesn't break layout)
-          - Neutral semantic meaning
-          - Easy to style (color based on value)
-
-          POTENTIAL ENHANCEMENT:
-          ----------------------
-          We could style based on value:
-          <span className={votes > 0 ? 'positive' : votes < 0 ? 'negative' : 'neutral'}>
-            {votes}
-          </span>
-
-          Then CSS:
-          .positive { color: green; }
-          .negative { color: red; }
-          .neutral { color: gray; }
-        */}
         <span>{votes}</span>
 
         {/*
-          DOWNVOTE BUTTON
-          ===============
-          A button to decrease the vote count for this opinion.
+          DOWNVOTE BUTTON WITH formAction
+          ================================
+          This button has its own formAction, separate from the upvote button!
 
-          This follows the exact same structure as the upvote button:
-          - <button> element (no type specified yet)
-          - SVG icon inside
-          - No text (icon-only)
+          THE formAction PROP:
+          --------------------
+          formAction={downvoteAction}
 
-          The only difference is the icon:
-          - Upvote: Arrow pointing up ↑
-          - Downvote: Arrow pointing down ↓
+          Notice this is DIFFERENT from the upvote button:
+          - Upvote button: formAction={upvoteAction}
+          - Downvote button: formAction={downvoteAction}
 
-          SAME ACCESSIBILITY ISSUES:
+          TWO BUTTONS, TWO ACTIONS:
           --------------------------
-          This button also needs:
-          - aria-label="Downvote"
-          - or title="Downvote"
-          - or hidden text explaining the action
+          This is the key feature of Lesson 279:
+          - Same form (<form className="votes">)
+          - Different actions (upvoteAction vs downvoteAction)
+          - React calls the correct function based on which button was clicked
 
-          We'll add these in future lessons.
+          NO NEED TO CHECK WHICH BUTTON:
+          -------------------------------
+          We don't need code like:
+          function handleVote(prevState, formData) {
+            if (wasUpvoteClicked) { ... }
+            else if (wasDownvoteClicked) { ... }
+          }
+
+          Instead, React automatically calls the right function:
+          - Click upvote → upvoteAction called
+          - Click downvote → downvoteAction called
+
+          This is much cleaner!
+
+          TESTING THIS BUTTON:
+          --------------------
+          1. Open browser console
+          2. Click the downvote button
+          3. You should see "DOWNVOTE" logged
+          4. Different from upvote! (which logs "UPVOTE")
+
+          TESTING BOTH BUTTONS:
+          ---------------------
+          Try clicking both buttons alternately:
+          - Click upvote → "UPVOTE" logged
+          - Click downvote → "DOWNVOTE" logged
+          - Click upvote → "UPVOTE" logged
+          - Click downvote → "DOWNVOTE" logged
+
+          Each button consistently triggers its own action.
+          This proves the formAction system is working correctly!
+
+          WHAT'S COMING NEXT:
+          -------------------
+          In the next lesson, we'll:
+          1. Replace console.log with actual voting logic
+          2. Call upvoteOpinion(id) and downvoteOpinion(id)
+          3. See the vote count change when we click
+          4. Add backend integration to persist votes
+          5. Possibly add optimistic updates for instant feedback
         */}
-        <button>
-          {/*
-            SVG ELEMENT - DOWNVOTE ICON
-            ===========================
-            An SVG icon showing a downward arrow in a box.
-
-            DIFFERENCES FROM UPVOTE ICON:
-            -----------------------------
-            Most attributes are the same. Only the <path> elements differ:
-
-            UPVOTE PATH:
-            <path d="m16 12-4-4-4 4" /> - ^ shape (cap pointing up)
-            <path d="M12 16V8" /> - Vertical line going up
-
-            DOWNVOTE PATH:
-            <path d="M12 8v8" /> - Vertical line going down (notice lowercase v)
-            <path d="m8 12 4 4 4-4" /> - v shape (cap pointing down)
-
-            Together: A down arrow ↓
-
-            PATH COMMAND DETAILS:
-            ---------------------
-            "M12 8v8" means:
-            - M12 8: Move to absolute position (12, 8)
-            - v8: Draw vertical line down by 8 units
-            - Result: Line from (12,8) to (12,16)
-
-            "m8 12 4 4 4-4" means:
-            - m8 12: Move to relative position +8, +12 from current
-            - 4 4: Line to relative position +4, +4
-            - 4-4: Line to relative position +4, -4
-            - Result: A v shape (downward cap)
-
-            ICON CONSISTENCY:
-            -----------------
-            Using matching styles for both icons:
-            - Same size (24x24)
-            - Same stroke width (2)
-            - Same box shape
-            - Same stroke color (currentColor)
-
-            This creates a cohesive, professional appearance.
-          */}
+        <button formAction={downvoteAction}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -641,116 +749,233 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS - LESSON 279
  * ============================================================================
  *
  * WHAT WE'VE LEARNED:
  * ===================
- * 1. NESTED DESTRUCTURING: We can destructure props in the function parameter,
- *    even nested objects. This makes code more concise when using many props.
+ * 1. formAction ON BUTTONS: React 19 allows formAction prop on buttons,
+ *    not just on forms. This enables multiple form actions per form.
  *
- * 2. SEMANTIC HTML: Using elements like <article>, <header>, <h3> provides
- *    meaning to our markup, helping accessibility and SEO.
+ * 2. MULTIPLE ACTIONS PER FORM: One form can have different actions for
+ *    different buttons. Each button's formAction is independent.
  *
- * 3. SVG ICONS: SVGs are ideal for icons - scalable, styleable, and small.
- *    Using currentColor makes icons adapt to surrounding text color.
+ * 3. CLEANER CODE: Separate action functions (upvoteAction, downvoteAction)
+ *    are cleaner than one function with if/else logic.
  *
- * 4. FORMS FOR BUTTON GROUPS: Even without submission, forms can semantically
- *    group related buttons and prepare for Form Actions.
+ * 4. CONTEXT INTEGRATION: We accessed upvoteOpinion and downvoteOpinion
+ *    from OpinionsContext using the use() hook.
  *
- * 5. COMPONENT COMPOSITION: This small, focused component receives data via
- *    props and displays it. It's easy to test and reuse.
+ * 5. CLOSURE ACCESS: Form action functions can access variables from their
+ *    outer scope (id, upvoteOpinion, downvoteOpinion) via closures.
  *
- * NESTED DESTRUCTURING PATTERN:
+ * 6. DEVELOPMENT WORKFLOW: Starting with console.log to verify wiring
+ *    before adding real functionality is a best practice.
+ *
+ * THE formAction PATTERN:
+ * =======================
+ * ONE FORM, MULTIPLE ACTIONS:
+ *
+ * <form>
+ *   <button formAction={action1}>Action 1</button>
+ *   <button formAction={action2}>Action 2</button>
+ *   <button formAction={action3}>Action 3</button>
+ * </form>
+ *
+ * Each button can have its own dedicated action function!
+ *
+ * USE CASES:
+ * ==========
+ * This pattern is perfect for:
+ *
+ * 1. VOTING SYSTEMS (our use case):
+ *    <form>
+ *      <button formAction={upvote}>👍</button>
+ *      <button formAction={downvote}>👎</button>
+ *    </form>
+ *
+ * 2. FORM WIZARDS:
+ *    <form>
+ *      <button formAction={goBack}>← Back</button>
+ *      <button formAction={goNext}>Next →</button>
+ *    </form>
+ *
+ * 3. SAVE OPTIONS:
+ *    <form>
+ *      <button formAction={saveDraft}>Save Draft</button>
+ *      <button formAction={publish}>Publish</button>
+ *    </form>
+ *
+ * 4. SEARCH TYPES:
+ *    <form>
+ *      <input name="query" />
+ *      <button formAction={searchUsers}>Search Users</button>
+ *      <button formAction={searchPosts}>Search Posts</button>
+ *    </form>
+ *
+ * 5. MULTI-ACTION MODALS:
+ *    <form>
+ *      <button formAction={cancel}>Cancel</button>
+ *      <button formAction={saveChanges}>Save</button>
+ *      <button formAction={deleteItem}>Delete</button>
+ *    </form>
+ *
+ * COMPARISON: formAction vs onClick:
+ * ===================================
+ *
+ * USING onClick (Traditional):
+ * -----------------------------
+ * <button onClick={() => upvoteOpinion(id)}>↑</button>
+ *
+ * Pros:
+ * ✓ Simple and familiar
+ * ✓ Direct function call
+ * ✓ Easy to understand
+ *
+ * Cons:
+ * ✗ Not semantic (doesn't follow form submission model)
+ * ✗ Can't use useFormStatus for loading states
+ * ✗ Doesn't work without JavaScript
+ * ✗ Not consistent with Form Actions pattern
+ *
+ * USING formAction (React 19):
+ * ----------------------------
+ * <button formAction={upvoteAction}>↑</button>
+ *
+ * Pros:
+ * ✓ Semantic form submission
+ * ✓ Works with useFormStatus for loading states
+ * ✓ Progressive enhancement (works without JS in some cases)
+ * ✓ Consistent with Form Actions ecosystem
+ * ✓ Better integration with form features
+ *
+ * Cons:
+ * ✗ Requires understanding Form Actions
+ * ✗ Slightly more verbose (function wrapper needed)
+ *
+ * WHEN TO USE formAction:
+ * -----------------------
+ * Use formAction when:
+ * ✓ You want loading states (useFormStatus)
+ * ✓ You're already using Form Actions
+ * ✓ You want semantic form submission
+ * ✓ You need form-related features (validation, reset, etc.)
+ *
+ * Use onClick when:
+ * ✓ Simple button actions (toggle, close modal, etc.)
+ * ✓ Not related to form submission
+ * ✓ Don't need loading states or form features
+ * ✓ Want simplest possible solution
+ *
+ * EXECUTION FLOW (CURRENT):
+ * ==========================
+ * 1. User clicks upvote button
+ * 2. React sees formAction={upvoteAction}
+ * 3. React prevents default form submission
+ * 4. React calls upvoteAction(undefined, formData)
+ * 5. upvoteAction logs "UPVOTE" to console
+ * 6. Nothing else happens (yet!)
+ *
+ * EXECUTION FLOW (NEXT LESSON):
  * ==============================
- * function Component({ parent: { child1, child2 } }) {
- *   // Use child1, child2 directly
- * }
- *
- * Equivalent to:
- * function Component({ parent }) {
- *   const { child1, child2 } = parent;
- * }
- *
- * Or:
- * function Component(props) {
- *   const { child1, child2 } = props.parent;
- * }
- *
- * Use when:
- * ✓ You use most properties of the nested object
- * ✓ Nesting is only 1-2 levels deep
- * ✓ You don't need the parent object
- *
- * Avoid when:
- * ✗ You need the parent object itself
- * ✗ Nesting is very deep (hard to read)
- * ✗ You only use one property (just destructure that one)
- *
- * SVG BEST PRACTICES:
- * ===================
- * ✓ Use viewBox to define coordinate system
- * ✓ Use currentColor for flexible coloring
- * ✓ Set width/height for consistent sizing
- * ✓ Use fill="none" stroke="currentColor" for outline icons
- * ✓ Keep paths simple and readable
- * ✓ Add aria-label for accessibility
- * ✓ Consider using an icon library (Lucide, Heroicons, etc.)
- *
- * ACCESSIBILITY IMPROVEMENTS NEEDED:
- * ==================================
- * Current issues:
- * ✗ Buttons have no accessible labels (icon-only)
- * ✗ Buttons have no type attribute
- * ✗ Buttons have no functionality (non-functional in this lesson)
- *
- * Future improvements:
- * ✓ Add aria-label="Upvote this opinion" to upvote button
- * ✓ Add aria-label="Downvote this opinion" to downvote button
- * ✓ Add type="button" (or type="submit" with form action)
- * ✓ Add keyboard shortcuts (optional)
- * ✓ Add visual feedback on click
- * ✓ Show vote count change animation
- *
- * NEXT STEPS:
- * ===========
- * In upcoming lessons, we'll enhance this component with:
- * 1. Connect to OpinionsContext to access upvote/downvote functions
- * 2. Add click handlers to buttons (or use Form Actions)
- * 3. Add proper button types and aria-labels
- * 4. Implement optimistic updates (instant visual feedback)
- * 5. Add animations for vote changes
- * 6. Show loading states during votes
- * 7. Handle vote errors gracefully
- * 8. Possibly add "undo vote" functionality
- * 9. Prevent multiple votes on same opinion (optional)
- * 10. Add vote persistence to backend (optional)
- *
- * OPTIMISTIC UPDATES PREVIEW:
- * ===========================
- * In future lessons, when you click upvote:
- * 1. Vote count updates IMMEDIATELY (optimistic)
- * 2. Context sends update to backend (async)
- * 3. If backend succeeds: Update is confirmed
- * 4. If backend fails: Revert the vote count
- *
- * This makes the app feel faster and more responsive, since users don't
- * have to wait for the network request to see their action's result.
+ * 1. User clicks upvote button
+ * 2. React sees formAction={upvoteAction}
+ * 3. React prevents default form submission
+ * 4. React calls upvoteAction(undefined, formData)
+ * 5. upvoteAction calls upvoteOpinion(id)
+ * 6. Context updates opinions state (votes + 1)
+ * 7. Component re-renders with new vote count
+ * 8. User sees vote count increase!
+ * 9. (Later) Backend gets the vote update
  *
  * CODE ORGANIZATION:
  * ==================
- * This component demonstrates good practices:
- * ✓ Single responsibility (display one opinion)
- * ✓ Receives data via props (no internal state management)
- * ✓ Small and focused (easy to understand)
- * ✓ Reusable (can render any opinion)
- * ✓ Testable (just pass different props)
- * ✓ Semantic HTML (meaningful structure)
+ * Notice how we structured this component:
  *
- * If this component grows too complex (e.g., with voting logic, animations,
- * etc.), we might split it further:
- * - Opinion (container)
- *   - OpinionHeader (title, author)
- *   - OpinionBody (content)
- *   - VoteButtons (voting UI and logic)
+ * 1. Imports (React, Context)
+ * 2. Component function
+ *    a. Context consumption (use hook)
+ *    b. Form action functions (upvoteAction, downvoteAction)
+ *    c. Render (JSX)
+ *
+ * This organization:
+ * ✓ Follows React conventions
+ * ✓ Keeps related code together
+ * ✓ Easy to understand flow
+ * ✓ Easy to test (mock Context, test actions)
+ *
+ * TESTING APPROACH:
+ * =================
+ * How to test this component:
+ *
+ * 1. UNIT TESTS:
+ *    - Mock OpinionsContext
+ *    - Mock use() hook
+ *    - Render component
+ *    - Simulate button clicks
+ *    - Assert correct functions were called
+ *
+ * 2. INTEGRATION TESTS:
+ *    - Render with real Context
+ *    - Click buttons
+ *    - Assert vote count changes
+ *    - Assert Context state updates
+ *
+ * 3. MANUAL TESTING (current):
+ *    - Open browser console
+ *    - Click upvote → see "UPVOTE" logged
+ *    - Click downvote → see "DOWNVOTE" logged
+ *    - Verifies formAction wiring works
+ *
+ * WHAT'S NEXT:
+ * ============
+ * In upcoming lessons, we'll:
+ *
+ * 1. IMPLEMENT VOTING (Lesson 280+):
+ *    - Replace console.log with upvoteOpinion(id)
+ *    - Replace console.log with downvoteOpinion(id)
+ *    - See vote count change on click
+ *
+ * 2. BACKEND INTEGRATION:
+ *    - Send vote updates to backend API
+ *    - Persist votes in database
+ *    - Handle network errors
+ *
+ * 3. OPTIMISTIC UPDATES:
+ *    - Update UI immediately (don't wait for backend)
+ *    - Revert if backend fails
+ *    - Better user experience
+ *
+ * 4. LOADING STATES:
+ *    - Disable buttons while voting
+ *    - Show loading indicator
+ *    - Prevent double-voting
+ *
+ * 5. ERROR HANDLING:
+ *    - Show error messages if vote fails
+ *    - Retry failed votes
+ *    - Graceful degradation
+ *
+ * 6. ACCESSIBILITY:
+ *    - Add aria-label to buttons
+ *    - Keyboard navigation
+ *    - Screen reader announcements
+ *
+ * 7. ANIMATIONS:
+ *    - Animate vote count changes
+ *    - Button press feedback
+ *    - Success/error animations
+ *
+ * REAL-WORLD APPLICATIONS:
+ * ========================
+ * This formAction pattern is used in many real apps:
+ *
+ * - Reddit: Upvote/downvote posts and comments
+ * - Stack Overflow: Upvote/downvote questions and answers
+ * - Twitter: Like/unlike posts (could use this pattern)
+ * - YouTube: Like/dislike videos
+ * - Product Hunt: Upvote products
+ * - Any voting or rating system
+ *
+ * The pattern we're learning here is production-ready and scalable!
  */
