@@ -308,10 +308,33 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
 
   /**
    * ============================================================================
-   * FORM ACTION FUNCTION: upvoteAction
+   * FORM ACTION FUNCTION: upvoteAction - NOW ACTUALLY VOTING! (LESSON 280)
    * ============================================================================
    *
-   * This function is called when the user clicks the upvote button.
+   * This async function is called when the user clicks the upvote button.
+   *
+   * WHAT CHANGED FROM LESSON 279:
+   * ------------------------------
+   * BEFORE (Lesson 279):
+   * - function upvoteAction(prevState, formData) { console.log('UPVOTE'); }
+   * - Just logged to console
+   * - No actual voting happened
+   *
+   * AFTER (Lesson 280):
+   * - async function upvoteAction(prevState, formData) { await upvoteOpinion(id); }
+   * - Actually calls the Context voting function
+   * - Sends backend request
+   * - Updates vote count
+   *
+   * WHY MAKE IT ASYNC?
+   * ------------------
+   * We made this function async because:
+   *
+   * 1. upvoteOpinion is now an async function (sends backend request)
+   * 2. We need to await its completion
+   * 3. React's Form Actions system knows how to handle async actions
+   * 4. useFormStatus can track when this action is pending
+   * 5. Buttons can show loading states automatically
    *
    * FORM ACTION SIGNATURE:
    * ----------------------
@@ -334,46 +357,42 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
    * - Our form has NO inputs (just buttons!)
    * - We get the opinion id from props, not from form data
    *
-   * CURRENT IMPLEMENTATION (LESSON 279):
-   * -------------------------------------
-   * Right now, we just console.log('UPVOTE') to verify the action works.
+   * THE await KEYWORD:
+   * ------------------
+   * await upvoteOpinion(id);
    *
-   * This is a good development practice:
-   * - Start simple (just logging)
-   * - Verify the wiring is correct
-   * - Then add real functionality
+   * This pauses execution until upvoteOpinion completes.
    *
-   * WHAT'S COMING NEXT (LESSON 280+):
-   * ----------------------------------
-   * We'll replace console.log with:
-   * upvoteOpinion(id);
+   * What happens during the await:
+   * 1. upvoteOpinion sends POST request to backend
+   * 2. Backend processes vote (~1 second delay)
+   * 3. Backend responds with success
+   * 4. upvoteOpinion updates local state
+   * 5. upvoteAction resumes (though we don't do anything after it)
    *
-   * This will:
-   * 1. Call the Context function
-   * 2. Update the vote count in Context state
-   * 3. Trigger re-render with new vote count
-   * 4. (Later) Send update to backend
+   * REACT'S HANDLING OF ASYNC FORM ACTIONS:
+   * ----------------------------------------
+   * Because this is an async form action, React automatically:
+   * - Tracks the pending state (true while upvoteOpinion is running)
+   * - Makes this available via useFormStatus hook
+   * - Prevents default form submission
+   * - Handles errors gracefully
    *
-   * TESTING THE CURRENT VERSION:
-   * -----------------------------
-   * 1. Open browser developer tools
-   * 2. Go to Console tab
-   * 3. Click the upvote button
-   * 4. You should see "UPVOTE" logged
+   * If we were using useFormStatus in a Submit button (like NewOpinion does),
+   * that button would:
+   * - Become disabled when user clicks upvote
+   * - Show "Voting..." or similar loading text
+   * - Re-enable when vote completes
    *
-   * This proves:
-   * ✓ The formAction prop is working
-   * ✓ React is calling this function
-   * ✓ The button is properly connected
-   * ✓ We're ready to add real functionality
+   * CURRENT ISSUE (will fix in next lesson):
+   * -----------------------------------------
+   * Right now, the vote buttons DON'T show loading states because:
+   * - They don't use useFormStatus
+   * - They're just plain buttons with formAction
+   * - User can click multiple times rapidly
+   * - UI doesn't update until backend responds (~1 second)
    *
-   * WHY START WITH CONSOLE.LOG?
-   * ----------------------------
-   * It's a best practice for development:
-   * - Quick feedback (did the button click work?)
-   * - Easy debugging (which action was called?)
-   * - No side effects (won't break anything)
-   * - Clear next step (replace log with real code)
+   * This creates the "strange behavior" mentioned in the lesson transcript.
    *
    * CLOSURE AND VARIABLE ACCESS:
    * -----------------------------
@@ -387,36 +406,80 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
    * - When upvoteAction runs, it can access those variables
    *
    * This is why we don't need to pass id via formData - we already have it!
+   *
+   * EXECUTION FLOW:
+   * ---------------
+   * 1. User clicks upvote button
+   * 2. React calls upvoteAction(undefined, formData)
+   * 3. upvoteAction calls upvoteOpinion(id)
+   * 4. upvoteOpinion sends POST to backend
+   * 5. ~1 second delay (backend processing)
+   * 6. Backend responds
+   * 7. upvoteOpinion updates Context state
+   * 8. All Opinion components re-render
+   * 9. This opinion shows updated vote count
+   * 10. upvoteAction completes
+   * 11. Form action finishes
+   *
+   * USER EXPERIENCE:
+   * ----------------
+   * What the user sees:
+   * 1. Click upvote button
+   * 2. Nothing happens immediately
+   * 3. Wait ~1 second
+   * 4. Vote count suddenly changes
+   * 5. Button is still clickable (can vote again!)
+   *
+   * This isn't ideal UX. In the next lesson, we'll improve it!
    */
-  function upvoteAction(prevState, formData) {
-    console.log('UPVOTE');
-    // Next lesson: upvoteOpinion(id);
+  async function upvoteAction(prevState, formData) {
+    await upvoteOpinion(id);
   }
 
   /**
    * ============================================================================
-   * FORM ACTION FUNCTION: downvoteAction
+   * FORM ACTION FUNCTION: downvoteAction - NOW ACTUALLY VOTING! (LESSON 280)
    * ============================================================================
    *
-   * This function is called when the user clicks the downvote button.
+   * This async function is called when the user clicks the downvote button.
+   *
+   * WHAT CHANGED FROM LESSON 279:
+   * ------------------------------
+   * BEFORE (Lesson 279):
+   * - function downvoteAction(prevState, formData) { console.log('DOWNVOTE'); }
+   * - Just logged to console
+   * - No actual voting happened
+   *
+   * AFTER (Lesson 280):
+   * - async function downvoteAction(prevState, formData) { await downvoteOpinion(id); }
+   * - Actually calls the Context voting function
+   * - Sends backend request
+   * - Updates vote count
    *
    * EXACT SAME STRUCTURE AS upvoteAction:
    * --------------------------------------
-   * - Accepts prevState and formData (don't use them)
-   * - Currently just logs to console
-   * - Will call downvoteOpinion(id) in next lesson
+   * This function is nearly identical to upvoteAction, just calling
+   * downvoteOpinion instead of upvoteOpinion.
+   *
+   * Everything we explained in upvoteAction applies here:
+   * - async function (uses await)
+   * - Calls Context function
+   * - Sends backend request
+   * - Waits for completion
+   * - Updates vote count
+   * - Uses closure to access id
    *
    * SEPARATE FUNCTION = BETTER CODE ORGANIZATION:
    * ----------------------------------------------
    * We could have used ONE function for both actions:
    *
    * BAD APPROACH (Don't do this):
-   * function voteAction(prevState, formData) {
+   * async function voteAction(prevState, formData) {
    *   const action = formData.get('action');
    *   if (action === 'upvote') {
-   *     console.log('UPVOTE');
+   *     await upvoteOpinion(id);
    *   } else if (action === 'downvote') {
-   *     console.log('DOWNVOTE');
+   *     await downvoteOpinion(id);
    *   }
    * }
    *
@@ -443,28 +506,61 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
    * ✓ Better type safety (if using TypeScript)
    * ✓ Matches React 19's design (formAction on buttons)
    *
-   * CURRENT IMPLEMENTATION:
-   * -----------------------
-   * console.log('DOWNVOTE');
+   * The small amount of code duplication is worth the clarity!
    *
-   * This helps us verify the downvote button works correctly.
+   * EXECUTION FLOW:
+   * ---------------
+   * 1. User clicks downvote button
+   * 2. React calls downvoteAction(undefined, formData)
+   * 3. downvoteAction calls downvoteOpinion(id)
+   * 4. downvoteOpinion sends POST to backend
+   * 5. ~1 second delay (backend processing)
+   * 6. Backend responds
+   * 7. downvoteOpinion updates Context state
+   * 8. All Opinion components re-render
+   * 9. This opinion shows updated vote count (decreased by 1)
+   * 10. downvoteAction completes
+   * 11. Form action finishes
    *
-   * TESTING:
-   * --------
-   * 1. Open browser console
-   * 2. Click downvote button
-   * 3. Should see "DOWNVOTE" logged
+   * USER EXPERIENCE:
+   * ----------------
+   * What the user sees:
+   * 1. Click downvote button
+   * 2. Nothing happens immediately
+   * 3. Wait ~1 second
+   * 4. Vote count suddenly changes (decreases)
+   * 5. Button is still clickable (can vote again!)
    *
-   * WHAT'S NEXT:
-   * ------------
-   * In the next lesson, we'll change this to:
-   * downvoteOpinion(id);
+   * CURRENT ISSUE (mentioned in lesson transcript):
+   * ------------------------------------------------
+   * The lesson mentions "strange behavior if I hammer this button because
+   * then it looks really weird if it changes like this."
    *
-   * This will actually decrease the vote count!
+   * This happens because:
+   * - User can click the button multiple times rapidly
+   * - Each click triggers a backend request
+   * - All requests eventually complete (after ~1 second each)
+   * - Vote count jumps around as requests finish in order
+   * - Very confusing UX!
+   *
+   * Example of rapid clicking:
+   * 1. Click downvote 5 times rapidly
+   * 2. 5 backend requests sent
+   * 3. First request completes: 10 → 9
+   * 4. Second request completes: 9 → 8
+   * 5. Third request completes: 8 → 7
+   * 6. Fourth request completes: 7 → 6
+   * 7. Fifth request completes: 6 → 5
+   *
+   * The count "jumps" 5 times over 1 second. Very weird!
+   *
+   * We'll fix this in the next lesson by:
+   * - Disabling buttons while voting
+   * - Showing loading states
+   * - Preventing double-voting
    */
-  function downvoteAction(prevState, formData) {
-    console.log('DOWNVOTE');
-    // Next lesson: downvoteOpinion(id);
+  async function downvoteAction(prevState, formData) {
+    await downvoteOpinion(id);
   }
 
   /**

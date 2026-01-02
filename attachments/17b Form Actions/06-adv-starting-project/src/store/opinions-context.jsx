@@ -1,11 +1,22 @@
 /**
  * ============================================================================
- * LESSON 275: OPINIONS CONTEXT - BACKEND COMMUNICATION & STATE MANAGEMENT
+ * LESSON 280: BACKEND INTEGRATION FOR VOTING - ASYNC VOTE OPERATIONS
  * ============================================================================
  *
  * This file implements the Context API for managing opinions data and handling
  * all backend communication. This is the "brain" of our application - it's
  * where all the data fetching, state management, and backend operations happen.
+ *
+ * WHAT'S NEW IN LESSON 280:
+ * ==========================
+ * We've upgraded the voting functions (upvoteOpinion and downvoteOpinion) to:
+ * ✓ Send HTTP requests to the backend API
+ * ✓ Use async/await for asynchronous operations
+ * ✓ Only update local state if backend request succeeds
+ * ✓ Persist votes to the database
+ *
+ * This replaces the previous "optimistic update" pattern (client-side only)
+ * with a "confirm-then-update" pattern (wait for backend confirmation).
  *
  * WHY USE CONTEXT HERE?
  * =====================
@@ -40,13 +51,15 @@
  * This file handles all HTTP requests to the backend server:
  * - GET /opinions - Fetch all opinions (on initial load)
  * - POST /opinions - Create a new opinion
- * - Note: Upvote/downvote are client-side only for now (optimistic updates)
+ * - POST /opinions/:id/upvote - Upvote an opinion (NEW!)
+ * - POST /opinions/:id/downvote - Downvote an opinion (NEW!)
  *
  * The backend server:
  * - Runs on http://localhost:3000
  * - Is a Node.js/Express server with a db.json file
  * - Provides REST API endpoints
  * - Stores opinions persistently
+ * - Has an artificial 1-second delay to simulate network latency
  */
 
 import { createContext, useEffect, useState } from 'react';
@@ -384,45 +397,238 @@ export function OpinionsContextProvider({ children }) {
   }
 
   /**
-   * UPVOTE OPINION FUNCTION
-   * =======================
-   * This function increments the vote count for a specific opinion.
+   * ============================================================================
+   * UPVOTE OPINION FUNCTION - NOW WITH BACKEND INTEGRATION (LESSON 280)
+   * ============================================================================
+   *
+   * This async function handles upvoting an opinion by:
+   * 1. Sending a POST request to the backend to increment the vote
+   * 2. Waiting for the backend to confirm the vote was saved
+   * 3. Only then updating the local state to reflect the new vote count
    *
    * @param {string} id - The unique identifier of the opinion to upvote
    *
-   * IMPORTANT NOTE: CLIENT-SIDE ONLY
-   * ---------------------------------
-   * Notice this function is NOT async and doesn't make a backend request.
-   * This is an "optimistic update" pattern:
-   * 1. Update the UI immediately (feels fast to the user)
-   * 2. In a real app, you'd also send the vote to the backend
-   * 3. If the backend request fails, you'd revert the change
+   * WHAT CHANGED FROM PREVIOUS LESSON:
+   * -----------------------------------
+   * BEFORE (Lesson 279):
+   * - Function was synchronous (not async)
+   * - Only updated local state (client-side only)
+   * - No backend persistence
+   * - Instant UI update ("optimistic update")
    *
-   * Why use this pattern?
-   * - Makes the app feel more responsive
-   * - User doesn't wait for the network request
-   * - Good for operations that rarely fail (like voting)
+   * AFTER (Lesson 280):
+   * - Function is async (uses async/await)
+   * - Sends POST request to backend API
+   * - Waits for backend confirmation
+   * - Updates local state only if backend succeeds
+   * - Votes are persisted in database
    *
-   * In future lessons, we might add backend persistence for votes.
+   * WHY MAKE IT ASYNC?
+   * ------------------
+   * Making this function async allows:
+   * 1. We can use 'await' to wait for the fetch request
+   * 2. Form actions can wait for the vote to complete (using await)
+   * 3. React's useFormStatus can track the pending state
+   * 4. Buttons can show loading states while voting
+   * 5. We prevent double-voting (button disabled while pending)
+   *
+   * CONFIRM-THEN-UPDATE PATTERN:
+   * -----------------------------
+   * This pattern is different from "optimistic updates":
+   * - Wait for backend to confirm the vote succeeded
+   * - Only update UI after confirmation
+   * - Slower (user waits ~1 second) but more reliable
+   * - User sees loading state during the wait
+   *
+   * Pros:
+   * ✓ UI always reflects actual database state
+   * ✓ No need to rollback if request fails
+   * ✓ Simpler error handling
+   * ✓ More predictable behavior
+   *
+   * Cons:
+   * ✗ Slower user experience (network delay)
+   * ✗ User has to wait to see vote change
+   *
+   * In the next lesson, we might switch to optimistic updates for a better UX!
+   *
+   * BACKEND API ENDPOINT:
+   * ---------------------
+   * POST http://localhost:3000/opinions/:id/upvote
+   *
+   * Example: POST http://localhost:3000/opinions/3/upvote
+   *
+   * The backend:
+   * 1. Finds the opinion with id = '3'
+   * 2. Increments votes by 1
+   * 3. Saves to database
+   * 4. Returns success response (200 OK)
+   * 5. Has artificial 1-second delay to simulate network latency
    */
-  function upvoteOpinion(id) {
+  async function upvoteOpinion(id) {
     /**
-     * IMMUTABLE STATE UPDATE WITH MAP
-     * ================================
-     * We use the functional state update pattern again, and map() to create
-     * a new array with the updated opinion.
+     * SENDING UPVOTE REQUEST TO BACKEND
+     * =================================
+     * We use fetch() to send a POST request to the backend.
+     *
+     * URL CONSTRUCTION:
+     * -----------------
+     * `http://localhost:3000/opinions/${id}/upvote`
+     *
+     * This is a template literal that builds the URL dynamically:
+     * - If id = '3', URL becomes: .../opinions/3/upvote
+     * - If id = '7', URL becomes: .../opinions/7/upvote
+     *
+     * The ${id} part is replaced with the actual id value.
+     *
+     * TEMPLATE LITERALS:
+     * ------------------
+     * Template literals use backticks (`) and allow embedded expressions (${...}).
+     * They're perfect for building URLs with dynamic parts.
+     *
+     * Alternative (concatenation):
+     * 'http://localhost:3000/opinions/' + id + '/upvote'
+     * But template literals are cleaner and more readable!
+     *
+     * REQUEST CONFIGURATION:
+     * ----------------------
+     * { method: 'POST' }
+     *
+     * We specify method: 'POST' because:
+     * - We're modifying data (incrementing votes)
+     * - The backend expects a POST request (see backend code)
+     * - GET is for reading, POST/PUT/PATCH for modifying
+     *
+     * NO BODY NEEDED:
+     * ---------------
+     * Notice we don't send any body data. Why?
+     * - The opinion ID is in the URL (not the body)
+     * - We're just saying "upvote this opinion"
+     * - No additional data needed
+     *
+     * Compare to addOpinion() which DOES send body data (opinion content).
+     *
+     * BACKEND DELAY:
+     * --------------
+     * The backend has an artificial 1-second delay (setTimeout).
+     * This simulates real-world network latency, so we can see:
+     * - Loading states in action
+     * - How async form actions work
+     * - The user experience during slow requests
+     *
+     * In production, network delays are usually 100-500ms, but can be longer
+     * with slow connections or distant servers.
+     */
+    const response = await fetch(
+      `http://localhost:3000/opinions/${id}/upvote`,
+      {
+        method: 'POST',
+      }
+    );
+
+    /**
+     * ERROR HANDLING
+     * ==============
+     * Check if the backend request was successful.
+     *
+     * response.ok:
+     * ------------
+     * This is a boolean property that's true if:
+     * - Status code is 200-299 (success range)
+     * - Examples: 200 OK, 201 Created, 204 No Content
+     *
+     * It's false if:
+     * - Status code is 400-599 (error range)
+     * - Examples: 404 Not Found, 500 Internal Server Error
+     *
+     * WHY CHECK THIS?
+     * ---------------
+     * If the request failed (e.g., opinion doesn't exist, server error),
+     * we DON'T want to update the local state.
+     *
+     * Example scenario:
+     * 1. User clicks upvote
+     * 2. Backend is down (response.ok = false)
+     * 3. We return early (don't update state)
+     * 4. Vote count stays the same (correct!)
+     * 5. User knows something went wrong
+     *
+     * EARLY RETURN PATTERN:
+     * ---------------------
+     * if (!response.ok) { return; }
+     *
+     * By returning early, we skip the state update below.
+     * This is cleaner than wrapping the state update in an if statement.
+     *
+     * IMPROVEMENT FOR NEXT LESSON:
+     * -----------------------------
+     * Right now, if the request fails, nothing happens. The user might
+     * wonder "Did my vote work?" In a future lesson, we could:
+     * - Show an error message
+     * - Retry the request
+     * - Use optimistic updates with rollback
+     * - Show a "Failed to vote" notification
+     */
+    if (!response.ok) {
+      return;
+    }
+
+    /**
+     * UPDATING LOCAL STATE AFTER SUCCESSFUL BACKEND UPDATE
+     * =====================================================
+     * Now that we know the backend successfully saved the vote, we update
+     * the local state to match.
+     *
+     * WHY UPDATE LOCAL STATE?
+     * -----------------------
+     * The backend has the new vote count in its database, but our UI still
+     * shows the old count. We need to update our local state so the UI
+     * re-renders with the new vote count.
+     *
+     * COULD WE JUST REFETCH ALL OPINIONS?
+     * ------------------------------------
+     * Yes, we could call:
+     * const opinions = await fetch('.../opinions').then(r => r.json());
+     * setOpinions(opinions);
+     *
+     * But that's inefficient:
+     * - Extra network request
+     * - Fetches ALL opinions (slow if there are many)
+     * - Delays UI update
+     *
+     * It's better to update the specific opinion locally since we know
+     * exactly what changed (votes += 1).
      *
      * FUNCTIONAL STATE UPDATE:
      * ------------------------
      * setOpinions(prevOpinions => ...)
-     * Using the function form ensures we work with the most current state.
      *
-     * MAP PATTERN:
-     * ------------
-     * prevOpinions.map() creates a new array by transforming each opinion.
-     * For each opinion, we check:
-     * - If it's the one being upvoted (opinion.id === id), return an updated version
-     * - Otherwise, return the opinion unchanged
+     * We use the functional form because:
+     * - This function might be called while state is updating
+     * - We need the MOST CURRENT state value
+     * - Prevents race conditions if multiple votes happen quickly
+     *
+     * MAP PATTERN FOR IMMUTABLE UPDATES:
+     * -----------------------------------
+     * prevOpinions.map(opinion => ...)
+     *
+     * map() creates a NEW array by transforming each element:
+     * - For each opinion in the array
+     * - If it's the one we voted on (opinion.id === id), update it
+     * - Otherwise, return it unchanged
+     *
+     * This creates a new array reference, which React needs to detect changes.
+     *
+     * TERNARY OPERATOR:
+     * -----------------
+     * opinion.id === id ? {...opinion, votes: opinion.votes + 1} : opinion
+     *
+     * This is shorthand for:
+     * if (opinion.id === id) {
+     *   return { ...opinion, votes: opinion.votes + 1 };
+     * } else {
+     *   return opinion;
+     * }
      *
      * OBJECT SPREAD PATTERN:
      * ----------------------
@@ -430,65 +636,162 @@ export function OpinionsContextProvider({ children }) {
      *
      * This creates a NEW object with:
      * - All properties from opinion (...opinion)
-     * - votes property overwritten with the new value
+     * - votes property overwritten with new value
      *
-     * Example:
-     * Before: { id: '1', title: 'React', votes: 5, ... }
-     * After:  { id: '1', title: 'React', votes: 6, ... }
+     * Example transformation:
+     * Before: { id: '3', title: 'React', votes: 5, userName: 'Alice', body: '...' }
+     * After:  { id: '3', title: 'React', votes: 6, userName: 'Alice', body: '...' }
+     *              ↑ All same         ↑ Incremented              ↑ All same
      *
-     * Why create new objects?
-     * - React needs new references to detect changes
-     * - Immutability makes debugging easier (can track history)
-     * - Prevents accidental mutations that cause bugs
+     * WHY CREATE A NEW OBJECT?
+     * ------------------------
+     * React uses reference equality to detect changes:
+     * - If we mutated the existing opinion object, React wouldn't see the change
+     * - Creating a new object gives React a different reference
+     * - React compares old reference !== new reference → triggers re-render
+     *
+     * REACT RE-RENDER FLOW:
+     * ---------------------
+     * 1. setOpinions is called with new array
+     * 2. React compares old array reference !== new array reference
+     * 3. React schedules a re-render of this Provider component
+     * 4. New contextValue is created with updated opinions array
+     * 5. All components consuming OpinionsContext re-render
+     * 6. Opinion component (for the upvoted opinion) re-renders with new votes
+     * 7. User sees the updated vote count!
      */
-    setOpinions((prevOpinions) => {
-      return prevOpinions.map((opinion) => {
-        // Check if this is the opinion to update
-        if (opinion.id === id) {
-          // Return a new object with votes incremented
-          return { ...opinion, votes: opinion.votes + 1 };
-        }
-        // Return unchanged opinion for all others
-        return opinion;
-      });
-    });
+    setOpinions((prevOpinions) =>
+      prevOpinions.map((opinion) =>
+        opinion.id === id
+          ? { ...opinion, votes: opinion.votes + 1 }
+          : opinion
+      )
+    );
   }
 
   /**
-   * DOWNVOTE OPINION FUNCTION
-   * =========================
-   * This function decrements the vote count for a specific opinion.
+   * ============================================================================
+   * DOWNVOTE OPINION FUNCTION - NOW WITH BACKEND INTEGRATION (LESSON 280)
+   * ============================================================================
+   *
+   * This async function handles downvoting an opinion by:
+   * 1. Sending a POST request to the backend to decrement the vote
+   * 2. Waiting for the backend to confirm the vote was saved
+   * 3. Only then updating the local state to reflect the new vote count
    *
    * @param {string} id - The unique identifier of the opinion to downvote
    *
    * IMPLEMENTATION:
    * ---------------
-   * This function is identical to upvoteOpinion, except:
-   * - We SUBTRACT 1 from votes instead of adding
-   * - votes: opinion.votes - 1
+   * This function is ALMOST IDENTICAL to upvoteOpinion, with two differences:
    *
-   * Everything else works the same way:
+   * 1. DIFFERENT ENDPOINT:
+   *    - upvoteOpinion: .../opinions/${id}/upvote
+   *    - downvoteOpinion: .../opinions/${id}/downvote
+   *
+   * 2. DIFFERENT VOTE CHANGE:
+   *    - upvoteOpinion: votes: opinion.votes + 1
+   *    - downvoteOpinion: votes: opinion.votes - 1
+   *
+   * Everything else is exactly the same:
+   * - async function (uses await)
+   * - POST request to backend
+   * - Error checking (response.ok)
    * - Functional state update
    * - Immutable map operation
    * - Object spread pattern
-   * - Client-side only (no backend request)
    *
-   * VOTES CAN BE NEGATIVE:
-   * ----------------------
-   * Notice there's no check to prevent negative votes. An opinion with more
-   * downvotes than upvotes will have a negative number (e.g., -3).
-   * This is intentional - it shows opinions the community disagrees with.
+   * WHY SEPARATE FUNCTIONS?
+   * ------------------------
+   * We could have one function that accepts a 'direction' parameter:
+   * function vote(id, direction) {
+   *   const endpoint = direction === 'up' ? 'upvote' : 'downvote';
+   *   const change = direction === 'up' ? +1 : -1;
+   *   ...
+   * }
+   *
+   * But separate functions are clearer:
+   * ✓ Clear intent (upvoteOpinion does one thing)
+   * ✓ Easier to understand
+   * ✓ Easier to test
+   * ✓ Better autocomplete
+   * ✓ Type-safe (if using TypeScript)
+   *
+   * The small amount of code duplication is worth the clarity!
+   *
+   * BACKEND API ENDPOINT:
+   * ---------------------
+   * POST http://localhost:3000/opinions/:id/downvote
+   *
+   * Example: POST http://localhost:3000/opinions/3/downvote
+   *
+   * The backend:
+   * 1. Finds the opinion with id = '3'
+   * 2. Decrements votes by 1 (votes can go negative!)
+   * 3. Saves to database
+   * 4. Returns success response (200 OK)
+   * 5. Has artificial 1-second delay
+   *
+   * NEGATIVE VOTES:
+   * ---------------
+   * Unlike some platforms (Reddit floors at 0), we allow negative votes.
+   * An opinion with -5 votes means it received 5 more downvotes than upvotes.
+   *
+   * This gives users clearer feedback about community sentiment:
+   * - 0 votes: Neutral or no votes
+   * - -5 votes: Community strongly disagrees
+   *
+   * If you wanted to prevent negative votes:
+   * votes: Math.max(0, opinion.votes - 1)
    */
-  function downvoteOpinion(id) {
-    setOpinions((prevOpinions) => {
-      return prevOpinions.map((opinion) => {
-        if (opinion.id === id) {
-          // Return a new object with votes decremented
-          return { ...opinion, votes: opinion.votes - 1 };
-        }
-        return opinion;
-      });
-    });
+  async function downvoteOpinion(id) {
+    /**
+     * SENDING DOWNVOTE REQUEST TO BACKEND
+     * ===================================
+     * Same pattern as upvoteOpinion, but different endpoint.
+     *
+     * The backend route handler for /downvote is almost identical to /upvote,
+     * just doing `votes--` instead of `votes++`.
+     */
+    const response = await fetch(
+      `http://localhost:3000/opinions/${id}/downvote`,
+      {
+        method: 'POST',
+      }
+    );
+
+    /**
+     * ERROR HANDLING
+     * ==============
+     * Same as upvoteOpinion - return early if request failed.
+     */
+    if (!response.ok) {
+      return;
+    }
+
+    /**
+     * UPDATING LOCAL STATE AFTER SUCCESSFUL BACKEND UPDATE
+     * =====================================================
+     * Same pattern as upvoteOpinion, but decrementing votes instead.
+     *
+     * votes: opinion.votes - 1
+     *          ↑ Previous value    ↑ Subtract 1
+     *
+     * Example:
+     * Before: { id: '3', votes: 5, ... }
+     * After:  { id: '3', votes: 4, ... }
+     *
+     * Or with negative votes:
+     * Before: { id: '7', votes: -2, ... }
+     * After:  { id: '7', votes: -3, ... }
+     */
+    setOpinions((prevOpinions) =>
+      prevOpinions.map((opinion) =>
+        opinion.id === id
+          ? { ...opinion, votes: opinion.votes - 1 }
+          : opinion
+      )
+    );
   }
 
   /**
@@ -500,9 +803,21 @@ export function OpinionsContextProvider({ children }) {
    * WHAT'S INCLUDED:
    * ----------------
    * - opinions: The current state (array of opinions or undefined)
-   * - addOpinion: Function to add a new opinion
-   * - upvoteOpinion: Function to upvote an opinion
-   * - downvoteOpinion: Function to downvote an opinion
+   * - addOpinion: Async function to add a new opinion
+   * - upvoteOpinion: Async function to upvote an opinion (UPDATED!)
+   * - downvoteOpinion: Async function to downvote an opinion (UPDATED!)
+   *
+   * IMPORTANT: Functions are now ASYNC
+   * -----------------------------------
+   * Components calling upvoteOpinion or downvoteOpinion should await them:
+   *
+   * await upvoteOpinion(id);
+   *
+   * This allows:
+   * - Form actions to wait for completion
+   * - useFormStatus to track pending state
+   * - Loading indicators while voting
+   * - Error handling
    *
    * SHORTHAND PROPERTY SYNTAX:
    * --------------------------
@@ -556,52 +871,79 @@ export function OpinionsContextProvider({ children }) {
    *
    * The 'value' prop is what gets passed to consuming components.
    */
-  return <OpinionsContext value={contextValue}>{children}</OpinionsContext>;
+  return <OpinionsContext.Provider value={contextValue}>{children}</OpinionsContext.Provider>;
 }
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS - LESSON 280
  * ============================================================================
  *
  * WHAT WE'VE LEARNED:
  * ===================
- * 1. CONTEXT API PATTERN: Create a Context and a Provider component to manage
- *    shared state and make it available to multiple components.
+ * 1. ASYNC VOTING FUNCTIONS: Made upvoteOpinion and downvoteOpinion async
+ *    to handle backend requests with async/await.
  *
- * 2. BACKEND COMMUNICATION: Use fetch() to load data from and send data to
- *    a backend server. Handle async operations with async/await.
+ * 2. BACKEND PERSISTENCE: Votes are now saved to the database, not just
+ *    updated locally. Votes survive page reloads!
  *
- * 3. IMMUTABLE STATE UPDATES: Always create new arrays/objects when updating
- *    state. Use spread operators (...) and map() to create new references.
+ * 3. CONFIRM-THEN-UPDATE PATTERN: Wait for backend confirmation before
+ *    updating UI. More reliable than optimistic updates, but slower.
  *
- * 4. FUNCTIONAL STATE UPDATES: Use setOpinions(prev => ...) when the new state
- *    depends on the previous state to avoid stale closure issues.
+ * 4. TEMPLATE LITERALS FOR URLs: Use backticks and ${id} to build dynamic
+ *    URLs for API endpoints.
  *
- * 5. OPTIMISTIC UPDATES: For operations like voting, update the UI immediately
- *    without waiting for the backend. This makes the app feel faster.
+ * 5. POST REQUESTS WITHOUT BODY: You can send POST requests with just a URL
+ *    and method, no body needed if the action is simple (like voting).
  *
- * 6. USEEFFECT FOR DATA LOADING: Use useEffect with empty dependency array []
- *    to load initial data once when the component mounts.
+ * 6. ERROR HANDLING: Check response.ok before updating state to ensure
+ *    backend request succeeded.
  *
- * 7. ERROR HANDLING: Check response.ok to detect failed requests. More
- *    sophisticated error handling will be added in future lessons.
+ * 7. FUNCTIONAL STATE UPDATES: Always use prevState => ... form when new
+ *    state depends on old state, especially with async operations.
  *
- * REACT 19 FEATURES COMING:
- * =========================
- * In future lessons, we'll add:
- * - Form actions for submitting opinions (useActionState)
- * - Form actions for voting buttons
- * - Proper loading states during async operations
- * - Better error handling and user feedback
- * - Possibly optimistic updates with automatic rollback
+ * EXECUTION FLOW EXAMPLE:
+ * =======================
+ * User clicks upvote button →
+ * 1. Form action calls upvoteOpinion(id)
+ * 2. upvoteOpinion sends POST to backend
+ * 3. Backend increments votes in database (~1 second delay)
+ * 4. Backend responds with 200 OK
+ * 5. upvoteOpinion updates local state
+ * 6. Context value changes
+ * 7. All consuming components re-render
+ * 8. User sees updated vote count!
+ *
+ * CURRENT USER EXPERIENCE:
+ * ========================
+ * ✓ Click vote button
+ * ✓ Wait ~1 second (backend delay)
+ * ✓ Vote count updates
+ * ✓ Votes are persisted
+ * ✓ Reload page - votes are still there!
+ *
+ * ✗ Slow feedback (1 second wait)
+ * ✗ Button is clickable during loading (can double-vote)
+ * ✗ No loading indicator
+ * ✗ No error messages if request fails
+ *
+ * WHAT'S COMING NEXT:
+ * ===================
+ * In the next lesson, we'll improve the UX by:
+ * - Making form actions async in Opinion.jsx
+ * - Using await to wait for voting to complete
+ * - Enabling useFormStatus to show loading states
+ * - Disabling buttons while voting
+ * - Preventing double-voting
+ * - Possibly adding optimistic updates for instant feedback
  *
  * BEST PRACTICES DEMONSTRATED:
  * ============================
- * ✓ Separate data management from UI components
- * ✓ Use Context for data that many components need
- * ✓ Keep functions that modify state close to where state is defined
- * ✓ Use immutable update patterns
- * ✓ Use async/await for cleaner asynchronous code
- * ✓ Provide default values in createContext for better DX
+ * ✓ Async/await for clean asynchronous code
+ * ✓ Error handling before state updates
+ * ✓ Functional state updates for reliability
+ * ✓ Immutable update patterns
+ * ✓ Template literals for dynamic URLs
+ * ✓ Separate functions for separate actions (clarity over DRY)
+ * ✓ Comments explaining WHY, not just WHAT
  */
