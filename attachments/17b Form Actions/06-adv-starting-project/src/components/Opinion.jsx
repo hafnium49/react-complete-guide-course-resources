@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- * LESSON 279: MULTIPLE FORM ACTIONS - VOTING WITH formAction ON BUTTONS
+ * LESSON 281: LOADING STATES WITH useActionState - PREVENTING DOUBLE-VOTING
  * ============================================================================
  *
- * This component demonstrates a powerful React 19 Form Actions feature:
- * using DIFFERENT form actions for DIFFERENT buttons within the SAME form.
+ * This component demonstrates how to add loading states and prevent double-voting
+ * using React 19's useActionState hook with multiple form actions.
  *
  * KEY LEARNING OBJECTIVES:
  * ========================
@@ -162,8 +162,46 @@
  * - addOpinion: Function to add new opinion
  * - upvoteOpinion: Function to upvote ← We need this!
  * - downvoteOpinion: Function to downvote ← We need this!
+ *
+ * useActionState() HOOK FROM REACT 19 (NEW IN LESSON 281)
+ * ========================================================
+ * We also import useActionState to manage form action state and loading states.
+ *
+ * This hook allows us to:
+ * - Track when a form action is pending (in progress)
+ * - Wrap form actions to get their pending state
+ * - Manage form state across submissions
+ * - Disable buttons during submission
+ * - Provide better UX with loading indicators
+ *
+ * HOOK SIGNATURE:
+ * ---------------
+ * const [state, formAction, pending] = useActionState(action, initialState);
+ *
+ * Parameters:
+ * - action: The form action function to wrap
+ * - initialState: Initial state value (often null for simple cases)
+ *
+ * Returns (array with 3 elements):
+ * - state: Current state value (updated by action's return value)
+ * - formAction: Wrapped version of the action to use on buttons
+ * - pending: Boolean - true while action is running, false otherwise
+ *
+ * WHY WE NEED THIS:
+ * -----------------
+ * In Lesson 280, we noticed "strange behavior" when rapidly clicking vote buttons:
+ * - Multiple requests sent simultaneously
+ * - Vote count "jumps" as requests complete
+ * - No visual feedback during voting
+ * - User can double-vote
+ *
+ * useActionState fixes this by:
+ * - Tracking pending state for each action
+ * - Allowing us to disable buttons while voting
+ * - Providing pending state for UI feedback
+ * - Making the UX much smoother
  */
-import { use } from 'react';
+import { use, useActionState } from 'react';
 
 /**
  * OPINIONS CONTEXT IMPORT
@@ -308,8 +346,25 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
 
   /**
    * ============================================================================
-   * FORM ACTION FUNCTION: upvoteAction - NOW ACTUALLY VOTING! (LESSON 280)
+   * FORM ACTION FUNCTION: upvoteAction - WILL BE WRAPPED BY useActionState
    * ============================================================================
+   *
+   * This async function is the "raw" form action that will be wrapped by
+   * useActionState to add loading state tracking.
+   *
+   * LESSON 280 vs LESSON 281:
+   * --------------------------
+   * LESSON 280 (Previous):
+   * - We used this function directly on the button: formAction={upvoteAction}
+   * - No loading state tracking
+   * - Users could click multiple times rapidly
+   * - No visual feedback during voting
+   *
+   * LESSON 281 (Current):
+   * - We wrap this function with useActionState
+   * - Get a wrapped version (upvoteFormAction) and pending state (upvotePending)
+   * - Use the wrapped version on the button: formAction={upvoteFormAction}
+   * - Can now track loading and disable buttons
    *
    * This async function is called when the user clicks the upvote button.
    *
@@ -565,6 +620,211 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
 
   /**
    * ============================================================================
+   * WRAPPING FORM ACTIONS WITH useActionState - ADDING LOADING STATES
+   * ============================================================================
+   *
+   * THE PROBLEM WE'RE SOLVING (from Lesson 280):
+   * ----------------------------------------------
+   * When we tested the voting buttons in Lesson 280, we noticed:
+   * "If you're now hammering this upvote button, there is some strange behavior
+   * because then it looks really weird if it changes like this."
+   *
+   * What happens when rapidly clicking:
+   * 1. User clicks upvote 5 times rapidly
+   * 2. All 5 requests are sent to the backend
+   * 3. Each request takes ~1 second to complete
+   * 4. The vote count "jumps" as each request finishes
+   * 5. Very confusing and janky UX!
+   *
+   * THE SOLUTION: useActionState
+   * -----------------------------
+   * We use useActionState to wrap our form actions and track their pending state.
+   *
+   * This allows us to:
+   * ✓ Know when a voting action is in progress
+   * ✓ Disable buttons while voting
+   * ✓ Prevent double-voting
+   * ✓ Show loading indicators (if we wanted to)
+   * ✓ Provide smooth, predictable UX
+   *
+   * WHY WE NEED TWO CALLS:
+   * -----------------------
+   * We have TWO separate form actions (upvote and downvote), so we need
+   * TWO separate useActionState calls.
+   *
+   * As the instructor explains:
+   * "Here I have to call this hook twice though because I have two actions,
+   * and one hook can only handle one action."
+   *
+   * Each useActionState call:
+   * - Wraps one action
+   * - Tracks pending state for that action
+   * - Returns a wrapped version of that action
+   *
+   * We can't do this with just one useActionState because each hook only
+   * tracks ONE action's pending state.
+   *
+   * HOOK CALL #1: WRAP UPVOTE ACTION
+   * =================================
+   * const [upvoteFormState, upvoteFormAction, upvotePending] = useActionState(upvoteAction, null);
+   *
+   * PARAMETERS:
+   * -----------
+   * 1. upvoteAction - The raw form action function we defined above
+   * 2. null - Initial state value (we don't need state management, so null)
+   *
+   * RETURN VALUES (Array with 3 elements):
+   * --------------------------------------
+   * 1. upvoteFormState - Current state (we don't use this, so we could name it _upvoteFormState)
+   * 2. upvoteFormAction - Wrapped version of upvoteAction to use on button
+   * 3. upvotePending - Boolean: true while upvoteAction is running, false otherwise
+   *
+   * WHAT EACH RETURN VALUE IS FOR:
+   * --------------------------------
+   * upvoteFormState:
+   * - Stores state returned by the form action
+   * - Useful for error messages, validation results, etc.
+   * - In our case, upvoteAction doesn't return anything, so this stays null
+   * - We don't use it, but we still need to destructure it (could use _ prefix)
+   *
+   * upvoteFormAction:
+   * - This is the WRAPPED version of upvoteAction
+   * - It has the same behavior as upvoteAction
+   * - But it also updates the pending state automatically
+   * - We'll use THIS on the button, not the original upvoteAction
+   *
+   * upvotePending:
+   * - Boolean value: true or false
+   * - true: upvoteAction is currently running (async operation in progress)
+   * - false: upvoteAction is not running (idle)
+   * - We'll use this to disable buttons and show loading states
+   *
+   * HOW IT WORKS:
+   * -------------
+   * 1. Initially: upvotePending = false
+   * 2. User clicks upvote button
+   * 3. upvoteFormAction is called
+   * 4. upvotePending immediately becomes true
+   * 5. upvoteAction executes (sends backend request)
+   * 6. ~1 second delay (waiting for backend)
+   * 7. upvoteAction completes
+   * 8. upvotePending becomes false again
+   * 9. Buttons re-enable
+   *
+   * BUTTON LOGIC:
+   * -------------
+   * We'll disable BOTH buttons when EITHER action is pending:
+   * <button formAction={upvoteFormAction} disabled={upvotePending || downvotePending}>
+   * <button formAction={downvoteFormAction} disabled={upvotePending || downvotePending}>
+   *
+   * Why disable both buttons?
+   * - Prevents voting in both directions simultaneously
+   * - Clearer UX (user knows voting is in progress)
+   * - Prevents race conditions
+   * - One vote at a time, as expected
+   */
+  const [upvoteFormState, upvoteFormAction, upvotePending] = useActionState(
+    upvoteAction,
+    null
+  );
+
+  /**
+   * HOOK CALL #2: WRAP DOWNVOTE ACTION
+   * ====================================
+   * const [downvoteFormState, downvoteFormAction, downvotePending] = useActionState(downvoteAction, null);
+   *
+   * This is the SAME pattern as the upvote hook, just for the downvote action.
+   *
+   * PARAMETERS:
+   * -----------
+   * 1. downvoteAction - The raw form action function we defined above
+   * 2. null - Initial state value (we don't need state management, so null)
+   *
+   * RETURN VALUES:
+   * --------------
+   * 1. downvoteFormState - Current state (not used, stays null)
+   * 2. downvoteFormAction - Wrapped version of downvoteAction to use on button
+   * 3. downvotePending - Boolean: true while downvoteAction is running, false otherwise
+   *
+   * WHY WE CAN'T COMBINE THEM:
+   * ---------------------------
+   * You might think: "Can't we just use one useActionState for both actions?"
+   *
+   * NO, we can't because:
+   * - useActionState tracks ONE action at a time
+   * - We have TWO different actions (upvote and downvote)
+   * - Each action needs its own pending state
+   *
+   * If we tried to use one hook:
+   * const [state, action, pending] = useActionState(???, null);
+   *
+   * What would we pass as the first parameter? upvoteAction or downvoteAction?
+   * We'd have to choose one, and then we couldn't track the other!
+   *
+   * ALTERNATIVE APPROACH (More complex, not recommended):
+   * ------------------------------------------------------
+   * We COULD create a single combined action:
+   *
+   * function voteAction(prevState, formData) {
+   *   const action = formData.get('action');
+   *   if (action === 'upvote') await upvoteOpinion(id);
+   *   else if (action === 'downvote') await downvoteOpinion(id);
+   * }
+   *
+   * const [state, formAction, pending] = useActionState(voteAction, null);
+   *
+   * <button name="action" value="upvote" disabled={pending}>↑</button>
+   * <button name="action" value="downvote" disabled={pending}>↓</button>
+   *
+   * But this is worse because:
+   * ✗ Loses the clarity of separate actions
+   * ✗ Needs extra form data for action type
+   * ✗ More complex logic in the action function
+   * ✗ Harder to test and maintain
+   *
+   * THE BETTER APPROACH (What we're doing):
+   * ----------------------------------------
+   * Two separate useActionState calls:
+   * ✓ Clear separation of concerns
+   * ✓ Each action is independent
+   * ✓ Easy to understand and maintain
+   * ✓ Can track each action's pending state separately
+   * ✓ More flexible (could show different loading states for each button)
+   *
+   * In our case, we disable both buttons when either is pending,
+   * but we COULD show different loading indicators if we wanted:
+   * - Upvote button: {upvotePending ? '⏳' : '↑'}
+   * - Downvote button: {downvotePending ? '⏳' : '↓'}
+   *
+   * This wouldn't be possible with a single useActionState!
+   *
+   * TIMING AND STATE UPDATES:
+   * --------------------------
+   * upvotePending and downvotePending are independent:
+   *
+   * Scenario 1: User clicks upvote
+   * - upvotePending: false → true → false (1 second cycle)
+   * - downvotePending: false (unchanged)
+   *
+   * Scenario 2: User clicks downvote
+   * - upvotePending: false (unchanged)
+   * - downvotePending: false → true → false (1 second cycle)
+   *
+   * Scenario 3: User tries to click both (but they're disabled!)
+   * - If upvote is clicked first: upvotePending = true
+   * - Both buttons become disabled
+   * - Downvote click is blocked (button is disabled)
+   * - upvotePending goes back to false
+   * - Both buttons re-enable
+   * - Now user can vote again (upvote or downvote)
+   *
+   * This prevents simultaneous voting and race conditions!
+   */
+  const [downvoteFormState, downvoteFormAction, downvotePending] =
+    useActionState(downvoteAction, null);
+
+  /**
+   * ============================================================================
    * COMPONENT RENDER
    * ============================================================================
    *
@@ -669,78 +929,185 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
       */}
       <form className="votes">
         {/*
-          UPVOTE BUTTON WITH formAction
-          ==============================
-          This button now has the formAction prop, making it functional!
+          UPVOTE BUTTON WITH WRAPPED formAction AND disabled STATE (LESSON 281)
+          ======================================================================
+          This button demonstrates the complete useActionState pattern!
 
-          THE formAction PROP:
-          --------------------
-          formAction={upvoteAction}
+          WHAT'S NEW IN LESSON 281:
+          --------------------------
+          BEFORE (Lesson 280):
+          - formAction={upvoteAction}
+          - No disabled prop
+          - Users could click multiple times rapidly
+          - Vote count would "jump" as requests completed
 
-          This tells React:
-          "When this button is clicked, call the upvoteAction function"
+          AFTER (Lesson 281):
+          - formAction={upvoteFormAction} ← Wrapped version from useActionState
+          - disabled={upvotePending || downvotePending} ← Prevents double-voting
+          - Buttons disable while ANY vote is in progress
+          - Smooth, predictable UX
 
-          HOW IT WORKS:
-          -------------
-          1. User clicks this button
-          2. React prevents default form submission
-          3. React calls upvoteAction(currentState, formData)
-          4. upvoteAction executes (currently logs "UPVOTE")
-          5. (Next lesson) Vote count updates
+          THE formAction PROP (Updated):
+          -------------------------------
+          formAction={upvoteFormAction}
 
-          WHY formAction INSTEAD OF onClick?
-          -----------------------------------
-          We COULD use onClick:
-          <button onClick={() => upvoteOpinion(id)}>
+          Notice we're using upvoteFormAction, NOT upvoteAction!
 
-          But formAction has benefits:
-          ✓ Consistent with Form Actions pattern
-          ✓ Works without JavaScript (progressive enhancement)
-          ✓ Better accessibility (semantic form submission)
-          ✓ Integrates with form features (validation, reset, etc.)
-          ✓ Can use useFormStatus for loading states
-          ✓ Matches React 19's design philosophy
+          upvoteFormAction is the WRAPPED version returned by useActionState:
+          const [upvoteFormState, upvoteFormAction, upvotePending] = useActionState(upvoteAction, null);
+                                    ↑ We use THIS on the button
 
-          BUTTON TYPE:
-          ------------
-          Notice we still don't specify type="submit" or type="button".
+          WHY THE WRAPPED VERSION?
+          ------------------------
+          The wrapped version (upvoteFormAction):
+          ✓ Does everything upvoteAction does (calls upvoteOpinion)
+          ✓ PLUS automatically updates upvotePending state
+          ✓ Sets upvotePending = true when called
+          ✓ Sets upvotePending = false when complete
+          ✓ This happens automatically - we don't write the code!
 
-          Inside a form:
-          - Default button type is "submit"
-          - Clicking triggers form submission
-          - formAction handles the submission
+          If we used the raw upvoteAction:
+          ✗ The pending state wouldn't update
+          ✗ The disabled prop wouldn't work
+          ✗ We'd be back to the Lesson 280 behavior (double-voting)
 
-          We could be explicit:
-          <button type="submit" formAction={upvoteAction}>
+          THE disabled PROP (New!):
+          --------------------------
+          disabled={upvotePending || downvotePending}
 
-          But it's optional since "submit" is the default.
+          This is a Boolean expression that evaluates to true or false.
 
-          ACCESSIBILITY IMPROVEMENT:
-          ---------------------------
-          We should add an aria-label for screen readers:
-          <button formAction={upvoteAction} aria-label="Upvote this opinion">
+          WHEN THE BUTTON IS DISABLED:
+          -----------------------------
+          The button becomes disabled when EITHER:
+          - upvotePending is true (upvote action is running)
+          - OR downvotePending is true (downvote action is running)
 
-          This would help users who can't see the arrow icon understand
-          what the button does.
+          WHY DISABLE BOTH BUTTONS?
+          --------------------------
+          We disable BOTH buttons (upvote and downvote) when EITHER action is pending.
 
-          We'll add this in a future lesson focused on accessibility.
+          This prevents:
+          ✗ Clicking upvote while upvote is already in progress (double upvote)
+          ✗ Clicking downvote while downvote is already in progress (double downvote)
+          ✗ Clicking upvote while downvote is in progress (simultaneous votes)
+          ✗ Clicking downvote while upvote is in progress (simultaneous votes)
 
-          TESTING THIS BUTTON:
-          --------------------
-          1. Open browser console
-          2. Click the upvote button
-          3. You should see "UPVOTE" logged
-          4. This proves formAction is working!
+          The rule is: ONE VOTE AT A TIME.
 
-          WHAT YOU'LL SEE:
+          USER EXPERIENCE FLOW:
+          ---------------------
+          1. Initially: Both buttons enabled (upvotePending = false, downvotePending = false)
+          2. User clicks upvote
+          3. upvoteFormAction is called
+          4. upvotePending becomes true IMMEDIATELY
+          5. disabled={true || false} = true
+          6. BOTH buttons become disabled (visual feedback!)
+          7. Backend request is sent (~1 second)
+          8. Vote count updates (Context state changes)
+          9. Backend request completes
+          10. upvotePending becomes false
+          11. disabled={false || false} = false
+          12. BOTH buttons re-enable
+          13. User can vote again
+
+          VISUAL FEEDBACK:
           ----------------
-          - Click: Page doesn't reload (React prevents default)
-          - Click: Console shows "UPVOTE"
-          - Click: Vote count doesn't change yet (next lesson!)
+          When a button is disabled:
+          - CSS styling changes (often grayed out, lower opacity)
+          - Cursor changes to "not-allowed" or default
+          - Button doesn't respond to clicks
+          - User clearly sees voting is in progress
 
-          The button is now "wired up" and ready for real functionality.
+          This is much better UX than Lesson 280 where:
+          - Buttons stayed clickable
+          - No visual feedback
+          - Vote count "jumped" unexpectedly
+
+          PREVENTING THE "STRANGE BEHAVIOR":
+          -----------------------------------
+          The instructor mentioned in Lesson 280:
+          "If you're now hammering this upvote button, there is some strange behavior
+          because then it looks really weird if it changes like this."
+
+          LESSON 280 (Without disabled):
+          User clicks 5 times → 5 requests sent → Vote jumps 5 times → Weird!
+
+          LESSON 281 (With disabled):
+          User clicks once → Button disables → Request completes → Button re-enables
+          User can click again → Button disables → Request completes → Button re-enables
+          One vote at a time → Smooth, predictable → No weirdness!
+
+          ALTERNATIVE: useFormStatus APPROACH
+          ------------------------------------
+          The instructor also mentions an alternative approach:
+          "You could outsource the buttons into separate components and use
+          useFormStatus there."
+
+          This would mean:
+          - Create UpvoteButton component with useFormStatus
+          - Create DownvoteButton component with useFormStatus
+          - Each tracks its own pending state
+          - Similar to how Submit.jsx uses useFormStatus
+
+          But the instructor chose useActionState because:
+          ✓ Keeps voting logic in one component
+          ✓ No need to create extra components
+          ✓ Easier to manage shared state (both buttons disabled together)
+          ✓ More straightforward for this use case
+
+          BOOLEAN LOGIC BREAKDOWN:
+          ------------------------
+          disabled={upvotePending || downvotePending}
+
+          Truth table:
+          upvotePending | downvotePending | Result | Button State
+          --------------|-----------------|--------|-------------
+          false         | false           | false  | ENABLED
+          true          | false           | true   | DISABLED
+          false         | true            | true   | DISABLED
+          true          | true            | true   | DISABLED
+
+          Only ONE scenario enables the button: BOTH pending states are false.
+          This ensures only one vote can happen at a time.
+
+          CSS STYLING (Automatic):
+          -------------------------
+          Browsers automatically style disabled buttons with CSS
+          using the :disabled pseudo-class with properties like
+          opacity: 0.6, cursor: not-allowed, etc.
+
+          You can customize this in your CSS to change the
+          appearance of disabled buttons (background-color,
+          color, opacity, etc.).
+
+          ACCESSIBILITY BENEFITS:
+          -----------------------
+          The disabled attribute:
+          ✓ Tells screen readers the button is disabled
+          ✓ Prevents keyboard navigation to the button
+          ✓ Semantic HTML (better than just CSS styling)
+          ✓ Works without JavaScript (if we were doing SSR)
+
+          Screen reader announcement:
+          "Upvote button, dimmed, unavailable"
+
+          TESTING THE BEHAVIOR:
+          ---------------------
+          1. Open the app in the browser
+          2. Click an upvote button
+          3. Notice BOTH buttons (upvote and downvote) gray out immediately
+          4. Wait ~1 second
+          5. Vote count increases
+          6. Both buttons re-enable
+          7. Try clicking rapidly - only first click registers!
+
+          This is the improved UX we wanted!
         */}
-        <button formAction={upvoteAction}>
+        <button
+          formAction={upvoteFormAction}
+          disabled={upvotePending || downvotePending}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -761,67 +1128,122 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
         <span>{votes}</span>
 
         {/*
-          DOWNVOTE BUTTON WITH formAction
-          ================================
-          This button has its own formAction, separate from the upvote button!
+          DOWNVOTE BUTTON WITH WRAPPED formAction AND disabled STATE (LESSON 281)
+          ========================================================================
+          This button mirrors the upvote button pattern with useActionState!
 
-          THE formAction PROP:
-          --------------------
-          formAction={downvoteAction}
-
-          Notice this is DIFFERENT from the upvote button:
-          - Upvote button: formAction={upvoteAction}
-          - Downvote button: formAction={downvoteAction}
-
-          TWO BUTTONS, TWO ACTIONS:
+          WHAT'S NEW IN LESSON 281:
           --------------------------
-          This is the key feature of Lesson 279:
-          - Same form (<form className="votes">)
-          - Different actions (upvoteAction vs downvoteAction)
-          - React calls the correct function based on which button was clicked
+          BEFORE (Lesson 280):
+          - formAction={downvoteAction}
+          - No disabled prop
+          - Users could click multiple times rapidly
+          - Vote count would "jump" as requests completed
 
-          NO NEED TO CHECK WHICH BUTTON:
+          AFTER (Lesson 281):
+          - formAction={downvoteFormAction} ← Wrapped version from useActionState
+          - disabled={upvotePending || downvotePending} ← Prevents double-voting
+          - Buttons disable while ANY vote is in progress
+          - Smooth, predictable UX
+
+          THE formAction PROP (Updated):
           -------------------------------
-          We don't need code like:
-          function handleVote(prevState, formData) {
-            if (wasUpvoteClicked) { ... }
-            else if (wasDownvoteClicked) { ... }
-          }
+          formAction={downvoteFormAction}
 
-          Instead, React automatically calls the right function:
-          - Click upvote → upvoteAction called
-          - Click downvote → downvoteAction called
+          Notice we're using downvoteFormAction, NOT downvoteAction!
 
-          This is much cleaner!
+          downvoteFormAction is the WRAPPED version returned by useActionState:
+          const [downvoteFormState, downvoteFormAction, downvotePending] = useActionState(downvoteAction, null);
+                                      ↑ We use THIS on the button
 
-          TESTING THIS BUTTON:
-          --------------------
-          1. Open browser console
-          2. Click the downvote button
-          3. You should see "DOWNVOTE" logged
-          4. Different from upvote! (which logs "UPVOTE")
+          SAME PATTERN AS UPVOTE:
+          -----------------------
+          Both buttons follow the exact same pattern:
+          - Upvote: formAction={upvoteFormAction}
+          - Downvote: formAction={downvoteFormAction}
 
-          TESTING BOTH BUTTONS:
+          Each uses the wrapped version from useActionState.
+
+          THE disabled PROP (Identical to Upvote):
+          -----------------------------------------
+          disabled={upvotePending || downvotePending}
+
+          Notice this is THE SAME as the upvote button!
+
+          Both buttons share the same disabled logic:
+          - Disabled when upvote is pending
+          - Disabled when downvote is pending
+          - Only enabled when BOTH are not pending
+
+          SYMMETRY AND CONSISTENCY:
+          -------------------------
+          Both voting buttons have identical disabled logic.
+          This ensures:
+          ✓ Consistent UX (both buttons behave the same way)
+          ✓ No simultaneous voting (only one action at a time)
+          ✓ Clear visual feedback (both gray out together)
+          ✓ Predictable behavior (users quickly learn the pattern)
+
+          USER EXPERIENCE WITH DOWNVOTE:
+          -------------------------------
+          1. User clicks downvote button
+          2. downvoteFormAction is called
+          3. downvotePending becomes true IMMEDIATELY
+          4. disabled={false || true} = true
+          5. BOTH buttons (upvote and downvote) become disabled
+          6. Backend request is sent (~1 second)
+          7. Vote count DECREASES (Context state changes)
+          8. Backend request completes
+          9. downvotePending becomes false
+          10. disabled={false || false} = false
+          11. BOTH buttons re-enable
+          12. User can vote again (upvote or downvote)
+
+          PREVENTING VOTE SPAM:
           ---------------------
-          Try clicking both buttons alternately:
-          - Click upvote → "UPVOTE" logged
-          - Click downvote → "DOWNVOTE" logged
-          - Click upvote → "UPVOTE" logged
-          - Click downvote → "DOWNVOTE" logged
+          Without the disabled prop (Lesson 280):
+          - User hammers downvote button 10 times
+          - 10 backend requests sent
+          - Vote count decreases by 10 over 1-2 seconds
+          - "Strange behavior" as count jumps
 
-          Each button consistently triggers its own action.
-          This proves the formAction system is working correctly!
+          With the disabled prop (Lesson 281):
+          - User clicks downvote button
+          - Button immediately disables
+          - First request processes
+          - Vote count decreases by 1
+          - Button re-enables
+          - User can click again (but only once at a time)
+          - Smooth, controlled voting
 
-          WHAT'S COMING NEXT:
-          -------------------
-          In the next lesson, we'll:
-          1. Replace console.log with actual voting logic
-          2. Call upvoteOpinion(id) and downvoteOpinion(id)
-          3. See the vote count change when we click
-          4. Add backend integration to persist votes
-          5. Possibly add optimistic updates for instant feedback
+          COMPLETE LESSON 281 SOLUTION:
+          ------------------------------
+          We've now implemented the complete solution to the double-voting problem:
+          1. ✓ Imported useActionState hook
+          2. ✓ Wrapped both form actions (upvote and downvote)
+          3. ✓ Extracted pending states (upvotePending, downvotePending)
+          4. ✓ Used wrapped actions on buttons (upvoteFormAction, downvoteFormAction)
+          5. ✓ Added disabled prop to both buttons
+          6. ✓ Disabled both buttons when either action is pending
+
+          Result: Smooth, predictable voting UX with no double-voting!
+
+          TESTING THE COMPLETE BEHAVIOR:
+          -------------------------------
+          1. Open the app in the browser
+          2. Click a downvote button
+          3. Notice BOTH buttons (upvote and downvote) gray out immediately
+          4. Wait ~1 second
+          5. Vote count DECREASES
+          6. Both buttons re-enable
+          7. Try rapid clicking - only first click registers!
+          8. Try alternating between upvote and downvote - each vote waits for previous to complete
+          9. Perfect UX!
         */}
-        <button formAction={downvoteAction}>
+        <button
+          formAction={downvoteFormAction}
+          disabled={upvotePending || downvotePending}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -845,233 +1267,273 @@ export function Opinion({ opinion: { id, title, body, userName, votes } }) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS - LESSON 279
+ * SUMMARY & KEY CONCEPTS - LESSON 281: useActionState for Loading States
  * ============================================================================
  *
  * WHAT WE'VE LEARNED:
  * ===================
- * 1. formAction ON BUTTONS: React 19 allows formAction prop on buttons,
- *    not just on forms. This enables multiple form actions per form.
+ * 1. useActionState HOOK: React 19's hook for wrapping form actions and
+ *    tracking their pending state. Essential for loading states and UX.
  *
- * 2. MULTIPLE ACTIONS PER FORM: One form can have different actions for
- *    different buttons. Each button's formAction is independent.
+ * 2. WRAPPING FORM ACTIONS: useActionState wraps an action function and
+ *    returns [state, wrappedAction, pending]. Use the wrapped action on buttons.
  *
- * 3. CLEANER CODE: Separate action functions (upvoteAction, downvoteAction)
- *    are cleaner than one function with if/else logic.
+ * 3. PENDING STATE TRACKING: The pending boolean automatically becomes true
+ *    when the action starts and false when it completes.
  *
- * 4. CONTEXT INTEGRATION: We accessed upvoteOpinion and downvoteOpinion
- *    from OpinionsContext using the use() hook.
+ * 4. MULTIPLE useActionState CALLS: Each action needs its own useActionState
+ *    hook. We used two hooks for upvote and downvote actions.
  *
- * 5. CLOSURE ACCESS: Form action functions can access variables from their
- *    outer scope (id, upvoteOpinion, downvoteOpinion) via closures.
+ * 5. DISABLED BUTTONS: Using disabled={upvotePending || downvotePending}
+ *    prevents double-voting and provides visual feedback.
  *
- * 6. DEVELOPMENT WORKFLOW: Starting with console.log to verify wiring
- *    before adding real functionality is a best practice.
+ * 6. SOLVING THE "STRANGE BEHAVIOR": By disabling buttons during voting,
+ *    we prevent the vote count from "jumping" when users rapidly click.
  *
- * THE formAction PATTERN:
- * =======================
- * ONE FORM, MULTIPLE ACTIONS:
+ * LESSONS 279-281 PROGRESSION:
+ * =============================
+ * LESSON 279: Set up multiple form actions with formAction on buttons
+ * LESSON 280: Made actions async and added backend integration
+ * LESSON 281: Added loading states with useActionState to prevent double-voting
  *
- * <form>
- *   <button formAction={action1}>Action 1</button>
- *   <button formAction={action2}>Action 2</button>
- *   <button formAction={action3}>Action 3</button>
- * </form>
+ * THE useActionState PATTERN:
+ * ============================
+ * COMPLETE IMPLEMENTATION WITH LOADING STATES:
  *
- * Each button can have its own dedicated action function!
+ * // 1. Define the raw form action
+ * async function upvoteAction(prevState, formData) {
+ *   await upvoteOpinion(id);
+ * }
  *
- * USE CASES:
- * ==========
- * This pattern is perfect for:
+ * // 2. Wrap it with useActionState
+ * const [upvoteFormState, upvoteFormAction, upvotePending] =
+ *   useActionState(upvoteAction, null);
+ *
+ * // 3. Use wrapped action and pending state on button
+ * <button
+ *   formAction={upvoteFormAction}
+ *   disabled={upvotePending || downvotePending}
+ * >
+ *   Upvote
+ * </button>
+ *
+ * This pattern gives you automatic loading state management!
+ *
+ * USE CASES FOR useActionState:
+ * ==============================
+ * This pattern is perfect for ANY async form action where you need:
  *
  * 1. VOTING SYSTEMS (our use case):
- *    <form>
- *      <button formAction={upvote}>👍</button>
- *      <button formAction={downvote}>👎</button>
- *    </form>
+ *    - Prevent double-voting
+ *    - Disable buttons during vote submission
+ *    - Show which vote is in progress
  *
- * 2. FORM WIZARDS:
- *    <form>
- *      <button formAction={goBack}>← Back</button>
- *      <button formAction={goNext}>Next →</button>
- *    </form>
+ * 2. FORM SUBMISSIONS:
+ *    - Disable submit button during submission
+ *    - Prevent duplicate submissions
+ *    - Show "Submitting..." state
  *
- * 3. SAVE OPTIONS:
- *    <form>
- *      <button formAction={saveDraft}>Save Draft</button>
- *      <button formAction={publish}>Publish</button>
- *    </form>
+ * 3. DELETE OPERATIONS:
+ *    - Disable delete button during deletion
+ *    - Prevent accidental double-deletes
+ *    - Show "Deleting..." state
  *
- * 4. SEARCH TYPES:
- *    <form>
- *      <input name="query" />
- *      <button formAction={searchUsers}>Search Users</button>
- *      <button formAction={searchPosts}>Search Posts</button>
- *    </form>
+ * 4. ASYNC ACTIONS WITH BACKEND:
+ *    - Any button that triggers an API call
+ *    - Any button that needs to wait for a response
+ *    - Any button that should be disabled during operation
  *
- * 5. MULTI-ACTION MODALS:
- *    <form>
- *      <button formAction={cancel}>Cancel</button>
- *      <button formAction={saveChanges}>Save</button>
- *      <button formAction={deleteItem}>Delete</button>
- *    </form>
+ * COMPARISON: useActionState vs Manual State Management:
+ * ========================================================
  *
- * COMPARISON: formAction vs onClick:
- * ===================================
+ * WITHOUT useActionState (Manual approach):
+ * ------------------------------------------
+ * const [isVoting, setIsVoting] = useState(false);
  *
- * USING onClick (Traditional):
- * -----------------------------
- * <button onClick={() => upvoteOpinion(id)}>↑</button>
+ * async function upvoteAction(prevState, formData) {
+ *   setIsVoting(true);
+ *   try {
+ *     await upvoteOpinion(id);
+ *   } finally {
+ *     setIsVoting(false);
+ *   }
+ * }
  *
- * Pros:
- * ✓ Simple and familiar
- * ✓ Direct function call
- * ✓ Easy to understand
+ * <button formAction={upvoteAction} disabled={isVoting}>
  *
  * Cons:
- * ✗ Not semantic (doesn't follow form submission model)
- * ✗ Can't use useFormStatus for loading states
- * ✗ Doesn't work without JavaScript
- * ✗ Not consistent with Form Actions pattern
+ * ✗ Manual state management (more code)
+ * ✗ Need try/finally to ensure state resets
+ * ✗ Have to remember to update state
+ * ✗ More places for bugs
+ * ✗ Shared state for multiple actions gets complex
  *
- * USING formAction (React 19):
+ * WITH useActionState (Automatic):
+ * ---------------------------------
+ * const [_, upvoteFormAction, upvotePending] = useActionState(upvoteAction, null);
+ *
+ * <button formAction={upvoteFormAction} disabled={upvotePending}>
+ *
+ * Pros:
+ * ✓ Automatic state management (less code)
+ * ✓ React handles pending state automatically
+ * ✓ No need for try/finally
+ * ✓ Cleaner, more declarative
+ * ✓ Each action gets its own pending state
+ * ✓ Less room for bugs
+ *
+ * WHEN TO USE useActionState:
  * ----------------------------
- * <button formAction={upvoteAction}>↑</button>
+ * Use useActionState when:
+ * ✓ You have async form actions
+ * ✓ You need loading/pending states
+ * ✓ You want to disable buttons during submission
+ * ✓ You want React to manage the state automatically
+ * ✓ You're using React 19 or newer
  *
- * Pros:
- * ✓ Semantic form submission
- * ✓ Works with useFormStatus for loading states
- * ✓ Progressive enhancement (works without JS in some cases)
- * ✓ Consistent with Form Actions ecosystem
- * ✓ Better integration with form features
+ * Use manual useState when:
+ * ✓ You need more complex state logic
+ * ✓ You need to control state updates manually
+ * ✓ You're not using React 19 yet
  *
- * Cons:
- * ✗ Requires understanding Form Actions
- * ✗ Slightly more verbose (function wrapper needed)
- *
- * WHEN TO USE formAction:
- * -----------------------
- * Use formAction when:
- * ✓ You want loading states (useFormStatus)
- * ✓ You're already using Form Actions
- * ✓ You want semantic form submission
- * ✓ You need form-related features (validation, reset, etc.)
- *
- * Use onClick when:
- * ✓ Simple button actions (toggle, close modal, etc.)
- * ✓ Not related to form submission
- * ✓ Don't need loading states or form features
- * ✓ Want simplest possible solution
- *
- * EXECUTION FLOW (CURRENT):
- * ==========================
+ * EXECUTION FLOW (LESSON 281 - WITH useActionState):
+ * ====================================================
  * 1. User clicks upvote button
- * 2. React sees formAction={upvoteAction}
+ * 2. React sees formAction={upvoteFormAction} (wrapped version!)
  * 3. React prevents default form submission
- * 4. React calls upvoteAction(undefined, formData)
- * 5. upvoteAction logs "UPVOTE" to console
- * 6. Nothing else happens (yet!)
+ * 4. React calls upvoteFormAction
+ * 5. upvotePending becomes true IMMEDIATELY
+ * 6. Component re-renders with disabled buttons
+ * 7. upvoteFormAction internally calls the original upvoteAction
+ * 8. upvoteAction calls upvoteOpinion(id)
+ * 9. Backend request is sent
+ * 10. ~1 second delay (backend processing)
+ * 11. Backend responds
+ * 12. Context updates opinions state (votes + 1)
+ * 13. Component re-renders with new vote count
+ * 14. upvoteAction completes
+ * 15. upvotePending becomes false automatically
+ * 16. Component re-renders with enabled buttons
+ * 17. User can vote again!
  *
- * EXECUTION FLOW (NEXT LESSON):
- * ==============================
- * 1. User clicks upvote button
- * 2. React sees formAction={upvoteAction}
- * 3. React prevents default form submission
- * 4. React calls upvoteAction(undefined, formData)
- * 5. upvoteAction calls upvoteOpinion(id)
- * 6. Context updates opinions state (votes + 1)
- * 7. Component re-renders with new vote count
- * 8. User sees vote count increase!
- * 9. (Later) Backend gets the vote update
+ * KEY DIFFERENCES FROM LESSON 280:
+ * =================================
+ * Steps 5-6 and 15-16 are NEW in Lesson 281:
+ * - upvotePending automatically becomes true at start
+ * - upvotePending automatically becomes false at end
+ * - Buttons automatically disable/enable based on pending
+ * - User gets immediate visual feedback
+ * - Double-voting is prevented
  *
- * CODE ORGANIZATION:
- * ==================
+ * CODE ORGANIZATION (LESSON 281):
+ * ================================
  * Notice how we structured this component:
  *
- * 1. Imports (React, Context)
+ * 1. Imports (React hooks: use, useActionState; Context)
  * 2. Component function
  *    a. Context consumption (use hook)
  *    b. Form action functions (upvoteAction, downvoteAction)
- *    c. Render (JSX)
+ *    c. useActionState hooks (wrapping both actions)
+ *    d. Render (JSX with wrapped actions and disabled prop)
  *
  * This organization:
  * ✓ Follows React conventions
  * ✓ Keeps related code together
+ * ✓ Hooks are called at the top level
+ * ✓ Form actions defined before being wrapped
  * ✓ Easy to understand flow
- * ✓ Easy to test (mock Context, test actions)
+ * ✓ Easy to test (mock Context and hooks)
  *
- * TESTING APPROACH:
- * =================
- * How to test this component:
+ * TESTING APPROACH (LESSON 281):
+ * ===============================
+ * How to test this component with useActionState:
  *
  * 1. UNIT TESTS:
  *    - Mock OpinionsContext
- *    - Mock use() hook
+ *    - Mock use() and useActionState hooks
  *    - Render component
  *    - Simulate button clicks
+ *    - Assert buttons disable during action
  *    - Assert correct functions were called
  *
  * 2. INTEGRATION TESTS:
  *    - Render with real Context
- *    - Click buttons
- *    - Assert vote count changes
- *    - Assert Context state updates
+ *    - Click upvote button
+ *    - Assert both buttons become disabled immediately
+ *    - Wait for action to complete
+ *    - Assert vote count increases
+ *    - Assert buttons re-enable
+ *    - Repeat for downvote
  *
- * 3. MANUAL TESTING (current):
- *    - Open browser console
- *    - Click upvote → see "UPVOTE" logged
- *    - Click downvote → see "DOWNVOTE" logged
- *    - Verifies formAction wiring works
+ * 3. MANUAL TESTING (Lesson 281):
+ *    - Open the app in browser
+ *    - Click upvote → buttons gray out immediately
+ *    - Wait ~1 second → vote count increases
+ *    - Buttons re-enable
+ *    - Try rapid clicking → only first click works!
+ *    - Verifies useActionState prevents double-voting
  *
- * WHAT'S NEXT:
- * ============
- * In upcoming lessons, we'll:
+ * COMPLETED IN LESSONS 279-281:
+ * ==============================
+ * ✓ LESSON 279: Set up multiple form actions with formAction on buttons
+ * ✓ LESSON 280: Made actions async and added backend integration
+ * ✓ LESSON 281: Added loading states with useActionState to prevent double-voting
  *
- * 1. IMPLEMENT VOTING (Lesson 280+):
- *    - Replace console.log with upvoteOpinion(id)
- *    - Replace console.log with downvoteOpinion(id)
- *    - See vote count change on click
+ * WHAT WE'VE ACCOMPLISHED:
+ * ========================
+ * ✓ Multiple form actions (upvote and downvote)
+ * ✓ Async backend integration (HTTP POST requests)
+ * ✓ Confirm-then-update pattern (wait for backend before UI update)
+ * ✓ Loading state tracking (useActionState)
+ * ✓ Disabled buttons during voting (prevents double-voting)
+ * ✓ Clean, maintainable code structure
  *
- * 2. BACKEND INTEGRATION:
- *    - Send vote updates to backend API
- *    - Persist votes in database
- *    - Handle network errors
+ * POTENTIAL FUTURE ENHANCEMENTS:
+ * ===============================
+ * If we wanted to extend this further, we could add:
  *
- * 3. OPTIMISTIC UPDATES:
+ * 1. OPTIMISTIC UPDATES:
  *    - Update UI immediately (don't wait for backend)
  *    - Revert if backend fails
- *    - Better user experience
+ *    - Even faster perceived performance
  *
- * 4. LOADING STATES:
- *    - Disable buttons while voting
- *    - Show loading indicator
- *    - Prevent double-voting
+ * 2. ERROR HANDLING WITH UI FEEDBACK:
+ *    - Show toast/alert if vote fails
+ *    - Retry failed votes automatically
+ *    - Display error message to user
  *
- * 5. ERROR HANDLING:
- *    - Show error messages if vote fails
- *    - Retry failed votes
- *    - Graceful degradation
+ * 3. LOADING INDICATORS:
+ *    - Spinner icons on buttons during voting
+ *    - "Voting..." text instead of icons
+ *    - Progress bars for long operations
  *
- * 6. ACCESSIBILITY:
- *    - Add aria-label to buttons
- *    - Keyboard navigation
- *    - Screen reader announcements
+ * 4. ENHANCED ACCESSIBILITY:
+ *    - aria-label on buttons ("Upvote this opinion")
+ *    - Announce vote changes to screen readers
+ *    - Keyboard shortcuts for voting
  *
- * 7. ANIMATIONS:
- *    - Animate vote count changes
- *    - Button press feedback
- *    - Success/error animations
+ * 5. ANIMATIONS:
+ *    - Animate vote count changes (count up/down)
+ *    - Button press feedback (scale, color change)
+ *    - Success animations when vote completes
  *
  * REAL-WORLD APPLICATIONS:
  * ========================
- * This formAction pattern is used in many real apps:
+ * The useActionState + formAction pattern we implemented is used in many real apps:
  *
- * - Reddit: Upvote/downvote posts and comments
- * - Stack Overflow: Upvote/downvote questions and answers
- * - Twitter: Like/unlike posts (could use this pattern)
- * - YouTube: Like/dislike videos
- * - Product Hunt: Upvote products
- * - Any voting or rating system
+ * - Reddit: Upvote/downvote with loading states (buttons disable during vote)
+ * - Stack Overflow: Vote buttons disable to prevent double-voting
+ * - Twitter: Like button shows loading state during request
+ * - YouTube: Like/dislike with instant feedback and disabled state
+ * - Product Hunt: Upvote buttons disable during submission
+ * - Any voting, rating, or action system with async backend
  *
- * The pattern we're learning here is production-ready and scalable!
+ * The patterns we learned (Form Actions + useActionState) are:
+ * ✓ Production-ready
+ * ✓ Scalable
+ * ✓ User-friendly
+ * ✓ Industry standard
+ * ✓ React 19 best practices
+ *
+ * This is exactly how modern React apps should handle async form actions!
  */
