@@ -290,10 +290,11 @@ export default function Header() {
       */}
       <nav>
         {/*
-          CART BUTTON
-          ===========
-          "In there I then want to have a button which will later open my cart.
-          And later we'll also show the number of cart items next to this text."
+          CART BUTTON (Lessons 285 & 289)
+          ===============================
+          Lesson 285: "In there I then want to have a button which will later
+          open my cart. And later we'll also show the number of cart items
+          next to this text."
 
           DYNAMIC CART COUNT:
           -------------------
@@ -305,8 +306,36 @@ export default function Header() {
           - Items are removed from the cart
           - Cart is cleared
 
-          This is the power of React's reactive system - the UI stays in sync
-          with the state without manual DOM manipulation.
+          LESSON 289 - USING CUSTOM BUTTON COMPONENT:
+          -------------------------------------------
+          The instructor explains: "For example, in the Header component.
+          There I have a button, which now should be built with that new
+          custom button. Therefore, here we can import this Button component
+          from ./UI/Button.jsx, and then replace the built-in button with
+          this custom button."
+
+          "And here, I won't add onClick yet because we're not dealing with
+          clicks yet. But I wanna make sure that here I got this text only
+          style. So therefore I wanna set text only here to true on this
+          custom button."
+
+          "And this can easily be done by simply adding the textOnly prop.
+          You could set it to true like this, but that's actually not required
+          because just adding a prop like this will automatically set it to
+          true in React."
+
+          LESSON 289 VERSION:
+          -------------------
+          import Button from './UI/Button.jsx';
+
+          <Button textOnly onClick={handleShowCart}>
+            Cart ({totalCartItems})
+          </Button>
+
+          CURRENT VERSION:
+          ----------------
+          Uses native <button> with "text-button" class.
+          The custom Button component encapsulates this same styling.
 
           CLICK HANDLER:
           --------------

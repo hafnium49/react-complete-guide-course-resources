@@ -292,25 +292,55 @@ export default function MealItem({ meal }) {
         */}
         <p className="meal-item-actions">
           {/*
-            ADD TO CART BUTTON (Lesson 287)
-            ===============================
-            "Of course, at the moment the button won't do anything but
-            that will change in the future."
+            ADD TO CART BUTTON (Lessons 287 & 289)
+            ======================================
+            Lesson 287: "Of course, at the moment the button won't do anything
+            but that will change in the future."
 
-            LESSON 287 VERSION:
-            -------------------
+            LESSON 287 VERSION (Initial):
+            -----------------------------
             <button>Add to Cart</button>
             (No onClick handler, no styling class)
 
+            LESSON 289 - USING CUSTOM BUTTON COMPONENT:
+            -------------------------------------------
+            The instructor explains: "Now, on those meal items I want to have
+            that other button style and therefore we should go to the MealItem
+            component and also import the custom button there from the UI
+            folder and then the Button.jsx file."
+
+            "And then go down to this button and here use it just like this.
+            And again, here, we don't need any other props for now because
+            we're also not handling clicks here yet."
+
+            LESSON 289 VERSION:
+            -------------------
+            import Button from './UI/Button.jsx';
+
+            <Button onClick={handleAddMealToCart}>
+              Add to Cart
+            </Button>
+
+            Note: No textOnly prop means it uses the "button" class
+            (gold background, primary action style).
+
             CURRENT VERSION:
             ----------------
-            Has onClick handler and "button" class (added in later lessons).
+            Uses native <button> with "button" class.
+            The custom Button component encapsulates this same styling.
 
-            className="button" provides:
+            className="button" provides (from index.css):
             - Gold background (#ffc404)
             - Dark text (#1f1a09)
-            - Hover effect
+            - Hover effect (#ffab04)
             - cursor: pointer
+            - padding and border-radius
+
+            WHAT'S NEXT (end of Lesson 289):
+            --------------------------------
+            "And therefore, I'd say as a next step it probably makes sense
+            to make sure that these buttons can be clicked and that we start
+            managing some cart data."
           */}
           <button className="button" onClick={handleAddMealToCart}>
             Add to Cart
