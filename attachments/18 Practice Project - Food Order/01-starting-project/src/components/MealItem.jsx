@@ -1,31 +1,44 @@
 /**
  * ============================================================================
- * MEAL ITEM COMPONENT - INDIVIDUAL MEAL CARD
+ * MEAL ITEM COMPONENT - INDIVIDUAL MEAL CARD (Lesson 287)
  * ============================================================================
  *
  * This component renders a single meal card with image, details, and an
  * "Add to Cart" button. It's used by the Meals component to display each
  * meal in the grid.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
- * 1. Creating presentational components that receive data via props
- * 2. Consuming Context to access shared functionality (addItem)
- * 3. Handling user interactions (click events)
- * 4. Formatting data for display (currency)
- * 5. Working with backend images
+ * LESSON 287 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Creating a separate component for repeated UI elements
+ * 2. Deciding between passing individual props vs a single object prop
+ * 3. Using CSS classes from the provided index.css file
+ * 4. Working with backend images using template literals
+ * 5. Semantic HTML structure (article, list items)
+ *
+ * WHY CREATE A SEPARATE COMPONENT?
+ * ================================
+ * As the instructor explains:
+ * "Since that will be quite some markup to add I'll add a brand new
+ * component here, which is optional, you could also add that markup
+ * which I'm about to add in a new component here in the meals component
+ * in that list item here, but I'll add a new component instead which
+ * I'll name MealItem.jsx."
+ *
+ * Benefits of separate component:
+ * - Keeps Meals.jsx clean and focused on fetching
+ * - MealItem handles its own presentation
+ * - Easier to maintain and modify
+ * - More reusable
  *
  * COMPONENT RESPONSIBILITIES:
  * ===========================
- * - Display meal image
+ * - Display meal image (with backend URL)
  * - Show meal name, price, and description
  * - Provide "Add to Cart" button
- * - Add meal to cart when button is clicked
  *
  * DATA FLOW:
  * ==========
- * Props in:  meal object from Meals component
- * Action out: addItem() called on CartContext when button clicked
+ * Meals.jsx → (meal object as prop) → MealItem.jsx
  */
 
 import { useContext } from 'react';
@@ -33,10 +46,20 @@ import { useContext } from 'react';
 /**
  * IMPORTS
  * =======
- * - currencyFormatter: Utility for formatting prices as currency
- * - CartContext: Context for accessing cart operations
+ * - currencyFormatter: Utility for formatting prices (Lesson 288)
+ * - CartContext: Context for accessing cart operations (added in later lesson)
+ *
+ * LESSON 288 - IMPORTING currencyFormatter:
+ * -----------------------------------------
+ * The instructor explains: "And now we can use this currencyFormatter
+ * here in the MealItem by importing currencyFormatter from going up one
+ * level and then diving into the util folder and importing from the
+ * formatting.js file."
+ *
+ * MDN Documentation for Intl.NumberFormat:
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat
  */
-import { currencyFormatter } from '../util/formatting.js';
+import { currencyFormatter } from '../util/formatting.js'; // Added in Lesson 288
 import CartContext from '../store/CartContext.jsx';
 
 /**
@@ -44,8 +67,28 @@ import CartContext from '../store/CartContext.jsx';
  * ===================
  * Renders a meal card with image, details, and add to cart functionality.
  *
+ * PROPS DESIGN DECISION (Lesson 287):
+ * ------------------------------------
+ * The instructor discusses two options:
+ *
+ * "So here we should definitely expect to get some props and it's now up
+ * to you, whether you expect to get a name prop, a price prop, an image
+ * prop, and so on, or if you expect to get a single meal prop, which then
+ * contains all these different fields as properties."
+ *
+ * OPTION 1 - Individual props:
+ * function MealItem({ name, price, description, image }) { ... }
+ * <MealItem name={meal.name} price={meal.price} ... />
+ *
+ * OPTION 2 - Single object prop (chosen):
+ * function MealItem({ meal }) { ... }
+ * <MealItem meal={meal} />
+ *
+ * "That really comes down to preference, and here I will go for this
+ * single meal prop."
+ *
  * @param {Object} props
- * @param {Object} props.meal - Meal data object
+ * @param {Object} props.meal - Meal data object from backend
  * @param {string} props.meal.id - Unique identifier
  * @param {string} props.meal.name - Meal name
  * @param {number|string} props.meal.price - Meal price
@@ -54,39 +97,22 @@ import CartContext from '../store/CartContext.jsx';
  */
 export default function MealItem({ meal }) {
   /**
-   * CONSUMING CART CONTEXT
-   * ======================
-   * We use useContext to access the CartContext.
+   * CONSUMING CART CONTEXT (Added in later lesson)
+   * ===============================================
+   * Note: In Lesson 287, the button doesn't work yet.
+   * The instructor says: "Of course, at the moment the button won't do
+   * anything but that will change in the future."
    *
-   * We only need the addItem function from the context.
-   * We could destructure it: const { addItem } = useContext(CartContext);
-   * But keeping cartCtx makes it clear where addItem comes from.
+   * This Context usage is added in a later lesson when we implement
+   * the cart functionality.
    */
   const cartCtx = useContext(CartContext);
 
   /**
-   * ADD TO CART HANDLER
-   * ===================
-   * Called when user clicks the "Add to Cart" button.
-   *
-   * WHAT HAPPENS:
-   * 1. cartCtx.addItem(meal) dispatches ADD_ITEM action to the reducer
-   * 2. Reducer checks if meal already exists in cart
-   * 3. If exists: increment quantity
-   * 4. If not: add meal with quantity 1
-   * 5. CartContext state updates
-   * 6. All components consuming CartContext re-render
-   * 7. Header shows updated cart count
-   *
-   * WHY PASS THE WHOLE MEAL OBJECT?
-   * -------------------------------
-   * The cart needs all meal data (id, name, price, etc.) to:
-   * - Display the item in the cart
-   * - Calculate totals
-   * - Include in order submission
-   *
-   * We could pass just the ID and look up the meal, but passing
-   * the whole object is simpler and more efficient.
+   * ADD TO CART HANDLER (Added in later lesson)
+   * ============================================
+   * In Lesson 287, this handler doesn't exist yet.
+   * The button is just a placeholder.
    */
   function handleAddMealToCart() {
     cartCtx.addItem(meal);
@@ -95,14 +121,25 @@ export default function MealItem({ meal }) {
   /**
    * RENDER MEAL CARD
    * ================
-   * The meal card structure follows the CSS classes defined in index.css.
+   * The instructor builds this structure step by step in Lesson 287.
+   *
+   * CSS CLASSES FROM index.css:
+   * ---------------------------
+   * The instructor frequently references the index.css file:
+   * "I wanna have a CSS class of meal-item. And I'm adding this class here,
+   * of course, because in index.css you'll find this class being selected
+   * in CSS rules, and those rules then will make sure that those items
+   * look good."
    */
   return (
     /**
-     * LIST ITEM
-     * =========
+     * LIST ITEM (Lesson 287)
+     * ======================
+     * "So every meal item should be a list item here for a start"
+     *
      * We use <li> because this component is rendered inside a <ul> in Meals.
-     * The "meal-item" class provides card styling:
+     *
+     * The "meal-item" class provides card styling from index.css:
      * - background-color: #1d1a16 (dark)
      * - border-radius: 1rem
      * - overflow: hidden (clips image corners)
@@ -111,74 +148,117 @@ export default function MealItem({ meal }) {
      */
     <li className="meal-item">
       {/*
-        ARTICLE ELEMENT
-        ===============
+        ARTICLE ELEMENT (Lesson 287)
+        ============================
+        The instructor references the CSS file for guidance:
+        "And you also see some related rules, for example, that we seem
+        to have an article in every meal item, at least here in the CSS
+        code I provided to you. Therefore here, I'll actually wrap an
+        article element around all the other content that makes up a
+        meal item."
+
         Using <article> is semantically correct for self-contained content
         that could be distributed independently.
-
-        The CSS makes this a flex container with space-between to push
-        the button to the bottom of the card.
       */}
       <article>
         {/*
-          MEAL IMAGE
-          ==========
-          Images are served by the backend at http://localhost:3000/
+          MEAL IMAGE (Lesson 287)
+          =======================
+          The instructor explains the image source challenge:
 
-          meal.image contains a relative path like "images/mac-and-cheese.jpg"
-          We concatenate with the backend URL to get the full path.
+          "And of course, the source of that image should now be received
+          as an input to that component as a prop, therefore, because of
+          course the meal data lives in the meals jsx file, and we kind
+          of need to pass that data to the meal item component."
 
-          Template literal: `http://localhost:3000/${meal.image}`
-          Result: "http://localhost:3000/images/mac-and-cheese.jpg"
+          BACKEND DATA:
+          -------------
+          "And it will be meal image because in that dummy backend data,
+          you'll see that every meal has a image property, and then also
+          a description, price, name and ID."
+
+          THE IMAGE URL PROBLEM (Lesson 287):
+          -----------------------------------
+          Initially, images were missing because:
+          "Now they are missing because in my backend data I just got a
+          relative path to those images seen relative from on the backend,
+          But we're now loading those images from the frontend. So we in
+          the end need to prepend this image path here on the frontend by
+          also adding the backend URL."
+
+          TEMPLATE LITERAL SOLUTION:
+          --------------------------
+          "And for this we can use the template literal feature provided
+          by JavaScript by using backticks here, so not single quotes but
+          backticks, which allows us to easily create a string where parts
+          of that string are dynamic."
+
+          "I'll start with the hard-coded part which is that backend URL,
+          localhost:3000/, and then thereafter I'll inject meal.image
+          which is that image path that's different for every meal."
+
+          RESULT:
+          -------
+          meal.image = "images/mac-and-cheese.jpg"
+          Full URL = "http://localhost:3000/images/mac-and-cheese.jpg"
 
           ALT TEXT:
           ---------
-          Using meal.name as alt text is good for accessibility.
-          Screen readers will announce "Mac & Cheese" instead of just "image".
-
-          CSS styling (from index.css):
-          - width: 100%
-          - height: 20rem
-          - object-fit: cover (maintains aspect ratio, crops if needed)
+          "we can now also set the alt text of that image maybe to meal.name"
         */}
         <img src={`http://localhost:3000/${meal.image}`} alt={meal.name} />
 
         {/*
-          MEAL DETAILS
-          ============
-          Container for the text content of the meal card.
+          MEAL DETAILS (Lesson 287)
+          =========================
+          "Below that image output the title of the meal, though for
+          styling purposes I'll wrap that into a div."
         */}
         <div>
           {/*
-            MEAL NAME
-            =========
-            The h3 element displays the meal name prominently.
-
-            CSS styling:
-            - font-size: 1.5rem
-            - font-weight: bold
-            - margin: 0.75rem 0
+            MEAL NAME (Lesson 287)
+            ======================
+            "And then here, between those h3 tags, I'll output meal.name."
           */}
           <h3>{meal.name}</h3>
 
           {/*
-            MEAL PRICE
-            ==========
-            Displays the formatted price in a styled badge.
+            MEAL PRICE (Lessons 287 & 288)
+            ==============================
+            Lesson 287: "Below that I then wanna have a paragraph where I
+            output the price, and for that here I'll give this a class name
+            of meal-item-price, again, another class you'll find in the
+            CSS file."
 
-            CURRENCY FORMATTING:
-            --------------------
-            currencyFormatter.format(meal.price)
+            LESSON 287 VERSION (Initial):
+            -----------------------------
+            "I'll make sure to format it in a second, but for the moment
+            I'll just output it like this"
 
-            Takes the raw price (e.g., 8.99 or "8.99") and formats it
-            as US currency: "$8.99"
+            {meal.price}  // Just the raw number
 
-            The formatter handles:
-            - Adding $ symbol
-            - Proper decimal places
-            - Thousands separators for large numbers
+            LESSON 288 VERSION (With formatting):
+            -------------------------------------
+            The instructor updates this:
+            "And then here where we output the meal price we can output
+            currencyFormatter.format meal.price like this, which again
+            here is a bit overkill, but something that's good to know
+            and something that can be helpful if you got numbers of
+            different formats."
 
-            CSS styling (meal-item-price class):
+            {currencyFormatter.format(meal.price)}  // "$8.99"
+
+            WHY USE currencyFormatter?
+            --------------------------
+            - Consistent formatting across the app
+            - Handles decimal places automatically
+            - Adds currency symbol
+            - Works with any number format
+
+            MDN Documentation:
+            https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat
+
+            CSS styling (meal-item-price class from index.css):
             - display: inline-block
             - background-color: #312c1d (brown/gold)
             - color: #ffc404 (gold)
@@ -190,39 +270,46 @@ export default function MealItem({ meal }) {
           </p>
 
           {/*
-            MEAL DESCRIPTION
-            ================
-            The description text provides more detail about the meal.
-
-            CSS styling (meal-item-description class):
-            - margin: 1rem
+            MEAL DESCRIPTION (Lesson 287)
+            =============================
+            "And then below that have another paragraph where we can
+            output the meal description. This paragraph should also
+            receive a CSS class of meal-item-description."
           */}
           <p className="meal-item-description">{meal.description}</p>
         </div>
 
         {/*
-          ACTIONS SECTION
-          ===============
-          Container for action buttons (currently just "Add to Cart").
+          ACTIONS SECTION (Lesson 287)
+          ============================
+          "As a last step, already, below this div here I'll add another
+          paragraph which will receive a class name of meal-item-actions
+          where I wanna add a button which should allow me to add this
+          meal to the cart."
 
           CSS styling (meal-item-actions class):
           - margin-bottom: 1.5rem
         */}
         <p className="meal-item-actions">
           {/*
-            ADD TO CART BUTTON
-            ==================
-            The main call-to-action for this component.
+            ADD TO CART BUTTON (Lesson 287)
+            ===============================
+            "Of course, at the moment the button won't do anything but
+            that will change in the future."
 
-            onClick={handleAddMealToCart}:
-            - When clicked, calls our handler function
-            - Handler adds the meal to the cart via Context
-            - No need for event.preventDefault() since it's a button, not form
+            LESSON 287 VERSION:
+            -------------------
+            <button>Add to Cart</button>
+            (No onClick handler, no styling class)
 
-            className="button":
+            CURRENT VERSION:
+            ----------------
+            Has onClick handler and "button" class (added in later lessons).
+
+            className="button" provides:
             - Gold background (#ffc404)
             - Dark text (#1f1a09)
-            - Hover effect (slightly darker gold)
+            - Hover effect
             - cursor: pointer
           */}
           <button className="button" onClick={handleAddMealToCart}>
@@ -236,56 +323,69 @@ export default function MealItem({ meal }) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS FROM LESSON 287
  * ============================================================================
  *
- * PRESENTATIONAL VS CONTAINER COMPONENTS:
- * =======================================
- * MealItem is primarily a PRESENTATIONAL component:
- * - Receives data via props
- * - Displays that data
- * - Has minimal logic
+ * COMPONENT EXTRACTION:
+ * =====================
+ * When you have a lot of markup that repeats for each item in a list,
+ * extract it into a separate component.
  *
- * The one "smart" part is accessing CartContext for the addItem function.
- * This is a reasonable exception - the alternative would be passing
- * the addItem function as a prop from Meals, which adds coupling.
+ * Before (in Meals.jsx):
+ * {loadedMeals.map((meal) => (
+ *   <li key={meal.id}>{meal.name}</li>  // Too simple!
+ * ))}
  *
- * CONTEXT USAGE:
- * ==============
- * Instead of prop drilling:
- *   App → Meals → MealItem (pass addItem as prop through each level)
+ * After (with MealItem):
+ * {loadedMeals.map((meal) => (
+ *   <MealItem key={meal.id} meal={meal} />
+ * ))}
  *
- * We use Context:
- *   CartContextProvider wraps the tree
- *   MealItem directly accesses addItem via useContext
+ * PROPS DESIGN:
+ * =============
+ * Single object prop: { meal }
+ * vs
+ * Individual props: { name, price, description, image }
  *
- * This is cleaner when many components need the same data/functions.
+ * Both are valid. Single object is simpler to pass and extend.
  *
- * IMAGE HANDLING:
+ * CSS CLASS PATTERNS:
+ * ===================
+ * The instructor uses the provided CSS as a guide:
+ * - meal-item: The card container
+ * - meal-item-price: Price badge styling
+ * - meal-item-description: Description paragraph
+ * - meal-item-actions: Button container
+ *
+ * This is a common pattern: CSS is designed first, then components
+ * are built to match the expected class structure.
+ *
+ * BACKEND IMAGES:
  * ===============
- * Backend images are served statically from the backend server.
- * The meal.image property contains a relative path, and we construct
- * the full URL using the backend's address.
+ * When images are served from a backend:
+ * 1. Backend returns relative path: "images/food.jpg"
+ * 2. Frontend must prepend base URL: "http://localhost:3000/"
+ * 3. Use template literal: `${baseUrl}/${path}`
  *
- * In production, you might:
- * - Use environment variables for the backend URL
- * - Use a CDN for images
- * - Use image optimization services
+ * PLACEHOLDER FUNCTIONALITY:
+ * ==========================
+ * It's okay to add buttons that don't work yet!
+ * The instructor adds the "Add to Cart" button knowing it won't
+ * function until the cart system is implemented.
  *
- * CURRENCY FORMATTING:
- * ====================
- * Using Intl.NumberFormat for currency formatting:
- * - Internationalization support
- * - Consistent formatting across the app
- * - Handles edge cases (rounding, locale differences)
+ * This approach:
+ * - Completes the visual design
+ * - Reserves space in the layout
+ * - Makes clear what needs to be implemented later
  *
- * SEMANTIC HTML:
- * ==============
- * - <li> for list items (inside <ul> in Meals)
- * - <article> for self-contained content
- * - <h3> for heading (inside the list item)
- * - <p> for paragraphs
- * - <button> for interactive actions
+ * WHAT'S NEXT (mentioned at end of Lesson 287):
+ * =============================================
+ * "I'd argue they don't look that great, and that's therefore what I'd
+ * like to change first along with that price formatting here, before
+ * we then start working on the cart."
  *
- * Good semantic HTML improves accessibility and SEO.
+ * Next lessons will:
+ * - Add button styling (className="button")
+ * - Add price formatting (currencyFormatter)
+ * - Implement cart functionality
  */

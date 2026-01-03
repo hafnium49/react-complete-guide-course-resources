@@ -155,11 +155,20 @@
  * This implementation uses a custom hook that encapsulates those hooks.
  *
  * - useHttp: Custom hook for HTTP requests (handles loading/error/data states)
- * - MealItem: Component for rendering individual meal cards (added in later lesson)
+ * - MealItem: Component for rendering individual meal cards (Lesson 287)
  * - Error: Component for displaying error messages (added in later lesson)
+ *
+ * LESSON 287 - IMPORTING MealItem:
+ * --------------------------------
+ * The instructor says: "Now we can go back to Meals.jsx and use that meal
+ * item there. Instead of outputting those list items here, I'll output my
+ * meal items which I just added."
+ *
+ * "Of course, you also must make sure that the meal item is imported from
+ * MealItem.jsx."
  */
 import useHttp from '../hooks/useHttp.js';
-import MealItem from './MealItem.jsx';
+import MealItem from './MealItem.jsx'; // Added in Lesson 287
 import Error from './Error.jsx';
 
 /**
@@ -289,8 +298,11 @@ export default function Meals() {
   return (
     <ul id="meals">
       {/*
-        MAPPING MEALS TO COMPONENTS
-        ===========================
+        MAPPING MEALS TO COMPONENTS (Lessons 286 & 287)
+        ================================================
+
+        LESSON 286 - Initial approach:
+        ------------------------------
         The instructor explains: "I'll just use this loadedMeals state
         and map every meals item into a list item which gets a key
         that should be meal.id because every dummy meal I'm providing
@@ -299,15 +311,21 @@ export default function Meals() {
         "And then every meal also has a name, a price, a description
         and an image. And for now I'll just output the name."
 
-        LESSON 286 VERSION:
-        -------------------
         {loadedMeals.map((meal) => (
           <li key={meal.id}>{meal.name}</li>
         ))}
 
-        CURRENT VERSION:
-        ----------------
-        Uses MealItem component for full meal cards (added in later lesson).
+        LESSON 287 - Using MealItem component:
+        --------------------------------------
+        The instructor says: "Now we can go back to Meals.jsx and use
+        that meal item there. Instead of outputting those list items
+        here, I'll output my meal items which I just added."
+
+        "And every meal item should of course receive a key which still
+        can be meal.id, and then, in my case, since I'm expecting that
+        single meal prop here, every meal item should also get this meal
+        prop which can be set equal to the meal we're getting here in
+        that loop."
 
         KEY PROP:
         ---------
