@@ -53,15 +53,21 @@
  * We import all the main components that make up our application.
  *
  * Visual Components:
- * - Header: The app header with logo and cart button
- * - Meals: The grid of available meals to order
+ * - Header: The app header with logo and cart button (Lesson 285)
+ * - Meals: The grid of available meals to order (Lesson 286)
  *
  * Modal Components:
  * - Cart: Shows cart contents in a modal (displayed conditionally)
  * - Checkout: Shows checkout form in a modal (displayed conditionally)
+ *
+ * LESSON 286 - ADDING MEALS:
+ * --------------------------
+ * The instructor says: "To now see this in action, we of course have to
+ * go to the App component and in there, add our Meals component which
+ * must be imported from the Meals.jsx file."
  */
 import Header from './components/Header.jsx';
-import Meals from './components/Meals.jsx';
+import Meals from './components/Meals.jsx'; // Added in Lesson 286
 import Cart from './components/Cart.jsx';
 import Checkout from './components/Checkout.jsx';
 
@@ -152,11 +158,28 @@ function App() {
         <Header />
 
         {/*
-          MEALS COMPONENT
-          ================
+          MEALS COMPONENT (Added in Lesson 286)
+          =====================================
           Fetches meal data from the backend (GET /meals) and displays
           them in a responsive grid layout.
 
+          As the instructor explains in Lesson 286:
+          "To now see this in action, we of course have to go to the
+          App component and in there, add our Meals component which
+          must be imported from the Meals.jsx file."
+
+          "And if we then save this and reload our page, we should see
+          that meals data here. Obviously, at the moment, just the names
+          because at the moment we're not outputting anything else but
+          this proves that fetching this data works. And that's of course
+          a huge step into the right direction."
+
+          LESSON 286 VERSION:
+          -------------------
+          Initially just displayed meal names in a simple list.
+
+          CURRENT VERSION:
+          ----------------
           Each meal card shows:
           - Meal image
           - Meal name
