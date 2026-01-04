@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lesson 295)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295 & 296)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -14,6 +14,29 @@
  * 4. Building a form with multiple input fields
  * 5. Creating reusable Input components (optional approach)
  * 6. Understanding the onClose prop for Escape key handling
+ *
+ * LESSON 296 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Handling form submission with onSubmit prop
+ * 2. Understanding why preventDefault() is necessary
+ * 3. Using HTML5 validation with the required attribute
+ * 4. Different approaches to extract form values (state, refs, FormData)
+ * 5. Using the FormData API with Object.fromEntries()
+ * 6. Combining customer data with cart data for the order
+ *
+ * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
+ * ===============================================
+ * The instructor explains:
+ * "if we wanna handle the submission of this form, we can either do that
+ * manually by adding the onSubmit prop and setting up our own function
+ * that's triggered when that submit event occurs, or we could use a
+ * form action."
+ *
+ * "Now, here, I'll start by using this onSubmit prop and I'll handle the
+ * form submission manually. I'll not use this form actions feature that's
+ * offered by React, but later, at the end of this section, we'll actually
+ * migrate this project to use form actions so that you see both approaches
+ * in action."
  *
  * WHY CREATE A CHECKOUT COMPONENT? (Lesson 295)
  * =============================================
@@ -213,9 +236,13 @@ export default function Checkout() {
   }
 
   /**
-   * FORM SUBMIT HANDLER
-   * ===================
-   * Called when user submits the checkout form.
+   * FORM SUBMIT HANDLER (Lesson 296)
+   * ================================
+   * The instructor explains setting up this handler:
+   * "So therefore here, I'll start by adding this onSubmit prop to this
+   * form element. And then we can set up a function, handleSubmit could
+   * be the name, which we connect to that prop, so which we pass as a
+   * value to that prop as we always do."
    *
    * FORM HANDLING PATTERN:
    * ----------------------
@@ -228,33 +255,83 @@ export default function Checkout() {
    */
   function handleSubmit(event) {
     /**
-     * PREVENT DEFAULT BEHAVIOR
-     * ========================
-     * By default, form submission causes a full page reload.
-     * We prevent this because we want to handle it with JavaScript.
+     * PREVENT DEFAULT BEHAVIOR (Lesson 296)
+     * =====================================
+     * The instructor explains why this is necessary:
+     * "the thing with form submissions just is that out of the box, when
+     * using a regular button in a regular form, the browser will go ahead
+     * and create an HTTP request for you and send it for you, but
+     * unfortunately not to the backend we want it to be sent to because
+     * the browser doesn't know about that."
+     *
+     * "Instead, the browser would send the request to this development
+     * server that's serving this site. So our front end. But this server
+     * and this site is not prepared and equipped to handle this request."
+     *
+     * "Therefore, what we need to do is we need to prevent that default.
+     * And as you learned, we can do this by calling preventDefault on
+     * that standard event object, which we automatically receive in our
+     * event handling function. It's passed in by React in the end."
+     *
+     * "And by calling this method here, preventDefault, we make sure that
+     * this request, which otherwise would get created and sent is not
+     * getting created and sent."
      */
     event.preventDefault();
 
     /**
-     * EXTRACTING FORM DATA
-     * ====================
-     * The FormData API provides easy access to form values.
+     * EXTRACTING FORM DATA (Lesson 296)
+     * =================================
+     * The instructor discusses multiple approaches to get form values:
      *
-     * new FormData(event.target):
-     * - event.target is the <form> element
-     * - FormData collects all named inputs automatically
+     * APPROACH 1 - State with onChange (Lesson 296):
+     * "We could add a state value for every input or a combined state
+     * object for all the inputs and use the onChange prop to update
+     * the state on every keystroke. We could do that, and for some
+     * validation approaches where we wanna validate on every keystroke,
+     * we typically would have to do that."
      *
-     * Object.fromEntries(fd.entries()):
-     * - fd.entries() returns an iterator of [name, value] pairs
-     * - Object.fromEntries() converts those pairs into an object
+     * APPROACH 2 - Refs (Lesson 296):
+     * "Alternatively, we could work with refs. Now, since I have a custom
+     * component here, the input component, in order to pass a ref to that
+     * component, you might need to use forward ref and wrap that component
+     * function with forward ref if you're using a React version lower than 19.
+     * If you are using React version 19 or higher, you could simply pass a
+     * ref to this component and use it in there."
      *
-     * EXAMPLE:
-     * --------
-     * Form inputs:
-     * <input name="name" value="John Doe" />
-     * <input name="email" value="john@example.com" />
+     * APPROACH 3 - FormData API (Chosen - Lesson 296):
+     * "But here again, I instead prefer using the built-in features the
+     * browser offers to us. We can create such a FormData object and pass
+     * the event target, which is the form element in the end, the underlying
+     * object that's managed by the browser to be precise."
      *
-     * Result:
+     * WHY THE name ATTRIBUTE IS IMPORTANT (Lesson 296):
+     * -------------------------------------------------
+     * "The only important thing here is that we got this name prop on our
+     * inputs because this is required to then access those different input
+     * fields by their name and to extract the values entered by the user."
+     *
+     * USING get() METHOD (Lesson 296):
+     * --------------------------------
+     * "Because as you learned, we can now use the get method, for example,
+     * to get the full name value. So the value that was entered into this field."
+     *
+     * Example: fd.get('name') returns the value of the input with name="name"
+     *
+     * CONVERTING TO PLAIN OBJECT (Lesson 296):
+     * ----------------------------------------
+     * "Or as you also learned in the forms section, we can actually convert
+     * this FormData object to a simpler JavaScript object where those form
+     * inputs are basically represented by their name as property names, and
+     * the entered values are then values for those properties, by using
+     * object fromEntries and passing FormData entries like this to it."
+     *
+     * "And this will essentially give us an object where we, for example,
+     * have an email property with the value entered by the user, and of
+     * course key value pairs for all the other input fields as well."
+     *
+     * RESULT EXAMPLE:
+     * ---------------
      * {
      *   name: "John Doe",
      *   email: "john@example.com",
@@ -262,23 +339,29 @@ export default function Checkout() {
      *   "postal-code": "12345",
      *   city: "New York"
      * }
-     *
-     * This is much cleaner than manually reading each input's value!
      */
     const fd = new FormData(event.target);
     const customerData = Object.fromEntries(fd.entries());
 
     /**
-     * SENDING THE ORDER
-     * =================
-     * We call sendRequest() with the request body as JSON string.
+     * SENDING THE ORDER (Lesson 296)
+     * ==============================
+     * The instructor explains combining customer data with cart data:
+     * "And therefore, this is how we can easily extract the data entered
+     * by the user. And that's then the data which we in the end wanna
+     * send to the backend, combined with the cart data, because of course
+     * the order which we're sending to the backend should also include
+     * details about what was ordered."
+     *
+     * "And therefore that's now the last step here. We need to send such
+     * an HTTP request to the backend. So let's do that as a next step."
      *
      * ORDER DATA STRUCTURE:
      * ---------------------
      * {
      *   order: {
-     *     items: [...],      // Cart items array
-     *     customer: {...}    // Customer form data
+     *     items: [...],      // Cart items array (what was ordered)
+     *     customer: {...}    // Customer form data (who ordered)
      *   }
      * }
      *
@@ -401,8 +484,20 @@ export default function Checkout() {
    * - Error display (if any)
    * - Action buttons
    *
-   * HTML5 VALIDATION:
-   * -----------------
+   * HTML5 VALIDATION (Lesson 296):
+   * ==============================
+   * The instructor explains using the required attribute:
+   * "Now here to validate the input, I added the required prop on those
+   * input fields. And as a result, if we save that and we go to the
+   * Checkout page and we try to submit an empty form, we get some nice
+   * error messages here. So that's pretty good. We don't have to worry
+   * about this problem here."
+   *
+   * "Though, as mentioned before, you could of course also implement
+   * custom JavaScript-driven validation as you also learned it in the
+   * forms section. But here, I'll keep it like this and therefore the
+   * validation part is already done."
+   *
    * We use the 'required' attribute for basic validation.
    * The browser won't submit the form if required fields are empty.
    * The 'email' input type adds email format validation.
@@ -410,11 +505,16 @@ export default function Checkout() {
   return (
     <Modal open={userProgressCtx.progress === 'checkout'} onClose={handleClose}>
       {/*
-        FORM ELEMENT
-        ============
+        FORM ELEMENT (Lesson 296)
+        =========================
+        The instructor explains setting up the onSubmit:
+        "So therefore here, I'll start by adding this onSubmit prop
+        to this form element."
+
         onSubmit={handleSubmit}:
         - Called when form is submitted (button click or Enter key)
         - We prevent default and handle it manually
+        - Later in this section, we'll migrate to form actions
       */}
       <form onSubmit={handleSubmit}>
         {/*
@@ -426,8 +526,8 @@ export default function Checkout() {
         <p>Total Amount: {currencyFormatter.format(cartTotal)}</p>
 
         {/*
-          FORM FIELDS (Lesson 295)
-          ========================
+          FORM FIELDS (Lessons 295 & 296)
+          ===============================
           The instructor discusses two approaches for form inputs:
 
           APPROACH 1 - Inline Inputs (used here):
@@ -450,10 +550,23 @@ export default function Checkout() {
           In JSX, we use 'htmlFor' instead of 'for' because 'for'
           is a reserved keyword in JavaScript.
 
-          name ATTRIBUTE:
-          ---------------
-          The 'name' attribute is crucial for FormData to work.
-          FormData uses the name to create key-value pairs.
+          name ATTRIBUTE (Lesson 296):
+          ----------------------------
+          The instructor emphasizes the importance of the name attribute:
+          "The only important thing here is that we got this name prop
+          on our inputs because this is required to then access those
+          different input fields by their name and to extract the values
+          entered by the user."
+
+          Without the name attribute, FormData cannot identify the inputs!
+
+          required ATTRIBUTE (Lesson 296):
+          --------------------------------
+          The instructor explains HTML5 validation:
+          "Now here to validate the input, I added the required prop on
+          those input fields. And as a result, if we save that and we go
+          to the Checkout page and we try to submit an empty form, we get
+          some nice error messages here."
         */}
         <div className="control">
           <label htmlFor="name">Full Name</label>
@@ -524,7 +637,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSON 295
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295 & 296
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -537,6 +650,35 @@ export default function Checkout() {
  * 6. Build form with input fields for customer data
  * 7. (Optional) Create reusable Input component in UI folder
  * 8. Add Checkout component to App.jsx
+ *
+ * LESSON 296 WORKFLOW:
+ * ====================
+ * 1. Add onSubmit prop to the form element
+ * 2. Create handleSubmit function to handle form submission
+ * 3. Call event.preventDefault() to stop browser's default behavior
+ * 4. Add required attribute to inputs for HTML5 validation
+ * 5. Create FormData object from event.target (the form)
+ * 6. Convert FormData to plain object with Object.fromEntries()
+ * 7. Combine customer data with cart items for the order
+ * 8. Send HTTP request to backend (covered in next lesson)
+ *
+ * TWO FORM SUBMISSION APPROACHES (Lesson 296):
+ * ============================================
+ * 1. onSubmit + handleSubmit (current approach)
+ * 2. Form Actions (will be covered later in this section)
+ *
+ * WHY preventDefault() IS NECESSARY (Lesson 296):
+ * ===============================================
+ * The instructor explains:
+ * "the browser will go ahead and create an HTTP request for you and send
+ * it for you, but unfortunately not to the backend we want it to be sent
+ * to because the browser doesn't know about that."
+ *
+ * THREE WAYS TO EXTRACT FORM VALUES (Lesson 296):
+ * ===============================================
+ * 1. State with onChange - update state on every keystroke
+ * 2. Refs - useRef + forwardRef (for React < 19) or just ref (React 19+)
+ * 3. FormData API - browser built-in, no React-specific code needed
  *
  * FORM HANDLING WITH FORMDATA:
  * ============================
