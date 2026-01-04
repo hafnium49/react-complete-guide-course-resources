@@ -72,8 +72,8 @@ import Cart from './components/Cart.jsx';
 import Checkout from './components/Checkout.jsx';
 
 /**
- * CONTEXT PROVIDER IMPORTS
- * ========================
+ * CONTEXT PROVIDER IMPORTS (Lesson 291)
+ * =====================================
  * We import the Provider components from our context files.
  *
  * Context in React allows us to share state across components without
@@ -84,7 +84,23 @@ import Checkout from './components/Checkout.jsx';
  * - Theme preferences
  * - UI state (which modal is open)
  *
- * CartContextProvider:
+ * CartContextProvider (Lesson 291):
+ * ---------------------------------
+ * The instructor explains why we wrap with CartContextProvider:
+ * "And that therefore is the next step to use this context from inside
+ * other components. Now as a first step we therefore have to wrap this
+ * CartContextProvider around all the components that are interested."
+ *
+ * "And in the end here, id offer one wrap, basically all my app components
+ * and all their nested components with that provider component. And hence
+ * the best place to do that is the App component, the root component of
+ * this application."
+ *
+ * "Here we can import as a named import CartContextProvider from
+ * ./store/CartContext.jsx. And then simply wrap this around Header and
+ * Meals. And this will allow all these components and their nested child
+ * components to access this context and its properties."
+ *
  * - Manages the shopping cart state
  * - Provides: items array, addItem(), removeItem(), clearCart()
  * - Used by: Header (cart count), MealItem (add to cart), Cart (display/edit items)
@@ -94,7 +110,7 @@ import Checkout from './components/Checkout.jsx';
  * - Provides: progress state, showCart(), hideCart(), showCheckout(), hideCheckout()
  * - Used by: Header (open cart), Cart (close/proceed), Checkout (close)
  */
-import { CartContextProvider } from './store/CartContext.jsx';
+import { CartContextProvider } from './store/CartContext.jsx'; // Wrapped in Lesson 291
 import { UserProgressContextProvider } from './store/UserProgressContext.jsx';
 
 /**

@@ -333,29 +333,50 @@ function cartReducer(state, action) {
   }
 
   /**
-   * REMOVE_ITEM ACTION (Added in later lesson)
-   * ==========================================
-   * Note: In Lesson 290, the instructor only implements ADD_ITEM.
-   * REMOVE_ITEM is added in a subsequent lesson when building the
-   * cart modal with increment/decrement buttons.
+   * REMOVE_ITEM ACTION (Lesson 291)
+   * ================================
+   * The instructor explains the remove item logic:
+   * "Of course, we also wanna make sure that we can remove items.
+   * And for that I'll actually also start by getting my existing
+   * cart item index."
    *
-   * Handles removing an item from the cart.
+   * "So I'll copy that code from add item and add this here in
+   * remove item. Because again, we wanna update that existing cart
+   * item in an immutable way."
    *
-   * LOGIC:
+   * LOGIC (Lesson 291):
+   * -------------------
    * 1. Find the item by ID
    * 2. If quantity > 1: decrement quantity
    * 3. If quantity === 1: remove item entirely
    *
-   * WHY REMOVE ENTIRELY WHEN QUANTITY IS 1?
-   * ----------------------------------------
-   * We don't want items with quantity: 0 in the cart.
-   * When quantity reaches 0, the item should be removed completely.
+   * WHY NO EXISTENCE CHECK? (Lesson 291)
+   * ------------------------------------
+   * The instructor explains:
+   * "Now here, when removing items, we don't have to check whether
+   * an item exists already or not because in this app we'll only be
+   * able to remove items if they do exist because we'll only be able
+   * to reduce the amount of items in the shopping cart from inside
+   * that shopping cart screen."
+   *
+   * This is a design decision - remove buttons only appear for items
+   * that are already in the cart.
    */
   if (action.type === 'REMOVE_ITEM') {
     /**
-     * FIND THE ITEM TO REMOVE
-     * =======================
-     * We use the ID from the action to find the item.
+     * FIND THE ITEM TO REMOVE (Lesson 291)
+     * =====================================
+     * The instructor explains:
+     * "So therefore here we'll need to grab our existing cart item
+     * by reaching out to the state items and accessing this existing
+     * cart item index."
+     *
+     * NOTE: In Lesson 291, the instructor changes action.item.id to action.id
+     * "I'm looking for an entire item property here, but that's no problem
+     * because I only need the id here anyways so I can simply access action.id
+     * here and everything should work. We don't need the full item here,
+     * unlike with the addItem case because when removing the item we just
+     * needed the id to identify it."
      */
     const existingCartItemIndex = state.items.findIndex(
       (item) => item.id === action.id
@@ -363,17 +384,31 @@ function cartReducer(state, action) {
     const existingCartItem = state.items[existingCartItemIndex];
 
     /**
-     * CREATE COPY OF ITEMS ARRAY
-     * ==========================
-     * Same as in ADD_ITEM - we need a new array to avoid mutation.
+     * CREATE COPY OF ITEMS ARRAY (Lesson 291)
+     * =======================================
+     * The instructor explains moving this out of the if block:
+     * "And to do that I'll actually move this updated items array
+     * creation here out of that if block, so that I can use it in
+     * both the if and also the else branch of this if check."
      */
     const updatedItems = [...state.items];
 
     if (existingCartItem.quantity === 1) {
       /**
-       * QUANTITY IS 1 - REMOVE ITEM ENTIRELY
-       * =====================================
-       * splice() removes elements from an array in place.
+       * QUANTITY IS 1 - REMOVE ENTIRE ITEM (Lesson 291)
+       * ================================================
+       * The instructor explains this condition:
+       * "we will need to check what the quantity of that item is because
+       * if it's greater than one we wanna reduce the quantity. If it's
+       * equal to one, we wanna remove the entire item from the shopping
+       * cart items array."
+       *
+       * Using splice() method:
+       * "One way of removing the item is to again create a copy of the
+       * old items... and to then call the splice method on that array.
+       * Splice takes an index, in this case the existing cart item index
+       * and then the number of items that should be spliced, which here
+       * simply means removed."
        *
        * splice(index, count):
        * - index: Where to start removing
@@ -384,10 +419,20 @@ function cartReducer(state, action) {
       updatedItems.splice(existingCartItemIndex, 1);
     } else {
       /**
-       * QUANTITY > 1 - DECREMENT QUANTITY
-       * ==================================
-       * Create a new item object with quantity - 1.
-       * Replace the old item in our items copy.
+       * QUANTITY > 1 - DECREMENT QUANTITY (Lesson 291)
+       * ===============================================
+       * The instructor explains:
+       * "If the quantity is greater than one though we wanna update that
+       * quantity. And for this, we'll need an updated item which is a
+       * fresh copy of the existing item. And we then need to update the
+       * quantity and set it equal to existingCartItem.quantity minus one."
+       *
+       * "So that we create a new item based on the old item where we
+       * reduce the quantity."
+       *
+       * "And then in the else branch, I'll set updated items for this
+       * existing cart item index equal to my updated item here, which
+       * has that reduced quantity."
        */
       const updatedItem = {
         ...existingCartItem,
@@ -396,6 +441,16 @@ function cartReducer(state, action) {
       updatedItems[existingCartItemIndex] = updatedItem;
     }
 
+    /**
+     * RETURN UPDATED STATE (Lesson 291)
+     * ==================================
+     * The instructor explains:
+     * "Now we just need to return that updated state outside of this
+     * inner if block, but still inside of this if block. And here it's
+     * in the end the same logic as before in the add item if block.
+     * We wanna return a new object that copies in the old state and
+     * updates the items."
+     */
     return { ...state, items: updatedItems };
   }
 
@@ -503,10 +558,21 @@ export function CartContextProvider({ children }) {
   }
 
   /**
-   * REMOVE ITEM FROM CART (Added in later lesson)
-   * ==============================================
-   * Note: In Lesson 290, the instructor only implements addItem.
-   * removeItem is added later when building the cart modal UI.
+   * REMOVE ITEM FROM CART (Lesson 291)
+   * ===================================
+   * The instructor explains the action dispatch:
+   * "Now for remove item, we also want to dispatch a cart action
+   * but now the identifier is REMOVE_ITEM, or whichever identifier
+   * you used in your reducer."
+   *
+   * WHY PASS id INSTEAD OF item? (Lesson 291)
+   * -----------------------------------------
+   * "And I now actually also have to change my reducer because here
+   * I'm getting an id as an input. That's what I'm expecting. And
+   * therefore I wanna forward that through the action to the reducer."
+   *
+   * "We don't need the full item here, unlike with the addItem case
+   * because when removing the item we just needed the id to identify it."
    *
    * @param {string} id - ID of the item to remove
    */
@@ -599,7 +665,7 @@ export default CartContext;
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSON 290
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 290 & 291
  * ============================================================================
  *
  * LESSON 290 WORKFLOW:
@@ -611,6 +677,16 @@ export default CartContext;
  * 5. Use useReducer for complex cart state logic
  * 6. Implement cartReducer with ADD_ITEM action
  * 7. Export both context (default) and provider (named)
+ *
+ * LESSON 291 WORKFLOW:
+ * ====================
+ * 1. Add REMOVE_ITEM action to the reducer
+ * 2. Handle quantity check: decrement vs remove entirely
+ * 3. Use splice() to remove items from array
+ * 4. Add addItem and removeItem dispatch functions
+ * 5. Wrap App with CartContextProvider
+ * 6. Use context in MealItem to add items
+ * 7. Use context in Header to display cart count with reduce()
  *
  * WHY CONTEXT? (From instructor):
  * ===============================
@@ -646,8 +722,8 @@ export default CartContext;
  * This is often used as a simpler alternative to Redux for
  * application-wide state management.
  *
- * USAGE EXAMPLE (as shown in MealItem.jsx):
- * =========================================
+ * USAGE EXAMPLE (as shown in MealItem.jsx - Lesson 291):
+ * ======================================================
  * // In a component
  * import { useContext } from 'react';
  * import CartContext from '../store/CartContext.jsx';
@@ -662,11 +738,19 @@ export default CartContext;
  *   return <button onClick={handleAddToCart}>Add to Cart</button>;
  * }
  *
- * WHAT'S NEXT (end of Lesson 290):
+ * USING reduce() FOR CART COUNT (Lesson 291):
+ * ===========================================
+ * The instructor explains in Header.jsx:
+ * "Now, just taking the length would not be enough now because we add
+ * every item only once to that cart and thereafter we just increase
+ * the quantity. So instead, I'll call the built-in reduce method."
+ *
+ * const totalCartItems = cartCtx.items.reduce((total, item) => {
+ *   return total + item.quantity;
+ * }, 0);
+ *
+ * WHAT'S NEXT (end of Lesson 291):
  * ================================
- * After setting up the context, the next steps are:
- * - Wrap the app with CartContextProvider in App.jsx
- * - Use the context in MealItem to add items to cart
- * - Use the context in Header to show cart count
- * - Build the cart modal to display cart contents
+ * "The next step now is to make sure that when we click this cart button,
+ * we open up a modal and we show some cart data in that modal."
  */

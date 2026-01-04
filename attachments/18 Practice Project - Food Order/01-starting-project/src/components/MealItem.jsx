@@ -41,13 +41,20 @@
  * Meals.jsx → (meal object as prop) → MealItem.jsx
  */
 
+/**
+ * REACT IMPORTS (Lesson 291)
+ * ==========================
+ * The instructor explains importing useContext:
+ * "Therefore we of course need to get access to that context and we can
+ * do that with help of the useContext hook, which must be imported from React."
+ */
 import { useContext } from 'react';
 
 /**
  * IMPORTS
  * =======
  * - currencyFormatter: Utility for formatting prices (Lesson 288)
- * - CartContext: Context for accessing cart operations (added in later lesson)
+ * - CartContext: Context for accessing cart operations (Lesson 291)
  *
  * LESSON 288 - IMPORTING currencyFormatter:
  * -----------------------------------------
@@ -58,9 +65,19 @@ import { useContext } from 'react';
  *
  * MDN Documentation for Intl.NumberFormat:
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat
+ *
+ * LESSON 291 - IMPORTING CartContext:
+ * ------------------------------------
+ * The instructor explains: "To use context, you must pass your context object
+ * as an identifier. So therefore here I'll import CartContext, not the provider
+ * component, but instead the context object itself. So this default export and
+ * therefore this object that's defined in the CartContext.jsx file."
+ *
+ * "And I'll import that from going up one level, diving into the store, and
+ * then into CartContext.jsx."
  */
 import { currencyFormatter } from '../util/formatting.js'; // Added in Lesson 288
-import CartContext from '../store/CartContext.jsx';
+import CartContext from '../store/CartContext.jsx'; // Added in Lesson 291
 
 /**
  * MEAL ITEM COMPONENT
@@ -97,22 +114,49 @@ import CartContext from '../store/CartContext.jsx';
  */
 export default function MealItem({ meal }) {
   /**
-   * CONSUMING CART CONTEXT (Added in later lesson)
-   * ===============================================
-   * Note: In Lesson 287, the button doesn't work yet.
-   * The instructor says: "Of course, at the moment the button won't do
-   * anything but that will change in the future."
+   * CONSUMING CART CONTEXT (Lesson 291)
+   * ====================================
+   * The instructor explains using the context:
+   * "Now we must pass CartContext as a value to useContext. And as a result
+   * we get back a CartContext object which we can use."
    *
-   * This Context usage is added in a later lesson when we implement
-   * the cart functionality.
+   * WHY MealItem HAS ACCESS TO THE CONTEXT (Lesson 291):
+   * ----------------------------------------------------
+   * "And we can now start in the MealItem component, which has access to the
+   * context because it's used in the Meals component, which in turn is used
+   * here in the App component and wrapped by CartContextProvider."
+   *
+   * Component hierarchy:
+   * CartContextProvider (in App.jsx)
+   *   └── Meals
+   *       └── MealItem ← We are here, inside the provider!
+   *
+   * LESSON 287 NOTE:
+   * ----------------
+   * In Lesson 287, the instructor says: "Of course, at the moment the button
+   * won't do anything but that will change in the future."
    */
   const cartCtx = useContext(CartContext);
 
   /**
-   * ADD TO CART HANDLER (Added in later lesson)
-   * ============================================
-   * In Lesson 287, this handler doesn't exist yet.
-   * The button is just a placeholder.
+   * ADD TO CART HANDLER (Lesson 291)
+   * =================================
+   * The instructor explains the handler function:
+   * "So in MealItem.jsx, we can set onClick equal to handleAddMealToCart
+   * like this. And here in handleAddMealToCart, I now want to call this
+   * addItem function of my context."
+   *
+   * "And now this object can be used here inside of handleAddMealToCart
+   * to call addItem and pass that meal item, which we're getting as a
+   * prop here as a value to addItem like this."
+   *
+   * WHAT HAPPENS WHEN CALLED:
+   * -------------------------
+   * 1. cartCtx.addItem(meal) is called
+   * 2. This dispatches { type: 'ADD_ITEM', item: meal } to the reducer
+   * 3. The reducer checks if item exists, updates quantity or adds new
+   * 4. State updates, triggering re-renders in consuming components
+   * 5. Header updates to show new cart count
    */
   function handleAddMealToCart() {
     cartCtx.addItem(meal);

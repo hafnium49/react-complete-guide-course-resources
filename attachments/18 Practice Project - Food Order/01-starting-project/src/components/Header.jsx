@@ -74,11 +74,16 @@ import { useContext } from 'react';
 import logoImg from '../assets/logo.jpg';
 
 /**
- * CONTEXT IMPORTS
- * ===============
+ * CONTEXT IMPORTS (Lesson 291)
+ * ============================
  * We import two contexts to access app-wide state:
  *
- * 1. CartContext: Provides access to cart items
+ * 1. CartContext: Provides access to cart items (Lesson 291)
+ *    The instructor explains:
+ *    "And doing so now thankfully is pretty easy because all we have to do
+ *    is call useContext, which must be imported from React in the header
+ *    component, pass the CartContext object, which also must be imported
+ *    as an identifier to useContext so that we get access to the CartContext."
  *    - Used to calculate and display the total number of items in the cart
  *    - The cart count is displayed next to the "Cart" text in the button
  *
@@ -86,7 +91,7 @@ import logoImg from '../assets/logo.jpg';
  *    - Used to show the cart modal when the user clicks the cart button
  *    - Controls the flow: browsing → cart → checkout
  */
-import CartContext from '../store/CartContext.jsx';
+import CartContext from '../store/CartContext.jsx'; // Used in Lesson 291 for cart count
 import UserProgressContext from '../store/UserProgressContext.jsx';
 
 /**
@@ -136,17 +141,50 @@ export default function Header() {
   const userProgressCtx = useContext(UserProgressContext);
 
   /**
-   * CALCULATING TOTAL CART ITEMS
-   * ============================
-   * We use the reduce() method to sum up the quantities of all items in the cart.
+   * CALCULATING TOTAL CART ITEMS (Lesson 291)
+   * ==========================================
+   * The instructor explains why we need this and how to implement it:
    *
-   * HOW reduce() WORKS:
-   * -------------------
-   * reduce() iterates over each item in the array and accumulates a single value.
+   * "So now to kind of finish this first step of implementing the cart,
+   * I wanna make sure that we also use the items data, not just to log it
+   * here, but to update this number here in the header."
    *
-   * Parameters:
-   * - Callback function: (accumulator, currentItem) => newAccumulatorValue
-   * - Initial value: 0 (we start counting from zero)
+   * "And that's why we used this context feature in the first place so that
+   * we can access that data from different places. Because whilst I wanna
+   * update my cart from inside the meal item component, I now want to access
+   * the items data and get the number of meals in the cart in my header component."
+   *
+   * WHY NOT JUST USE .length? (Lesson 291)
+   * --------------------------------------
+   * The instructor explains:
+   * "Now, just taking the length would not be enough now because we add every
+   * item only once to that cart and thereafter we just increase the quantity."
+   *
+   * USING reduce() (Lesson 291):
+   * ----------------------------
+   * The instructor explains the reduce method:
+   * "So instead, I'll call the built-in reduce method, which in the end is
+   * a built-in method that allows us to reduce an array to a single value,
+   * to a single number for example."
+   *
+   * "For this, reduce takes a function as a first argument and a starting
+   * value which I'll set to zero here as a second argument."
+   *
+   * "And that function, which we pass as a first argument then itself gets
+   * two arguments, passed in automatically by JavaScript. And that's the
+   * new value which we want to derive. So in this case, the total number
+   * of items, to make it very clear what this is. And then thereafter as
+   * a second value every item of the array on which we call reduce."
+   *
+   * "Step by step, item by item because this function will be executed once
+   * for every item in that item's array. And we then must return a new
+   * updated value and extend this updated value that will be fed into the
+   * next function execution as a value for total number of items."
+   *
+   * "And this zero here is simply just the starting value for the first
+   * execution of this function for the first item. So here I therefore
+   * want to return total number of items plus item quantity to add up
+   * all the quantities of all the items in this items array."
    *
    * EXAMPLE:
    * --------
