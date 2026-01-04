@@ -455,16 +455,35 @@ function cartReducer(state, action) {
   }
 
   /**
-   * CLEAR_CART ACTION (Added in later lesson)
-   * =========================================
+   * CLEAR_CART ACTION (Lesson 300)
+   * ==============================
    * Note: In Lesson 290, the instructor only implements ADD_ITEM.
-   * CLEAR_CART is added later when implementing the checkout flow
+   * CLEAR_CART is added in Lesson 300 when implementing the checkout flow
    * to clear the cart after successful order submission.
    *
-   * Removes all items from the cart.
+   * WHY CLEAR THE CART? (Lesson 300)
+   * ================================
+   * INSTRUCTOR QUOTE:
+   * "now in this function [handleFinish], we, of course, also wanna clear
+   * our cart. And I'll do that by going to my CartContext and by adding
+   * another action there or another function we can dispatch through this
+   * context - a clearCart function."
+   *
+   * After a successful order submission, we need to:
+   * 1. Reset the cart to empty (this action)
+   * 2. Close the checkout modal
+   * 3. Reset the HTTP hook's data state
+   *
+   * IMPLEMENTATION (Lesson 300):
+   * ============================
+   * The instructor explains:
+   * "And then I also need to dispatch this in my reducer, in my cartReducer...
+   * So I'll add another if check here in the reducer, checking if action.type
+   * equals CLEAR_CART, and if that's the case, I wanna return a new state
+   * where I spread the existing state and I set items to an empty array."
    *
    * Used when:
-   * - Order is successfully submitted
+   * - Order is successfully submitted (in handleFinish)
    * - User manually clears cart (if implemented)
    *
    * Simply returns state with an empty items array.
@@ -581,12 +600,33 @@ export function CartContextProvider({ children }) {
   }
 
   /**
-   * CLEAR ALL ITEMS (Added in later lesson)
-   * =======================================
+   * CLEAR ALL ITEMS FROM CART (Lesson 300)
+   * ======================================
    * Note: In Lesson 290, the instructor only implements addItem.
-   * clearCart is added later when implementing order submission.
+   * clearCart is added in Lesson 300 when implementing order submission.
    *
-   * Removes all items from the cart.
+   * WHY THIS FUNCTION? (Lesson 300)
+   * ===============================
+   * INSTRUCTOR QUOTE:
+   * "And I'll do that by going to my CartContext and by adding another action
+   * there or another function we can dispatch through this context - a clearCart
+   * function."
+   *
+   * "So I'll add a clearCart function to my context value which calls
+   * dispatchCartAction and dispatches an action of type CLEAR_CART."
+   *
+   * WHEN IS THIS CALLED? (Lesson 300)
+   * =================================
+   * This function is called in Checkout.jsx's handleFinish():
+   * - After a successful order submission
+   * - When user clicks "Okay" on the success modal
+   *
+   * COMPLETE CLEANUP SEQUENCE (Lesson 300):
+   * =======================================
+   * When an order succeeds, handleFinish does THREE things:
+   * 1. userProgressCtx.hideCheckout() - Close the modal
+   * 2. cartCtx.clearCart() - Empty the cart (THIS FUNCTION)
+   * 3. clearData() - Reset HTTP hook state
    */
   function clearCart() {
     dispatchCartAction({ type: 'CLEAR_CART' });
@@ -668,7 +708,7 @@ export default CartContext;
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 290 & 291
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 290, 291 & 300
  * ============================================================================
  *
  * LESSON 290 WORKFLOW:
@@ -756,4 +796,61 @@ export default CartContext;
  * ================================
  * "The next step now is to make sure that when we click this cart button,
  * we open up a modal and we show some cart data in that modal."
+ *
+ * ============================================================================
+ * LESSON 300 - CLEARING THE CART
+ * ============================================================================
+ *
+ * LESSON 300 WORKFLOW (CartContext additions):
+ * ============================================
+ * 1. Add CLEAR_CART action to cartReducer
+ * 2. Add clearCart function to CartContextProvider
+ * 3. Include clearCart in context value
+ * 4. Call clearCart in Checkout's handleFinish
+ *
+ * WHY CLEAR THE CART? (Lesson 300)
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "now in this function [handleFinish], we, of course, also wanna clear
+ * our cart. And I'll do that by going to my CartContext and by adding
+ * another action there or another function we can dispatch through this
+ * context - a clearCart function."
+ *
+ * After a successful order, we need to:
+ * - Empty the cart (so ordered items don't remain)
+ * - Close the checkout modal
+ * - Reset the HTTP hook state
+ *
+ * CLEAR_CART REDUCER ACTION (Lesson 300):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "And then I also need to dispatch this in my reducer, in my cartReducer...
+ * So I'll add another if check here in the reducer, checking if action.type
+ * equals CLEAR_CART, and if that's the case, I wanna return a new state
+ * where I spread the existing state and I set items to an empty array."
+ *
+ * Implementation:
+ * if (action.type === 'CLEAR_CART') {
+ *   return { ...state, items: [] };
+ * }
+ *
+ * clearCart FUNCTION (Lesson 300):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "So I'll add a clearCart function to my context value which calls
+ * dispatchCartAction and dispatches an action of type CLEAR_CART."
+ *
+ * Implementation:
+ * function clearCart() {
+ *   dispatchCartAction({ type: 'CLEAR_CART' });
+ * }
+ *
+ * COMPLETE CLEANUP IN CHECKOUT (Lesson 300):
+ * ==========================================
+ * When the user clicks "Okay" on the success screen, handleFinish:
+ * 1. Calls userProgressCtx.hideCheckout() - closes modal
+ * 2. Calls cartCtx.clearCart() - empties cart (THIS FUNCTION)
+ * 3. Calls clearData() - resets HTTP hook state
+ *
+ * All three are necessary for a clean state before next order!
  */

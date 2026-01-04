@@ -185,20 +185,49 @@ export default function useHttp(url, config, initialData) {
   const [error, setError] = useState();
 
   /**
-   * CLEAR DATA FUNCTION
-   * ===================
+   * CLEAR DATA FUNCTION (Lesson 300)
+   * ================================
    * Resets data to the initial value.
    * Useful after successful operations (e.g., clear form data after submit).
    *
-   * Used in Checkout.jsx after successful order submission.
+   * WHY THIS FUNCTION IS NEEDED (Lesson 300):
+   * =========================================
+   * INSTRUCTOR QUOTE:
+   * "The problem with that is that if we then add another item to our cart,
+   * and we then go to checkout again, we'll instantly see the success screen
+   * here because data is still set. This data here is still set."
+   *
+   * "So therefore, I'll go to my useHttp hook, and I'll add another function
+   * which I'll call clearData. And all clearData does is it sets data back
+   * to the initial data value."
+   *
+   * THE PROBLEM WITHOUT clearData() (Lesson 300):
+   * =============================================
+   * 1. User places order → Success! data is set
+   * 2. User clicks "Okay" → Modal closes, cart cleared
+   * 3. User adds new items to cart
+   * 4. User goes to checkout → data is STILL set from previous order
+   * 5. Success screen shows immediately (BAD UX!)
+   *
+   * THE SOLUTION (Lesson 300):
+   * ==========================
+   * INSTRUCTOR QUOTE:
+   * "And I'll export, I'll return that from our hook, so we can use it in
+   * the Checkout component and call it here in handleFinish as well, so that
+   * when we click okay or when this modal closes, we also clear the data."
+   *
+   * By calling clearData() in handleFinish, we reset the hook's state
+   * so the next checkout visit shows the form, not the success screen.
+   *
+   * Used in Checkout.jsx's handleFinish() after successful order submission.
    */
   function clearData() {
     setData(initialData);
   }
 
   /**
-   * SEND REQUEST FUNCTION (Lesson 298)
-   * ==================================
+   * SEND REQUEST FUNCTION (Lessons 298 & 300)
+   * =========================================
    * This function actually sends the HTTP request.
    * It's wrapped in useCallback to prevent unnecessary re-creations.
    *
@@ -220,6 +249,30 @@ export default function useHttp(url, config, initialData) {
    *
    * useCallback memoizes the function - it only creates a new function
    * when the dependencies (url, config) change.
+   *
+   * ACCEPTING DATA PARAMETER (Lesson 300):
+   * ======================================
+   * INSTRUCTOR QUOTE:
+   * "But the body we wanna add here should come from the Checkout component.
+   * And we can accept it here in our useHttp hook if we simply add a parameter
+   * to this sendRequest function. That's something we can of course do.
+   * We can accept data here."
+   *
+   * For POST requests, we need to send data (the order information).
+   * But we can't set the body in the config object (defined outside component)
+   * because the data is only available when the form is submitted.
+   *
+   * SOLUTION (Lesson 300):
+   * ----------------------
+   * 1. Accept 'data' as a parameter to sendRequest
+   * 2. Merge it with config when calling sendHttpRequest:
+   *    sendHttpRequest(url, { ...config, body: data })
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I then pass that data that should be attached to this request here
+   * to send HTTP request. And we can simply do that here by passing this
+   * extra config property body to this function, to this config object,
+   * and set it to data."
    *
    * DEPENDENCY ARRAY: [url, config]
    * -------------------------------
@@ -251,14 +304,33 @@ export default function useHttp(url, config, initialData) {
          * the request could fail."
          */
         /**
-         * MAKE THE REQUEST
-         * ================
+         * MAKE THE REQUEST (Lessons 298 & 300)
+         * ====================================
          * Call our helper function with the URL and config.
          * We spread the config and add the body data.
+         *
+         * MERGING body WITH config (Lesson 300):
+         * --------------------------------------
+         * INSTRUCTOR QUOTE:
+         * "And I then pass that data that should be attached to this request
+         * here to send HTTP request. And we can simply do that here by passing
+         * this extra config property body to this function, to this config
+         * object, and set it to data."
          *
          * { ...config, body: data }
          * - Copies all properties from config (method, headers, etc.)
          * - Adds/overwrites body with the data parameter
+         *
+         * WHY THIS PATTERN? (Lesson 300):
+         * -------------------------------
+         * The config object is defined OUTSIDE the component (to prevent
+         * infinite loops). But the body data (order info) is only available
+         * when the form is submitted.
+         *
+         * By accepting 'data' as a parameter and merging it here, we get
+         * the best of both worlds:
+         * - Stable config reference (no infinite loops)
+         * - Dynamic body data (passed when sendRequest is called)
          *
          * For GET requests, data will be undefined and body will be ignored.
          */
@@ -473,4 +545,84 @@ export default function useHttp(url, config, initialData) {
  * 6. Accept initialData to prevent undefined errors
  * 7. Define config objects OUTSIDE consuming components
  * 8. Return object with state and functions for consumers to destructure
+ *
+ * ============================================================================
+ * LESSON 300 - ADDITIONAL CONCEPTS
+ * ============================================================================
+ *
+ * LESSON 300 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Handling loading state (isSending) for better UX
+ * 2. Handling error state with Error component
+ * 3. Handling success state with success modal
+ * 4. Adding clearCart to CartContext for post-order cleanup
+ * 5. Adding clearData to useHttp to prevent stale success screens
+ * 6. Creating handleFinish for complete cleanup sequence
+ *
+ * ACCEPTING DATA IN sendRequest (Lesson 300):
+ * ===========================================
+ * INSTRUCTOR QUOTE:
+ * "But the body we wanna add here should come from the Checkout component.
+ * And we can accept it here in our useHttp hook if we simply add a parameter
+ * to this sendRequest function."
+ *
+ * Why we need this:
+ * - Config is defined OUTSIDE component (stable reference)
+ * - Body data is only available when form is submitted
+ * - Solution: Accept data as parameter, merge with config
+ *
+ * clearData FUNCTION (Lesson 300):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "The problem with that is that if we then add another item to our cart,
+ * and we then go to checkout again, we'll instantly see the success screen
+ * here because data is still set."
+ *
+ * "So therefore, I'll go to my useHttp hook, and I'll add another function
+ * which I'll call clearData."
+ *
+ * Purpose: Reset the hook's data state so the success screen doesn't
+ * persist across multiple checkout visits.
+ *
+ * HANDLING LOADING STATE (Lesson 300):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "So when I'm done sending, I basically want to reset and show those
+ * buttons again. But whilst I'm sending, I want to show a different
+ * text or maybe some loading spinner."
+ *
+ * Use isLoading (or rename to isSending for forms) to:
+ * - Show "Sending order data..." instead of buttons
+ * - Prevent duplicate submissions
+ * - Provide user feedback
+ *
+ * HANDLING SUCCESS STATE (Lesson 300):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "Now we're checking if we got data and no error... And if that's the
+ * case, I wanna return here and show a success screen."
+ *
+ * Condition: if (data && !error)
+ * - data: Server responded with success
+ * - !error: No error occurred
+ * - Show success modal instead of form
+ *
+ * COMPLETE CLEANUP SEQUENCE (Lesson 300):
+ * =======================================
+ * When order succeeds and user clicks "Okay":
+ * 1. hideCheckout() - Close the modal
+ * 2. clearCart() - Empty the shopping cart
+ * 3. clearData() - Reset HTTP hook state
+ *
+ * All three are necessary for a clean slate!
+ *
+ * LESSON 300 WORKFLOW:
+ * ====================
+ * 1. Add isSending state check - show loading text instead of buttons
+ * 2. Add success state check (data && !error) - show success modal
+ * 3. Add error display using Error component
+ * 4. Create handleFinish function with three cleanup actions
+ * 5. Add clearCart to CartContext (CLEAR_CART action)
+ * 6. Add clearData to useHttp hook
+ * 7. Call clearData in handleFinish to prevent stale success screens
  */

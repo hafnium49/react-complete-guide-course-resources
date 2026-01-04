@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297 & 298)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297, 298 & 300)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -42,6 +42,16 @@
  * 3. Defining requestConfig OUTSIDE the component to prevent infinite loops
  * 4. Understanding the difference between GET (auto-fetch) and POST (manual trigger)
  * 5. Managing loading, error, and success states for better UX
+ *
+ * LESSON 300 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Handling loading state (isSending) - show loading text instead of buttons
+ * 2. Handling error state - display Error component when submission fails
+ * 3. Handling success state - show success modal when order completes
+ * 4. Creating handleFinish for complete cleanup after successful order
+ * 5. Calling clearCart() to empty the shopping cart
+ * 6. Calling clearData() to prevent stale success screens
+ * 7. Understanding why all three cleanup actions are necessary
  *
  * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
  * ===============================================
@@ -299,21 +309,51 @@ export default function Checkout() {
   }
 
   /**
-   * FINISH HANDLER (POST-SUCCESS)
-   * =============================
+   * FINISH HANDLER (POST-SUCCESS) - Lesson 300
+   * ==========================================
    * Called when user clicks "Okay" after successful order submission.
+   *
+   * INSTRUCTOR QUOTE (Lesson 300):
+   * "And now we want to handle this case where we click Okay, and I wanna
+   * add a function for that, handleFinish maybe, and I wanna trigger this
+   * when the Okay button is clicked."
    *
    * This function does THREE things:
    * 1. hideCheckout(): Close the modal
    * 2. clearCart(): Empty the shopping cart
    * 3. clearData(): Reset the HTTP hook's data state
    *
-   * WHY clearData()?
-   * ----------------
-   * Without clearing the data, if the user adds more items and
-   * goes to checkout again, the 'data' from the previous successful
-   * order would still be set, immediately showing the success message
-   * instead of the form.
+   * STEP 1: CLOSE THE MODAL (Lesson 300)
+   * ------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "And in handleFinish, I of course wanna close this checkout modal,
+   * so I'll call userProgressCtx.hideCheckout."
+   *
+   * STEP 2: CLEAR THE CART (Lesson 300)
+   * -----------------------------------
+   * INSTRUCTOR QUOTE:
+   * "But now in this function, we, of course, also wanna clear our cart.
+   * And I'll do that by going to my CartContext and by adding another
+   * action there or another function we can dispatch through this context
+   * - a clearCart function."
+   *
+   * STEP 3: CLEAR HTTP DATA (Lesson 300)
+   * ------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "The problem with that is that if we then add another item to our cart,
+   * and we then go to checkout again, we'll instantly see the success screen
+   * here because data is still set. This data here is still set."
+   *
+   * "So therefore, I'll go to my useHttp hook, and I'll add another function
+   * which I'll call clearData... And I'll export, I'll return that from our
+   * hook, so we can use it in the Checkout component and call it here in
+   * handleFinish as well."
+   *
+   * WHY ALL THREE ARE NECESSARY:
+   * ----------------------------
+   * Without hideCheckout(): Modal stays open
+   * Without clearCart(): Old items remain in cart
+   * Without clearData(): Success screen shows immediately on next checkout
    *
    * This is a common pitfall when reusing HTTP state!
    */
@@ -529,24 +569,50 @@ export default function Checkout() {
   );
 
   /**
-   * LOADING STATE
-   * =============
+   * LOADING STATE (Lesson 300)
+   * ==========================
    * While the request is being sent, show a loading message
    * instead of the buttons.
+   *
+   * INSTRUCTOR QUOTE (Lesson 300):
+   * "So when I'm done sending, I basically want to reset and show those
+   * buttons again. But whilst I'm sending, I want to show a different
+   * text or maybe some loading spinner."
+   *
+   * IMPLEMENTATION (Lesson 300):
+   * ----------------------------
+   * INSTRUCTOR QUOTE:
+   * "So here we can check if isSending is truthy, so if we are currently
+   * sending a request, and if that's the case, I wanna update the actions
+   * and set them to, let's say, just a span that says 'Sending order data...'
+   * or anything like that."
    *
    * This prevents:
    * - User clicking submit multiple times
    * - Confusion about whether the action worked
+   * - Provides feedback that something is happening
    */
   if (isSending) {
     actions = <span>Sending order data...</span>;
   }
 
   /**
-   * SUCCESS STATE
-   * =============
+   * SUCCESS STATE (Lesson 300)
+   * ==========================
    * If we have data (response from server) and no error,
    * the order was successful. Show a success message.
+   *
+   * INSTRUCTOR QUOTE (Lesson 300):
+   * "Now we're checking if we got data and no error, because data is
+   * initially undefined here. So if we got data and no error, we know
+   * the request succeeded. And if that's the case, I wanna return here
+   * and show a success screen."
+   *
+   * WHY CHECK BOTH data AND !error? (Lesson 300)
+   * --------------------------------------------
+   * - data: Initially undefined, set when server responds successfully
+   * - !error: Ensures no error occurred during the request
+   * - Both must be true to show success screen
    *
    * EARLY RETURN PATTERN:
    * ---------------------
@@ -554,10 +620,16 @@ export default function Checkout() {
    * This is cleaner than trying to conditionally render within
    * a single return statement.
    *
-   * SUCCESS MODAL CONTENT:
-   * ----------------------
+   * SUCCESS MODAL CONTENT (Lesson 300):
+   * -----------------------------------
+   * INSTRUCTOR QUOTE:
+   * "And I'll output a paragraph that says 'Your order was submitted
+   * successfully.' And maybe also output that 'We will get back to you
+   * with more details via email within the next few minutes.'"
+   *
    * - Success heading
    * - Confirmation message
+   * - Email notification info
    * - "Okay" button to close and reset everything
    *
    * Note: onClose uses handleFinish, not handleClose, so that
@@ -768,7 +840,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297 & 298
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297, 298 & 300
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -920,4 +992,99 @@ export default function Checkout() {
  * - <button type="button"> won't submit the form
  *
  * Always use type="button" for non-submit buttons inside forms!
+ *
+ * ============================================================================
+ * LESSON 300 - HANDLING DIFFERENT STATES
+ * ============================================================================
+ *
+ * LESSON 300 WORKFLOW:
+ * ====================
+ * 1. Add isSending state check - show "Sending order data..." text
+ * 2. Add error state check - display Error component within form
+ * 3. Add success state check (data && !error) - show success modal
+ * 4. Create handleFinish function for post-success cleanup
+ * 5. Add clearCart to CartContext (CLEAR_CART action in reducer)
+ * 6. Add clearData to useHttp hook
+ * 7. Call all three cleanup functions in handleFinish
+ *
+ * HANDLING LOADING STATE (Lesson 300):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "So when I'm done sending, I basically want to reset and show those
+ * buttons again. But whilst I'm sending, I want to show a different
+ * text or maybe some loading spinner."
+ *
+ * Implementation:
+ * if (isSending) {
+ *   actions = <span>Sending order data...</span>;
+ * }
+ *
+ * HANDLING ERROR STATE (Lesson 300):
+ * ==================================
+ * The Error component is conditionally rendered within the form:
+ * {error && <Error title="Failed to submit order" message={error} />}
+ *
+ * This shows the error but still allows the user to fix issues
+ * and try again.
+ *
+ * HANDLING SUCCESS STATE (Lesson 300):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "Now we're checking if we got data and no error, because data is
+ * initially undefined here. So if we got data and no error, we know
+ * the request succeeded. And if that's the case, I wanna return here
+ * and show a success screen."
+ *
+ * Implementation:
+ * if (data && !error) {
+ *   return (
+ *     <Modal ...>
+ *       <h2>Success!</h2>
+ *       <p>Your order was submitted successfully.</p>
+ *       ...
+ *     </Modal>
+ *   );
+ * }
+ *
+ * COMPLETE CLEANUP SEQUENCE (Lesson 300):
+ * =======================================
+ * When the user clicks "Okay" on the success screen:
+ *
+ * function handleFinish() {
+ *   userProgressCtx.hideCheckout();  // Close modal
+ *   cartCtx.clearCart();              // Empty cart
+ *   clearData();                       // Reset HTTP state
+ * }
+ *
+ * WHY clearData IS CRITICAL (Lesson 300):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "The problem with that is that if we then add another item to our cart,
+ * and we then go to checkout again, we'll instantly see the success screen
+ * here because data is still set."
+ *
+ * Without clearData():
+ * 1. User places order → Success, data is set
+ * 2. User adds new items
+ * 3. User opens checkout → data is STILL set
+ * 4. Success screen shows immediately (wrong!)
+ *
+ * With clearData():
+ * 1. User places order → Success, data is set
+ * 2. User clicks Okay → clearData() resets data
+ * 3. User adds new items
+ * 4. User opens checkout → data is undefined
+ * 5. Form shows correctly (right!)
+ *
+ * MULTIPLE UI STATES PATTERN:
+ * ===========================
+ * This component demonstrates handling four distinct states:
+ *
+ * 1. DEFAULT: Show form with input fields
+ * 2. LOADING (isSending): Show "Sending..." instead of buttons
+ * 3. SUCCESS (data && !error): Show success message modal
+ * 4. ERROR (error): Show error component within form
+ *
+ * This pattern provides excellent user experience by giving
+ * appropriate feedback for every possible outcome.
  */
