@@ -1,25 +1,47 @@
 /**
  * ============================================================================
- * CART CONTEXT - SHOPPING CART STATE MANAGEMENT
+ * CART CONTEXT - SHOPPING CART STATE MANAGEMENT (Lesson 290)
  * ============================================================================
  *
  * This file implements the shopping cart functionality using React Context
  * and the useReducer hook for complex state management.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
- * 1. Creating and using React Context for global state
- * 2. Using useReducer for complex state logic
- * 3. Implementing cart operations (add, remove, clear)
- * 4. Immutable state updates in reducers
- * 5. Exporting both Context and Provider from the same file
+ * LESSON 290 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Creating a dedicated "store" folder for state management
+ * 2. Using React Context for global/shared state
+ * 3. Using useReducer for complex state logic
+ * 4. Implementing immutable state updates in reducers
+ * 5. Setting up default context values for IDE auto-completion
+ * 6. Creating a context provider component pattern
  *
- * WHY USE CONTEXT FOR CART?
- * =========================
- * The shopping cart is a perfect use case for Context because:
- * - Multiple components need access to cart data (Header, Cart, Checkout)
- * - Multiple components need to modify the cart (MealItem, CartItem)
- * - Without Context, we'd have to pass cart state through many component levels
+ * PROJECT PROGRESSION (End of Lesson 289):
+ * ========================================
+ * As the instructor says at the end of Lesson 289:
+ * "And therefore, I'd say as a next step it probably makes sense to make
+ * sure that these buttons can be clicked and that we start managing some
+ * cart data which we then at some point can also display in a modal that
+ * opens when we click this cart button."
+ *
+ * This sets up Lesson 290's goal: making the "Add to Cart" buttons work.
+ *
+ * WHY USE CONTEXT FOR CART? (Lesson 290)
+ * ======================================
+ * The instructor explains the reasoning:
+ * "So my next goal is to make this Add to Cart button work and to manage
+ * such a shopping cart behind the scenes. Now it sounds like this cart data
+ * should not be data that should be managed in a single component, because
+ * this data will be needed in multiple places in this app."
+ *
+ * "For example, we of course need this cart data in those meal items,
+ * because there we need to add items to the cart. We'll need the cart data
+ * in the header, where we want to show the overall number of items in the
+ * cart. And we'll also need the cart data later to show it in a modal...
+ * and we'll also need it to send it to the backend to submit an order."
+ *
+ * "Now there are of course different ways of managing such data... I'll
+ * instead use React's context feature to manage this cart data in a more
+ * general, centralized way."
  *
  * Components that use CartContext:
  * - Header: Displays total item count
@@ -28,8 +50,26 @@
  * - CartItem: Increment/decrement item quantity
  * - Checkout: Gets cart items for order submission, clears cart on success
  *
- * WHY useReducer INSTEAD OF useState?
- * ====================================
+ * CREATING THE STORE FOLDER (Lesson 290):
+ * =======================================
+ * The instructor explains the folder structure:
+ * "I'll add a new folder in my source folder, which I'll name store.
+ * Though you could also call it context or state or anything like that."
+ *
+ * src/
+ * └── store/             ← New folder created in Lesson 290
+ *     └── CartContext.jsx  ← This file
+ *
+ * WHY useReducer INSTEAD OF useState? (Lesson 290)
+ * ================================================
+ * The instructor explains the decision:
+ * "And one thing that'll be a bit more complex though will be the logic
+ * for managing these items because if something gets added, I wanna check
+ * if it's already part of the cart, and if it is, I just wanna update the
+ * quantity of that existing item instead of adding a new item, because if
+ * I add the same meal twice, I don't wanna add it twice but instead just
+ * update the quantity. So that's the complex cart logic we'll need."
+ *
  * useReducer is better when:
  * - State logic is complex (multiple sub-values)
  * - Next state depends on previous state
@@ -52,16 +92,25 @@
 import { createContext, useReducer } from 'react';
 
 /**
- * CREATING THE CONTEXT
- * ====================
- * createContext() creates a Context object that components can subscribe to.
+ * CREATING THE CONTEXT (Lesson 290)
+ * ==================================
+ * The instructor explains creating the context:
+ * "And in there, I'll add a CartContext.jsx file... because in that file
+ * I want to export my context, so I'll export here the CartContext, and
+ * this CartContext should be created with React's createContext function."
  *
- * The object passed to createContext() is the DEFAULT value. This value is
- * used when a component tries to access the context but isn't wrapped in
- * a provider.
+ * DEFAULT VALUE PURPOSE (Lesson 290):
+ * -----------------------------------
+ * The instructor explains why we pass default values to createContext:
+ * "Now in this createContext, we can set a default value, which technically
+ * will never be used because this context will always be used with a
+ * provider... but it can still be helpful to add such a default value here
+ * because your IDE will then be able to pick up on that default value
+ * structure and give you better auto-completion when using this context
+ * later."
  *
- * The default value also serves as documentation - it shows the shape of
- * the context value that consumers can expect.
+ * KEY INSIGHT: Default values enable IDE auto-completion!
+ * When you type cartCtx.add... the IDE will suggest addItem().
  *
  * CONTEXT SHAPE:
  * --------------
@@ -72,6 +121,16 @@ import { createContext, useReducer } from 'react';
  *   clearCart: () => {},       // Function to clear all items
  * }
  *
+ * INITIAL LESSON 290 VERSION:
+ * ---------------------------
+ * The instructor initially creates a simpler version with just items and addItem:
+ * const CartContext = createContext({
+ *   items: [],
+ *   addItem: (item) => {},
+ * });
+ *
+ * The removeItem and clearCart functions are added in later lessons.
+ *
  * ITEM SHAPE:
  * -----------
  * Each item in the items array has:
@@ -81,7 +140,7 @@ import { createContext, useReducer } from 'react';
  *   price: number,       // Price per item
  *   description: string, // Meal description
  *   image: string,       // Image path
- *   quantity: number     // How many of this item in cart
+ *   quantity: number     // How many of this item in cart (added by reducer)
  * }
  */
 const CartContext = createContext({
@@ -92,9 +151,23 @@ const CartContext = createContext({
 });
 
 /**
- * CART REDUCER FUNCTION
- * =====================
- * The reducer function contains all the logic for updating cart state.
+ * CART REDUCER FUNCTION (Lesson 290)
+ * ===================================
+ * The instructor explains the approach:
+ * "And one thing that'll be a bit more complex though will be the logic
+ * for managing these items... And since I have that more complex logic,
+ * I'll use the useReducer hook instead of the useState hook here."
+ *
+ * "So I'll have my cartReducer function, which I'll define outside of
+ * the component, outside of the provider component to be precise, because
+ * this function should not be recreated every time the context value
+ * changes, or every time this provider component here is re-executed."
+ *
+ * WHY DEFINE OUTSIDE COMPONENT?
+ * -----------------------------
+ * Key insight: Reducers don't need access to component props or state.
+ * They only receive the action and current state as parameters.
+ * Defining outside prevents unnecessary re-creation on every render.
  *
  * REDUCER ANATOMY:
  * ----------------
@@ -110,8 +183,13 @@ const CartContext = createContext({
  * Return value:
  * - The new state (must be a new object, not mutated original)
  *
- * IMPORTANT: IMMUTABLE UPDATES
- * ============================
+ * IMPORTANT: IMMUTABLE UPDATES (Lesson 290)
+ * =========================================
+ * The instructor emphasizes:
+ * "And now here we should not use push because push modifies an existing
+ * array... we should not mutate existing state. We should instead create
+ * a brand new state."
+ *
  * We never modify state directly. Instead, we create new objects/arrays.
  * This is crucial for React to detect changes and re-render components.
  *
@@ -129,17 +207,27 @@ const CartContext = createContext({
  */
 function cartReducer(state, action) {
   /**
-   * ADD_ITEM ACTION
-   * ===============
-   * Handles adding an item to the cart.
+   * ADD_ITEM ACTION (Lesson 290)
+   * ============================
+   * The instructor builds this logic step by step:
+   * "I want to handle actions of type ADD_ITEM... And when we receive such
+   * an action, we should check if the item that should be added is already
+   * part of the cart, because in that case, we should only update its
+   * quantity, not add it again."
    *
    * LOGIC:
    * 1. Check if item already exists in cart (by ID)
    * 2. If exists: increment quantity
    * 3. If not exists: add item with quantity 1
    *
-   * WHY CHECK FOR EXISTING ITEM?
-   * ----------------------------
+   * WHY CHECK FOR EXISTING ITEM? (Lesson 290)
+   * -----------------------------------------
+   * The instructor explains:
+   * "if something gets added, I wanna check if it's already part of the cart,
+   * and if it is, I just wanna update the quantity of that existing item
+   * instead of adding a new item, because if I add the same meal twice,
+   * I don't wanna add it twice but instead just update the quantity."
+   *
    * If a user adds "Mac & Cheese" twice, we don't want:
    * [{ name: "Mac & Cheese", quantity: 1 }, { name: "Mac & Cheese", quantity: 1 }]
    *
@@ -150,10 +238,20 @@ function cartReducer(state, action) {
    */
   if (action.type === 'ADD_ITEM') {
     /**
-     * FIND EXISTING ITEM
-     * ==================
+     * FIND EXISTING ITEM (Lesson 290)
+     * ================================
+     * The instructor explains using findIndex:
+     * "And I can find out whether the item is already part of the cart by
+     * using state items and then the findIndex method, which is a default
+     * method available on arrays in JavaScript, to find a specific element
+     * in an array."
+     *
      * findIndex() returns the index of the first element that matches,
      * or -1 if no match is found.
+     *
+     * "And find index will return the index of an item, of an element, in
+     * this array that matches a certain condition which you define by
+     * providing a function to find index."
      *
      * We compare by ID because it's the unique identifier for each meal.
      */
@@ -162,8 +260,13 @@ function cartReducer(state, action) {
     );
 
     /**
-     * CREATE COPY OF ITEMS ARRAY
-     * ==========================
+     * CREATE COPY OF ITEMS ARRAY (Lesson 290)
+     * =======================================
+     * The instructor emphasizes immutability:
+     * "And now here we should not use push because push modifies an existing
+     * array... instead I'll create a new constant where I have updated items
+     * which is a brand new array where I spread the existing state items."
+     *
      * We spread the existing items into a new array.
      * This creates a shallow copy that we can modify without
      * mutating the original state.
@@ -175,9 +278,14 @@ function cartReducer(state, action) {
 
     if (existingCartItemIndex > -1) {
       /**
-       * ITEM EXISTS - INCREMENT QUANTITY
-       * =================================
-       * The item is already in the cart, so we just increase its quantity.
+       * ITEM EXISTS - INCREMENT QUANTITY (Lesson 290)
+       * ==============================================
+       * The instructor explains this branch:
+       * "So if we got an existing cart item index that's greater than minus
+       * one, so that therefore is positive... if that's the case, the item
+       * already is part of the cart."
+       *
+       * "And in that case I just wanna update the quantity of that item."
        *
        * We create a NEW item object with the updated quantity.
        * We don't mutate the existing item directly.
@@ -193,13 +301,21 @@ function cartReducer(state, action) {
       updatedItems[existingCartItemIndex] = updatedItem;
     } else {
       /**
-       * ITEM DOESN'T EXIST - ADD NEW ITEM
-       * ==================================
-       * The item isn't in the cart yet, so we add it.
+       * ITEM DOESN'T EXIST - ADD NEW ITEM (Lesson 290)
+       * ===============================================
+       * The instructor explains:
+       * "And we have an else case here for the alternative where the item
+       * does not exist yet. So we have the case where it did exist and we
+       * updated the quantity, and now we have the case where it does not
+       * exist yet."
        *
-       * We spread the item properties and add quantity: 1.
+       * "In that case, I wanna push a new item onto updated items... I wanna
+       * spread action.item... and to add a quantity field set to one."
+       *
+       * WHY ADD QUANTITY: 1?
+       * --------------------
        * The item from action doesn't have quantity (it comes from
-       * the meals data), so we add it here.
+       * the meals data), so we add it here when adding to cart.
        *
        * action.item: { id: 'm1', name: 'Mac & Cheese', price: 8.99, ... }
        * new item:    { id: 'm1', name: 'Mac & Cheese', price: 8.99, ..., quantity: 1 }
@@ -217,8 +333,12 @@ function cartReducer(state, action) {
   }
 
   /**
-   * REMOVE_ITEM ACTION
-   * ==================
+   * REMOVE_ITEM ACTION (Added in later lesson)
+   * ==========================================
+   * Note: In Lesson 290, the instructor only implements ADD_ITEM.
+   * REMOVE_ITEM is added in a subsequent lesson when building the
+   * cart modal with increment/decrement buttons.
+   *
    * Handles removing an item from the cart.
    *
    * LOGIC:
@@ -280,8 +400,12 @@ function cartReducer(state, action) {
   }
 
   /**
-   * CLEAR_CART ACTION
-   * =================
+   * CLEAR_CART ACTION (Added in later lesson)
+   * =========================================
+   * Note: In Lesson 290, the instructor only implements ADD_ITEM.
+   * CLEAR_CART is added later when implementing the checkout flow
+   * to clear the cart after successful order submission.
+   *
    * Removes all items from the cart.
    *
    * Used when:
@@ -306,9 +430,13 @@ function cartReducer(state, action) {
 }
 
 /**
- * CART CONTEXT PROVIDER COMPONENT
- * ===============================
- * This component wraps children and provides cart state to them.
+ * CART CONTEXT PROVIDER COMPONENT (Lesson 290)
+ * ============================================
+ * The instructor explains this pattern:
+ * "And then I also want to export a component function which I'll call
+ * CartContextProvider... a component which you will typically also create
+ * when creating a context like this, so that you can wrap your provider
+ * around the parts of your component tree that need access to that context."
  *
  * HOW PROVIDERS WORK:
  * -------------------
@@ -322,8 +450,16 @@ function cartReducer(state, action) {
  */
 export function CartContextProvider({ children }) {
   /**
-   * INITIALIZE useReducer
-   * =====================
+   * INITIALIZE useReducer (Lesson 290)
+   * ==================================
+   * The instructor explains:
+   * "And since I have that more complex logic, I'll use the useReducer
+   * hook instead of the useState hook here. So here I'll use useReducer
+   * importing it from React."
+   *
+   * "And useReducer takes as a first argument a so-called reducer function,
+   * and as a second argument your initial state."
+   *
    * useReducer returns:
    * - cart: Current state (initially { items: [] })
    * - dispatchCartAction: Function to dispatch actions
@@ -334,8 +470,13 @@ export function CartContextProvider({ children }) {
   const [cart, dispatchCartAction] = useReducer(cartReducer, { items: [] });
 
   /**
-   * ACTION CREATOR FUNCTIONS
-   * ========================
+   * ACTION CREATOR FUNCTIONS (Lesson 290)
+   * =====================================
+   * The instructor explains creating these wrapper functions:
+   * "And I'll also have an addItem function in here, which is a function
+   * that takes an item as an input... And this function should then in the
+   * end call dispatchCartAction."
+   *
    * These functions wrap dispatchCartAction to provide a cleaner API.
    *
    * Instead of:
@@ -348,8 +489,13 @@ export function CartContextProvider({ children }) {
    */
 
   /**
-   * ADD ITEM TO CART
-   * ================
+   * ADD ITEM TO CART (Lesson 290)
+   * =============================
+   * The instructor explains:
+   * "And this function should then in the end call dispatchCartAction and
+   * dispatch an action. And the action which we're dispatching should have
+   * a type of add item. And then we also should forward that item."
+   *
    * @param {Object} item - Meal object to add { id, name, price, ... }
    */
   function addItem(item) {
@@ -357,8 +503,11 @@ export function CartContextProvider({ children }) {
   }
 
   /**
-   * REMOVE ITEM FROM CART
-   * =====================
+   * REMOVE ITEM FROM CART (Added in later lesson)
+   * ==============================================
+   * Note: In Lesson 290, the instructor only implements addItem.
+   * removeItem is added later when building the cart modal UI.
+   *
    * @param {string} id - ID of the item to remove
    */
   function removeItem(id) {
@@ -366,8 +515,11 @@ export function CartContextProvider({ children }) {
   }
 
   /**
-   * CLEAR ALL ITEMS
-   * ===============
+   * CLEAR ALL ITEMS (Added in later lesson)
+   * =======================================
+   * Note: In Lesson 290, the instructor only implements addItem.
+   * clearCart is added later when implementing order submission.
+   *
    * Removes all items from the cart.
    */
   function clearCart() {
@@ -375,15 +527,30 @@ export function CartContextProvider({ children }) {
   }
 
   /**
-   * CONTEXT VALUE
-   * =============
-   * This object is passed to all consuming components.
+   * CONTEXT VALUE (Lesson 290)
+   * ==========================
+   * The instructor explains creating this context value object:
+   * "Now we also need a cartContext constant, I'll name it like this,
+   * which should be an object that holds the data that will be exposed
+   * through this context."
+   *
+   * "And here we should have an items key, which points at cart.items...
+   * we should have that addItem function on there, just like this."
+   *
+   * INITIAL LESSON 290 VERSION:
+   * ---------------------------
+   * const cartContext = {
+   *   items: cart.items,
+   *   addItem,
+   * };
+   *
+   * removeItem and clearCart are added in later lessons.
    *
    * It includes:
    * - items: The cart items array (from reducer state)
    * - addItem: Function to add item
-   * - removeItem: Function to remove item
-   * - clearCart: Function to clear all items
+   * - removeItem: Function to remove item (added later)
+   * - clearCart: Function to clear all items (added later)
    */
   const cartContext = {
     items: cart.items,
@@ -393,8 +560,17 @@ export function CartContextProvider({ children }) {
   };
 
   /**
-   * RENDER PROVIDER
-   * ===============
+   * RENDER PROVIDER (Lesson 290)
+   * ============================
+   * The instructor explains:
+   * "And then down here, I wanna return something, and what I wanna return
+   * is the CartContext.Provider, so the provider property of that context
+   * which we created up here."
+   *
+   * "And this provider should wrap the children... And on this provider,
+   * we also need to set the value prop, which contains the actual context
+   * data. And that's why we pass this cartContext object to value."
+   *
    * The Provider component makes the context value available to all
    * descendants. The 'value' prop is what consumers receive.
    *
@@ -406,8 +582,12 @@ export function CartContextProvider({ children }) {
 }
 
 /**
- * DEFAULT EXPORT
- * ==============
+ * DEFAULT EXPORT (Lesson 290)
+ * ===========================
+ * The instructor explains the export pattern:
+ * "I also wanna export my context as a default so that it can be imported
+ * and used by components that wanna consume it."
+ *
  * We export CartContext as default so consuming components can import it:
  * import CartContext from '../store/CartContext.jsx';
  * const cartCtx = useContext(CartContext);
@@ -419,8 +599,24 @@ export default CartContext;
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS FROM LESSON 290
  * ============================================================================
+ *
+ * LESSON 290 WORKFLOW:
+ * ====================
+ * 1. Create "store" folder in src
+ * 2. Create CartContext.jsx file
+ * 3. Set up createContext with default values for IDE auto-completion
+ * 4. Create CartContextProvider component
+ * 5. Use useReducer for complex cart state logic
+ * 6. Implement cartReducer with ADD_ITEM action
+ * 7. Export both context (default) and provider (named)
+ *
+ * WHY CONTEXT? (From instructor):
+ * ===============================
+ * "it sounds like this cart data should not be data that should be managed
+ * in a single component, because this data will be needed in multiple
+ * places in this app"
  *
  * REDUCER PATTERN:
  * ================
@@ -430,8 +626,12 @@ export default CartContext;
  *
  * This makes state changes predictable and debuggable.
  *
- * IMMUTABLE STATE:
- * ================
+ * IMMUTABLE STATE (From instructor):
+ * ==================================
+ * "And now here we should not use push because push modifies an existing
+ * array... we should not mutate existing state. We should instead create
+ * a brand new state."
+ *
  * Never mutate state directly. Always create new objects/arrays:
  * - [...array] to copy arrays
  * - { ...object } to copy objects
@@ -446,8 +646,8 @@ export default CartContext;
  * This is often used as a simpler alternative to Redux for
  * application-wide state management.
  *
- * USAGE EXAMPLE:
- * ==============
+ * USAGE EXAMPLE (as shown in MealItem.jsx):
+ * =========================================
  * // In a component
  * import { useContext } from 'react';
  * import CartContext from '../store/CartContext.jsx';
@@ -461,4 +661,12 @@ export default CartContext;
  *
  *   return <button onClick={handleAddToCart}>Add to Cart</button>;
  * }
+ *
+ * WHAT'S NEXT (end of Lesson 290):
+ * ================================
+ * After setting up the context, the next steps are:
+ * - Wrap the app with CartContextProvider in App.jsx
+ * - Use the context in MealItem to add items to cart
+ * - Use the context in Header to show cart count
+ * - Build the cart modal to display cart contents
  */
