@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS COMPONENT - FETCHING AND DISPLAYING MEALS (Lesson 286)
+ * MEALS COMPONENT - FETCHING AND DISPLAYING MEALS (Lessons 286, 298 & 299)
  * ============================================================================
  *
  * This component is responsible for fetching meal data from the backend
@@ -13,6 +13,14 @@
  * 3. Understanding why we need useEffect to avoid infinite loops
  * 4. Why component functions cannot be async
  * 5. Rendering lists with the map() method
+ *
+ * LESSON 299 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Using different states from useHttp hook to provide better UX
+ * 2. Styling loading message with className="center"
+ * 3. Creating and using the Error component for error display
+ * 4. Testing error handling by entering an incorrect URL
+ * 5. This sets up for also using useHttp in Checkout component
  *
  * LESSON 297 - UX IMPROVEMENT NEEDED:
  * ===================================
@@ -310,22 +318,57 @@ export default function Meals() {
   } = useHttp('http://localhost:3000/meals', requestConfig, []);
 
   /**
-   * LOADING STATE
-   * =============
+   * LOADING STATE (Lesson 299)
+   * ==========================
    * While the request is in progress, show a loading message.
+   *
+   * INSTRUCTOR QUOTE (Lesson 299):
+   * "If we go back to our page and we throttle loading here, throttle
+   * the network to be precise, you will see that as we reload this page,
+   * obviously it takes some time to load, but then we'll see this
+   * fetching meals text here."
+   *
+   * WHY className="center"? (Lesson 299)
+   * ------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "And, of course, that text didn't look that great and pushed all
+   * the way to the left. Now, we can simply add the class name center
+   * here to fix this. So that now if I reload this, this looks better.
+   * So that was a quick and easy fix."
    *
    * Note: The basic Lesson 286 version didn't handle loading state.
    * It would show an empty list briefly before the data arrived.
-   * This is an enhancement added in later lessons.
    */
   if (isLoading) {
     return <p className="center">Fetching meals...</p>;
   }
 
   /**
-   * ERROR STATE
-   * ===========
+   * ERROR STATE (Lesson 299)
+   * ========================
    * If the request failed, show an error message.
+   *
+   * INSTRUCTOR QUOTE (Lesson 299):
+   * "And with this component added, we can go back to the meals component
+   * and now simply check if we have an error, in which case I wanna return
+   * this error component we just added. So we import it and we return it
+   * and we set a title which could be Failed to fetch meals and a message
+   * which is my error object."
+   *
+   * WHY PASS error AS MESSAGE? (Lesson 299):
+   * ----------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "Because in my custom hook, if we have an error, I'm setting my
+   * error state to the error message."
+   *
+   * TESTING ERROR HANDLING (Lesson 299):
+   * ------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "Now to simulate an error here, I'll simply enter an incorrect URL,
+   * save that, disable throttling and reload and I got this error."
+   *
+   * You can test by temporarily changing the URL to something wrong:
+   * 'http://localhost:3000/mealz' (typo → error)
    *
    * The instructor mentioned this in Lesson 286 but deferred it:
    * "Now that response then might be an error response because maybe
@@ -411,7 +454,7 @@ export default function Meals() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 286 & 298
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 286, 298 & 299
  * ============================================================================
  *
  * LESSON 286 - THE INFINITE LOOP PROBLEM:
@@ -477,6 +520,33 @@ export default function Meals() {
  *    - useCallback wraps the function
  *    - Same function reference unless deps change
  *    - Prevents useEffect from running on every render
+ *
+ * LESSON 299 - USING STATES FOR BETTER UX:
+ * ========================================
+ * 1. LOADING STATE:
+ *    - Show "Fetching meals..." while loading
+ *    - Use className="center" for proper styling
+ *
+ * 2. ERROR STATE:
+ *    - Create Error.jsx component with title and message props
+ *    - Return <Error /> when error state is truthy
+ *    - Pass error message from useHttp as the message prop
+ *
+ * 3. TESTING ERRORS:
+ *    - Enter incorrect URL to simulate error
+ *    - Verify error message displays correctly
+ *    - Fix URL when done testing
+ *
+ * INSTRUCTOR QUOTE (Lesson 299):
+ * "So now that we built the custom hook and we're using it here, it's
+ * time to use these different states to provide a better user experience."
+ *
+ * WHAT'S NEXT (Lesson 299):
+ * =========================
+ * INSTRUCTOR QUOTE:
+ * "And that therefore now allows us to work on this checkout page and
+ * make sure that there in the checkout component, we also use the
+ * custom hook."
  *
  * ADDING TO APP.JSX:
  * ==================

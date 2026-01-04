@@ -1,13 +1,30 @@
 /**
  * ============================================================================
- * ERROR COMPONENT - REUSABLE ERROR DISPLAY
+ * ERROR COMPONENT - REUSABLE ERROR DISPLAY (Lesson 299)
  * ============================================================================
  *
  * This is a simple, reusable component for displaying error messages
  * throughout the application.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
+ * LESSON 299 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Creating a reusable Error component for displaying error messages
+ * 2. Using the different states from useHttp hook for better UX
+ * 3. Handling loading and error states in components using the hook
+ * 4. Styling the loading message with className="center"
+ * 5. Testing error handling by using an incorrect URL
+ *
+ * WHY CREATE THIS COMPONENT? (Lesson 299)
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "Now I, of course, also wanna deal with the problem that we might be
+ * facing an error if we fail to load meals. And to deal with that, I'll
+ * add a new component which I'll name error like this in a error.jsx file."
+ *
+ * "And the entire purpose of this component is to output some error or message."
+ *
+ * KEY LEARNING OBJECTIVES (General):
+ * ==================================
  * 1. Creating simple, focused components
  * 2. Component reusability through props
  * 3. Separation of concerns (display vs logic)
@@ -33,9 +50,16 @@
  */
 
 /**
- * ERROR COMPONENT
- * ===============
+ * ERROR COMPONENT (Lesson 299)
+ * ============================
  * A simple presentational component that displays error information.
+ *
+ * INSTRUCTOR QUOTE (Lesson 299):
+ * "For that, I'll return a div with a className of error. And then here,
+ * I wanna have a title and a message. And both should be settable from
+ * outside. So we should be able to get a title here and the message.
+ * And then, of course, here we simply output the title and here we
+ * output the message."
  *
  * PROPS:
  * ------
@@ -111,8 +135,36 @@ export default function Error({ title, message }) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * LESSON 299 - SUMMARY & KEY CONCEPTS
  * ============================================================================
+ *
+ * LESSON 299 WORKFLOW:
+ * ====================
+ * 1. Use states from useHttp hook (isLoading, error, data) for better UX
+ * 2. Add className="center" to loading text for better styling
+ * 3. Create Error.jsx component for displaying error messages
+ * 4. Use Error component in Meals.jsx when error state is truthy
+ * 5. Test by using an incorrect URL to simulate errors
+ * 6. Next: Use useHttp hook in Checkout component too
+ *
+ * TESTING ERROR HANDLING (Lesson 299):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "Now to simulate an error here, I'll simply enter an incorrect URL,
+ * save that, disable throttling and reload and I got this error."
+ *
+ * WHY ERROR MESSAGE FROM useHttp? (Lesson 299):
+ * =============================================
+ * INSTRUCTOR QUOTE:
+ * "Because in my custom hook, if we have an error, I'm setting my
+ * error state to the error message."
+ *
+ * STYLING NOTE (Lesson 299):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "Now, of course, you could definitely improve the styling and the
+ * overall user experience, but here it's just about handling these
+ * different states and proving that this custom hook works."
  *
  * PRESENTATIONAL COMPONENTS:
  * ==========================
