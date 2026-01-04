@@ -72,8 +72,8 @@ import Cart from './components/Cart.jsx';
 import Checkout from './components/Checkout.jsx';
 
 /**
- * CONTEXT PROVIDER IMPORTS (Lesson 291)
- * =====================================
+ * CONTEXT PROVIDER IMPORTS (Lessons 291 & 293)
+ * =============================================
  * We import the Provider components from our context files.
  *
  * Context in React allows us to share state across components without
@@ -105,13 +105,18 @@ import Checkout from './components/Checkout.jsx';
  * - Provides: items array, addItem(), removeItem(), clearCart()
  * - Used by: Header (cart count), MealItem (add to cart), Cart (display/edit items)
  *
- * UserProgressContextProvider:
+ * UserProgressContextProvider (Lesson 293):
+ * ------------------------------------------
+ * The instructor explains wrapping with this provider:
+ * "Now we also need to add this UserProgressContextProvider. So that
+ * should also be wrapped around all our app components."
+ *
  * - Manages which modal is currently displayed
  * - Provides: progress state, showCart(), hideCart(), showCheckout(), hideCheckout()
  * - Used by: Header (open cart), Cart (close/proceed), Checkout (close)
  */
 import { CartContextProvider } from './store/CartContext.jsx'; // Wrapped in Lesson 291
-import { UserProgressContextProvider } from './store/UserProgressContext.jsx';
+import { UserProgressContextProvider } from './store/UserProgressContext.jsx'; // Wrapped in Lesson 293
 
 /**
  * APP COMPONENT
@@ -142,11 +147,17 @@ import { UserProgressContextProvider } from './store/UserProgressContext.jsx';
 function App() {
   return (
     /**
-     * CONTEXT PROVIDER NESTING
-     * ========================
+     * CONTEXT PROVIDER NESTING (Lessons 291 & 293)
+     * =============================================
      * We wrap our components in Context Providers to give them access
      * to shared state. The nesting order matters for which contexts
      * components can access.
+     *
+     * LESSON 293 - Adding UserProgressContextProvider:
+     * -------------------------------------------------
+     * The instructor explains:
+     * "Now we also need to add this UserProgressContextProvider. So that
+     * should also be wrapped around all our app components."
      *
      * Rule: A component can only access contexts from providers that
      * are ABOVE it in the component tree.
@@ -206,8 +217,12 @@ function App() {
         <Meals />
 
         {/*
-          CART COMPONENT (Modal)
-          ======================
+          CART COMPONENT (Modal) - Added in Lesson 293
+          =============================================
+          The instructor explains:
+          "So, to output some cart details, it's time for another new
+          component, a cart component."
+
           Renders a modal that displays when userProgress === 'cart'.
           The modal is always in the DOM but only visible when open.
 

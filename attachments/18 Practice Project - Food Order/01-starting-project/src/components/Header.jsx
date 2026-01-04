@@ -74,8 +74,8 @@ import { useContext } from 'react';
 import logoImg from '../assets/logo.jpg';
 
 /**
- * CONTEXT IMPORTS (Lesson 291)
- * ============================
+ * CONTEXT IMPORTS (Lessons 291 & 293)
+ * ====================================
  * We import two contexts to access app-wide state:
  *
  * 1. CartContext: Provides access to cart items (Lesson 291)
@@ -87,12 +87,15 @@ import logoImg from '../assets/logo.jpg';
  *    - Used to calculate and display the total number of items in the cart
  *    - The cart count is displayed next to the "Cart" text in the button
  *
- * 2. UserProgressContext: Manages UI state (which modal is open)
+ * 2. UserProgressContext: Manages UI state (Lesson 293)
+ *    The instructor explains:
+ *    "And in that header component now, I want to get access to that
+ *    userProgressContext."
  *    - Used to show the cart modal when the user clicks the cart button
  *    - Controls the flow: browsing → cart → checkout
  */
 import CartContext from '../store/CartContext.jsx'; // Used in Lesson 291 for cart count
-import UserProgressContext from '../store/UserProgressContext.jsx';
+import UserProgressContext from '../store/UserProgressContext.jsx'; // Used in Lesson 293 for showing cart
 
 /**
  * HEADER COMPONENT
@@ -212,8 +215,12 @@ export default function Header() {
   }, 0);
 
   /**
-   * CART BUTTON CLICK HANDLER
-   * =========================
+   * CART BUTTON CLICK HANDLER (Lesson 293)
+   * ======================================
+   * The instructor connects the Header to UserProgressContext:
+   * "And in there, I now just wanna call userProgressContext.showCart
+   * to change the progress to cart. And open the cart modal therefore."
+   *
    * When the user clicks the cart button, we want to open the cart modal.
    *
    * This function calls showCart() from UserProgressContext, which:

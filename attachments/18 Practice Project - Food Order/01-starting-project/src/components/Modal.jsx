@@ -206,14 +206,46 @@ export default function Modal({ children, open, onClose, className = '' }) {
    * - open becomes false → cleanup runs, close() is called
    */
   useEffect(() => {
-    // Store current ref in variable for cleanup function
+    /**
+     * STORING REF IN TEMPORARY CONSTANT (Lesson 293)
+     * ===============================================
+     * The instructor explains this important pattern:
+     * "It's recommended that you store the value of this ref in some
+     * temporary constant here so that you store the current value of the
+     * ref at the point of time when this effect function runs."
+     *
+     * "And I then use that constant both in this if statement and in this
+     * cleanup function because this ensures that this cleanup function
+     * will use the value that was stored in this constant when the effect
+     * function executed."
+     *
+     * WHY IS THIS IMPORTANT?
+     * ----------------------
+     * Refs are mutable - dialog.current could change between effect runs.
+     * By storing it in a constant:
+     * - We capture the exact DOM element at effect execution time
+     * - The cleanup function uses the same element reference
+     * - No risk of stale or incorrect element references
+     */
     const modal = dialog.current;
 
     if (open) {
       modal.showModal();
     }
 
-    // Cleanup: close the modal
+    /**
+     * CLEANUP FUNCTION (Lesson 293)
+     * =============================
+     * The instructor explains:
+     * "And I then use that constant both in this if statement and in this
+     * cleanup function because this ensures that this cleanup function
+     * will use the value that was stored in this constant when the effect
+     * function executed."
+     *
+     * This cleanup runs:
+     * - When the component unmounts
+     * - Before the effect re-runs (when 'open' changes)
+     */
     return () => modal.close();
   }, [open]);
 

@@ -1,18 +1,27 @@
 /**
  * ============================================================================
- * CART COMPONENT - SHOPPING CART MODAL
+ * CART COMPONENT - SHOPPING CART MODAL (Lesson 293)
  * ============================================================================
  *
  * This component displays the shopping cart in a modal, allowing users to
  * view their items, adjust quantities, and proceed to checkout.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
- * 1. Consuming multiple contexts in one component
- * 2. Calculating derived values from state (cart total)
- * 3. Conditional rendering based on state
- * 4. Composing reusable components (Modal, CartItem)
- * 5. Passing callback functions as props
+ * LESSON 293 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Creating a Cart component to display cart contents
+ * 2. Using the Modal component to display cart in an overlay
+ * 3. Consuming multiple contexts in one component
+ * 4. Calculating derived values (cart total) with reduce()
+ * 5. Setting up handlers for close and checkout actions
+ *
+ * WHY CREATE A CART COMPONENT? (Lesson 293)
+ * =========================================
+ * The instructor explains the need for this component:
+ * "So, to output some cart details, it's time for another new component,
+ * a cart component, and I'll add that to my components folder here."
+ *
+ * "In this cart component now we of course wanna output the cart items
+ * with help of the modal component."
  *
  * CART FEATURES:
  * ==============
@@ -36,13 +45,21 @@
 import { useContext } from 'react';
 
 /**
- * IMPORTS
- * =======
- * - Modal: Reusable modal component for displaying the cart
- * - CartContext: Access to cart items and operations
- * - UserProgressContext: Controls which modal is displayed
- * - currencyFormatter: For formatting prices
- * - CartItem: Component for individual cart items
+ * IMPORTS (Lesson 293)
+ * ====================
+ * The instructor imports the necessary dependencies:
+ *
+ * Modal: "In this cart component now we of course wanna output the cart
+ * items with help of the modal component."
+ *
+ * CartContext: For accessing cart items and calculating total
+ *
+ * UserProgressContext: "To do that therefore, we of course need access
+ * to this UserProgressContext."
+ *
+ * currencyFormatter: For formatting the cart total price
+ *
+ * CartItem: Component for individual cart item rows
  */
 import Modal from './Modal.jsx';
 import CartContext from '../store/CartContext.jsx';
@@ -51,22 +68,29 @@ import { currencyFormatter } from '../util/formatting.js';
 import CartItem from './CartItem.jsx';
 
 /**
- * CART COMPONENT
- * ==============
+ * CART COMPONENT (Lesson 293)
+ * ===========================
+ * The instructor creates this component:
+ * "So, to output some cart details, it's time for another new component,
+ * a cart component, and I'll add that to my components folder here."
+ *
  * Displays the shopping cart modal with items and total.
  */
 export default function Cart() {
   /**
-   * CONSUMING MULTIPLE CONTEXTS
-   * ===========================
+   * CONSUMING MULTIPLE CONTEXTS (Lesson 293)
+   * ========================================
    * This component needs both contexts:
    *
-   * CartContext: For cart data and operations
+   * CartContext: "So in cart, we of course need access to both contexts.
+   * We need access to the CartContext to get access to all the cart items
+   * and to the cart total."
    * - items: Array of items to display
    * - addItem: To increase quantity (passed to CartItem)
    * - removeItem: To decrease quantity (passed to CartItem)
    *
-   * UserProgressContext: For modal visibility
+   * UserProgressContext: "To do that therefore, we of course need access
+   * to this UserProgressContext."
    * - progress: To determine if this modal should be open
    * - hideCart: To close this modal
    * - showCheckout: To open checkout modal
@@ -75,12 +99,24 @@ export default function Cart() {
   const userProgressCtx = useContext(UserProgressContext);
 
   /**
-   * CALCULATING CART TOTAL
-   * ======================
-   * We use reduce() to sum up the total price of all items.
+   * CALCULATING CART TOTAL (Lesson 293)
+   * ====================================
+   * The instructor explains how to calculate the total:
+   * "Now we also want to output a cart total here, like the sum of all
+   * the prices of all the items in the cart."
    *
-   * For each item: quantity × price
-   * Then sum all those values together.
+   * "And for that I'll add a cart total constant here, where I reach out
+   * to my cart items and call reduce on them, to reduce this array to a
+   * single number, the total price."
+   *
+   * "Now reduce takes a reducer function which receives the total price,
+   * the accumulated value in the end, and then the current item we're
+   * looking at. And we should then return a new accumulated value here,
+   * a new total price in this case. And to get that total price I wanna
+   * take the total price and add item.quantity times item.price to it."
+   *
+   * "And the starting value here, which is the second argument, of reduced
+   * course, is zero."
    *
    * EXAMPLE:
    * --------
@@ -109,8 +145,11 @@ export default function Cart() {
   );
 
   /**
-   * CLOSE CART HANDLER
-   * ==================
+   * CLOSE CART HANDLER (Lesson 293)
+   * ================================
+   * The instructor adds this handler:
+   * "So here I'll add a handleCloseCart function."
+   *
    * Called when user clicks "Close" button.
    * Sets userProgress to '' which closes the modal.
    */
@@ -119,8 +158,12 @@ export default function Cart() {
   }
 
   /**
-   * GO TO CHECKOUT HANDLER
-   * ======================
+   * GO TO CHECKOUT HANDLER (Lesson 293)
+   * ====================================
+   * The instructor adds this for the checkout button:
+   * "And then another handler for handling a click on that go to checkout
+   * button. So handleGoToCheckout."
+   *
    * Called when user clicks "Go to Checkout" button.
    * Sets userProgress to 'checkout' which:
    * - Closes cart modal (progress !== 'cart')
@@ -131,18 +174,27 @@ export default function Cart() {
   }
 
   /**
-   * RENDER CART MODAL
-   * =================
-   * We use the Modal component and pass our cart content as children.
+   * RENDER CART MODAL (Lesson 293)
+   * ==============================
+   * The instructor explains using Modal:
+   * "In this cart component now we of course wanna output the cart items
+   * with help of the modal component."
    */
   return (
     <Modal
       /**
-       * MODAL PROPS
-       * ===========
-       * className="cart": Adds "cart" class for specific styling
+       * MODAL PROPS (Lesson 293)
+       * ========================
+       * className="cart":
+       * The instructor adds this for styling:
+       * "and I'll set a className of cart on this modal here."
+       * "Because then in the index CSS file, in there you'll find that
+       * I added some class selectors for this cart class so that you can
+       * set up styles specific to this cart modal."
        *
        * open={progress === 'cart'}:
+       * "And besides that, I'll set the open prop here to check whether
+       * userProgressContext.progress is equal to cart."
        * - Modal is open when userProgress is 'cart'
        * - Any other value ('', 'checkout') keeps it closed
        *
@@ -275,17 +327,37 @@ export default function Cart() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS FROM LESSON 293
  * ============================================================================
  *
- * MULTIPLE CONTEXTS:
- * ==================
+ * LESSON 293 WORKFLOW:
+ * ====================
+ * 1. Create Cart.jsx component in components folder
+ * 2. Import Modal, CartContext, and UserProgressContext
+ * 3. Use useContext to access both contexts
+ * 4. Calculate cart total with reduce()
+ * 5. Create handleCloseCart and handleGoToCheckout handlers
+ * 6. Use Modal with className="cart" for styling
+ * 7. Set open prop based on userProgress === 'cart'
+ *
+ * MULTIPLE CONTEXTS (Lesson 293):
+ * ===============================
+ * The instructor explains needing both contexts:
+ * "So in cart, we of course need access to both contexts.
+ * We need access to the CartContext to get access to all the cart items
+ * and to the cart total."
+ *
  * Components can consume multiple contexts to access different
  * pieces of application state. Each useContext call subscribes
  * to that context's updates.
  *
- * DERIVED STATE:
- * ==============
+ * DERIVED STATE (Lesson 293):
+ * ===========================
+ * The instructor shows calculating total with reduce():
+ * "And for that I'll add a cart total constant here, where I reach out
+ * to my cart items and call reduce on them, to reduce this array to a
+ * single number, the total price."
+ *
  * Values like cartTotal are "derived" from the source state (items).
  * Rather than storing them separately, we calculate them during render.
  * This ensures they're always in sync with the source data.
@@ -316,4 +388,10 @@ export default function Cart() {
  * - CartItem: For each item row
  *
  * This composition keeps each component focused and reusable.
+ *
+ * WHAT'S NEXT (end of Lesson 293):
+ * ================================
+ * The instructor sets up UserProgressContext next:
+ * "I'll go for another context, which can be controlled from
+ * different parts of the app in different ways."
  */

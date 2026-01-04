@@ -642,6 +642,9 @@ export function CartContextProvider({ children }) {
    *
    * {children} renders all child components wrapped by this provider.
    */
+
+  console.log(cartContext); // For debugging: log current cart context
+
   return (
     <CartContext.Provider value={cartContext}>{children}</CartContext.Provider>
   );
