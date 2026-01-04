@@ -45,8 +45,8 @@
 import { useContext } from 'react';
 
 /**
- * IMPORTS (Lesson 293)
- * ====================
+ * IMPORTS (Lessons 293 & 294)
+ * ===========================
  * The instructor imports the necessary dependencies:
  *
  * Modal: "In this cart component now we of course wanna output the cart
@@ -59,13 +59,17 @@ import { useContext } from 'react';
  *
  * currencyFormatter: For formatting the cart total price
  *
- * CartItem: Component for individual cart item rows
+ * CartItem (Lesson 294): Separate component for cart item rows
+ * The instructor explains:
+ * "Now in this card component, I wanna output my card item here in this
+ * list. So this custom card item component we just worked on, it must
+ * be imported of course."
  */
 import Modal from './Modal.jsx';
 import CartContext from '../store/CartContext.jsx';
 import UserProgressContext from '../store/UserProgressContext.jsx';
 import { currencyFormatter } from '../util/formatting.js';
-import CartItem from './CartItem.jsx';
+import CartItem from './CartItem.jsx'; // Added in Lesson 294
 
 /**
  * CART COMPONENT (Lesson 293)
@@ -229,27 +233,55 @@ export default function Cart() {
       <h2>Your Cart</h2>
 
       {/*
-        CART ITEMS LIST
-        ===============
-        We map over the cart items and render a CartItem for each.
+        CART ITEMS LIST (Lesson 294)
+        ============================
+        The instructor explains using CartItem:
+        "Now in this card component, I wanna output my card item here in
+        this list. So this custom card item component we just worked on,
+        it must be imported of course."
 
-        PASSING CALLBACK PROPS:
-        -----------------------
-        onIncrease={() => cartCtx.addItem(item)}
-        - Creates an arrow function that calls addItem with the current item
-        - When + button is clicked, addItem adds another of this item
+        KEY PROP (Lesson 294):
+        ----------------------
+        "And with that import added here, it needs that key because all
+        items in such a list should receive a key as you learned, the
+        item ID is still a good key."
 
-        onDecrease={() => cartCtx.removeItem(item.id)}
-        - Creates an arrow function that calls removeItem with item's ID
-        - When - button is clicked, removeItem decreases quantity or removes item
+        PASSING DATA PROPS (Lesson 294):
+        --------------------------------
+        The instructor explains two approaches:
 
-        WHY ARROW FUNCTIONS?
-        --------------------
-        We need to pass specific arguments (item, item.id) to the context functions.
-        Arrow functions let us "pre-configure" the call with these arguments.
+        APPROACH 1 - Spread operator:
+        "Now the quick and easy way of passing all the item data,
+        including name, quantity and price to that card item component
+        is to simply spread the item object onto the card item because
+        that item object includes a name, quantity and price."
 
-        Alternative (less clean):
-        onIncrease={cartCtx.addItem.bind(null, item)}
+        <CartItem key={item.id} {...item} />
+
+        APPROACH 2 - Manual assignment (chosen):
+        "But since it also includes some extra data which we don't
+        actually need in there, even though it wouldn't be a problem
+        to pass it to this component without needing it, we could go
+        for a different approach and manually set name equal to
+        item.name, quantity equal to item.quantity and price equal
+        to item.price, like this."
+
+        CALLBACK PROPS (Lesson 294):
+        ----------------------------
+        The instructor explains:
+        "And then go to the parent component, the card component, and
+        set those props here. On increase should be set equal to something
+        and on decrease."
+
+        onIncrease:
+        "So triggering those extra functions is as simple as passing an
+        anonymous function here to on increase and calling card context
+        add item here and passing this item for which we're rendering
+        this card item here as a value to add item."
+
+        onDecrease:
+        "And on decrease gets a function where we call card context
+        remove item and where we pass the item ID to this function."
       */}
       <ul>
         {cartCtx.items.map((item) => (
@@ -300,9 +332,15 @@ export default function Cart() {
         </button>
 
         {/*
-          GO TO CHECKOUT BUTTON
-          =====================
-          Only shown if cart has items.
+          GO TO CHECKOUT BUTTON (Lesson 294)
+          ==================================
+          The instructor explains this conditional:
+          "Though this button here should really also only be shown if we
+          have items in the cart. Because, for example, right now, where
+          there are no items, it makes no sense to show this button because
+          there is nothing to check out. But if we have items, this button
+          should take us to a different modal that does allow us to submit
+          the order."
 
           CONDITIONAL RENDERING:
           ----------------------
@@ -327,7 +365,7 @@ export default function Cart() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSON 293
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 293 & 294
  * ============================================================================
  *
  * LESSON 293 WORKFLOW:
@@ -339,6 +377,16 @@ export default function Cart() {
  * 5. Create handleCloseCart and handleGoToCheckout handlers
  * 6. Use Modal with className="cart" for styling
  * 7. Set open prop based on userProgress === 'cart'
+ *
+ * LESSON 294 WORKFLOW:
+ * ====================
+ * 1. Create separate CartItem component for cart item rows
+ * 2. Import CartItem in Cart.jsx
+ * 3. Use CartItem with key, name, quantity, price props
+ * 4. Choose manual prop assignment over spread operator
+ * 5. Pass onIncrease/onDecrease callbacks to CartItem
+ * 6. Connect callbacks to CartContext addItem/removeItem
+ * 7. Conditionally render "Go to Checkout" when cart has items
  *
  * MULTIPLE CONTEXTS (Lesson 293):
  * ===============================
@@ -362,18 +410,29 @@ export default function Cart() {
  * Rather than storing them separately, we calculate them during render.
  * This ensures they're always in sync with the source data.
  *
- * CALLBACK PROPS:
- * ===============
- * Passing functions as props allows child components to communicate
- * back to parents (or in this case, to Context).
+ * CALLBACK PROPS (Lesson 294):
+ * ============================
+ * The instructor explains this pattern for CartItem:
+ * "Alternatively, to also show you this pattern, which you already know
+ * from earlier in the course, we could of course also accept extra props
+ * that should get functions as values on increase and on decrease prop."
  *
  * Pattern: onEvent={() => handler(specificData)}
  *
- * CONDITIONAL RENDERING:
- * ======================
- * {condition && <Element />} is the idiomatic React way to
- * conditionally render elements. The element only renders when
- * condition is truthy.
+ * PROP PASSING APPROACHES (Lesson 294):
+ * =====================================
+ * Spread operator: <CartItem {...item} />
+ * Manual assignment: <CartItem name={item.name} quantity={item.quantity} />
+ *
+ * The instructor chose manual for precision control.
+ *
+ * CONDITIONAL RENDERING (Lesson 294):
+ * ===================================
+ * The instructor explains why we conditionally show checkout button:
+ * "Because, for example, right now, where there are no items, it makes
+ * no sense to show this button because there is nothing to check out."
+ *
+ * Pattern: {condition && <Element />}
  *
  * MODAL COORDINATION:
  * ===================
@@ -385,13 +444,16 @@ export default function Cart() {
  * ======================
  * Cart uses:
  * - Modal: For the overlay behavior
- * - CartItem: For each item row
+ * - CartItem (Lesson 294): For each item row
  *
  * This composition keeps each component focused and reusable.
  *
- * WHAT'S NEXT (end of Lesson 293):
+ * WHAT'S NEXT (end of Lesson 294):
  * ================================
- * The instructor sets up UserProgressContext next:
- * "I'll go for another context, which can be controlled from
- * different parts of the app in different ways."
+ * The instructor explains the next step:
+ * "And therefore, now the next step is to make sure that we can also
+ * go to the checkout. Though this button here should really also only
+ * be shown if we have items in the cart... But if we have items, this
+ * button should take us to a different modal that does allow us to
+ * submit the order."
  */
