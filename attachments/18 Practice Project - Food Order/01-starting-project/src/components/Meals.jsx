@@ -14,6 +14,20 @@
  * 4. Why component functions cannot be async
  * 5. Rendering lists with the map() method
  *
+ * LESSON 297 - UX IMPROVEMENT NEEDED:
+ * ===================================
+ * The instructor notes that this component needs loading/error handling:
+ * "And the same, by the way, is true here for the meals. When we reload
+ * the page, we're fetching those meals. But what if something goes wrong
+ * here? Or what if we have a slow internet connection which we can simulate
+ * by throttling it? In that case, if we reload here, reloading will take
+ * some time, but then once the page is there, you will also see that the
+ * meal items will take some time to load. So right now it's still the
+ * frontend code that loads, but then we stare at this empty page until
+ * the data is there. So we also might wanna show some loading spinner there."
+ *
+ * This sets up the need for the custom useHttp hook (covered in later lessons)
+ *
  * THE CHALLENGE:
  * ==============
  * As the instructor explains:

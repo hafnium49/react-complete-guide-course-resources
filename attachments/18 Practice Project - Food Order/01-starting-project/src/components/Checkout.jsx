@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295 & 296)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296 & 297)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -23,6 +23,17 @@
  * 4. Different approaches to extract form values (state, refs, FormData)
  * 5. Using the FormData API with Object.fromEntries()
  * 6. Combining customer data with cart data for the order
+ *
+ * LESSON 297 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Configuring fetch() for POST requests
+ * 2. Setting request method, headers, and body
+ * 3. Using JSON.stringify() to convert data to JSON format
+ * 4. Structuring the order data: { order: { items, customer } }
+ * 5. Getting cart items from CartContext
+ * 6. Ensuring form field names match backend expectations
+ * 7. Verifying requests in browser Network tab
+ * 8. Checking backend data storage (orders.json)
  *
  * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
  * ===============================================
@@ -98,9 +109,15 @@ import useHttp from '../hooks/useHttp.js';
 import Error from './Error.jsx';
 
 /**
- * REQUEST CONFIG FOR POST
- * =======================
+ * REQUEST CONFIG FOR POST (Lesson 297)
+ * ====================================
  * Configuration object for the HTTP POST request.
+ *
+ * The instructor explains why we need to configure the request:
+ * "We did not have to do that before in the meals file because the default
+ * without configuration is that fetch sends a get request to this route.
+ * But we now need to configure it because we need to change the request
+ * method now from get to post."
  *
  * WHY DEFINE THIS OUTSIDE THE COMPONENT?
  * --------------------------------------
@@ -111,10 +128,18 @@ import Error from './Error.jsx';
  * 2. A new object every render would look like a "change" to React
  * 3. This could cause unintended re-runs of effects
  *
- * CONFIGURATION OPTIONS:
- * ----------------------
- * - method: 'POST' for sending data to the server
- * - headers: Tell the server we're sending JSON data
+ * CONFIGURATION OPTIONS (Lesson 297):
+ * -----------------------------------
+ * method: 'POST'
+ * The instructor explains:
+ * "We should send a post request to this route to be precise."
+ *
+ * headers: { 'Content-Type': 'application/json' }
+ * The instructor explains:
+ * "In addition we should now also add some headers to add the Content-Type
+ * header, and set it to application/json like this so that the backend
+ * understands that we're submitting some data in JSON format, and it
+ * should be extracted accordingly."
  *
  * Note: The actual body (the order data) is passed separately
  * when calling sendRequest(), not here.
@@ -151,13 +176,26 @@ export default function Checkout() {
   const userProgressCtx = useContext(UserProgressContext);
 
   /**
-   * USING useHttp FOR POST REQUESTS
-   * ===============================
-   * Unlike Meals.jsx (which uses GET), this component uses POST.
+   * USING useHttp FOR POST REQUESTS (Lesson 297)
+   * ============================================
+   * The instructor explains why we send from handleSubmit, not useEffect:
+   * "in a similar way as we loaded our meals, though this time not inside
+   * of such an Effect function because this time we don't really need to
+   * run this when the component loads, but instead we wanna send a request
+   * from inside handleSubmit."
    *
-   * The key difference:
-   * - GET requests: useHttp sends automatically on mount
-   * - POST requests: We call sendRequest manually when form is submitted
+   * KEY DIFFERENCE FROM MEALS:
+   * --------------------------
+   * - GET requests (Meals): useHttp sends automatically on mount
+   * - POST requests (Checkout): We call sendRequest manually when form is submitted
+   *
+   * TARGETING THE /orders ENDPOINT (Lesson 297):
+   * --------------------------------------------
+   * The instructor explains:
+   * "it's inside of this handleSubmit function where we wanna use the fetch
+   * function to send the request to that dummy backend here. And there it's
+   * slash orders we wanna target because that's the route in this dummy
+   * backend that waits for such incoming order requests."
    *
    * DESTRUCTURED VALUES:
    * --------------------
@@ -344,20 +382,26 @@ export default function Checkout() {
     const customerData = Object.fromEntries(fd.entries());
 
     /**
-     * SENDING THE ORDER (Lesson 296)
-     * ==============================
-     * The instructor explains combining customer data with cart data:
-     * "And therefore, this is how we can easily extract the data entered
-     * by the user. And that's then the data which we in the end wanna
-     * send to the backend, combined with the cart data, because of course
-     * the order which we're sending to the backend should also include
-     * details about what was ordered."
+     * SENDING THE ORDER (Lessons 296 & 297)
+     * =====================================
+     * The instructor explains the data structure needed:
+     * "we should make sure then that the request body has a order property
+     * with the details about the order, and that should then in turn be an
+     * object that has a items property holding the cart items that were
+     * ordered, and a customer property with all the customer details that
+     * were entered in the checkout form."
      *
-     * "And therefore that's now the last step here. We need to send such
-     * an HTTP request to the backend. So let's do that as a next step."
+     * USING JSON.stringify() (Lesson 297):
+     * ------------------------------------
+     * The instructor explains:
+     * "And of course, we need to set that request body so that data that
+     * should be attached. And as mentioned, that should be in JSON format,
+     * and you can easily generate data in that format with the built-in
+     * JSON.stringify method, which now takes any standard JavaScript value
+     * to convert it to JSON."
      *
-     * ORDER DATA STRUCTURE:
-     * ---------------------
+     * ORDER DATA STRUCTURE (Lesson 297):
+     * ----------------------------------
      * {
      *   order: {
      *     items: [...],      // Cart items array (what was ordered)
@@ -365,10 +409,34 @@ export default function Checkout() {
      *   }
      * }
      *
-     * This matches what the backend expects at POST /orders.
+     * CUSTOMER DATA (Lesson 297):
+     * ---------------------------
+     * The instructor explains:
+     * "Now the customer property in the end should simply include this
+     * customer data object which we're getting from our form. Because
+     * with that we'll then have all these form input fields as key-value
+     * pairs in that customer data."
      *
-     * JSON.stringify() converts our JavaScript object to a JSON string,
-     * which is what we need to send in the request body.
+     * CART ITEMS (Lesson 297):
+     * ------------------------
+     * The instructor explains:
+     * "and for the items it's of course now the cart data which I wanna
+     * submit, the cart items which we can get from our cart context.
+     * So here it's cartCtx.items, and that's the data that should be submitted."
+     *
+     * VERIFYING THE REQUEST (Lesson 297):
+     * -----------------------------------
+     * The instructor demonstrates testing:
+     * "if you click Submit Order nothing will happen here. But you also
+     * shouldn't get an error, and behind the scenes in the Network tab,
+     * if you click Submit Order again, you should see that an HTTP request
+     * is being sent."
+     *
+     * You can also verify by checking backend/data/orders.json:
+     * "you can validate that it worked if you go back to your project,
+     * and into this backend folder, and you take a look at this orders.json
+     * file in the data folder. This is the file to which those dummy orders
+     * are written if they make it past all these checks in my backend."
      */
     sendRequest(
       JSON.stringify({
@@ -550,8 +618,8 @@ export default function Checkout() {
           In JSX, we use 'htmlFor' instead of 'for' because 'for'
           is a reserved keyword in JavaScript.
 
-          name ATTRIBUTE (Lesson 296):
-          ----------------------------
+          name ATTRIBUTE (Lessons 296 & 297):
+          -----------------------------------
           The instructor emphasizes the importance of the name attribute:
           "The only important thing here is that we got this name prop
           on our inputs because this is required to then access those
@@ -559,6 +627,19 @@ export default function Checkout() {
           entered by the user."
 
           Without the name attribute, FormData cannot identify the inputs!
+
+          MATCHING BACKEND FIELD NAMES (Lesson 297):
+          ------------------------------------------
+          The instructor explains a crucial detail:
+          "one thing we should actually change here is that on the app
+          backend I'm looking for a name field, but in my frontend here,
+          I named that field full-name. We should change this to just name
+          so that extracting that data and using that data in the backend
+          code works fine."
+
+          "So all the fields I'm looking for here on that customer data,
+          that should be the names of your form fields in the checkout form.
+          So make sure that's the case."
 
           required ATTRIBUTE (Lesson 296):
           --------------------------------
@@ -637,7 +718,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 295 & 296
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296 & 297
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -662,10 +743,53 @@ export default function Checkout() {
  * 7. Combine customer data with cart items for the order
  * 8. Send HTTP request to backend (covered in next lesson)
  *
+ * LESSON 297 WORKFLOW:
+ * ====================
+ * 1. Configure fetch request for POST (method, headers)
+ * 2. Set Content-Type header to application/json
+ * 3. Use JSON.stringify() to convert data to JSON format
+ * 4. Structure order data: { order: { items, customer } }
+ * 5. Get cart items from cartCtx.items
+ * 6. Ensure form field names match backend expectations
+ * 7. Call sendRequest() with the JSON data
+ * 8. Verify request in browser Network tab
+ * 9. Check backend/data/orders.json for stored orders
+ *
+ * WHY SEND FROM handleSubmit, NOT useEffect (Lesson 297):
+ * =======================================================
+ * The instructor explains:
+ * "this time not inside of such an Effect function because this time we
+ * don't really need to run this when the component loads, but instead
+ * we wanna send a request from inside handleSubmit."
+ *
+ * CONFIGURING FETCH FOR POST (Lesson 297):
+ * ========================================
+ * const requestConfig = {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' }
+ * };
+ *
+ * Why this configuration is needed:
+ * "We did not have to do that before in the meals file because the default
+ * without configuration is that fetch sends a get request to this route."
+ *
  * TWO FORM SUBMISSION APPROACHES (Lesson 296):
  * ============================================
  * 1. onSubmit + handleSubmit (current approach)
  * 2. Form Actions (will be covered later in this section)
+ *
+ * ROOM FOR IMPROVEMENT (Lesson 297):
+ * ==================================
+ * The instructor notes areas for enhancement:
+ * "the user experience, of course, here isn't that great. If something
+ * goes wrong, we wouldn't see an error message here, and if we click
+ * Submit Order, we also get no feedback whether that worked or not."
+ *
+ * "And the same, by the way, is true here for the meals. When we reload
+ * the page, we're fetching those meals. But what if something goes wrong
+ * here? Or what if we have a slow internet connection?"
+ *
+ * This sets up the need for loading/error states (covered in next lessons)
  *
  * WHY preventDefault() IS NECESSARY (Lesson 296):
  * ===============================================
