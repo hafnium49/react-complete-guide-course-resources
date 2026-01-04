@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296 & 297)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297 & 298)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -34,6 +34,14 @@
  * 6. Ensuring form field names match backend expectations
  * 7. Verifying requests in browser Network tab
  * 8. Checking backend data storage (orders.json)
+ *
+ * LESSON 298 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Using the custom useHttp hook for POST requests
+ * 2. Why we call sendRequest() from handleSubmit (not from useEffect)
+ * 3. Defining requestConfig OUTSIDE the component to prevent infinite loops
+ * 4. Understanding the difference between GET (auto-fetch) and POST (manual trigger)
+ * 5. Managing loading, error, and success states for better UX
  *
  * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
  * ===============================================
@@ -109,8 +117,8 @@ import useHttp from '../hooks/useHttp.js';
 import Error from './Error.jsx';
 
 /**
- * REQUEST CONFIG FOR POST (Lesson 297)
- * ====================================
+ * REQUEST CONFIG FOR POST (Lessons 297 & 298)
+ * ===========================================
  * Configuration object for the HTTP POST request.
  *
  * The instructor explains why we need to configure the request:
@@ -119,14 +127,29 @@ import Error from './Error.jsx';
  * But we now need to configure it because we need to change the request
  * method now from get to post."
  *
- * WHY DEFINE THIS OUTSIDE THE COMPONENT?
- * --------------------------------------
+ * WHY DEFINE THIS OUTSIDE THE COMPONENT? (Lesson 298 - CRITICAL!)
+ * ---------------------------------------------------------------
+ * INSTRUCTOR QUOTE (Lesson 298):
+ * "Here's one problem, with this config object... I'm also using this
+ * config object as a dependency of my sendRequest function inside of
+ * useCallback. And this config object will change every time this
+ * component function executes."
+ *
+ * "Therefore this config object is recreated, therefore this function
+ * is recreated, therefore useEffect runs again, and it all starts all
+ * over again."
+ *
+ * SOLUTION (Lesson 298):
+ * "So since this object doesn't use any values that are only available
+ * inside of the component function, we can simply move this object
+ * definition outside of the component function."
+ *
  * Same reason as in Meals.jsx - defining outside prevents creating
  * a new object on every render. This is important because:
  *
- * 1. The config object is in useHttp's dependency array
- * 2. A new object every render would look like a "change" to React
- * 3. This could cause unintended re-runs of effects
+ * 1. The config object is in useHttp's useCallback dependency array
+ * 2. A new object every render = new reference = "change" detected
+ * 3. This triggers infinite re-fetching loops!
  *
  * CONFIGURATION OPTIONS (Lesson 297):
  * -----------------------------------
@@ -176,18 +199,36 @@ export default function Checkout() {
   const userProgressCtx = useContext(UserProgressContext);
 
   /**
-   * USING useHttp FOR POST REQUESTS (Lesson 297)
-   * ============================================
+   * USING useHttp FOR POST REQUESTS (Lessons 297 & 298)
+   * ===================================================
    * The instructor explains why we send from handleSubmit, not useEffect:
    * "in a similar way as we loaded our meals, though this time not inside
    * of such an Effect function because this time we don't really need to
    * run this when the component loads, but instead we wanna send a request
    * from inside handleSubmit."
    *
-   * KEY DIFFERENCE FROM MEALS:
-   * --------------------------
+   * KEY DIFFERENCE FROM MEALS (Lesson 298):
+   * ---------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "I only wanna send it if it's a GET request, because for POST
+   * requests I only want to send those requests once the user clicked
+   * a button."
+   *
    * - GET requests (Meals): useHttp sends automatically on mount
    * - POST requests (Checkout): We call sendRequest manually when form is submitted
+   *
+   * WHY USE THE SAME HOOK? (Lesson 298):
+   * ------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "we have two components, the Checkout component and the Meals component,
+   * that both need to send requests, even though those requests are sent at
+   * different points of time, but they both do it. And they then also, both
+   * in the end need to deal with different request states."
+   *
+   * The useHttp hook handles:
+   * - Loading state (isLoading/isSending)
+   * - Error state (error message)
+   * - Success state (data from server)
    *
    * TARGETING THE /orders ENDPOINT (Lesson 297):
    * --------------------------------------------
@@ -196,6 +237,15 @@ export default function Checkout() {
    * function to send the request to that dummy backend here. And there it's
    * slash orders we wanna target because that's the route in this dummy
    * backend that waits for such incoming order requests."
+   *
+   * NO AUTO-FETCH (Lesson 298):
+   * ---------------------------
+   * Because requestConfig has method: 'POST', the useHttp hook's
+   * useEffect check prevents automatic fetching:
+   *
+   * if ((config && (config.method === 'GET' || !config.method)) || !config) {
+   *   sendRequest(); // Only runs for GET, not POST
+   * }
    *
    * DESTRUCTURED VALUES:
    * --------------------
@@ -718,7 +768,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296 & 297
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297 & 298
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -755,7 +805,18 @@ export default function Checkout() {
  * 8. Verify request in browser Network tab
  * 9. Check backend/data/orders.json for stored orders
  *
- * WHY SEND FROM handleSubmit, NOT useEffect (Lesson 297):
+ * LESSON 298 WORKFLOW:
+ * ====================
+ * 1. Create useHttp custom hook in src/hooks/useHttp.js
+ * 2. Define requestConfig OUTSIDE the component (prevents infinite loops)
+ * 3. Use useHttp hook with URL, config, and optional initialData
+ * 4. Destructure: { data, isLoading, error, sendRequest, clearData }
+ * 5. For POST: Call sendRequest(data) from handleSubmit (not auto-fetch)
+ * 6. For GET: Hook auto-fetches on mount (method undefined or 'GET')
+ * 7. Use isLoading/error/data to update UI accordingly
+ * 8. Use clearData() after success to reset for next use
+ *
+ * WHY SEND FROM handleSubmit, NOT useEffect (Lessons 297 & 298):
  * =======================================================
  * The instructor explains:
  * "this time not inside of such an Effect function because this time we

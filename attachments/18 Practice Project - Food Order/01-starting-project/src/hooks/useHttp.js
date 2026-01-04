@@ -1,33 +1,45 @@
 /**
  * ============================================================================
- * useHttp CUSTOM HOOK - REUSABLE HTTP REQUEST LOGIC
+ * useHttp CUSTOM HOOK - REUSABLE HTTP REQUEST LOGIC (Lesson 298)
  * ============================================================================
  *
  * This custom hook encapsulates all the logic for making HTTP requests,
  * including loading states, error handling, and data management.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
+ * LESSON 298 - KEY LEARNING OBJECTIVES:
+ * =====================================
  * 1. Creating custom hooks for reusable logic
- * 2. Managing async operations with loading/error states
- * 3. Using useCallback to memoize functions
- * 4. Automatic GET request execution on mount
- * 5. Manual POST/PUT/DELETE request triggering
+ * 2. Why standard functions won't work (need stateful logic)
+ * 3. Managing async operations with loading/error states
+ * 4. Using useCallback to prevent infinite loops
+ * 5. Automatic GET request execution on mount
+ * 6. Manual POST request triggering via sendRequest
+ * 7. Accepting initialData to avoid undefined errors
+ * 8. Defining config outside component to prevent infinite loops
  *
- * WHY A CUSTOM HOOK?
- * ==================
- * Without this hook, every component that fetches data would need:
- * - useState for data
- * - useState for loading
- * - useState for error
- * - useEffect to trigger the fetch
- * - Try/catch for error handling
+ * WHY A CUSTOM HOOK? (Lesson 298)
+ * ===============================
+ * The instructor explains:
+ * "we have two components, the Checkout component and the Meals component,
+ * that both need to send requests, even though those requests are sent at
+ * different points of time, but they both do it. And they then also, both
+ * in the end need to deal with different request states: failing requests,
+ * loading requests and requests that succeeded."
  *
- * This is a lot of boilerplate to repeat. A custom hook:
- * - Reduces code duplication
- * - Ensures consistent behavior
- * - Makes components cleaner
- * - Centralizes HTTP logic
+ * "So we have that same logic which we in the end need in two different
+ * components to update the UI. And since it's some stateful logic that
+ * should impact the UI and where changes should impact the UI, we need a
+ * custom hook, because just creating a custom standard function won't do
+ * the trick."
+ *
+ * FILE STRUCTURE (Lesson 298):
+ * ============================
+ * The instructor explains:
+ * "So in the source folder I'll add a hooks folder. And I'll name it,
+ * useHttp. This is the file name and in there I'll also export a function
+ * called useHttp, and as you learned in this course, custom hooks must
+ * start with 'use' to signal to React that the special rules of hooks
+ * should apply here."
  *
  * USAGE EXAMPLES:
  * ===============
@@ -42,10 +54,16 @@
 import { useCallback, useEffect, useState } from 'react';
 
 /**
- * SEND HTTP REQUEST HELPER
- * ========================
+ * SEND HTTP REQUEST HELPER (Lesson 298)
+ * =====================================
  * This is a pure async function (not a hook) that handles the actual
  * HTTP request. It's extracted to keep the hook logic cleaner.
+ *
+ * INSTRUCTOR QUOTE (Lesson 298):
+ * "this is not the hook, instead it's a helper function that could be
+ * outsourced into a separate file or added in the same file, which is
+ * what I'll do here, which receives the URL and the config and then
+ * uses the built-in fetch function to send the request"
  *
  * WHY SEPARATE THIS FUNCTION?
  * ---------------------------
@@ -61,15 +79,23 @@ import { useCallback, useEffect, useState } from 'react';
  */
 async function sendHttpRequest(url, config) {
   /**
-   * FETCH API
-   * =========
+   * FETCH API (Lesson 298)
+   * ======================
    * fetch() is the modern browser API for making HTTP requests.
    * It returns a Promise that resolves to a Response object.
+   *
+   * INSTRUCTOR QUOTE (Lesson 298):
+   * "which receives the URL and the config and then uses the built-in
+   * fetch function to send the request"
    *
    * The config object can include:
    * - method: 'GET', 'POST', 'PUT', 'DELETE'
    * - headers: { 'Content-Type': 'application/json' }
    * - body: JSON string of data to send
+   *
+   * ASYNC/AWAIT (Lesson 298):
+   * The instructor notes: "you are awaiting, and of course, therefore,
+   * we also need the async keyword here on this function"
    */
   const response = await fetch(url, config);
 
@@ -130,12 +156,29 @@ async function sendHttpRequest(url, config) {
  */
 export default function useHttp(url, config, initialData) {
   /**
-   * STATE MANAGEMENT
-   * ================
+   * STATE MANAGEMENT (Lesson 298)
+   * =============================
    * We track three pieces of state:
    * - data: The response data (starts with initialData)
    * - isLoading: Whether a request is in progress
    * - error: Any error message from a failed request
+   *
+   * INSTRUCTOR QUOTE (Lesson 298):
+   * "in that custom hook, we wanna manage some state and update the UI
+   * of the component that is using this hook based on that state."
+   *
+   * WHY THREE STATES? (Lesson 298):
+   * "You could also just use two states, for example, like isLoading
+   * and error... In the end it's up to you, but I like to have this
+   * data state here as well."
+   *
+   * WHY initialData? (Lesson 298):
+   * "because it will try to go through all meals and output list item
+   * elements for all meals, and if that meals data is undefined initially,
+   * this will fail"
+   *
+   * This is why Meals.jsx passes [] as initialData - to ensure
+   * .map() doesn't fail on undefined during initial render.
    */
   const [data, setData] = useState(initialData);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,16 +197,26 @@ export default function useHttp(url, config, initialData) {
   }
 
   /**
-   * SEND REQUEST FUNCTION
-   * =====================
+   * SEND REQUEST FUNCTION (Lesson 298)
+   * ==================================
    * This function actually sends the HTTP request.
    * It's wrapped in useCallback to prevent unnecessary re-creations.
    *
-   * WHY useCallback?
-   * ----------------
-   * Without useCallback, a new sendRequest function would be created
-   * on every render. This would cause the useEffect below to run on
-   * every render (since sendRequest is in its dependency array).
+   * WHY useCallback? (Lesson 298)
+   * -----------------------------
+   * INSTRUCTOR QUOTE:
+   * "we need to wrap this inner function with useCallback... The reason
+   * for that is that we would otherwise create an infinite loop."
+   *
+   * "because we're using sendRequest inside of useEffect as a dependency,
+   * useEffect will run again whenever sendRequest changes. And it does
+   * change if we don't use useCallback"
+   *
+   * THE INFINITE LOOP PROBLEM (Lesson 298):
+   * 1. Component renders → sendRequest recreated (new reference)
+   * 2. useEffect sees sendRequest changed → runs sendRequest()
+   * 3. sendRequest updates state (setData, setIsLoading, setError)
+   * 4. State update triggers re-render → back to step 1
    *
    * useCallback memoizes the function - it only creates a new function
    * when the dependencies (url, config) change.
@@ -178,14 +231,25 @@ export default function useHttp(url, config, initialData) {
   const sendRequest = useCallback(
     async function sendRequest(data) {
       /**
-       * SET LOADING STATE
-       * =================
+       * SET LOADING STATE (Lesson 298)
+       * ==============================
        * Before starting the request, set isLoading to true.
        * Components can use this to show loading indicators.
+       *
+       * INSTRUCTOR QUOTE (Lesson 298):
+       * "set isLoading to true right at the start here, and then try to
+       * send that HTTP request"
        */
       setIsLoading(true);
 
       try {
+        /**
+         * TRY-CATCH FOR ERROR HANDLING (Lesson 298)
+         * =========================================
+         * INSTRUCTOR QUOTE:
+         * "I wanna wrap my code here into a try catch block because
+         * the request could fail."
+         */
         /**
          * MAKE THE REQUEST
          * ================
@@ -232,13 +296,23 @@ export default function useHttp(url, config, initialData) {
   );
 
   /**
-   * AUTOMATIC GET REQUEST
-   * =====================
+   * AUTOMATIC GET REQUEST (Lesson 298)
+   * ==================================
    * For GET requests, we want to fetch data immediately when the
    * component mounts. This useEffect handles that.
    *
-   * CONDITION:
-   * ----------
+   * INSTRUCTOR QUOTE (Lesson 298):
+   * "now depending on the config that was passed, I either want to send
+   * that request, or I don't want to send it. I only wanna send it if
+   * it's a GET request, because for POST requests I only want to send
+   * those requests once the user clicked a button."
+   *
+   * CONDITION (Lesson 298):
+   * -----------------------
+   * INSTRUCTOR QUOTE:
+   * "if we have no method set, or if the method is get... only then
+   * this useEffect function should call sendRequest"
+   *
    * We only auto-fetch if:
    * - config exists AND method is 'GET' OR method is undefined (default is GET)
    * - OR config doesn't exist at all
@@ -281,12 +355,19 @@ export default function useHttp(url, config, initialData) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * LESSON 298 - SUMMARY & KEY CONCEPTS
  * ============================================================================
  *
- * CUSTOM HOOKS:
- * =============
+ * CUSTOM HOOKS (Lesson 298):
+ * ==========================
  * Custom hooks let you extract component logic into reusable functions.
+ *
+ * INSTRUCTOR QUOTE:
+ * "So we have that same logic which we in the end need in two different
+ * components to update the UI. And since it's some stateful logic that
+ * should impact the UI and where changes should impact the UI, we need a
+ * custom hook, because just creating a custom standard function won't do
+ * the trick."
  *
  * Rules:
  * - Name must start with "use"
@@ -300,15 +381,37 @@ export default function useHttp(url, config, initialData) {
  *
  * This allows consumers to destructure only what they need.
  *
- * useCallback:
- * ============
+ * useCallback - PREVENTING INFINITE LOOPS (Lesson 298):
+ * =====================================================
  * Memoizes a function to prevent unnecessary re-creations.
+ *
+ * INSTRUCTOR QUOTE:
+ * "we need to wrap this inner function with useCallback... The reason
+ * for that is that we would otherwise create an infinite loop."
  *
  * Without: New function every render → useEffect runs every render
  * With: Same function until deps change → useEffect runs only when needed
  *
- * LOADING/ERROR STATE PATTERN:
- * ============================
+ * CONFIG OBJECT - ANOTHER INFINITE LOOP PITFALL (Lesson 298):
+ * ===========================================================
+ * INSTRUCTOR QUOTE:
+ * "Here's one problem, with this config object... I'm also using this
+ * config object as a dependency of my sendRequest function... Therefore
+ * this config object is recreated, therefore this function is recreated,
+ * therefore useEffect runs again, and it all starts all over again."
+ *
+ * SOLUTION: Define the config object OUTSIDE the component:
+ *
+ *   // OUTSIDE component - stable reference
+ *   const requestConfig = { method: 'POST', headers: {...} };
+ *
+ *   function MyComponent() {
+ *     const { sendRequest } = useHttp('/orders', requestConfig);
+ *     // ...
+ *   }
+ *
+ * LOADING/ERROR STATE PATTERN (Lesson 298):
+ * =========================================
  * The three-state pattern for async operations:
  * - isLoading: true while in progress
  * - error: set if operation failed
@@ -316,21 +419,58 @@ export default function useHttp(url, config, initialData) {
  *
  * This pattern allows components to show appropriate UI for each state.
  *
+ * initialData PARAMETER (Lesson 298):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "because it will try to go through all meals and output list item
+ * elements for all meals, and if that meals data is undefined initially,
+ * this will fail"
+ *
+ * Pass [] for array data to prevent .map() errors during initial render.
+ *
  * USAGE IN COMPONENTS:
  * ====================
  *
  * GET Request (Meals.jsx):
  * ------------------------
- * const { data: meals, isLoading, error } = useHttp('/meals', {}, []);
- * // Automatically fetches on mount
- * // Show loading, error, or meals based on state
+ * // Config defined OUTSIDE component to prevent infinite loops
+ * const mealsConfig = {};
+ *
+ * function Meals() {
+ *   const { data: meals, isLoading, error } = useHttp(
+ *     'http://localhost:3000/meals',
+ *     mealsConfig,
+ *     []  // initialData to prevent undefined.map() error
+ *   );
+ *   // Automatically fetches on mount
+ *   // Show loading, error, or meals based on state
+ * }
  *
  * POST Request (Checkout.jsx):
  * ----------------------------
- * const { sendRequest, isLoading, error } = useHttp('/orders', {
+ * // Config defined OUTSIDE component to prevent infinite loops
+ * const requestConfig = {
  *   method: 'POST',
  *   headers: { 'Content-Type': 'application/json' }
- * });
- * // Call sendRequest(JSON.stringify(data)) when form is submitted
- * // Show loading state while submitting
+ * };
+ *
+ * function Checkout() {
+ *   const { sendRequest, isLoading, error } = useHttp(
+ *     'http://localhost:3000/orders',
+ *     requestConfig
+ *   );
+ *   // Call sendRequest(JSON.stringify(data)) when form is submitted
+ *   // Does NOT auto-fetch because method is 'POST'
+ * }
+ *
+ * LESSON 298 WORKFLOW:
+ * ====================
+ * 1. Create hooks folder: src/hooks/
+ * 2. Create useHttp.js with sendHttpRequest helper + useHttp hook
+ * 3. Manage state: data, isLoading, error
+ * 4. Wrap sendRequest in useCallback to prevent infinite loops
+ * 5. Use useEffect to auto-fetch for GET requests only
+ * 6. Accept initialData to prevent undefined errors
+ * 7. Define config objects OUTSIDE consuming components
+ * 8. Return object with state and functions for consumers to destructure
  */

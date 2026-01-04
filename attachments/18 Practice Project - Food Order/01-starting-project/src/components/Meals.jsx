@@ -186,20 +186,34 @@ import MealItem from './MealItem.jsx'; // Added in Lesson 287
 import Error from './Error.jsx';
 
 /**
- * REQUEST CONFIG
- * ==============
+ * REQUEST CONFIG (Lesson 298 - CRITICAL!)
+ * =======================================
  * Configuration object for the HTTP request.
  *
- * WHY DEFINE THIS OUTSIDE THE COMPONENT?
- * --------------------------------------
- * This relates to the useEffect dependency discussion in Lesson 286:
+ * WHY DEFINE THIS OUTSIDE THE COMPONENT? (Lesson 298)
+ * ---------------------------------------------------
+ * INSTRUCTOR QUOTE (Lesson 298):
+ * "Here's one problem, with this config object... I'm also using this
+ * config object as a dependency of my sendRequest function inside of
+ * useCallback. And this config object will change every time this
+ * component function executes. Or to be precise, it will be recreated.
+ * It will be a brand new object in memory every time this component
+ * function is executed. So it will change. Therefore this config object
+ * is recreated, therefore this function is recreated, therefore useEffect
+ * runs again, and it all starts all over again."
  *
+ * SOLUTION (Lesson 298):
+ * "So since this object doesn't use any values that are only available
+ * inside of the component function, we can simply move this object
+ * definition outside of the component function."
+ *
+ * This relates to the useEffect dependency discussion in Lesson 286:
  * If we defined this inside the component, a new object would be created
  * on every render. This would cause the effect to run on every render
  * because objects are compared by reference, not value.
  *
  * By defining it outside, we use the SAME object reference every time,
- * preventing unnecessary re-fetches.
+ * preventing unnecessary re-fetches and INFINITE LOOPS!
  *
  * BASIC FETCH (Lesson 286):
  * -------------------------
@@ -232,10 +246,17 @@ const requestConfig = {};
  */
 export default function Meals() {
   /**
-   * USING THE CUSTOM HTTP HOOK
-   * ==========================
+   * USING THE CUSTOM HTTP HOOK (Lesson 298)
+   * =======================================
    * This hook encapsulates the useState + useEffect + fetch pattern
    * taught in Lesson 286.
+   *
+   * INSTRUCTOR QUOTE (Lesson 298):
+   * "we have two components, the Checkout component and the Meals component,
+   * that both need to send requests... And since it's some stateful logic
+   * that should impact the UI and where changes should impact the UI, we
+   * need a custom hook, because just creating a custom standard function
+   * won't do the trick."
    *
    * WHAT THE HOOK DOES INTERNALLY (similar to Lesson 286):
    * ------------------------------------------------------
@@ -244,6 +265,22 @@ export default function Meals() {
    * 3. Calls fetch() with the URL
    * 4. Awaits response.json() to extract data
    * 5. Updates state with the result
+   *
+   * THREE PARAMETERS (Lesson 298):
+   * ------------------------------
+   * 1. URL: 'http://localhost:3000/meals' - the endpoint to fetch
+   * 2. config: requestConfig - defined OUTSIDE component to prevent loops
+   * 3. initialData: [] - the initial value for the data state
+   *
+   * WHY initialData IS CRUCIAL (Lesson 298):
+   * ----------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "because it will try to go through all meals and output list item
+   * elements for all meals, and if that meals data is undefined initially,
+   * this will fail"
+   *
+   * By passing [] as initialData, loadedMeals.map() won't crash during
+   * the initial render before data arrives from the server.
    *
    * DESTRUCTURING WITH RENAME:
    * --------------------------
@@ -255,6 +292,16 @@ export default function Meals() {
    * with an empty array. Since this should be that Meals state or
    * that loadedMeals state to make it very clear that that meals
    * data will not be there initially."
+   *
+   * AUTO-FETCH FOR GET REQUESTS (Lesson 298):
+   * -----------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "I only wanna send it if it's a GET request, because for POST
+   * requests I only want to send those requests once the user clicked
+   * a button."
+   *
+   * Since requestConfig has no method (defaults to GET), useHttp
+   * automatically fetches when the component mounts.
    */
   const {
     data: loadedMeals,
@@ -364,11 +411,11 @@ export default function Meals() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSON 286
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 286 & 298
  * ============================================================================
  *
- * THE INFINITE LOOP PROBLEM:
- * ==========================
+ * LESSON 286 - THE INFINITE LOOP PROBLEM:
+ * =======================================
  * 1. Component function runs
  * 2. fetch() is called
  * 3. Data arrives, setState() is called
@@ -377,14 +424,14 @@ export default function Meals() {
  * 6. fetch() is called again
  * 7. ... infinite loop!
  *
- * THE SOLUTION (useEffect):
- * =========================
+ * LESSON 286 - THE SOLUTION (useEffect):
+ * ======================================
  * useEffect runs AFTER the component renders, not during.
  * With an empty dependencies array [], it only runs once on mount.
  * This breaks the infinite loop.
  *
- * THE PATTERN:
- * ============
+ * LESSON 286 - THE PATTERN:
+ * =========================
  * useEffect(() => {
  *   async function fetchData() {
  *     const response = await fetch(url);
@@ -399,6 +446,37 @@ export default function Meals() {
  * - Component functions can't be async (React doesn't allow it)
  * - useEffect callback can't be async (must return cleanup or undefined)
  * - Solution: Define async function inside, then call it
+ *
+ * LESSON 298 - CUSTOM HOOK EVOLUTION:
+ * ===================================
+ * The basic Lesson 286 pattern evolved into the useHttp custom hook:
+ *
+ * BEFORE (Lesson 286):
+ * - useState + useEffect + fetch in every component
+ * - Duplicated logic across Meals and Checkout components
+ * - No centralized loading/error handling
+ *
+ * AFTER (Lesson 298):
+ * - useHttp hook encapsulates all the logic
+ * - Reusable across components
+ * - Consistent loading/error handling
+ * - Prevents infinite loops with useCallback + external config
+ *
+ * LESSON 298 - KEY PITFALLS AVOIDED:
+ * ==================================
+ * 1. CONFIG OBJECT RECREATION:
+ *    - Define config OUTSIDE component
+ *    - Objects compared by reference, not value
+ *    - New object = new reference = useEffect triggers
+ *
+ * 2. UNDEFINED DATA ON INITIAL RENDER:
+ *    - Pass initialData ([] for arrays)
+ *    - Prevents crashes when calling .map() on undefined
+ *
+ * 3. sendRequest RECREATION:
+ *    - useCallback wraps the function
+ *    - Same function reference unless deps change
+ *    - Prevents useEffect from running on every render
  *
  * ADDING TO APP.JSX:
  * ==================
