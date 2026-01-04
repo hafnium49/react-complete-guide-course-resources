@@ -238,8 +238,12 @@ function App() {
         <Cart />
 
         {/*
-          CHECKOUT COMPONENT (Modal)
-          ==========================
+          CHECKOUT COMPONENT (Modal) - Added in Lesson 295
+          =================================================
+          The instructor explains adding this component:
+          "Therefore, we need to add such a component. A new checkout
+          component in a new checkout component file."
+
           Renders a modal that displays when userProgress === 'checkout'.
           The user reaches this by clicking "Go to Checkout" in the Cart modal.
 

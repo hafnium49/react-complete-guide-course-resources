@@ -1,18 +1,30 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lesson 295)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
  * enter their shipping information and submit their order.
  *
- * KEY LEARNING OBJECTIVES:
- * ========================
- * 1. Handling form submission with FormData API
- * 2. Making POST requests with the custom useHttp hook
- * 3. Managing multiple UI states (form, loading, success, error)
- * 4. Consuming multiple contexts
- * 5. Conditional rendering based on async operation state
+ * LESSON 295 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Creating a new checkout component for order submission
+ * 2. Displaying checkout in a Modal component
+ * 3. Consuming both CartContext and UserProgressContext
+ * 4. Building a form with multiple input fields
+ * 5. Creating reusable Input components (optional approach)
+ * 6. Understanding the onClose prop for Escape key handling
+ *
+ * WHY CREATE A CHECKOUT COMPONENT? (Lesson 295)
+ * =============================================
+ * The instructor explains the need for this component:
+ * "Therefore, we need to add such a component. A new checkout component
+ * in a new checkout component file."
+ *
+ * "Now my plan here is to also show this checkout component in such
+ * a modal. Because the idea is that even when checkout is open, we
+ * still have the rest of the page in the background. And that's why
+ * I will use a modal here."
  *
  * CHECKOUT FEATURES:
  * ==================
@@ -37,14 +49,23 @@
 import { useContext } from 'react';
 
 /**
- * IMPORTS
- * =======
- * - Modal: Reusable modal component
- * - CartContext: Access to cart items and clearCart function
- * - UserProgressContext: Controls which modal is displayed
- * - currencyFormatter: For formatting the total price
- * - useHttp: Custom hook for HTTP requests
- * - Error: Component for displaying error messages
+ * IMPORTS (Lesson 295)
+ * ====================
+ * The instructor explains the necessary imports:
+ *
+ * Modal: "Now my plan here is to also show this checkout component
+ * in such a modal."
+ *
+ * CartContext: "Now of course, this total amount depends on our cart
+ * and therefore this checkout component will also need access to our
+ * CartContext here."
+ *
+ * UserProgressContext: For controlling when the checkout modal is open
+ * and closing it after order completion.
+ *
+ * currencyFormatter: For formatting the total price
+ * useHttp: Custom hook for HTTP requests
+ * Error: Component for displaying error messages
  */
 import Modal from './Modal.jsx';
 import CartContext from '../store/CartContext.jsx';
@@ -89,8 +110,12 @@ const requestConfig = {
  */
 export default function Checkout() {
   /**
-   * CONSUMING MULTIPLE CONTEXTS
-   * ===========================
+   * CONSUMING MULTIPLE CONTEXTS (Lesson 295)
+   * ========================================
+   * The instructor explains needing CartContext:
+   * "Now of course, this total amount depends on our cart and therefore
+   * this checkout component will also need access to our CartContext here."
+   *
    * CartContext provides:
    * - items: The cart items to include in the order
    * - clearCart: Function to empty the cart after successful order
@@ -401,12 +426,24 @@ export default function Checkout() {
         <p>Total Amount: {currencyFormatter.format(cartTotal)}</p>
 
         {/*
-          FORM FIELDS
-          ===========
+          FORM FIELDS (Lesson 295)
+          ========================
+          The instructor discusses two approaches for form inputs:
+
+          APPROACH 1 - Inline Inputs (used here):
           Each field follows the same pattern:
           - Wrapper div with "control" class (for CSS styling)
           - Label with htmlFor (accessibility - links to input)
           - Input with id, name, and required
+
+          APPROACH 2 - Reusable Input Component:
+          The instructor also mentions creating a reusable Input component
+          in a UI folder that encapsulates the div/label/input pattern.
+          This would look like:
+          <Input label="Full Name" type="text" id="name" />
+
+          Both approaches are valid - the component approach reduces
+          repetition but adds an extra abstraction layer.
 
           htmlFor vs for:
           ---------------
@@ -487,8 +524,19 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS
+ * SUMMARY & KEY CONCEPTS FROM LESSON 295
  * ============================================================================
+ *
+ * LESSON 295 WORKFLOW:
+ * ====================
+ * 1. Create Checkout.jsx component in components folder
+ * 2. Import Modal, CartContext, UserProgressContext
+ * 3. Use useContext to access both contexts
+ * 4. Calculate cart total for display
+ * 5. Create handleClose function for modal closing
+ * 6. Build form with input fields for customer data
+ * 7. (Optional) Create reusable Input component in UI folder
+ * 8. Add Checkout component to App.jsx
  *
  * FORM HANDLING WITH FORMDATA:
  * ============================

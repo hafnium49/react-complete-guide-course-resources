@@ -202,8 +202,13 @@ export default function Cart() {
        * - Modal is open when userProgress is 'cart'
        * - Any other value ('', 'checkout') keeps it closed
        *
-       * onClose CONDITIONAL:
-       * --------------------
+       * onClose CONDITIONAL (Lesson 295 BUG FIX):
+       * -----------------------------------------
+       * The instructor explains this important bug fix:
+       * "we could check if our current user progress is equal to cart
+       * in which case we wanna use handleCloseCart... But otherwise,
+       * we want to use nothing so null"
+       *
        * onClose={progress === 'cart' ? handleCloseCart : null}
        *
        * This is a clever pattern to handle a specific scenario:
@@ -211,11 +216,15 @@ export default function Cart() {
        * This causes the Cart modal to close (open becomes false).
        * The Modal's cleanup effect calls close(), which fires the onClose event.
        *
+       * THE BUG (Lesson 295):
+       * ---------------------
        * Without the condition:
        * - onClose would always be handleCloseCart
        * - handleCloseCart sets progress to ''
        * - Checkout modal would close immediately!
        *
+       * THE FIX (Lesson 295):
+       * ---------------------
        * With the condition:
        * - When progress === 'checkout', onClose is null
        * - No handler fires when cart modal closes
@@ -365,7 +374,7 @@ export default function Cart() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 293 & 294
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 293, 294 & 295
  * ============================================================================
  *
  * LESSON 293 WORKFLOW:
@@ -434,11 +443,30 @@ export default function Cart() {
  *
  * Pattern: {condition && <Element />}
  *
- * MODAL COORDINATION:
- * ===================
+ * MODAL COORDINATION (Lesson 295):
+ * ================================
+ * The instructor explains this important bug fix:
+ * "we could check if our current user progress is equal to cart
+ * in which case we wanna use handleCloseCart... But otherwise,
+ * we want to use nothing so null"
+ *
  * The onClose conditional prevents conflicts when transitioning
  * between modals. This is a subtle but important pattern for
  * multi-modal applications.
+ *
+ * LESSON 295 - onClose BUG FIX:
+ * =============================
+ * When transitioning from cart to checkout:
+ * 1. showCheckout() sets progress to 'checkout'
+ * 2. Cart modal closes (progress !== 'cart')
+ * 3. Modal cleanup effect calls dialog.close()
+ * 4. dialog fires "close" event, calling onClose
+ *
+ * Without conditional: onClose = handleCloseCart → sets progress to ''
+ *                      → Checkout modal never opens!
+ *
+ * With conditional: onClose = null when progress === 'checkout'
+ *                   → No handler fires → Checkout opens correctly
  *
  * COMPONENT COMPOSITION:
  * ======================

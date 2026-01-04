@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MODAL COMPONENT - REUSABLE DIALOG OVERLAY (Lesson 292)
+ * MODAL COMPONENT - REUSABLE DIALOG OVERLAY (Lessons 292 & 295)
  * ============================================================================
  *
  * This component creates a reusable modal dialog using the native HTML
@@ -13,6 +13,11 @@
  * 3. Using useRef to access DOM elements
  * 4. Using useEffect for side effects (opening/closing modal)
  * 5. Creating reusable, composable components
+ *
+ * LESSON 295 - ADDITIONAL CONCEPTS:
+ * =================================
+ * 1. Understanding the onClose prop for Escape key handling
+ * 2. How the dialog's native "close" event integrates with React
  *
  * PROJECT PROGRESSION (End of Lesson 291):
  * ========================================
@@ -315,15 +320,37 @@ export default function Modal({ children, open, onClose, className = '' }) {
      * the hard coded modal class, and I then also inject the class name
      * I might be receiving in addition."
      *
-     * onClose={onClose}:
+     * onClose={onClose} (Lesson 295):
+     * --------------------------------
+     * The instructor explains this important prop:
+     * "we can actually add an onClose prop, because a close event will
+     * be emitted by the browser when this dialogue is closed for example
+     * because the escape key was pressed."
+     *
      * - Native <dialog> fires "close" event when closed
      * - This happens when:
      *   - User presses Escape key
      *   - Our code calls dialog.close()
      * - We pass this event to the parent so it can update its state
      *
-     * IMPORTANT NOTE ON onClose:
-     * --------------------------
+     * WHY IS onClose NEEDED? (Lesson 295)
+     * -----------------------------------
+     * The instructor explains the bug this fixes:
+     * Without onClose, if the user presses Escape to close the modal,
+     * the dialog closes visually but our React state (userProgress)
+     * remains unchanged. This creates a mismatch between the UI and
+     * the state, potentially causing issues.
+     *
+     * By forwarding the close event, the parent component can update
+     * its state to match the dialog's closed state.
+     *
+     * IMPORTANT NOTE ON onClose (Lesson 295):
+     * ---------------------------------------
+     * The instructor explains a subtle bug when transitioning modals:
+     * "we could check if our current user progress is equal to cart
+     * in which case we wanna use handleCloseCart... But otherwise,
+     * we want to use nothing so null"
+     *
      * We conditionally pass onClose in Cart.jsx:
      * onClose={progress === 'cart' ? handleCloseCart : null}
      *
@@ -352,7 +379,7 @@ export default function Modal({ children, open, onClose, className = '' }) {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSON 292
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 292 & 295
  * ============================================================================
  *
  * LESSON 292 WORKFLOW:
@@ -424,6 +451,28 @@ export default function Modal({ children, open, onClose, className = '' }) {
  * - It notifies parent of close events
  *
  * Used by: Cart.jsx (cart modal), Checkout.jsx (checkout modal)
+ *
+ * LESSON 295 - onClose PROP:
+ * ==========================
+ * The instructor adds the onClose prop to handle Escape key:
+ * "we can actually add an onClose prop, because a close event will
+ * be emitted by the browser when this dialogue is closed for example
+ * because the escape key was pressed."
+ *
+ * BUG FIX - CONDITIONAL onClose (Lesson 295):
+ * ===========================================
+ * The instructor explains a subtle issue when transitioning between
+ * the cart and checkout modals:
+ *
+ * "we could check if our current user progress is equal to cart
+ * in which case we wanna use handleCloseCart... But otherwise,
+ * we want to use nothing so null"
+ *
+ * In Cart.jsx:
+ * onClose={progress === 'cart' ? handleCloseCart : null}
+ *
+ * This prevents the cart's close handler from firing when we
+ * transition to checkout, which would immediately close checkout.
  *
  * WHAT'S NEXT (end of Lesson 292):
  * ================================
