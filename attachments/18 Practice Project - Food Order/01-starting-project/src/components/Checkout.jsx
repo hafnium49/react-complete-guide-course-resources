@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297, 298 & 300)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297, 298, 300 & 301)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -52,6 +52,16 @@
  * 5. Calling clearCart() to empty the shopping cart
  * 6. Calling clearData() to prevent stale success screens
  * 7. Understanding why all three cleanup actions are necessary
+ *
+ * LESSON 301 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Migrating from onSubmit to form actions
+ * 2. Renaming handleSubmit to checkoutAction for clarity
+ * 3. Using action prop instead of onSubmit prop on the form
+ * 4. FormData is automatically passed to form actions (no event.target needed)
+ * 5. No need for event.preventDefault() with form actions
+ * 6. Form actions can be async functions (since sendRequest returns a Promise)
+ * 7. Understanding both approaches work for form submission
  *
  * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
  * ===============================================
@@ -364,22 +374,108 @@ export default function Checkout() {
   }
 
   /**
-   * FORM SUBMIT HANDLER (Lesson 296)
-   * ================================
+   * FORM SUBMIT HANDLER (Lessons 296 & 301)
+   * =======================================
    * The instructor explains setting up this handler:
    * "So therefore here, I'll start by adding this onSubmit prop to this
    * form element. And then we can set up a function, handleSubmit could
    * be the name, which we connect to that prop, so which we pass as a
    * value to that prop as we always do."
    *
-   * FORM HANDLING PATTERN:
-   * ----------------------
+   * FORM HANDLING PATTERN (onSubmit approach - Lesson 296):
+   * -------------------------------------------------------
    * 1. Prevent default form submission (page refresh)
    * 2. Extract form data using FormData API
    * 3. Convert FormData to plain object
    * 4. Send to server via our HTTP hook
    *
-   * @param {Event} event - The form submission event
+   * ============================================================================
+   * LESSON 301 - MIGRATING TO FORM ACTIONS
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE (Lesson 301):
+   * "So in this section here, in the Checkout component, we actually handled
+   * the submission of this checkout form manually with the onSubmit prop.
+   * And we then extracted those entered values in that function, in that
+   * handleSubmit function by constructing a FormData object by then getting
+   * hold of the event.target, which is the form, and by then collecting that
+   * FormData like this. And that, of course, all works, but you did, of course,
+   * also learn about form actions earlier in this course. And, therefore, we
+   * could, of course, also handled this form submission with help of form actions."
+   *
+   * MIGRATION STEPS (Lesson 301):
+   * ============================
+   * STEP 1 - Rename the function:
+   * INSTRUCTOR QUOTE:
+   * "We can start by giving this handleSubmit function a different name,
+   * which is not mandatory but which we can do to make it clear that it
+   * is a form action. And I'll name it checkoutAction."
+   *
+   * STEP 2 - Change the form prop:
+   * INSTRUCTOR QUOTE:
+   * "And down there, I'll actually not set this onSubmit prop on my form
+   * anymore. But instead, I'll set the action prop to this renamed function,
+   * so to the checkoutAction function."
+   *
+   * STEP 3 - Receive FormData directly:
+   * INSTRUCTOR QUOTE:
+   * "Now, as you learned earlier in the course, when triggering this as a
+   * form action, you will get a FormData object as an input. And I'm naming
+   * it FD, since this was also the name I used down here when I created
+   * that form data manually."
+   *
+   * STEP 4 - Remove unnecessary code:
+   * INSTRUCTOR QUOTE:
+   * "So by switching to a form action, I can actually get rid of some code here."
+   * - No more event.preventDefault() needed
+   * - No more new FormData(event.target) needed
+   * - FormData is passed automatically as the first parameter
+   *
+   * STEP 5 - Optional: Make it async:
+   * INSTRUCTOR QUOTE:
+   * "And sendRequest is still that function that's provided by my custom HTTP
+   * hook here. It's this function here, which in the end is an async function,
+   * so a function that returns a promise. So, of course, we can also turn this
+   * into an async form action and await this, though this actually won't make
+   * a difference if we don't use the form status anywhere, if we don't use
+   * useSubmit or anything like that."
+   *
+   * FORM ACTION VERSION (Lesson 301):
+   * =================================
+   * function checkoutAction(fd) {
+   *   // Or: async function checkoutAction(fd) {
+   *   const customerData = Object.fromEntries(fd.entries());
+   *
+   *   sendRequest(
+   *     JSON.stringify({
+   *       order: {
+   *         items: cartCtx.items,
+   *         customer: customerData,
+   *       },
+   *     })
+   *   );
+   * }
+   *
+   * // On the form:
+   * <form action={checkoutAction}>
+   *
+   * KEY DIFFERENCES:
+   * ----------------
+   * | Aspect              | onSubmit                    | Form Action               |
+   * |---------------------|----------------------------|---------------------------|
+   * | Prop name           | onSubmit                   | action                    |
+   * | Function receives   | event                      | FormData directly         |
+   * | preventDefault      | Required                   | Not needed                |
+   * | FormData creation   | new FormData(event.target) | Automatic (first param)   |
+   * | Cleaner code?       | No                         | Yes, less boilerplate     |
+   *
+   * CURRENT IMPLEMENTATION:
+   * =======================
+   * This file currently uses the onSubmit approach (Lesson 296).
+   * You can migrate to form actions as shown above (Lesson 301).
+   * Both approaches work correctly!
+   *
+   * @param {Event} event - The form submission event (onSubmit approach)
    */
   function handleSubmit(event) {
     /**
@@ -404,12 +500,18 @@ export default function Checkout() {
      * "And by calling this method here, preventDefault, we make sure that
      * this request, which otherwise would get created and sent is not
      * getting created and sent."
+     *
+     * NOTE (Lesson 301):
+     * ------------------
+     * When using form actions, this line is NOT needed!
+     * Form actions automatically prevent the default browser behavior.
+     * This is one of the benefits of the form action approach.
      */
     event.preventDefault();
 
     /**
-     * EXTRACTING FORM DATA (Lesson 296)
-     * =================================
+     * EXTRACTING FORM DATA (Lessons 296 & 301)
+     * ========================================
      * The instructor discusses multiple approaches to get form values:
      *
      * APPROACH 1 - State with onChange (Lesson 296):
@@ -432,6 +534,22 @@ export default function Checkout() {
      * browser offers to us. We can create such a FormData object and pass
      * the event target, which is the form element in the end, the underlying
      * object that's managed by the browser to be precise."
+     *
+     * APPROACH 4 - Form Actions (Lesson 301):
+     * With form actions, FormData is automatically passed as the first
+     * parameter, so you don't need to create it manually:
+     *
+     * function checkoutAction(fd) {
+     *   const customerData = Object.fromEntries(fd.entries());
+     *   // ...
+     * }
+     *
+     * INSTRUCTOR QUOTE (Lesson 301):
+     * "Now, as you learned earlier in the course, when triggering this as a
+     * form action, you will get a FormData object as an input. And I'm naming
+     * it FD, since this was also the name I used down here when I created
+     * that form data manually. So by switching to a form action, I can
+     * actually get rid of some code here."
      *
      * WHY THE name ATTRIBUTE IS IMPORTANT (Lesson 296):
      * -------------------------------------------------
@@ -467,6 +585,14 @@ export default function Checkout() {
      *   "postal-code": "12345",
      *   city: "New York"
      * }
+     *
+     * NOTE (Lesson 301):
+     * ------------------
+     * With form actions, this line becomes just:
+     * const customerData = Object.fromEntries(fd.entries());
+     *
+     * Because 'fd' is already passed as a parameter to the form action,
+     * you don't need to create it from event.target.
      */
     const fd = new FormData(event.target);
     const customerData = Object.fromEntries(fd.entries());
@@ -695,16 +821,44 @@ export default function Checkout() {
   return (
     <Modal open={userProgressCtx.progress === 'checkout'} onClose={handleClose}>
       {/*
-        FORM ELEMENT (Lesson 296)
-        =========================
+        FORM ELEMENT (Lessons 296 & 301)
+        ================================
         The instructor explains setting up the onSubmit:
         "So therefore here, I'll start by adding this onSubmit prop
         to this form element."
 
+        CURRENT APPROACH - onSubmit (Lesson 296):
+        -----------------------------------------
         onSubmit={handleSubmit}:
         - Called when form is submitted (button click or Enter key)
         - We prevent default and handle it manually
-        - Later in this section, we'll migrate to form actions
+
+        ALTERNATIVE APPROACH - Form Actions (Lesson 301):
+        -------------------------------------------------
+        INSTRUCTOR QUOTE (Lesson 301):
+        "And down there, I'll actually not set this onSubmit prop on my
+        form anymore. But instead, I'll set the action prop to this
+        renamed function, so to the checkoutAction function."
+
+        To migrate to form actions:
+        1. Rename handleSubmit to checkoutAction
+        2. Change onSubmit={handleSubmit} to action={checkoutAction}
+        3. Remove event.preventDefault() from the function
+        4. Receive FormData directly instead of creating it from event.target
+
+        Form action version:
+        <form action={checkoutAction}>
+
+        TESTING (Lesson 301):
+        ---------------------
+        INSTRUCTOR QUOTE:
+        "And with those changes made, if I now go back to my page here
+        and add a couple of items to the cart, I can go to the Checkout page,
+        enter my name and some email address and some street, like this,
+        and if I click Submit Order, I got this Success! Popup thereafter.
+        The cart is reset. And if I go to my backend and take a look at
+        the orders.json file, I can see that order here at the very bottom
+        of this page. So that worked now with the help of form actions."
       */}
       <form onSubmit={handleSubmit}>
         {/*
@@ -840,7 +994,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297, 298 & 300
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297, 298, 300 & 301
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -1087,4 +1241,109 @@ export default function Checkout() {
  *
  * This pattern provides excellent user experience by giving
  * appropriate feedback for every possible outcome.
+ *
+ * ============================================================================
+ * LESSON 301 - MIGRATING TO FORM ACTIONS
+ * ============================================================================
+ *
+ * LESSON 301 WORKFLOW:
+ * ====================
+ * 1. Rename handleSubmit to checkoutAction (optional but clear naming)
+ * 2. Change onSubmit={handleSubmit} to action={checkoutAction} on the form
+ * 3. Remove event.preventDefault() (not needed with form actions)
+ * 4. Remove new FormData(event.target) (FormData passed automatically)
+ * 5. Change function parameter from (event) to (fd)
+ * 6. Optionally make the function async (since sendRequest returns Promise)
+ * 7. Test that orders are still saved to backend/data/orders.json
+ *
+ * INSTRUCTOR QUOTE (Lesson 301):
+ * "So in this section here, in the Checkout component, we actually handled
+ * the submission of this checkout form manually with the onSubmit prop.
+ * And we then extracted those entered values in that function, in that
+ * handleSubmit function by constructing a FormData object by then getting
+ * hold of the event.target, which is the form, and by then collecting that
+ * FormData like this. And that, of course, all works, but you did, of course,
+ * also learn about form actions earlier in this course."
+ *
+ * BEFORE (onSubmit approach - Lesson 296):
+ * ========================================
+ * function handleSubmit(event) {
+ *   event.preventDefault();
+ *   const fd = new FormData(event.target);
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   sendRequest(JSON.stringify({ order: { items, customer } }));
+ * }
+ *
+ * <form onSubmit={handleSubmit}>
+ *
+ * AFTER (form action approach - Lesson 301):
+ * ==========================================
+ * function checkoutAction(fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   sendRequest(JSON.stringify({ order: { items, customer } }));
+ * }
+ *
+ * <form action={checkoutAction}>
+ *
+ * KEY DIFFERENCES:
+ * ================
+ * 1. PROP NAME: onSubmit → action
+ * 2. FUNCTION PARAMETER: event → FormData (fd)
+ * 3. preventDefault(): Required → Not needed
+ * 4. FormData CREATION: Manual → Automatic
+ * 5. CODE LINES: More → Less (cleaner)
+ *
+ * WHY RENAME TO checkoutAction? (Lesson 301)
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "We can start by giving this handleSubmit function a different name,
+ * which is not mandatory but which we can do to make it clear that it
+ * is a form action. And I'll name it checkoutAction."
+ *
+ * ASYNC FORM ACTIONS (Lesson 301):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "And sendRequest is still that function that's provided by my custom HTTP
+ * hook here. It's this function here, which in the end is an async function,
+ * so a function that returns a promise. So, of course, we can also turn this
+ * into an async form action and await this, though this actually won't make
+ * a difference if we don't use the form status anywhere, if we don't use
+ * useSubmit or anything like that. But for the moment, let's just keep it
+ * like this."
+ *
+ * async function checkoutAction(fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   await sendRequest(...);  // Optional await
+ * }
+ *
+ * TESTING THE MIGRATION (Lesson 301):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "And with those changes made, if I now go back to my page here and add a
+ * couple of items to the cart, I can go to the Checkout page, enter my name
+ * and some email address and some street, like this, and if I click Submit
+ * Order, I got this Success! Popup thereafter. The cart is reset. And if I
+ * go to my backend and take a look at the orders.json file, I can see that
+ * order here at the very bottom of this page. So that worked now with the
+ * help of form actions."
+ *
+ * WHICH APPROACH TO USE?
+ * ======================
+ * Both approaches work correctly! Choose based on:
+ *
+ * onSubmit approach:
+ * - More explicit control over the submission process
+ * - Familiar to developers who know traditional HTML forms
+ * - Works with any React version
+ *
+ * Form action approach:
+ * - Cleaner, less boilerplate code
+ * - Integrates with React's form system
+ * - Works with useFormStatus() and other React 19+ features
+ * - FormData is automatically provided
+ *
+ * CURRENT IMPLEMENTATION:
+ * =======================
+ * This file currently uses the onSubmit approach.
+ * The comments above show how to migrate to form actions if desired.
  */
