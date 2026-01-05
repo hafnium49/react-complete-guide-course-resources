@@ -203,7 +203,7 @@ const requestConfig = {
   headers: {
     'Content-Type': 'application/json',
   },
-};
+}; // Important: Defined outside to prevent infinite loops
 
 /**
  * CHECKOUT COMPONENT
