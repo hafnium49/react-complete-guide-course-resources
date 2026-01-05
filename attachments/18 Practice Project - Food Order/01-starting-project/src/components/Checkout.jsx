@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297, 298, 300 & 301)
+ * CHECKOUT COMPONENT - ORDER FORM MODAL (Lessons 295, 296, 297, 298, 300, 301 & 302)
  * ============================================================================
  *
  * This component displays the checkout form in a modal, allowing users to
@@ -62,6 +62,17 @@
  * 5. No need for event.preventDefault() with form actions
  * 6. Form actions can be async functions (since sendRequest returns a Promise)
  * 7. Understanding both approaches work for form submission
+ *
+ * LESSON 302 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Using useActionState hook for form state management
+ * 2. No longer needing isLoading from useHttp when using useActionState
+ * 3. Calling useActionState with the action function and initial state
+ * 4. Destructuring formState, formAction, and pending from useActionState
+ * 5. Using formAction (not the original action) on the form's action prop
+ * 6. The pending value replaces isSending for loading state
+ * 7. CRITICAL: Action function parameter order changes - prevState FIRST, FormData SECOND
+ * 8. Browser-based validation still works with form actions
  *
  * TWO APPROACHES TO FORM SUBMISSION (Lesson 296):
  * ===============================================
@@ -280,6 +291,144 @@ export default function Checkout() {
    * Semantic naming! "isSending" better describes what's happening
    * in a form submission context vs "isLoading" which sounds like
    * we're loading/fetching data.
+   *
+   * ============================================================================
+   * LESSON 302 - ALTERNATIVE APPROACH WITH useActionState
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE (Lesson 302):
+   * "we actually don't really need this isLoading value anymore, since we can
+   * use the useActionState hook to also get such a pending value. So of course,
+   * here, you could also pass isLoading here to use that approach, but I will
+   * simply not extract it here at all anymore, because instead we could use
+   * useActionState."
+   *
+   * WITH useActionState, YOU DON'T NEED isLoading:
+   * ----------------------------------------------
+   * When using form actions with useActionState, the hook provides its own
+   * 'pending' value that indicates whether the form action is currently
+   * being processed. This eliminates the need to track loading state
+   * manually via the useHttp hook.
+   *
+   * WHAT IS useActionState? (Lesson 302):
+   * ------------------------------------
+   * useActionState is a React hook that:
+   * - Takes your action function and initial state
+   * - Returns [formState, formAction, pending]
+   * - formAction is a wrapped version of your action
+   * - pending tells you if the action is currently running
+   *
+   * INSTRUCTOR QUOTE (Lesson 302):
+   * "we can import useActionState from React and then use this hook in this
+   * component and pass our checkoutAction here, the action we want to perform
+   * as a first argument. And then also a second argument, which is the initial
+   * state... for this form action, we don't really have any initial state, so
+   * null would be fine."
+   *
+   * HOW TO USE useActionState (Lesson 302):
+   * ======================================
+   *
+   * STEP 1 - Import the hook:
+   * import { useActionState } from 'react';
+   *
+   * STEP 2 - Call useActionState with action and initial state:
+   * const [formState, formAction, pending] = useActionState(checkoutAction, null);
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now this gives us back an array with three elements. The form state,
+   * a form action, and actually this is exactly what we need: a pending state."
+   *
+   * STEP 3 - Rename pending to isSending (for clarity):
+   * const [formState, formAction, isSending] = useActionState(checkoutAction, null);
+   *
+   * INSTRUCTOR QUOTE:
+   * "So the third value here is actually called pending, but since I was using
+   * the name isSending previously, I can simply rename this here to isSending."
+   *
+   * STEP 4 - Use formAction on the form (NOT the original checkoutAction):
+   * <form action={formAction}>
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then here on the form, we don't use checkoutAction anymore directly,
+   * but instead formAction like this. And that's all we need to change."
+   *
+   * STEP 5 - Remove isLoading from useHttp:
+   * const { data, error, sendRequest, clearData } = useHttp(...);
+   * // No more isLoading: isSending needed!
+   *
+   * ============================================================================
+   * CRITICAL: PARAMETER ORDER CHANGE WITH useActionState (Lesson 302)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "the actual important thing is that this action, so this checkoutAction,
+   * will actually, when connected to useActionState here, the form action
+   * passed to useActionState, actually receives a different first argument.
+   * Because if you're using useActionState, you not just receive form data,
+   * but before that, you receive the previous state."
+   *
+   * WITHOUT useActionState (Lesson 301):
+   * -----------------------------------
+   * function checkoutAction(fd) {
+   *   // fd = FormData (first and only parameter)
+   *   const customerData = Object.fromEntries(fd.entries());
+   *   sendRequest(...);
+   * }
+   *
+   * WITH useActionState (Lesson 302):
+   * ---------------------------------
+   * function checkoutAction(prevState, fd) {
+   *   // prevState = previous state (first parameter)
+   *   // fd = FormData (second parameter - MOVED!)
+   *   const customerData = Object.fromEntries(fd.entries());
+   *   sendRequest(...);
+   * }
+   *
+   * INSTRUCTOR QUOTE:
+   * "So we now also receive the previous state value, and that's the state
+   * value that was stored previously. So initially, the initial state,
+   * which would be null in our case. So we do receive this here. We don't
+   * have to use it, but we do receive it. But now the important thing is
+   * that the FormData that's passed in is the second argument. So we should
+   * switch those around."
+   *
+   * WHY DOES THIS MATTER? (Lesson 302):
+   * ----------------------------------
+   * If you forget to change the parameter order:
+   * - prevState will be treated as FormData
+   * - Object.fromEntries(prevState.entries()) will fail!
+   * - You'll get an error because prevState is null, not FormData
+   *
+   * TESTING THE CHANGE (Lesson 302):
+   * ================================
+   * INSTRUCTOR QUOTE:
+   * "And with all those changes made, if we save this, go back to our page,
+   * reload the page, and go to the cart, select a couple of items, and then
+   * go to checkout... if I fill out this form and I click Submit Order, you'll
+   * see that we see 'Sending order data...' here. And you might have seen that
+   * we also see it for a longer period of time than before. That's actually just
+   * because I went to my backend and tweaked a timeout, the timeout that delays
+   * this response here, so that it becomes a bit more visible."
+   *
+   * BROWSER VALIDATION STILL WORKS (Lesson 302):
+   * ============================================
+   * INSTRUCTOR QUOTE:
+   * "And of course, this browser-based validation approach also still works
+   * because we're still using a regular form with inputs here. So we got no
+   * problems there either."
+   *
+   * The required attribute and type="email" validation continue to work
+   * because we're still using standard HTML form elements.
+   *
+   * SUMMARY: useActionState APPROACH (Lesson 302):
+   * ==============================================
+   * 1. Import useActionState from 'react'
+   * 2. Remove isLoading extraction from useHttp
+   * 3. Call useActionState(checkoutAction, null)
+   * 4. Destructure [formState, formAction, isSending]
+   * 5. Use formAction on the form (not checkoutAction)
+   * 6. Change checkoutAction(fd) to checkoutAction(prevState, fd)
+   * 7. isSending now comes from useActionState, not useHttp
    */
   const {
     data,
@@ -994,7 +1143,7 @@ export default function Checkout() {
 
 /**
  * ============================================================================
- * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297, 298, 300 & 301
+ * SUMMARY & KEY CONCEPTS FROM LESSONS 295, 296, 297, 298, 300, 301 & 302
  * ============================================================================
  *
  * LESSON 295 WORKFLOW:
@@ -1346,4 +1495,146 @@ export default function Checkout() {
  * =======================
  * This file currently uses the onSubmit approach.
  * The comments above show how to migrate to form actions if desired.
+ *
+ * ============================================================================
+ * LESSON 302 - USING useActionState FOR FORM STATE MANAGEMENT
+ * ============================================================================
+ *
+ * LESSON 302 WORKFLOW:
+ * ====================
+ * 1. Import useActionState from 'react'
+ * 2. Remove isLoading extraction from useHttp (not needed anymore)
+ * 3. Define checkoutAction function with (prevState, fd) parameters
+ * 4. Call useActionState(checkoutAction, null)
+ * 5. Destructure [formState, formAction, isSending]
+ * 6. Use formAction (not checkoutAction) on the form's action prop
+ * 7. Use isSending for loading state (same as before, just different source)
+ * 8. Test by submitting the form and watching for "Sending order data..."
+ *
+ * WHY USE useActionState? (Lesson 302):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "we actually don't really need this isLoading value anymore, since we can
+ * use the useActionState hook to also get such a pending value."
+ *
+ * Benefits of useActionState:
+ * - Built-in pending state (no need for separate loading state management)
+ * - Integrates seamlessly with form actions
+ * - Standard React pattern for form submissions
+ * - Works with React's concurrent features
+ *
+ * THE THREE VALUES FROM useActionState (Lesson 302):
+ * =================================================
+ * const [formState, formAction, pending] = useActionState(action, initialState);
+ *
+ * 1. formState: The current state (updated when action returns a value)
+ * 2. formAction: A wrapped version of your action function (USE THIS on the form!)
+ * 3. pending: Boolean - true while the action is executing, false otherwise
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now this gives us back an array with three elements. The form state,
+ * a form action, and actually this is exactly what we need: a pending state."
+ *
+ * PARAMETER ORDER IS CRITICAL (Lesson 302):
+ * =========================================
+ * When using useActionState, your action function receives parameters in a
+ * different order than when using form actions alone:
+ *
+ * | Approach               | First Parameter | Second Parameter |
+ * |------------------------|-----------------|------------------|
+ * | Form action alone      | FormData        | -                |
+ * | With useActionState    | Previous State  | FormData         |
+ *
+ * INSTRUCTOR QUOTE:
+ * "the actual important thing is that this action, so this checkoutAction,
+ * will actually, when connected to useActionState here, the form action
+ * passed to useActionState, actually receives a different first argument."
+ *
+ * COMMON MISTAKE (Lesson 302):
+ * ===========================
+ * If you forget to change the parameter order:
+ *
+ * // WRONG - will crash!
+ * function checkoutAction(fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   // Error: fd is actually prevState (null), not FormData!
+ * }
+ *
+ * // CORRECT
+ * function checkoutAction(prevState, fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   // Works! fd is now correctly the FormData object
+ * }
+ *
+ * USE formAction, NOT checkoutAction (Lesson 302):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "And then here on the form, we don't use checkoutAction anymore directly,
+ * but instead formAction like this. And that's all we need to change."
+ *
+ * // WRONG
+ * <form action={checkoutAction}>
+ *
+ * // CORRECT
+ * <form action={formAction}>
+ *
+ * The formAction is a wrapped version that:
+ * - Tracks the pending state
+ * - Passes the previous state to your action
+ * - Updates formState when the action completes
+ *
+ * BROWSER VALIDATION STILL WORKS (Lesson 302):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "And of course, this browser-based validation approach also still works
+ * because we're still using a regular form with inputs here. So we got no
+ * problems there either."
+ *
+ * The required attribute and type="email" continue to provide validation
+ * because we're still using standard HTML form elements.
+ *
+ * COMPLETE MIGRATION PATH (Lessons 296 → 301 → 302):
+ * ==================================================
+ *
+ * STAGE 1 - onSubmit approach (Lesson 296):
+ * -----------------------------------------
+ * function handleSubmit(event) {
+ *   event.preventDefault();
+ *   const fd = new FormData(event.target);
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   sendRequest(...);
+ * }
+ * <form onSubmit={handleSubmit}>
+ * // Uses isLoading from useHttp for loading state
+ *
+ * STAGE 2 - Form action approach (Lesson 301):
+ * --------------------------------------------
+ * function checkoutAction(fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   sendRequest(...);
+ * }
+ * <form action={checkoutAction}>
+ * // Still uses isLoading from useHttp for loading state
+ *
+ * STAGE 3 - useActionState approach (Lesson 302):
+ * -----------------------------------------------
+ * function checkoutAction(prevState, fd) {
+ *   const customerData = Object.fromEntries(fd.entries());
+ *   sendRequest(...);
+ * }
+ * const [formState, formAction, isSending] = useActionState(checkoutAction, null);
+ * <form action={formAction}>
+ * // Uses isSending (pending) from useActionState - no need for isLoading!
+ *
+ * EACH STAGE SIMPLIFIES THE CODE:
+ * ===============================
+ * Lesson 296 → 301: Removed event.preventDefault() and manual FormData creation
+ * Lesson 301 → 302: Removed need for isLoading from useHttp, using built-in pending
+ *
+ * WHEN TO USE EACH APPROACH:
+ * ==========================
+ * - onSubmit: Traditional approach, maximum control, React < 19 compatibility
+ * - Form action: Cleaner code, less boilerplate, modern React
+ * - useActionState: When you need pending state, formState tracking, or
+ *   integration with React's concurrent features
  */

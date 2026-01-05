@@ -233,7 +233,7 @@ import Error from './Error.jsx';
  * example change the request method, but GET is already the default
  * and we also don't need to send any other information."
  */
-const requestConfig = {};
+const requestConfig = {}; // It is important that this is outside the component because otherwise it will be recreated on every render causing infinite loops
 
 /**
  * MEALS COMPONENT
@@ -339,6 +339,8 @@ export default function Meals() {
    * Note: The basic Lesson 286 version didn't handle loading state.
    * It would show an empty list briefly before the data arrived.
    */
+  console.log(loadedMeals);
+
   if (isLoading) {
     return <p className="center">Fetching meals...</p>;
   }
