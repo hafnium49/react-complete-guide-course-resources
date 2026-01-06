@@ -15,6 +15,14 @@
  * 6. Creating the Redux store
  * 7. Exporting the store for use in React components
  *
+ * LESSON 316 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Understanding why actions need more than just a type
+ * 2. Adding extra data (payload) to action objects
+ * 3. Extracting payload data in the reducer (e.g., action.amount)
+ * 4. Matching property names between dispatch and reducer
+ * 5. Flexibility in naming payload properties
+ *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
  * INSTRUCTOR QUOTE:
@@ -125,6 +133,66 @@ const counterReducer = (state = { counter: 0 }, action) => {
   if (action.type === 'decrement') {
     return {
       counter: state.counter - 1,
+    };
+  }
+
+  /**
+   * =========================================================================
+   * INCREASE ACTION WITH PAYLOAD (Lesson 316)
+   * =========================================================================
+   *
+   * WHY PAYLOADS ARE NEEDED (Lesson 316):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "Now, when building more realistic applications, oftentimes, you have
+   * actions where just the type is not enough. Where the action, which we
+   * dispatch and which reaches the Reducer often needs to carry extra data."
+   *
+   * SIMPLE ACTIONS VS ACTIONS WITH PAYLOADS:
+   * ========================================
+   * - Simple action: { type: 'increment' }
+   *   → Reducer knows exactly what to do (add 1)
+   *
+   * - Action with payload: { type: 'increase', amount: 10 }
+   *   → Reducer uses the extra 'amount' data to determine the increment
+   *
+   * INSTRUCTOR QUOTE:
+   * "And in the reducer function we then wanna add, not always one, but instead
+   * we wanna use a value provided by the action. So to add some value which is
+   * attached to that increase action."
+   *
+   * EXTRACTING PAYLOAD DATA (Lesson 316):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "We could then simply access action.amount here. Because the action is an
+   * object and if that object has an amount property set on it, we can read
+   * that value with action.amount."
+   *
+   * IMPORTANT: The property name used when DISPATCHING (e.g., 'amount')
+   * MUST match the property name used when READING in the reducer (action.amount).
+   *
+   * INSTRUCTOR QUOTE:
+   * "Of course, we do have to make sure though, that we use the amount property
+   * name here, because that's the name, the property name I'm gonna use when
+   * dispatching this action."
+   *
+   * PAYLOAD PROPERTY NAMING FLEXIBILITY (Lesson 316):
+   * ================================================
+   * INSTRUCTOR QUOTE:
+   * "And I could use any identifier here. I could name this value or number
+   * or anything like that. But I'll go with amount because that's most
+   * descriptive in my opinion."
+   *
+   * Common payload property names:
+   * - amount: for numeric values
+   * - payload: generic convention in Redux
+   * - value, data, item: other common choices
+   *
+   * The key is CONSISTENCY between dispatch and reducer!
+   */
+  if (action.type === 'increase') {
+    return {
+      counter: state.counter + action.amount,
     };
   }
 
@@ -244,4 +312,57 @@ export default store;
  * - Provide the store to React app using <Provider>
  * - Use useSelector() to read state in components
  * - Use useDispatch() to dispatch actions from components
+ *
+ * ============================================================================
+ * LESSON 316 - ACTION PAYLOADS IN THE REDUCER
+ * ============================================================================
+ *
+ * WHY PAYLOADS ARE NEEDED:
+ * ========================
+ * - Simple actions with only 'type' are inflexible
+ * - Payloads allow passing dynamic values to the reducer
+ * - One action type can handle many different scenarios
+ *
+ * EXAMPLE: INCREMENT VS INCREASE
+ * ==============================
+ *
+ * INCREMENT (no payload):
+ * ----------------------
+ * Action:  { type: 'increment' }
+ * Reducer: return { counter: state.counter + 1 }  // Always +1
+ *
+ * INCREASE (with payload):
+ * -----------------------
+ * Action:  { type: 'increase', amount: 10 }
+ * Reducer: return { counter: state.counter + action.amount }  // Flexible!
+ *
+ * ACCESSING PAYLOAD IN REDUCER:
+ * ============================
+ * The action parameter contains all properties from the dispatched object:
+ *
+ * // When dispatched:   dispatch({ type: 'increase', amount: 10 })
+ * // In reducer:        action.type === 'increase'
+ * //                    action.amount === 10
+ *
+ * INSTRUCTOR QUOTE:
+ * "We could then simply access action.amount here. Because the action is an
+ * object and if that object has an amount property set on it, we can read
+ * that value with action.amount."
+ *
+ * PAYLOAD NAMING CONVENTIONS:
+ * ==========================
+ * The property name is YOUR choice. Common conventions:
+ *
+ * 1. Descriptive names (recommended for clarity):
+ *    { type: 'increase', amount: 10 }
+ *    { type: 'addUser', user: { name: 'John' } }
+ *    { type: 'setFilter', filterValue: 'active' }
+ *
+ * 2. Generic 'payload' property (Redux Toolkit convention):
+ *    { type: 'increase', payload: 10 }
+ *    { type: 'addUser', payload: { name: 'John' } }
+ *
+ * IMPORTANT: Whatever name you choose, it MUST match between:
+ * - The dispatched action: dispatch({ type: 'x', amount: 10 })
+ * - The reducer access: action.amount
  */

@@ -7,6 +7,7 @@
  * - Read data from a Redux store using useSelector (Lesson 313)
  * - Dispatch actions to modify Redux state using useDispatch (Lesson 314)
  * - Alternative: Using connect() for class-based components (Lesson 315)
+ * - Attaching payload data to actions (Lesson 316)
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -35,6 +36,14 @@
  * 5. mapDispatchToProps - maps dispatch functions to props
  * 6. The connect()() double-call pattern
  * 7. Both approaches (hooks vs connect) manage subscriptions automatically
+ *
+ * LESSON 316 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Actions often need more than just a 'type' property
+ * 2. Adding extra payload properties to action objects
+ * 3. Dispatching actions with payloads: { type: '...', amount: 10 }
+ * 4. Property names must match between dispatch and reducer
+ * 5. Common payload naming conventions (amount, payload, value, etc.)
  *
  * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
  * =====================================================
@@ -145,6 +154,72 @@ const Counter = () => {
     dispatch({ type: 'decrement' });
   };
 
+  /**
+   * =========================================================================
+   * INCREASE HANDLER WITH PAYLOAD (Lesson 316)
+   * =========================================================================
+   *
+   * WHY ACTIONS NEED PAYLOADS (Lesson 316):
+   * =======================================
+   * INSTRUCTOR QUOTE:
+   * "Now, when building more realistic applications, oftentimes, you have
+   * actions where just the type is not enough. Where the action, which we
+   * dispatch and which reaches the Reducer often needs to carry extra data."
+   *
+   * EXAMPLE - ADDING A THIRD BUTTON (Lesson 316):
+   * =============================================
+   * INSTRUCTOR QUOTE:
+   * "For example, here in this counter application, let's say, we also want
+   * to have a third button, an increase by five button, which adds not one,
+   * but five to the counter."
+   *
+   * WHY NOT HARDCODE IN REDUCER? (Lesson 316):
+   * ==========================================
+   * INSTRUCTOR QUOTE:
+   * "Now, one straightforward way of achieving this would be to add another
+   * action in the Reducer function that always adds five. But I want to have
+   * a more flexible action here, an action where I define the value I want
+   * to add to counter, when I dispatch the action and not in the Reducer
+   * function."
+   *
+   * Benefits of using payloads:
+   * - More flexible - same action type can handle different values
+   * - Reusable - "increase by 5", "increase by 10", etc. use the same action
+   * - Scalable - don't need new action types for each possible value
+   *
+   * ATTACHING EXTRA DATA TO ACTIONS (Lesson 316):
+   * =============================================
+   * INSTRUCTOR QUOTE:
+   * "This is actually not too difficult to achieve. All we have to do is add
+   * an extra property to this action here... For example, an extra amount
+   * property. And this property name is entirely up to you."
+   *
+   * PROPERTY NAMING (Lesson 316):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "And I could use any identifier here. I could name this value or number
+   * or anything like that. But I'll go with amount because that's most
+   * descriptive in my opinion."
+   *
+   * ACTION STRUCTURE WITH PAYLOAD:
+   * ==============================
+   * {
+   *   type: 'increase',   // REQUIRED - identifies the action
+   *   amount: 10          // PAYLOAD - extra data for the reducer
+   * }
+   *
+   * The 'amount' property name here MUST match what the reducer expects!
+   * In our reducer: action.amount
+   *
+   * INSTRUCTOR QUOTE:
+   * "Of course, we do have to make sure though, that we use the amount property
+   * name here, because that's the name, the property name I'm gonna use when
+   * dispatching this action."
+   */
+  const increaseHandler = () => {
+    dispatch({ type: 'increase', amount: 10 });
+  };
+
   const toggleCounterHandler = () => {};
 
   return (
@@ -183,9 +258,29 @@ const Counter = () => {
         So now we're able to use what we learned about Redux in this react demo,
         in this react component here."
       */}
+      {/*
+        INCREASE BY 10 BUTTON (Lesson 316)
+        ===================================
+        INSTRUCTOR QUOTE:
+        "For example, here in this counter application, let's say, we also want
+        to have a third button, an increase by five button, which adds not one,
+        but five to the counter."
+
+        Note: The instructor uses "increase by five" as an example, but the
+        concept applies to any value. We're using 10 here to demonstrate
+        that the payload value can be anything.
+
+        TESTING (Lesson 316):
+        ====================
+        INSTRUCTOR QUOTE:
+        "And if I now save this and I click Increase by 5, you see it increases
+        by five. And if I click it again, it increases by five. And decrement
+        decreases by one, so that's still working."
+      */}
       <div>
         <button onClick={incrementHandler}>Increment</button>
         <button onClick={decrementHandler}>Decrement</button>
+        <button onClick={increaseHandler}>Increase by 10</button>
       </div>
 
       <button onClick={toggleCounterHandler}>Toggle Counter</button>
@@ -426,4 +521,73 @@ export default Counter;
  * exist, they are valid, they are still getting used in a lot of projects, and
  * therefore you should know how to connect those to Redux as well. Nonetheless,
  * we will stick to functional components."
+ *
+ * ============================================================================
+ * LESSON 316 - ACTION PAYLOADS SUMMARY
+ * ============================================================================
+ *
+ * WHY PAYLOADS MATTER:
+ * ====================
+ * - Simple actions (type only) are limited to hardcoded behavior
+ * - Payloads make actions flexible and reusable
+ * - Same action type can handle many different values
+ *
+ * ACTION WITH PAYLOAD STRUCTURE:
+ * ==============================
+ * {
+ *   type: 'actionType',     // REQUIRED - identifies what action to perform
+ *   payload: data,          // OPTIONAL - additional data for the reducer
+ *   // OR use specific property names:
+ *   amount: 10,
+ *   value: 'something',
+ *   item: { ... }
+ * }
+ *
+ * DISPATCHING WITH PAYLOAD:
+ * ========================
+ * // In component:
+ * const increaseHandler = () => {
+ *   dispatch({ type: 'increase', amount: 10 });
+ * };
+ *
+ * HANDLING PAYLOAD IN REDUCER:
+ * ============================
+ * // In reducer:
+ * if (action.type === 'increase') {
+ *   return {
+ *     counter: state.counter + action.amount  // Use the payload!
+ *   };
+ * }
+ *
+ * COMMON MISTAKES TO AVOID (Lesson 316):
+ * ======================================
+ * 1. Property name mismatch:
+ *    - Dispatch: { type: 'increase', amount: 10 }
+ *    - Reducer: action.value  // WRONG! Should be action.amount
+ *
+ * 2. Forgetting to use the payload:
+ *    - Reducer returns state.counter + 1 instead of state.counter + action.amount
+ *
+ * DATA FLOW WITH PAYLOADS:
+ * ========================
+ *
+ *   Component                              Reducer
+ *   ---------                              -------
+ *       |                                     |
+ *       |  dispatch({                         |
+ *       |    type: 'increase',                |
+ *       |    amount: 10         ───────────>  | if (action.type === 'increase')
+ *       |  })                                 |   return { counter: state.counter
+ *       |                                     |              + action.amount }
+ *       |                                     |
+ *       |  <─────────────────────────────────  | New state returned
+ *       |                                     |
+ *       |  Component re-renders               |
+ *       |  with updated counter               |
+ *
+ * NEXT STEPS (Upcoming Lessons):
+ * ==============================
+ * - Working with multiple state properties
+ * - Handling more complex state shapes
+ * - Redux Toolkit to simplify Redux code
  */
