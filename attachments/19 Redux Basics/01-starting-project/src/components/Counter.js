@@ -1,11 +1,12 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313 & 314)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313, 314 & 315)
  * ============================================================================
  *
  * This component demonstrates how to:
  * - Read data from a Redux store using useSelector (Lesson 313)
  * - Dispatch actions to modify Redux state using useDispatch (Lesson 314)
+ * - Alternative: Using connect() for class-based components (Lesson 315)
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -24,6 +25,27 @@
  * 4. Dispatching actions as objects with a 'type' property
  * 5. Action type values MUST match identifiers in the reducer
  * 6. Wiring up buttons with onClick to dispatch actions
+ *
+ * LESSON 315 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Class-based components cannot use hooks
+ * 2. Using connect() function from react-redux as alternative
+ * 3. connect() is a Higher-Order Component (HOC)
+ * 4. mapStateToProps - maps Redux state to component props
+ * 5. mapDispatchToProps - maps dispatch functions to props
+ * 6. The connect()() double-call pattern
+ * 7. Both approaches (hooks vs connect) manage subscriptions automatically
+ *
+ * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
+ * =====================================================
+ * INSTRUCTOR QUOTE:
+ * "Now, even though it's not the focus of this course because it's not the
+ * common way of writing components, I wanna briefly talk about class-based
+ * components instead of functional components. Because whilst nowadays we
+ * typically do use functional components only, there still are a lot of
+ * projects out there that do use class-based components instead. And there
+ * of course also are simply people who prefer that, and there is nothing
+ * wrong with class-based components."
  */
 
 import classes from './Counter.module.css';
@@ -253,4 +275,155 @@ export default Counter;
  * - Adding payloads to actions for dynamic values
  * - Working with more complex state
  * - Using Redux Toolkit to simplify Redux code
+ *
+ * ============================================================================
+ * LESSON 315 - CLASS-BASED COMPONENTS & THE connect() FUNCTION
+ * ============================================================================
+ *
+ * HOOKS VS connect() (Lesson 315):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "In the functional component we used hooks. useDispatch and useSelector,
+ * but hooks are not usable in class-based components."
+ *
+ * "React Redux also exports a connect function, which is a function that helps
+ * you connect class-based components to Redux. Actually, you could also use it
+ * on functional components, but for functional components, using these hooks
+ * is simply more convenient."
+ *
+ * THE connect() FUNCTION (Lesson 315):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "When we export our counter, we don't export the counter component like this.
+ * Instead we call connect and now connect when executed, will actually return
+ * a new function as a value, which we then execute again. And then we pass our
+ * component to that returned function as our argument."
+ *
+ * "So this can look strange, but connect is a so-called higher order component.
+ * We execute the connect function. It then returns a new function, and we execute
+ * this returned, this new function as well. And to this returned function, we
+ * pass counter."
+ *
+ * mapStateToProps (Lesson 315):
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "The first function is a function that maps Redux state to props, which will
+ * be received in this component then. Hence we call this function mapStateToProps.
+ * That's not a name you must use, but a convention which you will see in a lot
+ * of projects."
+ *
+ * "This is a function which receives the Redux state, and then this returns an
+ * object where the keys will be available as props in the receiving component."
+ *
+ * "And that's of course, similar to what we do with useSelector. Here we also
+ * get the state and drill into the state to get the counter, and then store
+ * that in a counter const. That's basically the equivalent when not doing it
+ * with hooks, but with the connect function."
+ *
+ * mapDispatchToProps (Lesson 315):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "The second argument is another function, which is typically called
+ * mapDispatchToProps. It's the equivalent to useDispatch. Now the idea is
+ * to store dispatch functions in props. So that in the counter component,
+ * we have certain props which we can execute as a function, which will then
+ * when executed dispatch an action to the Redux store."
+ *
+ * "For this mapDispatchToProps receives the dispatch function as an argument
+ * automatically, just like mapStateToProps. The mapDispatchToProps function
+ * will be executed for you by Redux."
+ *
+ * AUTOMATIC SUBSCRIPTION MANAGEMENT (Lesson 315):
+ * ===============================================
+ * INSTRUCTOR QUOTE:
+ * "And when using connect, react Redux will still set up a subscription and
+ * manage a subscription for you. It will do all of that. It's just an
+ * alternative to using the useDispatch and useSelector hooks."
+ *
+ * CLASS-BASED COMPONENT EXAMPLE (Lesson 315):
+ * ===========================================
+ *
+ * // Imports needed for class-based approach:
+ * // import { Component } from 'react';
+ * // import { connect } from 'react-redux';
+ *
+ * // mapStateToProps - Maps Redux state to component props
+ * // Equivalent to useSelector
+ * const mapStateToProps = (state) => {
+ *   return {
+ *     counter: state.counter  // this.props.counter will be available
+ *   };
+ * };
+ *
+ * // mapDispatchToProps - Maps dispatch functions to component props
+ * // Equivalent to useDispatch
+ * const mapDispatchToProps = (dispatch) => {
+ *   return {
+ *     increment: () => dispatch({ type: 'increment' }),
+ *     decrement: () => dispatch({ type: 'decrement' })
+ *   };
+ * };
+ *
+ * // Class-based component
+ * class Counter extends Component {
+ *   incrementHandler() {
+ *     this.props.increment();  // Calls the mapped dispatch function
+ *   }
+ *
+ *   decrementHandler() {
+ *     this.props.decrement();  // Calls the mapped dispatch function
+ *   }
+ *
+ *   toggleCounterHandler() {}
+ *
+ *   render() {
+ *     return (
+ *       <main className={classes.counter}>
+ *         <h1>Redux Counter</h1>
+ *         <div className={classes.value}>{this.props.counter}</div>
+ *         <div>
+ *           <button onClick={this.incrementHandler.bind(this)}>Increment</button>
+ *           <button onClick={this.decrementHandler.bind(this)}>Decrement</button>
+ *         </div>
+ *         <button onClick={this.toggleCounterHandler.bind(this)}>Toggle Counter</button>
+ *       </main>
+ *     );
+ *   }
+ * }
+ *
+ * // Export with connect() - Higher-Order Component pattern
+ * export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+ *
+ * BINDING METHODS IN CLASS COMPONENTS (Lesson 315):
+ * ==================================================
+ * INSTRUCTOR QUOTE:
+ * "Now, to make sure that everything works because JavaScript works the way it
+ * does, we need to call bind here on the increment and decrement handler bindings
+ * in JSX, and bind this to make sure that the 'this' keyword inside of these
+ * methods refers to the class."
+ *
+ * COMPARISON: HOOKS vs connect()
+ * ==============================
+ *
+ * | Feature                  | Hooks Approach          | connect() Approach        |
+ * |--------------------------|-------------------------|---------------------------|
+ * | Component Type           | Functional only         | Functional or Class       |
+ * | Reading State            | useSelector(fn)         | mapStateToProps           |
+ * | Dispatching              | useDispatch()           | mapDispatchToProps        |
+ * | Subscription             | Automatic               | Automatic                 |
+ * | Syntax Complexity        | Simpler                 | More verbose              |
+ * | Export                   | export default Comp     | export default connect()()|
+ * | Accessing in Component   | const val = useSelector | this.props.val            |
+ *
+ * INSTRUCTOR RECOMMENDATION (Lesson 315):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "And obviously that's a bit shorter and easier, I would say. But if you're
+ * working with class-based components, you can't use hooks, and then this is
+ * your equivalent."
+ *
+ * "Again, class-based components are not the focus of this course, but they do
+ * exist, they are valid, they are still getting used in a lot of projects, and
+ * therefore you should know how to connect those to Redux as well. Nonetheless,
+ * we will stick to functional components."
  */
