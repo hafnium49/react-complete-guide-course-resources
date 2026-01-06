@@ -23,6 +23,16 @@
  * 4. Matching property names between dispatch and reducer
  * 5. Flexibility in naming payload properties
  *
+ * LESSON 317 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Working with multiple state properties in Redux
+ * 2. Extracting initial state into a constant for readability
+ * 3. CRITICAL: Redux REPLACES state, it does NOT merge changes
+ * 4. Must include ALL state properties in every return statement
+ * 5. Adding new state properties (showCounter)
+ * 6. Adding new action types (toggle)
+ * 7. Using multiple useSelector calls in components
+ *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
  * INSTRUCTOR QUOTE:
@@ -60,6 +70,39 @@ import { createStore } from 'redux';
  */
 
 /**
+ * ============================================================================
+ * INITIAL STATE CONSTANT (Lesson 317)
+ * ============================================================================
+ *
+ * EXTRACTING INITIAL STATE FOR READABILITY (Lesson 317):
+ * ======================================================
+ * INSTRUCTOR QUOTE:
+ * "And to keep this a bit more readable, I'll extract that and store that in
+ * a constant named initialState like this and assign initialState here then
+ * just to make this a bit easier to read."
+ *
+ * Why extract initial state?
+ * - Cleaner reducer function signature
+ * - Easier to see all initial values at a glance
+ * - Can be reused if needed (e.g., for reset functionality)
+ * - Better organization as state grows more complex
+ *
+ * ADDING showCounter (Lesson 317):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "When we start besides having a counter which has a value of zero, I wanna
+ * have a showCounter field which has a value of true or false, that's up to you."
+ *
+ * This demonstrates managing MULTIPLE pieces of state in Redux:
+ * - counter: The numeric value being counted
+ * - showCounter: Whether to display the counter (boolean)
+ */
+const initialState = {
+  counter: 0,
+  showCounter: true,
+};
+
+/**
  * COUNTER REDUCER FUNCTION (Lesson 311)
  * =====================================
  * The reducer is a pure function that takes the current state and an action,
@@ -87,11 +130,11 @@ import { createStore } from 'redux';
  * - The store is first created
  * - Redux calls the reducer with undefined state to get initial state
  *
- * @param {Object} state - The current state (defaults to { counter: 0 })
+ * @param {Object} state - The current state (defaults to initialState)
  * @param {Object} action - The dispatched action with a 'type' property
  * @returns {Object} - The new state after applying the action
  */
-const counterReducer = (state = { counter: 0 }, action) => {
+const counterReducer = (state = initialState, action) => {
   /**
    * HANDLING DIFFERENT ACTIONS (Lesson 311)
    * =======================================
@@ -116,10 +159,40 @@ const counterReducer = (state = { counter: 0 }, action) => {
    *
    * IMPORTANT: We return a NEW object, not modify the existing state!
    * This is crucial for Redux to detect state changes.
+   *
+   * =========================================================================
+   * CRITICAL: REDUX REPLACES STATE, IT DOESN'T MERGE! (Lesson 317)
+   * =========================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "We still need to set the showCounter property here though because we are
+   * returning the overall state object and Redux won't merge your changes with
+   * the existing state. It instead takes what you return and replaces the
+   * existing state with it."
+   *
+   * WHY WE MUST INCLUDE showCounter (Lesson 317):
+   * =============================================
+   * INSTRUCTOR QUOTE:
+   * "Now when we increment, we are changing the counter, we don't care about
+   * showCounter. We still need to set the showCounter property here though."
+   *
+   * If we only returned { counter: state.counter + 1 }, the showCounter
+   * property would be LOST! The entire state would become just { counter: X }
+   * with no showCounter property at all.
+   *
+   * PRESERVING UNCHANGED VALUES (Lesson 317):
+   * =========================================
+   * INSTRUCTOR QUOTE:
+   * "So for increment, we don't wanna change it, so we will just take the
+   * existing showCounter value."
+   *
+   * Pattern: For properties you don't want to change, copy their current value:
+   *   showCounter: state.showCounter
    */
   if (action.type === 'increment') {
     return {
       counter: state.counter + 1,
+      showCounter: state.showCounter, // MUST include! Redux replaces, doesn't merge
     };
   }
 
@@ -129,10 +202,19 @@ const counterReducer = (state = { counter: 0 }, action) => {
    * INSTRUCTOR QUOTE:
    * "Else, I check if action.type is equal to decrement. In which case I wanna
    * return an object, where the counter is set to state.counter minus one."
+   *
+   * PRESERVING showCounter (Lesson 317):
+   * ====================================
+   * INSTRUCTOR QUOTE:
+   * "And then we can do the same here... for decrement here."
+   *
+   * Same pattern as increment - we must include showCounter even though
+   * we're not changing it, because Redux replaces the entire state.
    */
   if (action.type === 'decrement') {
     return {
       counter: state.counter - 1,
+      showCounter: state.showCounter, // Preserve existing value
     };
   }
 
@@ -190,9 +272,70 @@ const counterReducer = (state = { counter: 0 }, action) => {
    *
    * The key is CONSISTENCY between dispatch and reducer!
    */
+  /**
+   * PRESERVING showCounter IN INCREASE (Lesson 317):
+   * ================================================
+   * INSTRUCTOR QUOTE:
+   * "And we can do the same here for increase because there we also wanna
+   * keep the existing showCounter value."
+   */
   if (action.type === 'increase') {
     return {
       counter: state.counter + action.amount,
+      showCounter: state.showCounter, // Preserve existing value
+    };
+  }
+
+  /**
+   * =========================================================================
+   * TOGGLE ACTION - WORKING WITH MULTIPLE STATE PROPERTIES (Lesson 317)
+   * =========================================================================
+   *
+   * WHY ADD TOGGLE? (Lesson 317):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "So when we click this button, the toggleCounterHandler is fired. And then
+   * here we wanna dispatch an action which changes some state in Redux which
+   * controls whether this counter div is shown or not."
+   *
+   * ADDING NEW STATE (Lesson 317):
+   * =============================
+   * INSTRUCTOR QUOTE:
+   * "For this, we need to add a new state, a new piece of data to our Redux store.
+   * And how do we now do that? Well, to add a new piece of data, we need to go
+   * to our reducer in the end and just add it to all these state snapshots
+   * which we are producing."
+   *
+   * ACTION IDENTIFIER CHOICE (Lesson 317):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "But now I will also handle a new action type... I will check for, let's
+   * say toggle. Now the identifier just like all these identifiers is up to you.
+   * I'll go with toggle."
+   *
+   * INVERTING BOOLEAN VALUES (Lesson 317):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "Here, we now wanna change showCounter and set it to the opposite of what
+   * it was before. If it was true, we wanna set it to false, if it was false,
+   * we wanna set it to true. And we can do this by simply adding an exclamation
+   * mark and then accessing state.showCounter. This will invert the value."
+   *
+   * The ! (NOT) operator inverts booleans:
+   * - !true  === false
+   * - !false === true
+   *
+   * PRESERVING counter (Lesson 317):
+   * ================================
+   * INSTRUCTOR QUOTE:
+   * "Now for the counter itself, we wanna keep the existing state because we
+   * don't wanna change this here for this action. So we just set counter to
+   * state.counter."
+   */
+  if (action.type === 'toggle') {
+    return {
+      showCounter: !state.showCounter, // Invert the boolean
+      counter: state.counter, // Preserve counter value
     };
   }
 
@@ -365,4 +508,109 @@ export default store;
  * IMPORTANT: Whatever name you choose, it MUST match between:
  * - The dispatched action: dispatch({ type: 'x', amount: 10 })
  * - The reducer access: action.amount
+ *
+ * ============================================================================
+ * LESSON 317 - WORKING WITH MULTIPLE STATE PROPERTIES
+ * ============================================================================
+ *
+ * LOCAL STATE VS GLOBAL STATE (Lesson 317):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "Now for this, of course, we could use useState. So we could set up some
+ * local state in this component which we manage with useState, not with Redux.
+ * And that would be the proper way of doing it because showing or hiding the
+ * counter is something which only is interesting to this component, not to
+ * any other part of the application."
+ *
+ * WHEN TO USE REDUX VS useState:
+ * - Use useState for truly local, component-specific state
+ * - Use Redux for state shared across multiple components
+ * - In demos/learning, we often use Redux for simplicity even when local state would work
+ *
+ * ADDING NEW STATE PROPERTIES (Lesson 317):
+ * =========================================
+ * To add new state to Redux:
+ * 1. Add the property to your initial state
+ * 2. Include it in EVERY return statement in the reducer
+ * 3. Create action type(s) to modify it
+ * 4. Access it via useSelector in components
+ *
+ * CRITICAL CONCEPT: REDUX STATE REPLACEMENT (Lesson 317):
+ * =======================================================
+ * INSTRUCTOR QUOTE:
+ * "Redux won't merge your changes with the existing state. It instead takes
+ * what you return and replaces the existing state with it."
+ *
+ * WRONG - Will lose showCounter:
+ * if (action.type === 'increment') {
+ *   return { counter: state.counter + 1 };
+ *   // showCounter is GONE!
+ * }
+ *
+ * CORRECT - Includes all properties:
+ * if (action.type === 'increment') {
+ *   return {
+ *     counter: state.counter + 1,
+ *     showCounter: state.showCounter  // Preserved!
+ *   };
+ * }
+ *
+ * MULTIPLE STATE PROPERTIES EXAMPLE (Lesson 317):
+ * ===============================================
+ *
+ * const initialState = {
+ *   counter: 0,        // Numeric state
+ *   showCounter: true  // Boolean state
+ * };
+ *
+ * // In reducer - ALWAYS include all properties!
+ * if (action.type === 'increment') {
+ *   return {
+ *     counter: state.counter + 1,     // Changed
+ *     showCounter: state.showCounter  // Unchanged, but MUST be included
+ *   };
+ * }
+ *
+ * if (action.type === 'toggle') {
+ *   return {
+ *     counter: state.counter,         // Unchanged, but MUST be included
+ *     showCounter: !state.showCounter // Changed (inverted)
+ *   };
+ * }
+ *
+ * ACCESSING MULTIPLE STATE PROPERTIES IN COMPONENTS (Lesson 317):
+ * ===============================================================
+ * INSTRUCTOR QUOTE:
+ * "We can use this [useSelector] multiple times to retrieve different pieces
+ * of data from the state."
+ *
+ * // In component:
+ * const counter = useSelector(state => state.counter);
+ * const show = useSelector(state => state.showCounter);
+ *
+ * Each useSelector call:
+ * - Subscribes to that specific piece of state
+ * - Re-renders component when that data changes
+ *
+ * CONDITIONAL RENDERING WITH REDUX STATE (Lesson 317):
+ * ====================================================
+ * INSTRUCTOR QUOTE:
+ * "So now here with show extracted, we now can render this div here
+ * conditionally by checking if show and only rendering the div if show
+ * is truthy, like this."
+ *
+ * // JSX pattern:
+ * {show && <div className={classes.value}>{counter}</div>}
+ *
+ * TESTING THE FEATURE (Lesson 317):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "If we now save this and reload, if we click Toggle Counter, it's gone,
+ * if I click this again, it's there again. I can still increase it even
+ * if it's hidden but it only shows up when, well, when I click Toggle Counter."
+ *
+ * Key observations:
+ * - Counter value persists even when hidden
+ * - Toggle only affects visibility, not the counter value
+ * - Each piece of state is independent but managed together
  */

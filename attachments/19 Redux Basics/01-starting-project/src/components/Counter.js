@@ -8,6 +8,7 @@
  * - Dispatch actions to modify Redux state using useDispatch (Lesson 314)
  * - Alternative: Using connect() for class-based components (Lesson 315)
  * - Attaching payload data to actions (Lesson 316)
+ * - Working with multiple state properties (Lesson 317)
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -44,6 +45,15 @@
  * 3. Dispatching actions with payloads: { type: '...', amount: 10 }
  * 4. Property names must match between dispatch and reducer
  * 5. Common payload naming conventions (amount, payload, value, etc.)
+ *
+ * LESSON 317 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Managing multiple state properties in Redux
+ * 2. Using multiple useSelector calls for different state pieces
+ * 3. Dispatching toggle action to change visibility state
+ * 4. Conditional rendering based on Redux state
+ * 5. Understanding Redux state replacement vs merging
+ * 6. Local state (useState) vs global state (Redux) considerations
  *
  * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
  * =====================================================
@@ -88,6 +98,37 @@ const Counter = () => {
    * - Clears subscription on unmount
    */
   const counter = useSelector((state) => state.counter);
+
+  /**
+   * =========================================================================
+   * USING MULTIPLE useSelector CALLS (Lesson 317)
+   * =========================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "We can use this multiple times to retrieve different pieces of data from
+   * the state. And here I'm then interested in my showCounter piece of data,
+   * and I'll store that in a show constant. The constant name of course is up
+   * to you."
+   *
+   * MULTIPLE SUBSCRIPTIONS (Lesson 317):
+   * ====================================
+   * INSTRUCTOR QUOTE:
+   * "Now again, that will then always update and the component will be
+   * re-evaluated whenever that data which we're accessing here changes."
+   *
+   * Key points about multiple useSelector calls:
+   * - Each call subscribes to a specific piece of state
+   * - Component re-renders when ANY subscribed state changes
+   * - More granular subscriptions = better performance (only re-render when needed)
+   * - Can use as many useSelector calls as needed
+   *
+   * WHY NOT ONE BIG SELECTOR? (Lesson 317):
+   * ======================================
+   * You could do: const state = useSelector(state => state);
+   * But this would re-render on ANY state change, even unrelated ones.
+   * Selecting specific pieces is more efficient.
+   */
+  const show = useSelector((state) => state.showCounter);
 
   /**
    * USING useDispatch TO GET THE DISPATCH FUNCTION (Lesson 314)
@@ -220,7 +261,40 @@ const Counter = () => {
     dispatch({ type: 'increase', amount: 10 });
   };
 
-  const toggleCounterHandler = () => {};
+  /**
+   * =========================================================================
+   * TOGGLE COUNTER HANDLER (Lesson 317)
+   * =========================================================================
+   *
+   * DISPATCHING THE TOGGLE ACTION (Lesson 317):
+   * ===========================================
+   * INSTRUCTOR QUOTE:
+   * "Now we also support this new toggle action type and hence back in counter.js
+   * in the toggleCounterHandler, we should dispatch such an action. We dispatch
+   * a new action object where the type is toggle."
+   *
+   * LOCAL STATE VS REDUX FOR THIS FEATURE (Lesson 317):
+   * ===================================================
+   * INSTRUCTOR QUOTE:
+   * "Now for this, of course, we could use useState. So we could set up some
+   * local state in this component which we manage with useState, not with Redux.
+   * And that would be the proper way of doing it because showing or hiding the
+   * counter is something which only is interesting to this component, not to
+   * any other part of the application."
+   *
+   * INSTRUCTOR QUOTE:
+   * "But the same could be set about our counter. We are only using the counter
+   * in this component here. So the counter technically also is local state but
+   * this is just a simple demo to get started."
+   *
+   * When to use Redux vs useState:
+   * - useState: For truly component-local state (recommended for toggle visibility)
+   * - Redux: For state shared across multiple components
+   * - In this demo: Using Redux to learn the concepts
+   */
+  const toggleCounterHandler = () => {
+    dispatch({ type: 'toggle' });
+  };
 
   return (
     <main className={classes.counter}>
@@ -230,8 +304,34 @@ const Counter = () => {
         ========================================
         The counter variable contains the current value from Redux store.
         It will automatically update whenever the store state changes.
+
+        =====================================================================
+        CONDITIONAL RENDERING BASED ON REDUX STATE (Lesson 317)
+        =====================================================================
+
+        INSTRUCTOR QUOTE:
+        "So now here with show extracted, we now can render this div here
+        conditionally by checking if show and only rendering the div if show
+        is truthy, like this."
+
+        The pattern: {show && <div>...</div>}
+        - If show is true: renders the div
+        - If show is false: renders nothing (short-circuit evaluation)
+
+        TESTING (Lesson 317):
+        ====================
+        INSTRUCTOR QUOTE:
+        "If we now save this and reload, if we click Toggle Counter, it's gone,
+        if I click this again, it's there again. I can still increase it even
+        if it's hidden but it only shows up when, well, when I click Toggle Counter."
+
+        KEY INSIGHT (Lesson 317):
+        ========================
+        The counter VALUE persists even when hidden! Clicking increment/decrement
+        while hidden still updates the counter in Redux - you just can't see it
+        until you toggle visibility back on.
       */}
-      <div className={classes.value}>{counter}</div>
+      {show && <div className={classes.value}>{counter}</div>}
 
       {/*
         INCREMENT/DECREMENT BUTTONS (Lesson 314)
@@ -590,4 +690,143 @@ export default Counter;
  * - Working with multiple state properties
  * - Handling more complex state shapes
  * - Redux Toolkit to simplify Redux code
+ *
+ * ============================================================================
+ * LESSON 317 - WORKING WITH MULTIPLE STATE PROPERTIES SUMMARY
+ * ============================================================================
+ *
+ * OVERVIEW (Lesson 317):
+ * ======================
+ * INSTRUCTOR QUOTE:
+ * "So that now also works and that is how we can manage multiple different
+ * pieces of data in our state. Of course, this data is still kind of connected,
+ * we have the counter and then the state whether we wanna show it or not but
+ * it's two totally different values which are changed in totally different ways.
+ * So therefore, that is how we can manage multiple pieces of data."
+ *
+ * LOCAL STATE VS REDUX STATE (Lesson 317):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "Now for this, of course, we could use useState... And that would be the
+ * proper way of doing it because showing or hiding the counter is something
+ * which only is interesting to this component."
+ *
+ * Decision guide:
+ * | Scenario                          | Use           |
+ * |-----------------------------------|---------------|
+ * | State only needed in one component| useState      |
+ * | State shared across components    | Redux         |
+ * | Simple UI toggles                 | useState      |
+ * | Authentication/user data          | Redux         |
+ * | Form input values                 | useState      |
+ * | Shopping cart items               | Redux         |
+ *
+ * STEPS TO ADD NEW STATE IN REDUX (Lesson 317):
+ * =============================================
+ *
+ * 1. ADD TO INITIAL STATE (in store/index.js):
+ *    const initialState = {
+ *      counter: 0,
+ *      showCounter: true  // NEW!
+ *    };
+ *
+ * 2. UPDATE ALL RETURN STATEMENTS (CRITICAL!):
+ *    // EVERY return must include ALL properties!
+ *    if (action.type === 'increment') {
+ *      return {
+ *        counter: state.counter + 1,
+ *        showCounter: state.showCounter  // MUST INCLUDE!
+ *      };
+ *    }
+ *
+ * 3. ADD NEW ACTION TYPE:
+ *    if (action.type === 'toggle') {
+ *      return {
+ *        counter: state.counter,
+ *        showCounter: !state.showCounter
+ *      };
+ *    }
+ *
+ * 4. USE MULTIPLE useSelector IN COMPONENT:
+ *    const counter = useSelector(state => state.counter);
+ *    const show = useSelector(state => state.showCounter);
+ *
+ * 5. DISPATCH NEW ACTION:
+ *    const toggleHandler = () => {
+ *      dispatch({ type: 'toggle' });
+ *    };
+ *
+ * 6. USE IN JSX (conditional rendering):
+ *    {show && <div>{counter}</div>}
+ *
+ * CRITICAL CONCEPT: STATE REPLACEMENT (Lesson 317):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "Redux won't merge your changes with the existing state. It instead takes
+ * what you return and replaces the existing state with it."
+ *
+ * // WRONG - showCounter will be LOST!
+ * return { counter: state.counter + 1 };
+ *
+ * // CORRECT - All properties preserved
+ * return {
+ *   counter: state.counter + 1,
+ *   showCounter: state.showCounter
+ * };
+ *
+ * MULTIPLE useSelector PATTERN (Lesson 317):
+ * ==========================================
+ * // Read different pieces of state
+ * const counter = useSelector(state => state.counter);
+ * const show = useSelector(state => state.showCounter);
+ *
+ * Benefits:
+ * - Each selector subscribes to specific state
+ * - Component only re-renders when relevant state changes
+ * - More granular = better performance
+ *
+ * CONDITIONAL RENDERING PATTERN (Lesson 317):
+ * ===========================================
+ * {show && <div className={classes.value}>{counter}</div>}
+ *
+ * How it works:
+ * - show = true:  renders the div
+ * - show = false: short-circuit, renders nothing
+ *
+ * KEY INSIGHT (Lesson 317):
+ * ========================
+ * The counter value persists even when not visible:
+ * - Toggle hides the display
+ * - Increment/decrement still works
+ * - Toggle back shows the updated value
+ *
+ * COMPLETE DATA FLOW (Lesson 317):
+ * ================================
+ *
+ *   Component                              Redux Store
+ *   ---------                              -----------
+ *       |                                      |
+ *       | 1. dispatch({ type: 'toggle' })      |
+ *       | -----------------------------------> |
+ *       |                                      |
+ *       |                          2. Reducer:
+ *       |                             if (action.type === 'toggle')
+ *       |                               return {
+ *       |                                 counter: state.counter,
+ *       |                                 showCounter: !state.showCounter
+ *       |                               }
+ *       |                                      |
+ *       | 3. useSelector gets new showCounter  |
+ *       | <----------------------------------- |
+ *       |                                      |
+ *       | 4. Component re-renders              |
+ *       |    {show && <div>...}                |
+ *       |    now shows/hides based on          |
+ *       |    new showCounter value             |
+ *
+ * NEXT STEPS (Upcoming Lessons):
+ * ==============================
+ * - Handling state correctly (avoiding mutations)
+ * - Redux Toolkit to simplify Redux code
+ * - Async code with Redux
  */
