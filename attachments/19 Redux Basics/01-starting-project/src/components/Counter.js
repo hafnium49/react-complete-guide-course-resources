@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING REDUX STATE (Lesson 313)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313 & 314)
  * ============================================================================
  *
- * This component demonstrates how to read data from a Redux store
- * using the useSelector hook from react-redux.
+ * This component demonstrates how to:
+ * - Read data from a Redux store using useSelector (Lesson 313)
+ * - Dispatch actions to modify Redux state using useDispatch (Lesson 314)
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -15,115 +16,112 @@
  * 5. Automatic cleanup when component unmounts
  * 6. Alternative: connect() function for class components
  *
- * WHY THIS COMPONENT? (Lesson 313)
- * =================================
- * INSTRUCTOR QUOTE:
- * "Let's say we wanna utilize this provided store not in the app component
- * but in the counter component which I rendered there. That's this counter
- * component in the components folder."
- *
- * "Now that's the component you're seeing on the screen here when you're
- * running your Def server. It shows us basically a container where we wanna
- * output the counter value."
+ * LESSON 314 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Importing useDispatch from 'react-redux'
+ * 2. useDispatch returns a dispatch function (no arguments needed)
+ * 3. Creating handler functions for increment/decrement
+ * 4. Dispatching actions as objects with a 'type' property
+ * 5. Action type values MUST match identifiers in the reducer
+ * 6. Wiring up buttons with onClick to dispatch actions
  */
 
 import classes from './Counter.module.css';
 
 /**
- * IMPORTING useSelector FROM REACT-REDUX (Lesson 313)
- * ====================================================
- * INSTRUCTOR QUOTE:
- * "And we again do that with help of the React Redux Library. So from React
- * Redux we again wanna import something and the something which we are
- * importing is a React Hook. A custom hook made by the React Redux team.
- * The useSelector hook."
+ * IMPORTING HOOKS FROM REACT-REDUX (Lessons 313 & 314)
+ * =====================================================
+ * useSelector (Lesson 313):
+ * - Custom hook to read/select state from Redux store
+ * - Automatically subscribes component to store updates
  *
- * useSelector vs useStore (Lesson 313):
- * =====================================
- * INSTRUCTOR QUOTE:
- * "There also is useStore hook, which we could use as well which gives us
- * direct access to the store but useSelector is a bit more convenient to use
- * because that allows us to then automatically select a part of our state
- * managed by the store. So I will use useSelector here."
+ * useDispatch (Lesson 314):
+ * - Custom hook to get the dispatch function
+ * - Allows dispatching actions to modify Redux state
  *
- * | Hook        | What it returns           | When to use                    |
- * |-------------|---------------------------|--------------------------------|
- * | useSelector | A specific piece of state | Most cases - get specific data |
- * | useStore    | The entire store object   | Rare - need store.dispatch()   |
- *
- * CLASS COMPONENTS ALTERNATIVE (Lesson 313):
- * ==========================================
- * INSTRUCTOR QUOTE:
- * "Now if we would be using a class-based component and not a functional
- * component as we are here and as we are in the majority of the course,
- * then there also is a connect function which we could use instead.
- * This function can be used as a wrapper around our class component to
- * connect that class component to the store. I'll come back to that later
- * for the moment we'll focus on useSelector."
+ * INSTRUCTOR QUOTE (Lesson 314):
+ * "Well, there is another hook which we can use, the useDispatch hook."
  */
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 const Counter = () => {
   /**
    * USING useSelector TO READ REDUX STATE (Lesson 313)
    * ===================================================
-   * INSTRUCTOR QUOTE:
-   * "So here in this functional component we can now get access to the data
-   * managed in our store by using useSelector. We call this and now we need
-   * to pass a function to useSelector."
+   * Pass a selector function that receives state and returns
+   * the specific piece of state you need.
    *
-   * THE SELECTOR FUNCTION (Lesson 313):
-   * ====================================
-   * INSTRUCTOR QUOTE:
-   * "A function which will be executed by React Redux, a function which then
-   * basically determines which piece of data we wanna extract from our store."
-   *
-   * "For this we should pass a function to it, a function which will receive
-   * the state managed by Redux and then we return the part of the state which
-   * you wanna extract. So here for example, state.counter."
-   *
-   * HOW IT WORKS:
-   * =============
-   * 1. We pass an arrow function: (state) => state.counter
-   * 2. React Redux calls this function with the current Redux state
-   * 3. We return the specific part of state we need (state.counter)
-   * 4. useSelector returns that extracted value
-   *
-   * WHY SELECTOR FUNCTIONS ARE POWERFUL (Lesson 313):
-   * ==================================================
-   * INSTRUCTOR QUOTE:
-   * "Of course at the moment we have a very simple state. Just an object with
-   * a counter property. But in bigger applications, you will have more complex
-   * states with tons of different properties maybe nested objects and arrays
-   * and therefore being able to just get a slice, just a tiny part of that
-   * overall state object in a easy way is worth a lot. And that's what
-   * useSelector allows us to do."
-   *
-   * AUTOMATIC SUBSCRIPTION (Lesson 313):
-   * ====================================
-   * INSTRUCTOR QUOTE:
-   * "Now the great thing is that when you use useSelector, React Redux will
-   * automatically set up a subscription to the Redux store for this component.
-   * So your component will be updated and will receive the latest counter
-   * automatically whenever that data changes in the Redux store."
-   *
-   * "So it's automatically reactive and changes to the Redux store will cause
-   * this component function to be re-executed. So you always have the latest
-   * counter. That's why useSelector is a very useful hook and why it is the
-   * hook we use for getting data out of the store."
-   *
-   * AUTOMATIC CLEANUP (Lesson 313):
-   * ===============================
-   * INSTRUCTOR QUOTE:
-   * "If you ever would unmount this component, if it would be removed from
-   * the DOM for whatever reason, React Redux would also automatically clear
-   * the subscription for you. So it manages that subscription for you behind
-   * the scenes."
-   *
-   * This is similar to how useEffect cleanup works - you don't need to
-   * manually unsubscribe when the component unmounts.
+   * React Redux automatically:
+   * - Sets up subscription to the store
+   * - Re-renders component when selected data changes
+   * - Clears subscription on unmount
    */
   const counter = useSelector((state) => state.counter);
+
+  /**
+   * USING useDispatch TO GET THE DISPATCH FUNCTION (Lesson 314)
+   * ============================================================
+   * INSTRUCTOR QUOTE:
+   * "When we call useDispatch here, we don't pass any argument to it,
+   * but instead, this gives us back a dispatch function which you can execute."
+   *
+   * "So dispatch here is a function, a function which we can call, which will
+   * dispatch an action against our Redux store."
+   *
+   * KEY POINTS:
+   * ===========
+   * - useDispatch() takes NO arguments
+   * - Returns the store's dispatch function
+   * - We use this dispatch function to send actions to the reducer
+   * - The reducer then processes the action and returns new state
+   */
+  const dispatch = useDispatch();
+
+  /**
+   * INCREMENT HANDLER (Lesson 314)
+   * ==============================
+   * INSTRUCTOR QUOTE:
+   * "So therefore now, I'll add two new functions here in this counter component.
+   * The increment handler and the decrement handler. So two new functions which
+   * will wire up to the buttons."
+   *
+   * DISPATCHING AN ACTION (Lesson 314):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "And in the increment handler, we want to use this dispatch function and
+   * execute it to dispatch a new action and then do what we learned. An action
+   * is an object with a type property."
+   *
+   * ACTION TYPE MUST MATCH REDUCER (Lesson 314):
+   * ============================================
+   * INSTRUCTOR QUOTE:
+   * "And then the value for type should be one of the identifiers we use in
+   * our Redux store reducer. So here in the reducer function, we handle the
+   * action type increment and the action type decrement. So we should dispatch
+   * one of these two identifiers. Of course, exactly these identifiers, without
+   * any typos or changes."
+   *
+   * IMPORTANT: The string 'increment' here MUST match exactly what the reducer
+   * expects. If we wrote 'INCREMENT' or 'Increment', the reducer wouldn't
+   * recognize it and would return unchanged state!
+   */
+  const incrementHandler = () => {
+    dispatch({ type: 'increment' });
+  };
+
+  /**
+   * DECREMENT HANDLER (Lesson 314)
+   * ==============================
+   * INSTRUCTOR QUOTE:
+   * "And then here in the decrement handler I'll dispatch an object with a
+   * type property with a value of decrement."
+   *
+   * Same pattern as increment - dispatch an action object with a type
+   * property that matches what the reducer handles.
+   */
+  const decrementHandler = () => {
+    dispatch({ type: 'decrement' });
+  };
 
   const toggleCounterHandler = () => {};
 
@@ -133,16 +131,41 @@ const Counter = () => {
       {/*
         DISPLAYING THE REDUX STATE (Lesson 313)
         ========================================
-        INSTRUCTOR QUOTE:
-        "Now that we got this counter, we can use it down there, to output
-        the counter value like this. And if we now save this, we therefore
-        now see zero here. And that's how we can get access to data managed
-        by Redux."
-
         The counter variable contains the current value from Redux store.
         It will automatically update whenever the store state changes.
       */}
       <div className={classes.value}>{counter}</div>
+
+      {/*
+        INCREMENT/DECREMENT BUTTONS (Lesson 314)
+        ========================================
+        INSTRUCTOR QUOTE:
+        "Now for dispatching actions, I first of all, want to have two new
+        buttons here which allow me to dispatch actions for incrementing
+        and decrementing. So here I'll add a new div. And in that div I'll
+        just add two buttons. The first one says increment, the second one
+        says decrement."
+
+        WIRING UP THE BUTTONS (Lesson 314):
+        ===================================
+        INSTRUCTOR QUOTE:
+        "Now we need to wire up those two functions to the buttons. So this
+        first button we add an onClick prop and point at the increment handler.
+        And on the second button we do the same for the decrement handler."
+
+        TESTING (Lesson 314):
+        =====================
+        INSTRUCTOR QUOTE:
+        "And if we do that and save this, if we now click increment, you see
+        the counter increases and if you click decrement, it decreases.
+        So now we're able to use what we learned about Redux in this react demo,
+        in this react component here."
+      */}
+      <div>
+        <button onClick={incrementHandler}>Increment</button>
+        <button onClick={decrementHandler}>Decrement</button>
+      </div>
+
       <button onClick={toggleCounterHandler}>Toggle Counter</button>
     </main>
   );
@@ -152,56 +175,82 @@ export default Counter;
 
 /**
  * ============================================================================
- * SUMMARY - LESSON 313 WORKFLOW
+ * SUMMARY - LESSONS 313 & 314 COMBINED WORKFLOW
  * ============================================================================
  *
- * 1. IMPORT useSelector:
- *    import { useSelector } from 'react-redux';
- *
- * 2. CALL useSelector WITH A SELECTOR FUNCTION:
- *    const counter = useSelector((state) => state.counter);
- *
- *    The selector function:
- *    - Receives the entire Redux state as a parameter
- *    - Returns the specific piece of state you need
- *    - Is called by React Redux automatically
- *
- * 3. USE THE VALUE IN YOUR JSX:
- *    <div>{counter}</div>
- *
- * AUTOMATIC FEATURES:
- * ===================
- * | Feature              | What React Redux does automatically         |
- * |----------------------|---------------------------------------------|
- * | Subscription         | Sets up store subscription on mount         |
- * | Re-rendering         | Re-renders component when selected data changes |
- * | Cleanup              | Clears subscription on unmount              |
- *
- * SELECTOR FUNCTION EXAMPLES:
+ * READING STATE (Lesson 313):
  * ===========================
- * // Simple property access
- * const counter = useSelector(state => state.counter);
+ * 1. Import useSelector from 'react-redux'
+ * 2. Call useSelector with a selector function
+ * 3. Use the returned value in your JSX
  *
- * // Nested property access
- * const userName = useSelector(state => state.user.profile.name);
+ * DISPATCHING ACTIONS (Lesson 314):
+ * =================================
+ * 1. Import useDispatch from 'react-redux'
+ * 2. Call useDispatch() to get the dispatch function
+ * 3. Create handler functions that call dispatch({ type: 'actionType' })
+ * 4. Wire up buttons/events to these handler functions
  *
- * // Computed/derived values
- * const doubleCounter = useSelector(state => state.counter * 2);
+ * COMPLETE PATTERN:
+ * =================
+ * import { useSelector, useDispatch } from 'react-redux';
  *
- * // Array filtering
- * const completedTodos = useSelector(state =>
- *   state.todos.filter(todo => todo.completed)
- * );
+ * const MyComponent = () => {
+ *   // Read state
+ *   const value = useSelector(state => state.value);
  *
- * HOOKS VS CLASS COMPONENTS:
- * ==========================
- * | Approach      | For Component Type | How to use                   |
- * |---------------|--------------------|-----------------------------|
- * | useSelector   | Functional         | Hook inside component       |
- * | connect()     | Class-based        | HOC wrapping component      |
+ *   // Get dispatch function
+ *   const dispatch = useDispatch();
+ *
+ *   // Handler that dispatches action
+ *   const handleClick = () => {
+ *     dispatch({ type: 'someAction' });
+ *   };
+ *
+ *   return <button onClick={handleClick}>{value}</button>;
+ * };
+ *
+ * DATA FLOW:
+ * ==========
+ *
+ *   Component                    Redux Store
+ *   ---------                    -----------
+ *       |                             |
+ *       |   1. dispatch(action)       |
+ *       | --------------------------> |
+ *       |                             |
+ *       |   2. Reducer processes      |
+ *       |      action, returns        |
+ *       |      new state              |
+ *       |                             |
+ *       |   3. useSelector gets       |
+ *       |      updated state          |
+ *       | <-------------------------- |
+ *       |                             |
+ *       |   4. Component re-renders   |
+ *       |      with new data          |
+ *
+ * ACTION OBJECT STRUCTURE:
+ * ========================
+ * {
+ *   type: 'actionType'  // REQUIRED - identifies the action
+ *   payload: data       // OPTIONAL - additional data for the action
+ * }
+ *
+ * COMMON MISTAKES TO AVOID:
+ * =========================
+ * 1. Typo in action type - 'increment' vs 'INCREMENT' vs 'Increment'
+ *    Solution: Use constants for action types (covered later)
+ *
+ * 2. Forgetting to call dispatch - just having dispatch({ type: '...' })
+ *    without putting it in a function won't work
+ *
+ * 3. Calling useDispatch conditionally or in loops
+ *    Hooks must be called at the top level of the component
  *
  * NEXT STEPS (Upcoming Lessons):
  * ==============================
- * - Use useDispatch() to dispatch actions and change the counter
- * - Implement increment and decrement functionality
+ * - Adding payloads to actions for dynamic values
+ * - Working with more complex state
+ * - Using Redux Toolkit to simplify Redux code
  */

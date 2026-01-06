@@ -21,3 +21,16 @@
   margin: 2rem 0;
   font-weight: bold;
 }
+
+/**
+ * BUTTON STYLING (Lesson 314)
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "And now to add some spacing, I'll quickly dive into counter.module.css
+ * and add this selector .counter button which selects these buttons here.
+ * And I'll just give them a margin of one rem in all directions, just so
+ * that we have some spacing."
+ */
+.counter button {
+  margin: 1rem;
+}
