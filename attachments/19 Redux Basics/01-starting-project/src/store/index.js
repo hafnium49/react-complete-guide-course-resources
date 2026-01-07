@@ -1,9 +1,10 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lessons 311-320)
+ * REDUX STORE CONFIGURATION (Lessons 311-321)
  * ============================================================================
  *
- * This file contains the Redux store setup using Redux Toolkit's createSlice.
+ * This file contains the Redux store setup using Redux Toolkit's createSlice
+ * and configureStore.
  *
  * LESSON 311-319 - CORE REDUX FOUNDATIONS:
  * ========================================
@@ -22,6 +23,18 @@
  * 8. Accessing action.payload for extra data in reducer methods
  * 9. No more manual if/else checks for action types
  *
+ * LESSON 321 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Using the return value of createSlice (the slice object)
+ * 2. Accessing counterSlice.reducer to get the combined reducer
+ * 3. The problem: createStore only accepts ONE reducer
+ * 4. Solution: configureStore from @reduxjs/toolkit
+ * 5. configureStore takes a configuration object, not a reducer directly
+ * 6. The reducer property (singular) - Redux wants ONE main reducer
+ * 7. Value can be a single reducer OR a map of reducers (object)
+ * 8. configureStore merges multiple reducers behind the scenes
+ * 9. How to dispatch actions with createSlice (teaser)
+ *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
  * INSTRUCTOR QUOTE:
@@ -39,8 +52,35 @@
  * directly: import store from './store' (instead of './store/index')
  */
 
-import { createStore } from 'redux';
-import { createSlice } from '@reduxjs/toolkit';
+/**
+ * ============================================================================
+ * IMPORTS (Lesson 321)
+ * ============================================================================
+ *
+ * REMOVING createStore (Lesson 321):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "So first of all we can get rid of our old counterReducer here, we don't need
+ * that anymore. So let's remove it to make this a bit more readable."
+ *
+ * We no longer need createStore from 'redux' because Redux Toolkit provides
+ * configureStore which is more powerful and easier to use.
+ *
+ * IMPORTING configureStore (Lesson 321):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Now with standard Redux, there is a combineReducers function which we could
+ * use for that but we can also ditch Redux here and instead import another
+ * function from reduxjs/toolkit which will make that a bit easier. We can
+ * import the configureStore function."
+ *
+ * configureStore advantages over createStore:
+ * - Automatically sets up Redux DevTools
+ * - Automatically adds middleware (like redux-thunk)
+ * - Makes merging multiple reducers easier
+ * - Configuration object instead of function arguments
+ */
+import { createSlice, configureStore } from '@reduxjs/toolkit';
 
 /**
  * ============================================================================
@@ -338,33 +378,157 @@ const counterSlice = createSlice({
 
 /**
  * ============================================================================
- * USING THE SLICE'S REDUCER WITH createStore (Lesson 320)
+ * USING THE SLICE WITH configureStore (Lesson 321)
+ * ============================================================================
+ *
+ * USING THE RETURN VALUE OF createSlice (Lesson 321):
+ * ===================================================
+ * INSTRUCTOR QUOTE:
+ * "Now to use our slice, we first of all need to use the return value of calling
+ * createSlice because here we get back our counterSlice, now this name is up to
+ * you, but it's a slice of our global state, the slice which is responsible for
+ * working with our counter."
+ *
+ * The slice object (counterSlice) contains:
+ * - reducer: The generated reducer function (use this for store creation)
+ * - actions: Auto-generated action creators (covered later in this lesson)
+ * - name: The slice name ('counter')
+ *
+ * REGISTERING THE SLICE WITH THE STORE (Lesson 321):
+ * ==================================================
+ * INSTRUCTOR QUOTE:
+ * "Now we wanna register this with our store."
+ *
+ * ACCESSING counterSlice.reducer (Lesson 321):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "And now here to createStore, we could pass our counterSlice.reducer. With that
+ * we get access to the reducers set up in the slice even though it .reducer, it's
+ * basically a big reducer with a couple of if statements that trigger those
+ * different reducer methods depending on the action type and we would be good to go."
+ *
+ * THE PROBLEM WITH MULTIPLE SLICES (Lesson 321):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "But if we have bigger applications with multiple state slices, we would face a
+ * problem if we try to do it like this, because there can only be one reducer
+ * passed to create store and when we have multiple slices, we have multiple
+ * reducers which we access with .reducer on the different slices."
+ *
+ * Example of the problem:
+ *   const counterSlice = createSlice({ ... });  // counterSlice.reducer
+ *   const authSlice = createSlice({ ... });     // authSlice.reducer
+ *   // createStore only accepts ONE reducer - which one do we pass?
+ *
+ * TRADITIONAL SOLUTION - combineReducers (Lesson 321):
+ * ====================================================
+ * INSTRUCTOR QUOTE:
+ * "Now with standard Redux, there is a combineReducers function which we could
+ * use for that..."
+ *
+ * MODERN SOLUTION - configureStore (Lesson 321):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "...but we can also ditch Redux here and instead import another function from
+ * reduxjs/toolkit which will make that a bit easier. We can import the
+ * configureStore function."
+ *
+ * INSTRUCTOR QUOTE:
+ * "ConfigureStore like createStore creates a store but it makes merging multiple
+ * reducers into one reducer easier thereafter."
+ *
+ * ============================================================================
+ * configureStore CONFIGURATION OBJECT (Lesson 321)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now you did learn that createStore wants a pointer at a Reducer function
- * as a parameter."
+ * "So here we can now call configureStore, and to configureStore, we now pass an
+ * object not a reducer function but an object. It's a configuration object
+ * expected by configureStore."
  *
- * ACCESSING THE REDUCER FROM A SLICE (Lesson 320):
+ * WHY "reducer" (SINGULAR) NOT "reducers" (PLURAL)? (Lesson 321):
+ * ==============================================================
+ * INSTRUCTOR QUOTE:
+ * "A configuration object where we then set a reducer property and that's an
+ * expected property by configureStore. Reducer singular and not reducers plural
+ * because still, no matter if we use createStore or configureStore, Redux wants
+ * one main reducer function, which is responsible for the global state."
+ *
+ * SINGLE REDUCER VALUE (Lesson 321):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "However, with configureStore, the value for reducer can be a single reducer
+ * so we can for example use counterSlice.reducer to use the reducer from that
+ * counterSlice which combines all those reducer methods to find in that slice.
+ * We can use that as a global main reducer and here that would make sense because
+ * this is the only state slice we have and therefore, the only reducer we have."
+ *
+ * MAP OF REDUCERS (FOR MULTIPLE SLICES) (Lesson 321):
+ * ===================================================
+ * INSTRUCTOR QUOTE:
+ * "...but if we had multiple state slices in a bigger application something we're
+ * going to see later, then alternatively as a value for this reducer key, we could
+ * also set an object and in that object, we can set up any keys of our choice, so
+ * any property names of our choice and the values of those properties would then
+ * be different reducer functions."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So we would create a map of reducers you could say, and this map is then set as
+ * a value for the main reducer and behind the scenes configureStore will emerge
+ * all those reducers into one big reducer. So it will merge them for us."
+ *
+ * EXAMPLE - Single reducer (what we're using now):
  * ================================================
- * createSlice generates a reducer function automatically. Access it via:
- *   counterSlice.reducer
+ * const store = configureStore({
+ *   reducer: counterSlice.reducer  // Single reducer for single slice
+ * });
  *
- * The slice object contains:
- * - reducer: The generated reducer function (use this for store creation)
- * - actions: Auto-generated action creators (covered in next lesson)
- * - name: The slice name ('counter')
+ * EXAMPLE - Map of reducers (for multiple slices):
+ * ================================================
+ * const store = configureStore({
+ *   reducer: {
+ *     counter: counterSlice.reducer,  // state.counter
+ *     auth: authSlice.reducer,        // state.auth
+ *     cart: cartSlice.reducer         // state.cart
+ *   }
+ * });
  *
- * The store is the central hub that:
- * - Holds the application state
- * - Allows access to state via getState()
- * - Allows state updates via dispatch(action)
- * - Registers listeners via subscribe(listener)
+ * With a map of reducers:
+ * - configureStore merges them into one big reducer automatically
+ * - Each key becomes a property in the global state
+ * - Access via: state.counter, state.auth, state.cart
  *
- * NOTE: createStore is technically deprecated in favor of Redux Toolkit's
- * configureStore (covered in lesson 321), but it still works for now.
+ * WHY WE USE SINGLE REDUCER HERE (Lesson 321):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "And that's an alternative we can use, not an alternative we will use here
+ * though because here we only have one reducer so we can direct the assign, that
+ * reducer from the counterSlice as our main reducer for configureStore."
  */
-const store = createStore(counterSlice.reducer);
+const store = configureStore({
+  reducer: counterSlice.reducer,
+});
+
+/**
+ * ============================================================================
+ * HOW DO WE DISPATCH ACTIONS? (Lesson 321 - TEASER)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now the question is, how do we dispatch actions? Because we don't have our
+ * own, if checks, we don't know what the identifiers for our actions should be.
+ * We just have these method names but how do we now know what to dispatch?"
+ *
+ * This is answered in the next part of the lesson - we'll use the auto-generated
+ * action creators from counterSlice.actions!
+ *
+ * Preview:
+ *   export const counterActions = counterSlice.actions;
+ *
+ *   // In component:
+ *   dispatch(counterActions.increment())
+ *   dispatch(counterActions.increase(10))  // payload becomes action.payload
+ */
 
 /**
  * WHY NOT SUBSCRIBE HERE? (Lesson 311)

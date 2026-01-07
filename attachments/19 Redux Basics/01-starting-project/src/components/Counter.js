@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-320)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-321)
  * ============================================================================
  *
  * This component demonstrates how to:
@@ -18,12 +18,25 @@
  * - Can now "mutate" state directly (Immer handles immutability)
  * - No more if/else checks for action types
  *
- * COMPONENT CHANGES COMING IN LESSON 321:
- * ======================================
+ * LESSON 321 - configureStore (STORE-SIDE CHANGES):
+ * =================================================
+ * Lesson 321 introduces configureStore from Redux Toolkit:
+ * - Replaced createStore with configureStore
+ * - configureStore takes a configuration object with { reducer: ... }
+ * - Can pass single reducer OR a map of reducers (for multiple slices)
+ * - Behind the scenes, merges multiple reducers automatically
+ *
+ * THE DISPATCHING QUESTION (Lesson 321):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "Now the question is, how do we dispatch actions? Because we don't have our
+ * own, if checks, we don't know what the identifiers for our actions should be.
+ * We just have these method names but how do we now know what to dispatch?"
+ *
  * Currently, this component still dispatches actions the old way:
  *   dispatch({ type: 'increment' })
  *
- * In the next lesson, we'll use auto-generated action creators:
+ * In the next part of the lesson, we'll use auto-generated action creators:
  *   dispatch(counterActions.increment())
  *
  * This eliminates string-based action types and potential typos!
