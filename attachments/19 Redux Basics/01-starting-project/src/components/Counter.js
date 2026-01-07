@@ -55,6 +55,18 @@
  * 5. Understanding Redux state replacement vs merging
  * 6. Local state (useState) vs global state (Redux) considerations
  *
+ * LESSON 318 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. NEVER mutate existing state in Redux reducers
+ * 2. Understanding reference vs primitive values in JavaScript
+ * 3. Why mutation seems to work but causes hidden bugs
+ * 4. Always return brand new state objects from reducers
+ * 5. Avoiding accidental mutation with objects and arrays
+ *
+ * NOTE: Lesson 318 concepts apply to the REDUCER code in store/index.js.
+ * Components dispatch actions, but the immutability rules are enforced
+ * in the reducer. See store/index.js for detailed Lesson 318 comments.
+ *
  * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
  * =====================================================
  * INSTRUCTOR QUOTE:
@@ -824,9 +836,77 @@ export default Counter;
  *       |    now shows/hides based on          |
  *       |    new showCounter value             |
  *
+ * ============================================================================
+ * LESSON 318 - NEVER MUTATE STATE (COMPONENT PERSPECTIVE)
+ * ============================================================================
+ *
+ * IMPORTANT: The immutability rules from Lesson 318 apply to the REDUCER,
+ * not to component code. Components dispatch actions but don't directly
+ * mutate state.
+ *
+ * WHY COMPONENTS ARE SAFE (Lesson 318):
+ * =====================================
+ * When a component calls:
+ *   dispatch({ type: 'increment' })
+ *
+ * It's just sending a MESSAGE to Redux. The component doesn't have direct
+ * access to modify state. The reducer receives this action and must return
+ * a NEW state object.
+ *
+ * THE DANGEROUS CODE IS IN THE REDUCER (Lesson 318):
+ * ==================================================
+ * INSTRUCTOR QUOTE:
+ * "You should never, super important, never mutate the state, the existing state."
+ *
+ * // WRONG (in reducer):
+ * if (action.type === 'increment') {
+ *   state.counter++;   // MUTATION! Changes the existing state object
+ *   return state;      // Returns the SAME object
+ * }
+ *
+ * // CORRECT (in reducer):
+ * if (action.type === 'increment') {
+ *   return {           // Returns a NEW object
+ *     counter: state.counter + 1,
+ *     showCounter: state.showCounter
+ *   };
+ * }
+ *
+ * WHAT COMPONENTS DO (Lesson 318):
+ * ================================
+ * Components simply:
+ * 1. READ state via useSelector (non-mutating)
+ * 2. DISPATCH actions to request state changes
+ *
+ * They never directly modify state, so the immutability burden falls
+ * on the reducer code.
+ *
+ * WHY IT MATTERS FOR COMPONENTS (Lesson 318):
+ * ===========================================
+ * INSTRUCTOR QUOTE:
+ * "This can lead to bugs, unpredictable behavior and it can make debugging
+ * your application harder as well."
+ *
+ * If the reducer mutates state:
+ * - Components may not re-render when state "changes"
+ * - useSelector may return stale values
+ * - The UI gets out of sync with the data
+ *
+ * This appears to the component developer as mysterious bugs where the
+ * component doesn't update even though actions are being dispatched.
+ *
+ * SEE store/index.js FOR COMPLETE LESSON 318 DOCUMENTATION:
+ * =========================================================
+ * - The golden rule of Redux immutability
+ * - Reference vs primitive values explained
+ * - Correct immutable update patterns
+ * - Mutating vs non-mutating array methods table
+ * - Why mutations seem to work but cause hidden bugs
+ * - Handling deeply nested state immutably
+ *
  * NEXT STEPS (Upcoming Lessons):
  * ==============================
- * - Handling state correctly (avoiding mutations)
- * - Redux Toolkit to simplify Redux code
+ * - Redux Toolkit to simplify Redux code (makes immutability easier!)
  * - Async code with Redux
+ * - Redux DevTools for debugging
  */
