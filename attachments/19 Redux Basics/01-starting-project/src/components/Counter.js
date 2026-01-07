@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313, 314 & 315)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-320)
  * ============================================================================
  *
  * This component demonstrates how to:
@@ -9,6 +9,24 @@
  * - Alternative: Using connect() for class-based components (Lesson 315)
  * - Attaching payload data to actions (Lesson 316)
  * - Working with multiple state properties (Lesson 317)
+ *
+ * LESSON 320 - REDUX TOOLKIT createSlice (STORE-SIDE CHANGES):
+ * ============================================================
+ * Lesson 320 introduces Redux Toolkit's createSlice in the store.
+ * Key changes happened in store/index.js:
+ * - Replaced manual reducer function with createSlice
+ * - Can now "mutate" state directly (Immer handles immutability)
+ * - No more if/else checks for action types
+ *
+ * COMPONENT CHANGES COMING IN LESSON 321:
+ * ======================================
+ * Currently, this component still dispatches actions the old way:
+ *   dispatch({ type: 'increment' })
+ *
+ * In the next lesson, we'll use auto-generated action creators:
+ *   dispatch(counterActions.increment())
+ *
+ * This eliminates string-based action types and potential typos!
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
