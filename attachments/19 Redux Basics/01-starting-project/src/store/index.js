@@ -52,6 +52,18 @@
  * 6. Traditional solution: Splitting reducers into smaller ones
  * 7. Modern solution: Redux Toolkit - makes everything easier
  *
+ * LESSON 320 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Installing Redux Toolkit: npm install @reduxjs/toolkit
+ * 2. Redux Toolkit INCLUDES Redux - can uninstall plain 'redux' package
+ * 3. Importing createSlice from @reduxjs/toolkit
+ * 4. createSlice vs createReducer (createSlice is more powerful)
+ * 5. Creating a slice with: name, initialState, reducers
+ * 6. Slice reducers automatically receive current state
+ * 7. "Mutating" state is ALLOWED in createSlice (Immer handles immutability)
+ * 8. Accessing action.payload for extra data in reducer methods
+ * 9. No more manual if/else checks for action types
+ *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
  * INSTRUCTOR QUOTE:
@@ -1316,10 +1328,463 @@ export default store;
  *    - Makes Redux code cleaner and easier to maintain
  *    - Is optional but highly recommended
  *
+ * ============================================================================
+ * LESSON 320 - GETTING STARTED WITH REDUX TOOLKIT (createSlice)
+ * ============================================================================
+ *
+ * INSTALLING REDUX TOOLKIT (Lesson 320):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "So let's now get started with Redux toolkit. And for that I'll quit my dev
+ * server and then NPM install @reduxjs/toolkit. That is simply the package name.
+ * You all define this, the official docs."
+ *
+ * Installation command:
+ *   npm install @reduxjs/toolkit
+ *
+ * REDUX IS INCLUDED IN REDUX TOOLKIT (Lesson 320):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "Now, when you install that you then there after can also uninstall Redux.
+ * So the Redux library itself because that is already included in Redux toolkit.
+ * So you could now remove this Redux entry here from package Json."
+ *
+ * After installing Redux Toolkit, your package.json can have:
+ *   "@reduxjs/toolkit": "^1.x.x"   // KEEP - this includes Redux
+ *   "redux": "^4.x.x"              // CAN REMOVE - already in toolkit
+ *   "react-redux": "^8.x.x"        // KEEP - still needed for React bindings
+ *
+ * WHERE TO USE REDUX TOOLKIT (Lesson 320):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "Well we do use it here in this store folder in the index JS file because
+ * Redux toolkit simplifies a couple of aspects of working with Redux."
+ *
+ * ============================================================================
+ * IMPORTING createSlice (Lesson 320)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Here at the top and the index JS file we can import something from
+ * @reduxjs/toolkit. And that's something is the create slice function."
+ *
+ * Import syntax:
+ *   import { createSlice } from '@reduxjs/toolkit';
+ *
+ * createSlice vs createReducer (Lesson 320):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "There also is a create reducer function which would also allow us to create
+ * a reducer with certain enhancements, but create slice is even more powerful
+ * than create reducer. And it will simplify a couple of aspects in one go."
+ *
+ * | Function       | Purpose                                    |
+ * |----------------|--------------------------------------------|
+ * | createReducer  | Create reducer with Immer support          |
+ * | createSlice    | Create reducer + actions + initial state   |
+ *
+ * createSlice is the recommended approach because it generates everything!
+ *
+ * ============================================================================
+ * WHAT IS A SLICE? (Lesson 320)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, what we do with create slice is we are preparing a slice of our global
+ * state. And when we have different pieces of state which are not directly
+ * related, let's say an authentication status and the counter status, we could
+ * create different slices potentially also in different files to make our code
+ * maintainable."
+ *
+ * A SLICE IS:
+ * ===========
+ * - A portion of your Redux state
+ * - Related state, reducers, and actions bundled together
+ * - Typically organized by feature (counter, auth, cart, etc.)
+ *
+ * EXAMPLE SLICE STRUCTURE:
+ * ========================
+ * Your app might have multiple slices:
+ *
+ * counterSlice (this file):
+ *   - state: { counter, showCounter }
+ *   - actions: increment, decrement, increase, toggle
+ *
+ * authSlice (separate file):
+ *   - state: { isLoggedIn, user }
+ *   - actions: login, logout
+ *
+ * cartSlice (separate file):
+ *   - state: { items, totalQuantity, totalAmount }
+ *   - actions: addItem, removeItem, clearCart
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now here we only have counter related state and I would say that the counter
+ * and show counter belong kind of together so I will create one slice for now."
+ *
+ * ============================================================================
+ * createSlice CONFIGURATION OBJECT (Lesson 320)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And then create slice once an object as an argument."
+ *
+ * createSlice takes an object with THREE required properties:
+ *
+ * 1. NAME (Lesson 320):
+ * ====================
+ * INSTRUCTOR QUOTE:
+ * "Now every slice needs a name and identifier of that piece of state so to say.
+ * And here I'll name this counter but the name is up to you. It doesn't have to
+ * be this name here, it can be any name you want."
+ *
+ * The name is used:
+ * - As a prefix for generated action types
+ * - For debugging in Redux DevTools
+ * - To identify the slice in your code
+ *
+ * 2. INITIAL STATE (Lesson 320):
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "Next you need to set up an initial state. And here I wanna set my initial
+ * state equal to that object or I therefore just point at initial state so at
+ * this constant and use that constant value as a value."
+ *
+ * MODERN JAVASCRIPT SYNTAX (Lesson 320):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "Or we even use modern JavaScript Syntex, omit this part and let JavaScript
+ * behind the scenes automatically expanded to this code again."
+ *
+ * // Long form:
+ * { initialState: initialState }
+ *
+ * // Shorthand (ES6 property shorthand):
+ * { initialState }  // Same thing!
+ *
+ * 3. REDUCERS (Lesson 320):
+ * ========================
+ * INSTRUCTOR QUOTE:
+ * "And then we also need to add reducers. Reducers is again, an object, a map
+ * you could say, of all the reducers this slice needs, this state slice needs."
+ *
+ * ============================================================================
+ * THE createSlice SYNTAX (Lesson 320)
+ * ============================================================================
+ *
+ * Here's what our counter slice would look like with Redux Toolkit:
+ *
+ * import { createSlice } from '@reduxjs/toolkit';
+ *
+ * const initialState = {
+ *   counter: 0,
+ *   showCounter: true,
+ * };
+ *
+ * const counterSlice = createSlice({
+ *   name: 'counter',        // Slice identifier
+ *   initialState,           // ES6 shorthand for initialState: initialState
+ *   reducers: {
+ *     increment(state) {
+ *       state.counter++;    // "Mutation" is OK here!
+ *     },
+ *     decrement(state) {
+ *       state.counter--;
+ *     },
+ *     increase(state, action) {
+ *       state.counter += action.payload;  // Access payload data
+ *     },
+ *     toggleCounter(state) {
+ *       state.showCounter = !state.showCounter;
+ *     }
+ *   }
+ * });
+ *
+ * ============================================================================
+ * REDUCER METHODS IN createSlice (Lesson 320)
+ * ============================================================================
+ *
+ * METHOD NAMES ARE IMPORTANT (Lesson 320):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "Now here in this object, you can now simply add methods with any names of
+ * your choice, though those names will become important later."
+ *
+ * The method names become:
+ * - Action type identifiers (auto-generated)
+ * - Action creator function names (auto-generated)
+ * - The way you dispatch actions from components
+ *
+ * FOUR METHODS FOR FOUR CASES (Lesson 320):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "And here I'll add an increment method. I will add a decrement method. I will
+ * add an increase method, and I will also add my toggle counter method, let's
+ * say. So for methods because I had four different if cases in my reducer before."
+ *
+ * | Old if-check            | New method name |
+ * |-------------------------|-----------------|
+ * | if (type === 'increment')| increment()    |
+ * | if (type === 'decrement')| decrement()    |
+ * | if (type === 'increase') | increase()     |
+ * | if (type === 'toggle')   | toggleCounter()|
+ *
+ * AUTOMATIC STATE PARAMETER (Lesson 320):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Now, every method here will then automatically receive the latest state.
+ * These methods will be called for you by Redux, and they will receive the
+ * current state."
+ *
+ * // Redux Toolkit automatically passes state:
+ * increment(state) {  // state is current state - automatically provided
+ *   state.counter++;
+ * }
+ *
+ * NO MORE IF CHECKS (Lesson 320):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "So we don't need to write our own if checks anymore instead we'll soon be
+ * able to identify these different reducers and dispatch actions that target
+ * these different reducers. So we now don't have to write our own if checks
+ * anymore which also reduces some boilerplate code we would have to write
+ * otherwise."
+ *
+ * BEFORE (vanilla Redux):
+ * if (action.type === 'increment') { ... }
+ * if (action.type === 'decrement') { ... }
+ * if (action.type === 'increase') { ... }
+ * if (action.type === 'toggle') { ... }
+ * return state;
+ *
+ * AFTER (Redux Toolkit):
+ * Just define methods - Redux Toolkit routes actions automatically!
+ *
+ * ============================================================================
+ * "MUTATING" STATE IN createSlice (Lesson 320)
+ * ============================================================================
+ *
+ * THE BIG CHANGE - MUTATION IS ALLOWED (Lesson 320):
+ * ==================================================
+ * INSTRUCTOR QUOTE:
+ * "Now in these methods here in the reducers map we now also can do something
+ * else than we did before. Now, here we are allowed to mutate the state. So
+ * here we can set state.counter++ for example, for incrementing it."
+ *
+ * // In createSlice - THIS IS OK:
+ * increment(state) {
+ *   state.counter++;  // Direct mutation - ALLOWED!
+ * }
+ *
+ * // In plain Redux - THIS WAS FORBIDDEN:
+ * if (action.type === 'increment') {
+ *   state.counter++;  // WRONG! Mutation!
+ *   return state;
+ * }
+ *
+ * WHY MUTATION IS "ALLOWED" (Lesson 320):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Now this was forbidden before and I emphasized that it is forbidden. I also
+ * did emphasize it because here it seems to be allowed. But the important part
+ * is the word seems."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We still must not manipulate the existing state but the good thing is when
+ * using Redux toolkit and its functions like create slice, we can't accidentally
+ * manipulate the existing state."
+ *
+ * THE MAGIC: IMMER LIBRARY (Lesson 320):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "Because Redux toolkit internally uses another package, called imgur, which
+ * will detect code like this and which will automatically clone the existing
+ * state, create a new state object, keep all the state which we're not editing,
+ * and override the state which we are editing in an immutable way."
+ *
+ * WHAT IMMER DOES BEHIND THE SCENES:
+ * ==================================
+ *
+ * You write:
+ *   increment(state) {
+ *     state.counter++;
+ *   }
+ *
+ * Immer transforms it to:
+ *   increment(state) {
+ *     return {
+ *       ...state,
+ *       counter: state.counter + 1
+ *     };
+ *   }
+ *
+ * You get the easy syntax, Redux gets the immutable update!
+ *
+ * INSTRUCTOR QUOTE:
+ * "So we still have immutable code here even though it doesn't look like it
+ * because of this internally used package and therefore we as a developer
+ * have a much easier time working with Redux because we don't have to create
+ * a copy manually and keep all the code we're not changing, instead, we just
+ * change the code we wanna change and internally it's translated into
+ * immutable code."
+ *
+ * COMPARISON - BEFORE AND AFTER:
+ * ==============================
+ *
+ * VANILLA REDUX (verbose, error-prone):
+ * if (action.type === 'increment') {
+ *   return {
+ *     counter: state.counter + 1,
+ *     showCounter: state.showCounter  // Must copy unchanged properties!
+ *   };
+ * }
+ *
+ * REDUX TOOLKIT (simple, safe):
+ * increment(state) {
+ *   state.counter++;  // Just change what you need - Immer handles the rest
+ * }
+ *
+ * ============================================================================
+ * ACCESSING PAYLOAD IN createSlice (Lesson 320)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And here for increase we now need a payload. We now need extra data. So how
+ * does that work?"
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now when using Redux toolkit we of course, can still have reducers that
+ * listen to actions that have an extra payload, extra data. Because these
+ * were user functions here, don't just receive the state. They also still
+ * do get the action."
+ *
+ * WHEN YOU DON'T NEED PAYLOAD (Lesson 320):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "We just don't need to accept it in the other two reducers because we don't
+ * need to do anything with the action in there."
+ *
+ * // No payload needed - just accept state:
+ * increment(state) {
+ *   state.counter++;
+ * }
+ *
+ * decrement(state) {
+ *   state.counter--;
+ * }
+ *
+ * WHEN YOU NEED PAYLOAD (Lesson 320):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "But now here if we need some data that's attached to the action, then we
+ * can still accept it as a parameter and use it in the reducer function in
+ * the reducer method."
+ *
+ * // Need payload - accept both state and action:
+ * increase(state, action) {
+ *   state.counter += action.payload;  // Payload is accessed via action.payload
+ * }
+ *
+ * NOTE: In Redux Toolkit, extra data is ALWAYS on action.payload
+ * (standardized convention), not action.amount or custom property names.
+ *
+ * INSTRUCTOR QUOTE:
+ * "So they are for now I can set state counter equal to state counter plus
+ * action.amount. So basically what I did down here as well. Now again, in
+ * this mutable looking way, which isn't really mutating the state."
+ *
+ * TOGGLE COUNTER EXAMPLE (Lesson 320):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "Now for a toggle counter we don't need the actual payload here we just get
+ * the state, and set state.show counter equal to not state.show counter to
+ * invert this value."
+ *
+ * toggleCounter(state) {
+ *   state.showCounter = !state.showCounter;  // Simple inversion
+ * }
+ *
+ * ============================================================================
+ * COMPLETE createSlice EXAMPLE (Lesson 320)
+ * ============================================================================
+ *
+ * Here's our full counter slice with Redux Toolkit:
+ *
+ * import { createSlice } from '@reduxjs/toolkit';
+ *
+ * const initialState = {
+ *   counter: 0,
+ *   showCounter: true,
+ * };
+ *
+ * const counterSlice = createSlice({
+ *   name: 'counter',
+ *   initialState,
+ *   reducers: {
+ *     increment(state) {
+ *       state.counter++;              // Immer makes this immutable
+ *     },
+ *     decrement(state) {
+ *       state.counter--;              // Immer makes this immutable
+ *     },
+ *     increase(state, action) {
+ *       state.counter += action.payload;  // Access payload, Immer handles rest
+ *     },
+ *     toggleCounter(state) {
+ *       state.showCounter = !state.showCounter;  // Simple boolean flip
+ *     }
+ *   }
+ * });
+ *
+ * INSTRUCTOR QUOTE:
+ * "So now we created this slice and writing that code is certainly quite
+ * convenient and shorter than what we had to do down there."
+ *
+ * COMPARISON - LINES OF CODE:
+ * ==========================
+ *
+ * VANILLA REDUX REDUCER: ~40 lines
+ * - Multiple if statements
+ * - Manual state copying in each case
+ * - Return statements everywhere
+ * - Default case for unknown actions
+ *
+ * REDUX TOOLKIT SLICE: ~15 lines
+ * - Method names = action types
+ * - "Mutations" that are actually immutable
+ * - No return statements needed (unless you want to)
+ * - Cleaner, more readable code
+ *
+ * ============================================================================
+ * WHAT'S NEXT? (Lesson 320)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But how do we now make our store aware of that slice? How do we use that
+ * slice? And how do we then dispatch actions against this slice?"
+ *
+ * Questions for the next lesson:
+ * 1. How to connect the slice to the Redux store?
+ * 2. How to get the reducer from the slice?
+ * 3. How to get action creators from the slice?
+ * 4. How to dispatch these auto-generated actions?
+ *
+ * KEY TAKEAWAYS (Lesson 320):
+ * ==========================
+ * 1. Install Redux Toolkit: npm install @reduxjs/toolkit
+ * 2. Redux Toolkit includes Redux - can remove plain 'redux' package
+ * 3. createSlice creates reducer + actions + initial state together
+ * 4. Each slice needs: name, initialState, reducers object
+ * 5. Reducer methods automatically receive current state
+ * 6. You CAN "mutate" state in createSlice - Immer handles immutability
+ * 7. Access payload via action.payload (standardized property name)
+ * 8. Method names become action type identifiers automatically
+ * 9. No more manual if/else checks - much cleaner code!
+ *
  * NEXT STEPS (Upcoming Lessons):
  * ==============================
- * - Installing Redux Toolkit
- * - Using createSlice to define state, reducers, and actions together
- * - Using configureStore for simpler store setup
- * - Automatic immutable updates with built-in Immer
+ * - Connecting the slice to the store with configureStore
+ * - Extracting and exporting action creators from the slice
+ * - Dispatching slice actions from components
+ * - Working with multiple slices
  */

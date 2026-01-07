@@ -79,6 +79,18 @@
  * all three problems (action types, large reducers, immutability) and
  * their solutions. This file focuses on the component-side action type issue.
  *
+ * LESSON 320 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Installing Redux Toolkit: npm install @reduxjs/toolkit
+ * 2. Redux Toolkit includes Redux (can uninstall plain 'redux')
+ * 3. createSlice function for defining reducers
+ * 4. Slice reducers can "mutate" state (Immer handles immutability)
+ * 5. Action payload accessed via action.payload (standardized)
+ *
+ * NOTE: Lesson 320 is primarily about store/index.js setup. Component
+ * dispatching will change in upcoming lessons - instead of string types,
+ * we'll dispatch auto-generated action creators from the slice.
+ *
  * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
  * =====================================================
  * INSTRUCTOR QUOTE:
@@ -1079,10 +1091,129 @@ export default Counter;
  * 4. Redux Toolkit is developed by the same team as Redux
  * 5. Optional but highly recommended for production apps
  *
+ * ============================================================================
+ * LESSON 320 - REDUX TOOLKIT createSlice (COMPONENT PREVIEW)
+ * ============================================================================
+ *
+ * WHAT CHANGES FOR COMPONENTS? (Lesson 320):
+ * ==========================================
+ * Lesson 320 focuses on the STORE setup with createSlice. Components will
+ * change in the NEXT lesson, but here's a preview of what's coming:
+ *
+ * CURRENT APPROACH (This file):
+ * ============================
+ * dispatch({ type: 'increment' });
+ * dispatch({ type: 'decrement' });
+ * dispatch({ type: 'increase', amount: 10 });
+ * dispatch({ type: 'toggle' });
+ *
+ * Problems:
+ * - String types prone to typos
+ * - No autocomplete
+ * - Payload property names vary (amount, value, etc.)
+ *
+ * REDUX TOOLKIT APPROACH (Coming soon):
+ * =====================================
+ * dispatch(counterActions.increment());
+ * dispatch(counterActions.decrement());
+ * dispatch(counterActions.increase(10));  // Payload becomes action.payload
+ * dispatch(counterActions.toggleCounter());
+ *
+ * Benefits:
+ * - No strings to typo
+ * - Full IDE autocomplete
+ * - Standardized payload property (action.payload)
+ * - Type-safe with TypeScript
+ *
+ * HOW createSlice ENABLES THIS (Lesson 320):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "Now here in this object, you can now simply add methods with any names of
+ * your choice, though those names will become important later."
+ *
+ * When you create a slice:
+ *
+ * const counterSlice = createSlice({
+ *   name: 'counter',
+ *   initialState,
+ *   reducers: {
+ *     increment(state) { state.counter++; },
+ *     decrement(state) { state.counter--; },
+ *     increase(state, action) { state.counter += action.payload; },
+ *     toggleCounter(state) { state.showCounter = !state.showCounter; }
+ *   }
+ * });
+ *
+ * Redux Toolkit AUTO-GENERATES action creators:
+ *   counterSlice.actions.increment()    // Returns { type: 'counter/increment' }
+ *   counterSlice.actions.decrement()    // Returns { type: 'counter/decrement' }
+ *   counterSlice.actions.increase(10)   // Returns { type: 'counter/increase', payload: 10 }
+ *   counterSlice.actions.toggleCounter() // Returns { type: 'counter/toggleCounter' }
+ *
+ * PAYLOAD STANDARDIZATION (Lesson 320):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "So they are for now I can set state counter equal to state counter plus
+ * action.amount."
+ *
+ * In Redux Toolkit, ALL extra data goes to action.payload:
+ *
+ * // Dispatching:
+ * dispatch(counterActions.increase(10));
+ * dispatch(counterActions.increase(5));
+ * dispatch(counterActions.increase(100));
+ *
+ * // In reducer:
+ * increase(state, action) {
+ *   state.counter += action.payload;  // Always action.payload, not action.amount
+ * }
+ *
+ * This standardization means:
+ * - Consistent property name across all actions
+ * - No need to remember if it's action.amount, action.value, etc.
+ * - Better TypeScript support
+ *
+ * IMMER AND COMPONENTS (Lesson 320):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Because Redux toolkit internally uses another package, called imgur, which
+ * will detect code like this and which will automatically clone the existing
+ * state, create a new state object."
+ *
+ * Components don't directly use Immer, but they benefit from it:
+ * - Reducers are simpler to write (store/index.js)
+ * - Less risk of bugs from incorrect state updates
+ * - useSelector still works the same way
+ * - Components re-render correctly because state is truly immutable
+ *
+ * WHAT'S COMING NEXT:
+ * ==================
+ * 1. How to extract action creators from the slice
+ * 2. How to export them for use in components
+ * 3. How to dispatch them instead of { type: '...' }
+ * 4. How to connect the slice to the store with configureStore
+ *
+ * SEE store/index.js FOR COMPLETE LESSON 320 COVERAGE:
+ * ====================================================
+ * - Installing Redux Toolkit
+ * - createSlice configuration (name, initialState, reducers)
+ * - "Mutating" state with Immer
+ * - Accessing action.payload
+ * - Complete createSlice example code
+ *
+ * KEY TAKEAWAYS (Lesson 320):
+ * ==========================
+ * 1. Redux Toolkit is installed: npm install @reduxjs/toolkit
+ * 2. createSlice bundles: initial state + reducer + actions
+ * 3. Reducer methods can "mutate" state - Immer makes it immutable
+ * 4. Payload is accessed via action.payload (standardized)
+ * 5. Method names become action creator names
+ * 6. Components will soon dispatch action creators, not string types
+ *
  * NEXT STEPS (Upcoming Lessons):
  * ==============================
- * - Installing Redux Toolkit
- * - createSlice for actions + reducers in one place
- * - configureStore for simpler store setup
- * - Dispatching auto-generated action creators
+ * - configureStore to connect slices to the Redux store
+ * - Exporting action creators from the slice
+ * - Updating component dispatch calls to use action creators
+ * - Working with multiple slices
  */
