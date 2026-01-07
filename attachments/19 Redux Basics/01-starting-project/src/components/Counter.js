@@ -91,6 +91,20 @@
  * dispatching will change in upcoming lessons - instead of string types,
  * we'll dispatch auto-generated action creators from the slice.
  *
+ * LESSON 321 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. createSlice returns an object with .reducer and .actions properties
+ * 2. Accessing the reducer: counterSlice.reducer
+ * 3. configureStore replaces createStore for Redux Toolkit
+ * 4. configureStore takes a config object with 'reducer' property
+ * 5. Single slice: reducer: counterSlice.reducer
+ * 6. Multiple slices: reducer: { counter: counterSlice.reducer, ... }
+ * 7. State access changes with multiple slices (state.counter.counter)
+ *
+ * NOTE: Lesson 321 is primarily about store configuration. The next lesson
+ * will cover how components dispatch actions using slice action creators.
+ * See store/index.js for comprehensive Lesson 321 documentation.
+ *
  * WHY LEARN ABOUT CLASS-BASED COMPONENTS? (Lesson 315)
  * =====================================================
  * INSTRUCTOR QUOTE:
@@ -1210,10 +1224,190 @@ export default Counter;
  * 5. Method names become action creator names
  * 6. Components will soon dispatch action creators, not string types
  *
- * NEXT STEPS (Upcoming Lessons):
- * ==============================
+ * NEXT STEPS (Lesson 320 Preview):
+ * =================================
  * - configureStore to connect slices to the Redux store
  * - Exporting action creators from the slice
  * - Updating component dispatch calls to use action creators
+ * - Working with multiple slices
+ *
+ * ============================================================================
+ * LESSON 321 - configureStore AND COMPONENT STATE ACCESS
+ * ============================================================================
+ *
+ * WHAT LESSON 321 COVERS (In store/index.js):
+ * ===========================================
+ * Lesson 321 focuses on the STORE setup, specifically:
+ * - What createSlice returns (object with .reducer and .actions)
+ * - configureStore replaces createStore
+ * - Passing slice reducers to configureStore
+ * - Single vs multiple slice configurations
+ *
+ * HOW IT AFFECTS COMPONENTS (Lesson 321):
+ * =======================================
+ * The main change for components comes from how configureStore is set up:
+ *
+ * SINGLE SLICE CONFIGURATION:
+ * ===========================
+ * In store/index.js:
+ *   const store = configureStore({
+ *     reducer: counterSlice.reducer
+ *   });
+ *
+ * In component (UNCHANGED):
+ *   const counter = useSelector(state => state.counter);
+ *   const show = useSelector(state => state.showCounter);
+ *
+ * The state shape is exactly what's in initialState:
+ *   { counter: 0, showCounter: true }
+ *
+ * MULTIPLE SLICES CONFIGURATION:
+ * ==============================
+ * In store/index.js:
+ *   const store = configureStore({
+ *     reducer: {
+ *       counter: counterSlice.reducer,
+ *       auth: authSlice.reducer
+ *     }
+ *   });
+ *
+ * In component (MUST CHANGE):
+ *   const counter = useSelector(state => state.counter.counter);  // Note: nested!
+ *   const show = useSelector(state => state.counter.showCounter);  // Note: nested!
+ *   const isLoggedIn = useSelector(state => state.auth.isLoggedIn);
+ *
+ * The state shape becomes nested:
+ *   {
+ *     counter: { counter: 0, showCounter: true },
+ *     auth: { isLoggedIn: false, user: null }
+ *   }
+ *
+ * WHY STATE ACCESS CHANGES (Lesson 321):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "And in this object, we can then set up any keys of our choice. And the
+ * values of those keys then would be different reducer functions."
+ *
+ * The key you use in the reducer object becomes a top-level property in state:
+ *
+ * reducer: {
+ *   counter: ...  // Creates state.counter
+ *   auth: ...     // Creates state.auth
+ *   cart: ...     // Creates state.cart
+ * }
+ *
+ * So the counter slice's state (which includes { counter: 0, showCounter: true })
+ * is nested under state.counter, making it state.counter.counter for the value.
+ *
+ * CURRENT CODE VS FUTURE CODE (Lesson 321):
+ * =========================================
+ *
+ * CURRENT (This file - single slice, direct reducer):
+ * ---------------------------------------------------
+ * // Store setup:
+ * const store = configureStore({ reducer: counterSlice.reducer });
+ *
+ * // Component:
+ * const counter = useSelector(state => state.counter);
+ * dispatch({ type: 'increment' });
+ *
+ * FUTURE (Multiple slices - reducer map):
+ * ---------------------------------------
+ * // Store setup:
+ * const store = configureStore({
+ *   reducer: { counter: counterSlice.reducer }
+ * });
+ *
+ * // Component:
+ * const counter = useSelector(state => state.counter.counter);  // Nested!
+ * dispatch(counterActions.increment());  // Using action creator!
+ *
+ * THE BIG QUESTION: DISPATCHING (Lesson 321):
+ * ===========================================
+ * INSTRUCTOR QUOTE:
+ * "Now, how do we dispatch these actions we created here in these reducer
+ * methods? How do we reach those methods from inside our counter component?"
+ *
+ * This will be answered in the NEXT LESSON. Currently, our dispatch calls:
+ *
+ *   dispatch({ type: 'increment' });
+ *   dispatch({ type: 'decrement' });
+ *   dispatch({ type: 'increase', amount: 10 });
+ *   dispatch({ type: 'toggle' });
+ *
+ * Will become (preview):
+ *
+ *   dispatch(counterActions.increment());
+ *   dispatch(counterActions.decrement());
+ *   dispatch(counterActions.increase(10));  // Payload passed as argument!
+ *   dispatch(counterActions.toggleCounter());
+ *
+ * Where counterActions comes from counterSlice.actions
+ *
+ * PREVIEW: ACTION CREATORS (Lesson 321):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "For this, we should first of all, understand what create slice gives us.
+ * Create slice returns an object."
+ *
+ * counterSlice = {
+ *   name: 'counter',
+ *   reducer: [the combined reducer function],
+ *   actions: {
+ *     increment: [action creator function],
+ *     decrement: [action creator function],
+ *     increase: [action creator function],
+ *     toggleCounter: [action creator function]
+ *   }
+ * };
+ *
+ * Calling counterSlice.actions.increment() returns:
+ *   { type: 'counter/increment' }
+ *
+ * Calling counterSlice.actions.increase(10) returns:
+ *   { type: 'counter/increase', payload: 10 }
+ *
+ * BENEFITS FOR COMPONENTS (Lesson 321):
+ * =====================================
+ *
+ * | Aspect                   | Current Approach         | Redux Toolkit Approach      |
+ * |--------------------------|--------------------------|------------------------------|
+ * | Action type              | String: 'increment'      | Auto-generated: 'counter/increment' |
+ * | Typo risk                | High (silent failure)    | None (IDE autocomplete)     |
+ * | Payload property         | Custom: action.amount    | Standard: action.payload    |
+ * | Dispatching              | dispatch({ type: '...' })| dispatch(actions.method()) |
+ * | IDE support              | No autocomplete          | Full autocomplete           |
+ *
+ * KEY TAKEAWAYS (Lesson 321 - Component Perspective):
+ * ===================================================
+ *
+ * 1. useSelector and useDispatch hooks STILL WORK the same way
+ *
+ * 2. State access MAY change depending on store configuration:
+ *    - Single slice: state.counter (direct)
+ *    - Multiple slices: state.counter.counter (nested)
+ *
+ * 3. The current dispatch calls with string types still work, but will
+ *    be replaced with action creators in the next lesson
+ *
+ * 4. No component code changes are required for Lesson 321 - the changes
+ *    are all in store/index.js
+ *
+ * SEE store/index.js FOR COMPLETE LESSON 321 COVERAGE:
+ * ===================================================
+ * - What createSlice returns
+ * - Accessing counterSlice.reducer
+ * - configureStore vs createStore comparison
+ * - Configuration object structure
+ * - Single slice vs multiple slice configurations
+ * - Automatic reducer combining
+ * - Complete configureStore example code
+ *
+ * NEXT STEPS (Upcoming Lessons):
+ * ==============================
+ * - Accessing counterSlice.actions for action creators
+ * - Exporting action creators from the store file
+ * - Updating THIS component's dispatch calls to use action creators
+ * - The standardized action.payload property
  * - Working with multiple slices
  */

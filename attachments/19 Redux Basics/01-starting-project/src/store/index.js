@@ -64,6 +64,17 @@
  * 8. Accessing action.payload for extra data in reducer methods
  * 9. No more manual if/else checks for action types
  *
+ * LESSON 321 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. createSlice returns an object with useful properties
+ * 2. Accessing the reducer: counterSlice.reducer
+ * 3. configureStore replaces createStore (Redux Toolkit way)
+ * 4. configureStore takes a configuration object with 'reducer' property
+ * 5. Single slice: pass slice.reducer directly to the reducer property
+ * 6. Multiple slices: pass an object map of reducers
+ * 7. configureStore automatically calls combineReducers behind the scenes
+ * 8. Action dispatching changes coming in next lesson
+ *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
  * INSTRUCTOR QUOTE:
@@ -405,7 +416,7 @@ const counterReducer = (state = initialState, action) => {
    */
   if (action.type === 'increment') {
     return {
-      counter: state.counter + 1,
+      counter: state.counter + 1, // Never mutate the existing state, even if you can
       showCounter: state.showCounter, // MUST include! Redux replaces, doesn't merge
     };
   }
@@ -1781,10 +1792,390 @@ export default store;
  * 8. Method names become action type identifiers automatically
  * 9. No more manual if/else checks - much cleaner code!
  *
- * NEXT STEPS (Upcoming Lessons):
- * ==============================
+ * NEXT STEPS (Lesson 320 Preview):
+ * =================================
  * - Connecting the slice to the store with configureStore
  * - Extracting and exporting action creators from the slice
  * - Dispatching slice actions from components
  * - Working with multiple slices
+ *
+ * ============================================================================
+ * LESSON 321 - CONNECTING SLICES TO THE STORE (configureStore)
+ * ============================================================================
+ *
+ * WHAT createSlice RETURNS (Lesson 321):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Now we're doing that. But how do we now make our store aware of that slice?
+ * How do we use that slice? And how do we then dispatch actions against this slice?"
+ *
+ * INSTRUCTOR QUOTE:
+ * "For this, we should first of all, understand what create slice gives us.
+ * Create slice returns an object. And if we store that object in a constant
+ * like counter slice here, we can then access different properties of that
+ * object."
+ *
+ * What createSlice returns:
+ * ========================
+ * const counterSlice = createSlice({ ... });
+ *
+ * counterSlice is an object containing:
+ * - counterSlice.name        // The slice name ('counter')
+ * - counterSlice.reducer     // The reducer function (important!)
+ * - counterSlice.actions     // Object of action creators (next lesson)
+ * - counterSlice.getInitialState() // Function to get initial state
+ *
+ * ============================================================================
+ * ACCESSING THE REDUCER (Lesson 321)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We, for example, can access the reducer, which was created based on this
+ * reducer's map we passed to create slice."
+ *
+ * When you define methods in the reducers object:
+ * createSlice({
+ *   reducers: {
+ *     increment(state) { ... },
+ *     decrement(state) { ... }
+ *   }
+ * });
+ *
+ * Redux Toolkit creates a single reducer function that handles all these
+ * methods. You access it via: counterSlice.reducer
+ *
+ * INSTRUCTOR QUOTE:
+ * "So under the reducer property, we get a reducer that was automatically
+ * created for us by create slice, and that will combine all these reducer
+ * methods we defined here."
+ *
+ * What counterSlice.reducer does:
+ * - It's a standard Redux reducer function: (state, action) => newState
+ * - It automatically handles all the action types for your slice
+ * - It uses Immer internally for immutable updates
+ * - It's ready to be used with the Redux store
+ *
+ * ============================================================================
+ * configureStore vs createStore (Lesson 321)
+ * ============================================================================
+ *
+ * WHY NOT createStore? (Lesson 321):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Now for that we could use this counter slice reducer and pass it to create
+ * store here but we'll use another import from Redux toolkit, which might be
+ * a bit more convenient later."
+ *
+ * THE NEW APPROACH: configureStore (Lesson 321):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "So we'll use a function which you can import from Redux toolkit called
+ * configure store. And we can now use this configure store function instead
+ * of create store."
+ *
+ * Import syntax:
+ *   import { createSlice, configureStore } from '@reduxjs/toolkit';
+ *
+ * KEY DIFFERENCES:
+ * ================
+ *
+ * | Feature                    | createStore           | configureStore          |
+ * |----------------------------|-----------------------|-------------------------|
+ * | Package                    | 'redux'               | '@reduxjs/toolkit'      |
+ * | Argument type              | reducer function      | configuration object    |
+ * | Multiple reducers          | Manual combineReducers| Automatic merging       |
+ * | Redux DevTools             | Manual setup          | Enabled by default      |
+ * | Middleware                 | Manual applyMiddleware| Automatic (thunk, etc.) |
+ * | Recommended                | Legacy                | Modern / Standard       |
+ *
+ * ============================================================================
+ * configureStore CONFIGURATION OBJECT (Lesson 321)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, the big difference is that create store wants a reducer function as
+ * a parameter. Configure store wants a configuration object."
+ *
+ * Basic structure:
+ * ================
+ * const store = configureStore({
+ *   reducer: // The reducer(s) for the store
+ * });
+ *
+ * THE "reducer" PROPERTY (Lesson 321):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "And in this configuration object, we then set a reducer property. And this
+ * is then the reducer that will be used by that store, by that global store."
+ *
+ * Note: The property is called "reducer" (singular), not "reducers" (plural),
+ * even though you can pass multiple reducers!
+ *
+ * ============================================================================
+ * SINGLE SLICE CONFIGURATION (Lesson 321)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now here, if we just have one slice, if we just have this global state with
+ * one slice, we can set this to counter slice.reducer as a value. So we point
+ * at that reducer that's created for this slice."
+ *
+ * Example - Single Slice:
+ * =======================
+ * const counterSlice = createSlice({ ... });
+ *
+ * const store = configureStore({
+ *   reducer: counterSlice.reducer  // Direct assignment
+ * });
+ *
+ * This is the simplest case:
+ * - One slice managing all the state
+ * - counterSlice.reducer becomes the root reducer
+ * - State shape: { counter: 0, showCounter: true }
+ *
+ * ============================================================================
+ * MULTIPLE SLICES CONFIGURATION (Lesson 321)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now alternatively, if we have a bigger application with multiple state
+ * slices, multiple different pieces of state which are not directly related,
+ * and we therefore have multiple slices, we could also set this to an object
+ * instead of a single reducer, we could set this to an object."
+ *
+ * Example - Multiple Slices:
+ * =========================
+ * const counterSlice = createSlice({ name: 'counter', ... });
+ * const authSlice = createSlice({ name: 'auth', ... });
+ * const cartSlice = createSlice({ name: 'cart', ... });
+ *
+ * const store = configureStore({
+ *   reducer: {
+ *     counter: counterSlice.reducer,
+ *     auth: authSlice.reducer,
+ *     cart: cartSlice.reducer
+ *   }
+ * });
+ *
+ * MAP OF REDUCERS STRUCTURE (Lesson 321):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "And in this object, we can then set up any keys of our choice. And the
+ * values of those keys then would be different reducer functions."
+ *
+ * The keys you choose become the top-level state properties:
+ * {
+ *   counter: counterSlice.reducer,  // state.counter
+ *   auth: authSlice.reducer,        // state.auth
+ *   cart: cartSlice.reducer         // state.cart
+ * }
+ *
+ * This results in state shaped like:
+ * {
+ *   counter: { counter: 0, showCounter: true },
+ *   auth: { isLoggedIn: false, user: null },
+ *   cart: { items: [], totalQuantity: 0 }
+ * }
+ *
+ * AUTOMATIC COMBINER (Lesson 321):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "And behind the scenes configure store will merge all those reducers into
+ * one big reducer. So that is really convenient."
+ *
+ * With createStore, you'd have to manually use combineReducers:
+ *
+ * // OLD WAY (without Redux Toolkit):
+ * import { createStore, combineReducers } from 'redux';
+ *
+ * const rootReducer = combineReducers({
+ *   counter: counterReducer,
+ *   auth: authReducer,
+ *   cart: cartReducer
+ * });
+ *
+ * const store = createStore(rootReducer);
+ *
+ * // NEW WAY (with Redux Toolkit):
+ * const store = configureStore({
+ *   reducer: {
+ *     counter: counterSlice.reducer,
+ *     auth: authSlice.reducer,
+ *     cart: cartSlice.reducer
+ *   }
+ * });
+ *
+ * configureStore does the combining automatically!
+ *
+ * ============================================================================
+ * SINGLE SLICE VS MULTIPLE SLICES (Lesson 321)
+ * ============================================================================
+ *
+ * FOR THIS DEMO (Lesson 321):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "So in a bigger application, you would use this approach, but here we just
+ * have one slice. So therefore we can set reducer to counter slice.reducer
+ * and use this simple approach."
+ *
+ * | Scenario              | Configuration Style               |
+ * |-----------------------|-----------------------------------|
+ * | Single slice app      | reducer: counterSlice.reducer     |
+ * | Multi-slice app       | reducer: { key: slice.reducer }   |
+ *
+ * ============================================================================
+ * HOW configureStore CHANGES STATE ACCESS (Lesson 321)
+ * ============================================================================
+ *
+ * SINGLE SLICE (Direct):
+ * ======================
+ * configureStore({ reducer: counterSlice.reducer });
+ *
+ * State access in component:
+ *   useSelector(state => state.counter)      // Direct access
+ *   useSelector(state => state.showCounter)  // Direct access
+ *
+ * MULTIPLE SLICES (Nested):
+ * =========================
+ * configureStore({
+ *   reducer: {
+ *     counter: counterSlice.reducer,
+ *     auth: authSlice.reducer
+ *   }
+ * });
+ *
+ * State access in component:
+ *   useSelector(state => state.counter.counter)      // Nested under key
+ *   useSelector(state => state.counter.showCounter)  // Nested under key
+ *   useSelector(state => state.auth.isLoggedIn)      // Different slice
+ *
+ * Note: When using the object syntax, your slice state is nested under
+ * the key you define in the reducer map.
+ *
+ * ============================================================================
+ * THE BIG QUESTION: HOW TO DISPATCH? (Lesson 321)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So now we got a store based on our counter slice. But now what's still
+ * missing is the part where we dispatch actions."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, how do we dispatch these actions we created here in these reducer
+ * methods? How do we reach those methods from inside our counter component?
+ * How do we dispatch actions that trigger these different reducer methods here?"
+ *
+ * This will be covered in the NEXT LESSON:
+ * - Extracting action creators from the slice
+ * - Exporting them from the store file
+ * - Importing and using them in components
+ * - The new dispatch pattern with auto-generated action creators
+ *
+ * PREVIEW (Lesson 321):
+ * =====================
+ * Instead of:
+ *   dispatch({ type: 'increment' })
+ *
+ * You'll write:
+ *   dispatch(counterActions.increment())
+ *
+ * Where counterActions comes from:
+ *   counterSlice.actions
+ *
+ * ============================================================================
+ * COMPLETE configureStore EXAMPLE (Lesson 321)
+ * ============================================================================
+ *
+ * Here's what our complete store setup would look like with Redux Toolkit:
+ *
+ * import { createSlice, configureStore } from '@reduxjs/toolkit';
+ *
+ * const initialState = {
+ *   counter: 0,
+ *   showCounter: true,
+ * };
+ *
+ * const counterSlice = createSlice({
+ *   name: 'counter',
+ *   initialState,
+ *   reducers: {
+ *     increment(state) {
+ *       state.counter++;
+ *     },
+ *     decrement(state) {
+ *       state.counter--;
+ *     },
+ *     increase(state, action) {
+ *       state.counter += action.payload;
+ *     },
+ *     toggleCounter(state) {
+ *       state.showCounter = !state.showCounter;
+ *     }
+ *   }
+ * });
+ *
+ * // Create store with configureStore
+ * const store = configureStore({
+ *   reducer: counterSlice.reducer  // Single slice, direct assignment
+ * });
+ *
+ * export default store;
+ *
+ * // Note: Action exports will be added in next lesson
+ *
+ * ============================================================================
+ * WHY configureStore OVER createStore? (Lesson 321)
+ * ============================================================================
+ *
+ * 1. SIMPLER SYNTAX:
+ *    - No need to import and use combineReducers
+ *    - Just pass an object of reducers, it combines automatically
+ *
+ * 2. BETTER DEFAULTS:
+ *    - Redux DevTools extension enabled by default
+ *    - Useful middleware included (redux-thunk for async actions)
+ *    - Development checks for common mistakes
+ *
+ * 3. DESIGNED FOR SLICES:
+ *    - Works seamlessly with createSlice
+ *    - Pass slice.reducer directly
+ *    - Single consistent pattern
+ *
+ * 4. FUTURE-PROOF:
+ *    - This is the recommended approach by Redux team
+ *    - createStore is considered legacy
+ *    - Better TypeScript support
+ *
+ * ============================================================================
+ * KEY TAKEAWAYS (Lesson 321)
+ * ============================================================================
+ *
+ * 1. createSlice returns an object with .reducer and .actions properties
+ *
+ * 2. Access the reducer for your slice via: counterSlice.reducer
+ *
+ * 3. configureStore replaces createStore (Redux Toolkit way):
+ *    - Import: import { configureStore } from '@reduxjs/toolkit';
+ *    - Takes a configuration object, not a function
+ *
+ * 4. The 'reducer' property can be:
+ *    - A single reducer: reducer: counterSlice.reducer
+ *    - An object of reducers: reducer: { counter: counterSlice.reducer }
+ *
+ * 5. Multiple slices: configureStore automatically combines them
+ *    - No need for manual combineReducers
+ *    - Keys in the object become state property names
+ *
+ * 6. State shape depends on configuration:
+ *    - Single slice: state.counter (direct)
+ *    - Multiple slices: state.counter.counter (nested under key)
+ *
+ * 7. COMING NEXT: How to dispatch actions using slice action creators
+ *
+ * NEXT STEPS (Upcoming Lessons):
+ * ==============================
+ * - Accessing counterSlice.actions for auto-generated action creators
+ * - Exporting action creators from the store file
+ * - Updating components to dispatch action creators instead of strings
+ * - The standardized action.payload property
  */
