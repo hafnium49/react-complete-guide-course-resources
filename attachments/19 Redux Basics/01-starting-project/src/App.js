@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * APP COMPONENT (Lesson 323)
+ * APP COMPONENT (Lesson 323 & 324)
  * ============================================================================
  *
  * ADDING MORE COMPONENTS TO THE APP (Lesson 323):
@@ -28,6 +28,7 @@
  * =======================
  * - Header: Navigation bar (shows different items based on auth state)
  * - Auth: Login form (will dispatch login action)
+ * - UserProfile: Shown when user is authenticated
  * - Counter: The counter we've been building (still works independently)
  *
  * WHAT WE'RE GOING TO BUILD (Lesson 323):
@@ -67,30 +68,97 @@
  * | UserProfile  | Show user info (only when authenticated)      |
  * | App          | Conditionally render Auth OR UserProfile      |
  *
- * NEXT STEPS (Practice):
- * ======================
+ * ============================================================================
+ * USING AUTH STATE IN APP COMPONENT (Lesson 324)
+ * ============================================================================
+ *
  * INSTRUCTOR QUOTE:
  * "So now we added this authSlice. Let's now use it in our different components
  * and of course, definitely feel free to try this on your own first, tap into
  * the store and use the auth state to conditionally show the Auth component or
  * the UserProfile component in App and in the Header to conditionally show
  * these items or not show them."
+ *
+ * READING AUTH STATE WITH useSelector (Lesson 324):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "Here in App.js... we should also import the useSelector hook and use that
+ * to tap into our Redux store and to get access to our authentication state."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And then we can add a new constant isAuth for example or isAuthenticated and
+ * use useSelector here and get access to the state and then get the auth part
+ * of the state, so state.auth and then the isAuthenticated value."
+ *
+ * Why state.auth.isAuthenticated?
+ * - We're using a reducer map in configureStore:
+ *   { counter: counterSlice.reducer, auth: authSlice.reducer }
+ * - So auth state is accessed via state.auth
+ * - The isAuthenticated property comes from initialAuthState
+ *
+ * CONDITIONAL RENDERING BASED ON AUTH (Lesson 324):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "And now we can use isAuth down there in our JSX code where we render the
+ * Auth component to render the Auth component if we're not authenticated yet
+ * or render the UserProfile component if we are authenticated."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here we could check if not isAuth, so we're not authenticated, then
+ * render Auth, else render the UserProfile. And therefore, in here I want
+ * to import from UserProfile, I want to import the UserProfile component."
+ *
+ * Pattern: {!isAuth ? <Auth /> : <UserProfile />}
+ * - If NOT authenticated: show login form (Auth)
+ * - If authenticated: show user profile (UserProfile)
  */
 import { Fragment } from 'react';
 
 /**
- * IMPORTING ADDITIONAL COMPONENTS (Lesson 323):
- * =============================================
+ * IMPORTING useSelector FOR AUTH STATE (Lesson 324):
+ * ==================================================
+ * useSelector allows us to read from the Redux store.
+ * Here we use it to check if the user is authenticated.
+ */
+import { useSelector } from 'react-redux';
+
+/**
+ * IMPORTING ADDITIONAL COMPONENTS (Lesson 323 & 324):
+ * ===================================================
  * INSTRUCTOR QUOTE:
  * "Let's also add our Header component here. And for this, we need to import
  * Header from ./components/Header. And let's also add the Auth component here.
  * And for this import Auth from ./components/Auth."
+ *
+ * INSTRUCTOR QUOTE (Lesson 324):
+ * "And therefore, in here I want to import from UserProfile, I want to import
+ * the UserProfile component."
  */
 import Header from './components/Header';
 import Auth from './components/Auth';
+import UserProfile from './components/UserProfile';
 import Counter from './components/Counter';
 
 function App() {
+  /**
+   * ACCESSING AUTH STATE (Lesson 324):
+   * ==================================
+   * INSTRUCTOR QUOTE:
+   * "And then we can add a new constant isAuth for example or isAuthenticated
+   * and use useSelector here and get access to the state and then get the auth
+   * part of the state, so state.auth and then the isAuthenticated value."
+   *
+   * STATE STRUCTURE:
+   * ================
+   * state = {
+   *   counter: { counter: 0, showCounter: true },  // from counterSlice
+   *   auth: { isAuthenticated: false }              // from authSlice
+   * }
+   *
+   * We access state.auth.isAuthenticated to check login status.
+   */
+  const isAuth = useSelector((state) => state.auth.isAuthenticated);
+
   return (
     /**
      * USING FRAGMENT TO WRAP MULTIPLE ELEMENTS (Lesson 323):
@@ -100,12 +168,25 @@ function App() {
      *
      * Components rendered:
      * - Header: Navigation bar at the top
-     * - Auth: Login form (will be conditionally swapped with UserProfile later)
+     * - Auth OR UserProfile: Conditionally rendered based on auth state
      * - Counter: Our Redux counter demo (still works with the new slice structure)
      */
     <Fragment>
       <Header />
-      <Auth />
+      {/**
+       * CONDITIONAL RENDERING (Lesson 324):
+       * ===================================
+       * INSTRUCTOR QUOTE:
+       * "So here we could check if not isAuth, so we're not authenticated,
+       * then render Auth, else render the UserProfile."
+       *
+       * - !isAuth (not authenticated) -> Show Auth (login form)
+       * - isAuth (authenticated) -> Show UserProfile
+       *
+       * This is a ternary expression used for conditional rendering:
+       * condition ? valueIfTrue : valueIfFalse
+       */}
+      {!isAuth ? <Auth /> : <UserProfile />}
       <Counter />
     </Fragment>
   );
