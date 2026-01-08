@@ -51,13 +51,31 @@
 import { useDispatch } from 'react-redux';
 
 /**
- * IMPORTING authActions (Lesson 324):
- * ===================================
+ * ============================================================================
+ * IMPORTING authActions (Lessons 324 & 325)
+ * ============================================================================
+ *
  * authActions contains the auto-generated action creators from authSlice:
  * - authActions.login() - sets isAuthenticated to true
  * - authActions.logout() - sets isAuthenticated to false
+ *
+ * UPDATED IMPORT PATH (Lesson 325):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "In auth JS, we need to import auth the actions from the auth file in the
+ * store folder."
+ *
+ * OLD IMPORT (before Lesson 325):
+ *   import { authActions } from '../store/index';
+ *
+ * NEW IMPORT (after Lesson 325):
+ *   import { authActions } from '../store/auth';
+ *
+ * Each slice file now exports its own actions:
+ * - counter.js exports counterActions
+ * - auth.js exports authActions
  */
-import { authActions } from '../store/index';
+import { authActions } from '../store/auth';
 
 import classes from './Auth.module.css';
 

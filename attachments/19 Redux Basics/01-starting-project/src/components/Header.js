@@ -45,17 +45,37 @@
 import { useSelector, useDispatch } from 'react-redux';
 
 /**
- * IMPORTING authActions (Lesson 324):
- * ===================================
- * INSTRUCTOR QUOTE:
+ * ============================================================================
+ * IMPORTING authActions (Lessons 324 & 325)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 324):
  * "And therefore of course here we also need to import authActions from our
  * store index.js file."
  *
  * authActions contains the auto-generated action creators from authSlice:
  * - authActions.login() - sets isAuthenticated to true
  * - authActions.logout() - sets isAuthenticated to false
+ *
+ * UPDATED IMPORT PATH (Lesson 325):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "In header, we need to import auth actions from the auth file as well."
+ *
+ * OLD IMPORT (before Lesson 325):
+ *   import { authActions } from '../store/index';
+ *
+ * NEW IMPORT (after Lesson 325):
+ *   import { authActions } from '../store/auth';
+ *
+ * WHY IMPORT FROM SLICE FILES?
+ * ============================
+ * - Each slice file is responsible for its own state and actions
+ * - Better organization: auth-related code in auth.js
+ * - Clearer dependencies: you can see exactly which slice a component uses
+ * - Smaller bundle potential: tree shaking can work more effectively
  */
-import { authActions } from '../store/index';
+import { authActions } from '../store/auth';
 
 import classes from './Header.module.css';
 

@@ -158,10 +158,10 @@ import { useSelector, useDispatch } from 'react-redux';
 
 /**
  * ============================================================================
- * IMPORTING ACTION CREATORS (Lesson 322)
+ * IMPORTING ACTION CREATORS (Lessons 322 & 325)
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 322):
  * "And by doing this we can then go to the component where we need the actions
  * in this case to counter JS file, and import from our index JS file here, and
  * import the counter actions which we just exported there."
@@ -169,6 +169,28 @@ import { useSelector, useDispatch } from 'react-redux';
  * INSTRUCTOR QUOTE:
  * "And now, again that's an object which has our reducer names our reducer method
  * names as keys."
+ *
+ * ============================================================================
+ * UPDATED IMPORT PATH (Lesson 325)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now with that, if we saved this we'll need to fix a couple of imports in
+ * counter JS for example, where I try to import counter actions from the index
+ * file we now need to import them from the counter file in the store folder."
+ *
+ * OLD IMPORT (before Lesson 325):
+ *   import { counterActions } from '../store/index';
+ *
+ * NEW IMPORT (after Lesson 325):
+ *   import { counterActions } from '../store/counter';
+ *
+ * WHY THE CHANGE?
+ * ===============
+ * - Actions are now exported from their respective slice files
+ * - counter.js contains counterSlice and exports counterActions
+ * - auth.js contains authSlice and exports authActions
+ * - index.js only exports the store now
  *
  * counterActions contains action creator methods:
  * - counterActions.increment()     -> { type: 'counter/increment' }
@@ -178,7 +200,7 @@ import { useSelector, useDispatch } from 'react-redux';
  *
  * These method names MATCH the reducer method names in createSlice!
  */
-import { counterActions } from '../store/index';
+import { counterActions } from '../store/counter';
 
 const Counter = () => {
   /**

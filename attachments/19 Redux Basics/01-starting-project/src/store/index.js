@@ -1,1642 +1,261 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lessons 311-323)
+ * REDUX STORE CONFIGURATION (Lessons 311-325)
  * ============================================================================
  *
- * This file contains the Redux store setup using Redux Toolkit's createSlice
- * and configureStore with MULTIPLE SLICES.
- *
- * LESSON 311-319 - CORE REDUX FOUNDATIONS:
- * ========================================
- * See previous lessons for: createStore, reducers, action types, payloads,
- * multiple state properties, immutability rules, and Redux challenges.
- *
- * LESSON 320 - KEY LEARNING OBJECTIVES:
- * =====================================
- * 1. Installing Redux Toolkit: npm install @reduxjs/toolkit
- * 2. Redux Toolkit INCLUDES Redux - can uninstall plain 'redux' package
- * 3. Importing createSlice from @reduxjs/toolkit
- * 4. createSlice vs createReducer (createSlice is more powerful)
- * 5. Creating a slice with: name, initialState, reducers
- * 6. Slice reducers automatically receive current state
- * 7. "Mutating" state is ALLOWED in createSlice (Immer handles immutability)
- * 8. Accessing action.payload for extra data in reducer methods
- * 9. No more manual if/else checks for action types
- *
- * LESSON 321 - KEY LEARNING OBJECTIVES:
- * =====================================
- * 1. Using the return value of createSlice (the slice object)
- * 2. Accessing counterSlice.reducer to get the combined reducer
- * 3. The problem: createStore only accepts ONE reducer
- * 4. Solution: configureStore from @reduxjs/toolkit
- * 5. configureStore takes a configuration object, not a reducer directly
- * 6. The reducer property (singular) - Redux wants ONE main reducer
- * 7. Value can be a single reducer OR a map of reducers (object)
- * 8. configureStore merges multiple reducers behind the scenes
- * 9. How to dispatch actions with createSlice (teaser)
- *
- * LESSON 322 - KEY LEARNING OBJECTIVES:
- * =====================================
- * 1. createSlice automatically creates unique action identifiers
- * 2. Accessing counterSlice.actions to get action creators
- * 3. Action creator methods match reducer method names
- * 4. Action creators generate action objects with unique type property
- * 5. Exporting counterActions for use in components
- * 6. Passing payload data to action creators
- * 7. Payload is stored in action.payload (Redux Toolkit default)
- * 8. No more manual action objects or worrying about typos
- *
- * LESSON 323 - KEY LEARNING OBJECTIVES:
- * =====================================
- * 1. Authentication state is PERFECT for Redux (app-wide state)
- * 2. Separation of concerns: Create separate slices for different state
- * 3. Rename initialState to initialCounterState (for clarity)
- * 4. Create authSlice with login/logout reducers
- * 5. Using a REDUCER MAP in configureStore for multiple slices
- * 6. Still only ONE Redux store, even with multiple slices
- * 7. Export authActions for use in components
- * 8. IMPORTANT: State access changes with reducer map (state.counter.counter)
- * 9. Update selectors in components to use new state structure
- *
- * WHY CREATE A STORE FOLDER? (Lesson 311)
- * ========================================
- * INSTRUCTOR QUOTE:
- * "I will create a new folder in the source folder and I'll name it, store.
- * This is not something you have to do. It's just a common convention.
- * To store your Redux related code files, in a store folder, in the source folder."
- *
- * FILE NAMING:
- * ============
- * INSTRUCTOR QUOTE:
- * "And then they are all, just create an index.js file. This file name is also
- * up to you, into which I'll put my Redux-logic here."
- *
- * The index.js name is convenient because it allows importing from the folder
- * directly: import store from './store' (instead of './store/index')
- */
-
-/**
  * ============================================================================
- * IMPORTS (Lesson 321)
+ * LESSON 325 - SPLITTING CODE INTO SEPARATE FILES
  * ============================================================================
  *
- * REMOVING createStore (Lesson 321):
- * ==================================
+ * WHY SPLIT THE STORE FILE? (Lesson 325):
+ * =======================================
  * INSTRUCTOR QUOTE:
- * "So first of all we can get rid of our old counterReducer here, we don't need
- * that anymore. So let's remove it to make this a bit more readable."
- *
- * We no longer need createStore from 'redux' because Redux Toolkit provides
- * configureStore which is more powerful and easier to use.
- *
- * IMPORTING configureStore (Lesson 321):
- * ======================================
- * INSTRUCTOR QUOTE:
- * "Now with standard Redux, there is a combineReducers function which we could
- * use for that but we can also ditch Redux here and instead import another
- * function from reduxjs/toolkit which will make that a bit easier. We can
- * import the configureStore function."
- *
- * configureStore advantages over createStore:
- * - Automatically sets up Redux DevTools
- * - Automatically adds middleware (like redux-thunk)
- * - Makes merging multiple reducers easier
- * - Configuration object instead of function arguments
- */
-import { createSlice, configureStore } from '@reduxjs/toolkit';
-
-/**
- * ============================================================================
- * IMPORTING FROM REDUX TOOLKIT (Lesson 320)
- * ============================================================================
+ * "Now to come to an end in this module where we learned a lot of important things.
+ * I wanna split up this index JS file into store folder. It's actually quite a
+ * small file not too much code in it, but of course, in your typical a React
+ * application where you have multiple state slices, this can become a very long file."
  *
  * INSTRUCTOR QUOTE:
- * "Here at the top and the index JS file we can import something from
- * @reduxjs/toolkit. And that's something is the create slice function."
+ * "So therefore it might be worth splitting it up into smaller pieces. And when
+ * using Redux Toolkit it could make sense to put every slice into its own file."
  *
- * WHY createSlice? (Lesson 320):
- * =============================
- * INSTRUCTOR QUOTE:
- * "There also is a create reducer function which would also allow us to create
- * a reducer with certain enhancements, but create slice is even more powerful
- * than create reducer. And it will simplify a couple of aspects in one go."
- *
- * createSlice provides:
- * - Automatic action creators (no more manual dispatch({ type: '...' }))
- * - Built-in Immer for immutable updates (can "mutate" state directly)
- * - Grouped reducers for related state (slices)
- * - Auto-generated action type strings
- */
-
-/**
- * ============================================================================
- * INITIAL COUNTER STATE (Lessons 317 & 323)
- * ============================================================================
- *
- * RENAMING TO initialCounterState (Lesson 323):
- * =============================================
- * INSTRUCTOR QUOTE:
- * "I'll rename this initialState up here to the initialCounterState because we
- * will soon have more than one initialState and therefore, I set the initialState
- * property in this slice to the value stored in initialCounterState."
- *
- * Why rename?
- * - We're adding a second slice (authSlice) with its own initial state
- * - Clear naming prevents confusion about which state belongs to which slice
- * - Better organization when multiple slices exist
- *
- * EXTRACTING INITIAL STATE FOR READABILITY (Lesson 317):
- * ======================================================
- * INSTRUCTOR QUOTE:
- * "And to keep this a bit more readable, I'll extract that and store that in
- * a constant named initialState like this and assign initialState here then
- * just to make this a bit easier to read."
- *
- * This state belongs to the COUNTER slice:
- * - counter: The numeric value being counted
- * - showCounter: Whether to display the counter (boolean)
- */
-const initialCounterState = {
-  counter: 0,
-  showCounter: true,
-};
-
-/**
- * ============================================================================
- * INITIAL AUTH STATE (Lesson 323)
- * ============================================================================
- *
- * WHY AUTHENTICATION STATE IS PERFECT FOR REDUX (Lesson 323):
- * ==========================================================
- * INSTRUCTOR QUOTE:
- * "And unlike the counter state, which was just a basic example, the authentication
- * state and the answer to the question whether the user is logged in or not is
- * indeed not just local state, which matters to one specific component but it is
- * application-wide state, which matters to a lot of components in the application."
- *
- * INSTRUCTOR QUOTE:
- * "It matters to the Header, it matters to the Auth component, it matters to the
- * UserProfile component in the end. So therefore, this is the user authenticated
- * state is a perfect example for a state that we could manage with React context
- * or since this section is about Redux, with Redux."
- *
- * LOCAL STATE vs APPLICATION-WIDE STATE:
- * ======================================
- * | State Type        | Use Case                | Solution         |
- * |-------------------|-------------------------|------------------|
- * | Local state       | One component only      | useState         |
- * | App-wide state    | Multiple components     | Redux or Context |
- *
- * Authentication state:
- * - Needed in Header (show/hide nav items, logout button)
- * - Needed in Auth component (show login form)
- * - Needed in UserProfile component (show user info)
- * - Needed in App (conditional rendering of components)
- *
- * CREATING A SEPARATE INITIAL STATE (Lesson 323):
- * ===============================================
- * INSTRUCTOR QUOTE:
- * "I'll add a const initialAuthState, which again let's say is an object where
- * we have the isAuthenticated property, which initially is set to false."
- */
-const initialAuthState = {
-  isAuthenticated: false,
-};
-
-/**
- * ============================================================================
- * CREATING A SLICE WITH createSlice (Lesson 320)
- * ============================================================================
- *
- * WHAT IS A SLICE? (Lesson 320):
- * ==============================
- * INSTRUCTOR QUOTE:
- * "Now, what we do with create slice is we are preparing a slice of our global
- * state. And when we have different pieces of state which are not directly
- * related, let's say an authentication status and the counter status, we could
- * create different slices potentially also in different files to make our code
- * maintainable."
- *
- * A "slice" groups together:
- * - A piece of state (initialState)
- * - The reducers that modify that state
- * - Auto-generated action creators
- *
- * SLICE CONFIGURATION (Lesson 320):
- * =================================
- * createSlice requires an object with:
- * 1. name: A unique identifier for this slice
- * 2. initialState: The starting state values
- * 3. reducers: An object of reducer methods
- *
- * INSTRUCTOR QUOTE:
- * "Now every slice needs a name and identifier of that piece of state so to say.
- * And here I'll name this counter but the name is up to you. It doesn't have
- * to be this name here, it can be any name you want."
- */
-const counterSlice = createSlice({
-  /**
-   * SLICE NAME (Lesson 320):
-   * ========================
-   * INSTRUCTOR QUOTE:
-   * "Now every slice needs a name and identifier of that piece of state so to say."
-   *
-   * The name is used to generate action type strings automatically.
-   * For example: 'counter/increment', 'counter/decrement', etc.
-   */
-  name: 'counter',
-
-  /**
-   * INITIAL STATE (Lessons 320 & 323):
-   * ==================================
-   * INSTRUCTOR QUOTE:
-   * "Next you need to set up an initial state. And here I wanna set my initial
-   * state equal to that object or I therefore just point at initial state."
-   *
-   * UPDATED FOR LESSON 323:
-   * ======================
-   * INSTRUCTOR QUOTE:
-   * "And therefore, I set the initialState property in this slice to the value
-   * stored in initialCounterState."
-   *
-   * Now using initialCounterState (renamed from initialState for clarity)
-   */
-  initialState: initialCounterState,
-
-  /**
-   * REDUCERS OBJECT (Lesson 320):
-   * =============================
-   * INSTRUCTOR QUOTE:
-   * "And then we also need to add reducers. Reducers is again, an object, a map
-   * you could say, of all the reducers this slice needs, this state slice needs."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now here in this object, you can now simply add methods with any names of
-   * your choice, though those names will become important later."
-   *
-   * Each method:
-   * - Automatically receives the current state as first parameter
-   * - Optionally receives the action as second parameter (for payloads)
-   * - Is called based on which action is dispatched
-   */
-  reducers: {
-    /**
-     * INCREMENT REDUCER (Lesson 320):
-     * ===============================
-     * INSTRUCTOR QUOTE:
-     * "Every method here will then automatically receive the latest state.
-     * These methods will be called for you by Redux, and they will receive
-     * the current state."
-     *
-     * =========================================================================
-     * "MUTATING" STATE IN createSlice - IT'S SAFE! (Lesson 320)
-     * =========================================================================
-     *
-     * INSTRUCTOR QUOTE:
-     * "Now in these methods here in the reducers map we now also can do something
-     * else than we did before. Now, here we are allowed to mutate the state.
-     * So here we can set state.counter++ for example, for incrementing it."
-     *
-     * WHY IS THIS SAFE? (Lesson 320):
-     * ==============================
-     * INSTRUCTOR QUOTE:
-     * "Now this was forbidden before and I emphasized that it is forbidden. I also
-     * did emphasize it because here it seems to be allowed. But the important part
-     * is the word seems. We still must not manipulate the existing state but the
-     * good thing is when using Redux toolkit and its functions like create slice,
-     * we can't accidentally manipulate the existing state."
-     *
-     * HOW IMMER WORKS BEHIND THE SCENES (Lesson 320):
-     * ===============================================
-     * INSTRUCTOR QUOTE:
-     * "Because Redux toolkit internally uses another package, called imgur [Immer],
-     * which will detect code like this and which will automatically clone the
-     * existing state, create a new state object, keep all the state which we're
-     * not editing, and override the state which we are editing in an immutable way."
-     *
-     * THE DEVELOPER EXPERIENCE (Lesson 320):
-     * =====================================
-     * INSTRUCTOR QUOTE:
-     * "So we still have immutable code here even though it doesn't look like it
-     * because of this internally used package and therefore we as a developer
-     * have a much easier time working with Redux because we don't have to create
-     * a copy manually and keep all the code we're not changing, instead, we just
-     * change the code we wanna change and internally it's translated into
-     * immutable code."
-     *
-     * NO NEED TO RETURN IN SIMPLE CASES:
-     * - When "mutating" state, you don't need to return anything
-     * - Immer handles creating the new state automatically
-     * - You CAN still return a new state object if you prefer
-     */
-    increment(state) {
-      state.counter++;
-    },
-
-    /**
-     * DECREMENT REDUCER (Lesson 320):
-     * ===============================
-     * INSTRUCTOR QUOTE:
-     * "Therefore in decrement we execute state.counter--"
-     *
-     * Notice:
-     * - No need to copy showCounter (Immer preserves it automatically)
-     * - No need to return a new object
-     * - Much cleaner than the manual approach!
-     */
-    decrement(state) {
-      state.counter--;
-    },
-
-    /**
-     * INCREASE REDUCER WITH PAYLOAD (Lessons 320 & 322):
-     * ==================================================
-     * INSTRUCTOR QUOTE (Lesson 320):
-     * "And here for increase we now need a payload. We now need extra data.
-     * So how does that work?"
-     *
-     * ACCEPTING THE ACTION PARAMETER (Lesson 320):
-     * ============================================
-     * INSTRUCTOR QUOTE:
-     * "Now when using Redux toolkit we of course, can still have reducers that
-     * listen to actions that have an extra payload, extra data. Because these
-     * were user functions here, don't just receive the state. They also still
-     * do get the action."
-     *
-     * =========================================================================
-     * WHY action.payload? (Lesson 322)
-     * =========================================================================
-     *
-     * INSTRUCTOR QUOTE:
-     * "The only important thing to know here is how you then extract that value
-     * because what Redux Toolkit will do for us here is it will automatically
-     * create action objects which dispatches where the type is some unique
-     * identifier generated by Redux toolkit and any value you pass here. As an
-     * argument to this action method you're executing, will it be stored in an
-     * extra field named payload."
-     *
-     * INSTRUCTOR QUOTE:
-     * "And that field name is not up to you. That's the default Redux Toolkit
-     * uses here. Hence now in our index JS file in the increase reducer instead
-     * of action amount. We now need to access action.payload, because that is the
-     * name of the property which will hold any extra data you might be dispatching."
-     *
-     * HOW IT WORKS:
-     * =============
-     * When dispatching:
-     *   dispatch(counterActions.increase(10))
-     *
-     * Redux Toolkit creates:
-     *   { type: 'counter/increase', payload: 10 }
-     *
-     * So we access action.payload, NOT action.amount!
-     */
-    increase(state, action) {
-      state.counter = state.counter + action.payload;
-    },
-
-    /**
-     * TOGGLE COUNTER REDUCER (Lesson 320):
-     * ====================================
-     * INSTRUCTOR QUOTE:
-     * "Now for a toggle counter we don't need the actual payload here we just
-     * get the state, and set state.show counter equal to not state.show counter
-     * to invert this value."
-     *
-     * Notice: We don't need the action here, so we only accept state.
-     */
-    toggleCounter(state) {
-      state.showCounter = !state.showCounter;
-    },
-  },
-});
-
-/**
- * ============================================================================
- * COMPARISON: OLD REDUCER vs createSlice (Lesson 320)
- * ============================================================================
- *
- * OLD WAY (Manual reducer with if checks):
- * ========================================
- * const counterReducer = (state = initialState, action) => {
- *   if (action.type === 'increment') {
- *     return {
- *       counter: state.counter + 1,
- *       showCounter: state.showCounter,  // Must copy everything!
- *     };
- *   }
- *   if (action.type === 'decrement') { ... }
- *   return state;
- * };
- *
- * NEW WAY (createSlice):
- * =====================
- * const counterSlice = createSlice({
- *   name: 'counter',
- *   initialState,
- *   reducers: {
- *     increment(state) { state.counter++; },  // So much simpler!
- *     decrement(state) { state.counter--; },
- *   }
- * });
- *
- * BENEFITS:
- * - No manual if/else or switch statements
- * - No need to copy unchanged properties
- * - Can "mutate" state directly (Immer handles immutability)
- * - Auto-generated action creators (covered in next lesson)
- * - Much less boilerplate code
- */
-
-/**
- * ============================================================================
- * CREATING THE AUTH SLICE (Lesson 323)
- * ============================================================================
- *
- * WHY A SEPARATE SLICE FOR AUTH? (Lesson 323):
- * ============================================
- * INSTRUCTOR QUOTE:
- * "We could, of course, also add a new property to our state here. Let's say the
- * isAuthenticated property and set this to false and then add a new reducer,
- * login, for example, a new reducer method, and in here, we then set
- * isAuthenticated to true. We could do this but logically it makes no sense."
- *
- * SEPARATION OF CONCERNS (Lesson 323):
- * ====================================
- * INSTRUCTOR QUOTE:
- * "The authentication status has nothing to do with the counter. Whilst it would
- * technically work, in programming we typically wanna separate our concerns. We
- * wanna make sure that this slice really focuses on the counter-related state
- * and actions. And we should create a brand new slice for the authentication state."
- *
- * WHY NOT PUT EVERYTHING IN ONE SLICE?
- * ====================================
- * | Approach               | Pros                  | Cons                    |
- * |------------------------|-----------------------|-------------------------|
- * | One big slice          | Simple for tiny apps  | Hard to maintain        |
- * | Separate slices        | Organized, scalable   | Slightly more setup     |
- *
- * CREATING A SECOND SLICE (Lesson 323):
- * =====================================
- * INSTRUCTOR QUOTE:
- * "And then we can add a new slice below the other slice, though the exact position
- * does not matter. But we can call createSlice again to create another slice and
- * this slice also, of course, needs an object to be configured, just as our first
- * slice. This slice will be configured in exactly the same way just with different
- * values."
- *
- * NAMING THE SLICE (Lesson 323):
- * ==============================
- * INSTRUCTOR QUOTE:
- * "So we add a name here and set this to auth, for example, or authentication,
- * whatever you want."
- */
-const authSlice = createSlice({
-  name: 'auth',
-  initialState: initialAuthState,
-
-  /**
-   * AUTH REDUCERS (Lesson 323):
-   * ===========================
-   * INSTRUCTOR QUOTE:
-   * "And then we need to register our reducers. These reducer methods, which can
-   * change this state. And here I think two methods make sense. A login method
-   * for well, logging the user in. And a logout method for logging the user out."
-   */
-  reducers: {
-    /**
-     * LOGIN REDUCER (Lesson 323):
-     * ===========================
-     * INSTRUCTOR QUOTE:
-     * "In both methods, we'll receive the current state as an argument automatically
-     * provided by Redux and we can then mutate this state, even though we technically
-     * shouldn't but as I explained, we can do it here because under the hood, our
-     * code will be transformed to actually not mutate the original state. So it's
-     * safe to do that here."
-     *
-     * INSTRUCTOR QUOTE:
-     * "And we can set state.isAuthenticated equal to true here in the login state."
-     */
-    login(state) {
-      state.isAuthenticated = true;
-    },
-
-    /**
-     * LOGOUT REDUCER (Lesson 323):
-     * ============================
-     * INSTRUCTOR QUOTE:
-     * "And here in the logout state, set isAuthenticated to false."
-     */
-    logout(state) {
-      state.isAuthenticated = false;
-    },
-  },
-});
-
-/**
- * ============================================================================
- * USING THE SLICE WITH configureStore (Lesson 321)
- * ============================================================================
- *
- * USING THE RETURN VALUE OF createSlice (Lesson 321):
- * ===================================================
- * INSTRUCTOR QUOTE:
- * "Now to use our slice, we first of all need to use the return value of calling
- * createSlice because here we get back our counterSlice, now this name is up to
- * you, but it's a slice of our global state, the slice which is responsible for
- * working with our counter."
- *
- * The slice object (counterSlice) contains:
- * - reducer: The generated reducer function (use this for store creation)
- * - actions: Auto-generated action creators (covered later in this lesson)
- * - name: The slice name ('counter')
- *
- * REGISTERING THE SLICE WITH THE STORE (Lesson 321):
- * ==================================================
- * INSTRUCTOR QUOTE:
- * "Now we wanna register this with our store."
- *
- * ACCESSING counterSlice.reducer (Lesson 321):
- * ============================================
- * INSTRUCTOR QUOTE:
- * "And now here to createStore, we could pass our counterSlice.reducer. With that
- * we get access to the reducers set up in the slice even though it .reducer, it's
- * basically a big reducer with a couple of if statements that trigger those
- * different reducer methods depending on the action type and we would be good to go."
- *
- * THE PROBLEM WITH MULTIPLE SLICES (Lesson 321):
- * ==============================================
- * INSTRUCTOR QUOTE:
- * "But if we have bigger applications with multiple state slices, we would face a
- * problem if we try to do it like this, because there can only be one reducer
- * passed to create store and when we have multiple slices, we have multiple
- * reducers which we access with .reducer on the different slices."
- *
- * Example of the problem:
- *   const counterSlice = createSlice({ ... });  // counterSlice.reducer
- *   const authSlice = createSlice({ ... });     // authSlice.reducer
- *   // createStore only accepts ONE reducer - which one do we pass?
- *
- * TRADITIONAL SOLUTION - combineReducers (Lesson 321):
- * ====================================================
- * INSTRUCTOR QUOTE:
- * "Now with standard Redux, there is a combineReducers function which we could
- * use for that..."
- *
- * MODERN SOLUTION - configureStore (Lesson 321):
- * ==============================================
- * INSTRUCTOR QUOTE:
- * "...but we can also ditch Redux here and instead import another function from
- * reduxjs/toolkit which will make that a bit easier. We can import the
- * configureStore function."
- *
- * INSTRUCTOR QUOTE:
- * "ConfigureStore like createStore creates a store but it makes merging multiple
- * reducers into one reducer easier thereafter."
- *
- * ============================================================================
- * configureStore CONFIGURATION OBJECT (Lesson 321)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "So here we can now call configureStore, and to configureStore, we now pass an
- * object not a reducer function but an object. It's a configuration object
- * expected by configureStore."
- *
- * WHY "reducer" (SINGULAR) NOT "reducers" (PLURAL)? (Lesson 321):
- * ==============================================================
- * INSTRUCTOR QUOTE:
- * "A configuration object where we then set a reducer property and that's an
- * expected property by configureStore. Reducer singular and not reducers plural
- * because still, no matter if we use createStore or configureStore, Redux wants
- * one main reducer function, which is responsible for the global state."
- *
- * SINGLE REDUCER VALUE (Lesson 321):
- * ==================================
- * INSTRUCTOR QUOTE:
- * "However, with configureStore, the value for reducer can be a single reducer
- * so we can for example use counterSlice.reducer to use the reducer from that
- * counterSlice which combines all those reducer methods to find in that slice.
- * We can use that as a global main reducer and here that would make sense because
- * this is the only state slice we have and therefore, the only reducer we have."
- *
- * MAP OF REDUCERS (FOR MULTIPLE SLICES) (Lesson 321):
- * ===================================================
- * INSTRUCTOR QUOTE:
- * "...but if we had multiple state slices in a bigger application something we're
- * going to see later, then alternatively as a value for this reducer key, we could
- * also set an object and in that object, we can set up any keys of our choice, so
- * any property names of our choice and the values of those properties would then
- * be different reducer functions."
- *
- * INSTRUCTOR QUOTE:
- * "So we would create a map of reducers you could say, and this map is then set as
- * a value for the main reducer and behind the scenes configureStore will emerge
- * all those reducers into one big reducer. So it will merge them for us."
- *
- * EXAMPLE - Single reducer (what we're using now):
- * ================================================
- * const store = configureStore({
- *   reducer: counterSlice.reducer  // Single reducer for single slice
- * });
- *
- * EXAMPLE - Map of reducers (for multiple slices):
- * ================================================
- * const store = configureStore({
- *   reducer: {
- *     counter: counterSlice.reducer,  // state.counter
- *     auth: authSlice.reducer,        // state.auth
- *     cart: cartSlice.reducer         // state.cart
- *   }
- * });
- *
- * With a map of reducers:
- * - configureStore merges them into one big reducer automatically
- * - Each key becomes a property in the global state
- * - Access via: state.counter, state.auth, state.cart
- *
- * ============================================================================
- * USING A REDUCER MAP FOR MULTIPLE SLICES (Lesson 323)
- * ============================================================================
- *
- * STILL ONLY ONE REDUX STORE (Lesson 323):
- * ========================================
- * INSTRUCTOR QUOTE:
- * "Now, very important, when you work with multiple slices, you still only have
- * one Redux store, so you still only call configureStore once. This does not change."
- *
- * INSTRUCTOR QUOTE:
- * "And this store only has one root reducer here but as I briefly explained earlier,
- * this reducer actually does not just take a reducer function as an argument but
- * also an object which acts as a map of reducers."
- *
- * CREATING THE REDUCER MAP (Lesson 323):
- * ======================================
- * INSTRUCTOR QUOTE:
- * "...where you can then have any key names of your choice, for example, counter
- * and then point at your different reducers. Here, for example, add
- * counterSlice.reducer. And then we also add auth let's say as a key and then
- * here we add authSlice.reducer."
- *
- * AUTOMATIC MERGING (Lesson 323):
+ * FILE STRUCTURE AFTER SPLITTING:
  * ===============================
+ * store/
+ *   index.js      <- THIS FILE: Store configuration and reducer merging
+ *   counter.js    <- Counter slice, reducer, and actions
+ *   auth.js       <- Auth slice, reducer, and actions
+ *
+ * WHAT THIS FILE DOES NOW (Lesson 325):
+ * =====================================
  * INSTRUCTOR QUOTE:
- * "And these individual reducers here will then automatically be merged together
- * into one main reducer, which is exposed to this store. That's how we can combine
- * multiple slices and their reducers."
+ * "Now in index JS, we want to merge all those slices together. Therefore we can
+ * remove, create slice in there. We don't need that import anymore because we're
+ * not creating any slices in this file anymore. Instead, we focus on creating
+ * that main store and merging all the slice reducers together."
  *
- * IMPORTANT - STATE ACCESS CHANGES (Lesson 323):
- * ==============================================
- * INSTRUCTOR QUOTE:
- * "Just one important hint, since we are merging our reducers together here, the
- * way we access data in our store changes slightly and we will need to adjust
- * this for the counter as well."
+ * This file is now ONLY responsible for:
+ * 1. Importing reducers from slice files
+ * 2. Creating the store with configureStore
+ * 3. Merging reducers via the reducer map
+ * 4. Exporting the store
  *
- * OLD (single reducer):
- *   reducer: counterSlice.reducer
- *   Access: state.counter, state.showCounter
- *
- * NEW (reducer map):
- *   reducer: { counter: counterSlice.reducer, auth: authSlice.reducer }
- *   Access: state.counter.counter, state.counter.showCounter
- *           state.auth.isAuthenticated
- *
- * WHY state.counter.counter? (Lesson 323):
+ * BENEFITS OF THIS STRUCTURE (Lesson 325):
  * ========================================
  * INSTRUCTOR QUOTE:
- * "So for counter, I use counter as an identifier here, hence in the Counter
- * component, when we wanna access the counter, it's actually state.counter.counter.
- * This might look strange but with the first .counter, we make React Redux aware
- * of the fact that we wanna dive into this slice in the end, into the state
- * produced by this slicer's reducer and then in that state slice, we simply have
- * a property named counter."
+ * "And in bigger application stat can ensure that our code stays maintainable
+ * and is easier to manage because now we have a lean index JS file and then
+ * pretty lean files for our different state slices which are then focused on
+ * one specific type of state."
  *
- * STATE STRUCTURE WITH REDUCER MAP:
- * =================================
+ * | Before (All in index.js)      | After (Split files)           |
+ * |-------------------------------|-------------------------------|
+ * | Initial states                | Moved to slice files          |
+ * | Slice definitions             | Moved to slice files          |
+ * | Action exports                | Moved to slice files          |
+ * | Store configuration           | Stays here                    |
+ * | Reducer merging               | Stays here                    |
+ *
+ * INSTRUCTOR QUOTE:
+ * "Not required here but definitely helpful in bigger applications. And even
+ * here, it certainly doesn't hurt."
+ *
+ * LESSON 311-324 REVIEW:
+ * ======================
+ * Previous lessons covered:
+ * - Lesson 311: Creating the store folder and basic Redux setup
+ * - Lesson 312: Providing the store to React with Provider
+ * - Lesson 313: Reading state with useSelector
+ * - Lesson 314: Dispatching actions with useDispatch
+ * - Lesson 315: Class-based components with connect()
+ * - Lesson 316: Action payloads
+ * - Lesson 317: Multiple state properties
+ * - Lesson 318: State immutability rules
+ * - Lesson 319: Redux challenges and intro to Redux Toolkit
+ * - Lesson 320: createSlice for defining slices
+ * - Lesson 321: configureStore for store setup
+ * - Lesson 322: Auto-generated action creators
+ * - Lesson 323: Multiple slices and reducer maps
+ * - Lesson 324: Using auth state in components
+ * - Lesson 325: Splitting code into separate files (THIS LESSON)
+ */
+
+import { configureStore } from '@reduxjs/toolkit';
+
+/**
+ * ============================================================================
+ * IMPORTING REDUCERS FROM SLICE FILES (Lesson 325)
+ * ============================================================================
+ *
+ * REMOVING createSlice IMPORT (Lesson 325):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "Therefore we can remove, create slice in there. We don't need that import
+ * anymore because we're not creating any slices in this file anymore."
+ *
+ * We only need configureStore since slice creation happens in separate files.
+ *
+ * IMPORTING counterReducer (Lesson 325):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Hence we can now import the counter slice from ./counter, or since we only
+ * really needed to reducer in here, we actually go to the counter and we just
+ * export the reducer. So we don't export the entire slice but just it's reducer part."
+ *
+ * INSTRUCTOR QUOTE:
+ * "By doing that in index JS we could import the counter reducer here since that
+ * is what we're exporting as a default. And then just assign that as a reducer
+ * to counter the counter reducer."
+ *
+ * counter.js exports:
+ *   export default counterSlice.reducer;  // This is what we import
+ *   export const counterActions = counterSlice.actions;  // Components import this
+ */
+import counterReducer from './counter';
+
+/**
+ * IMPORTING authReducer (Lesson 325):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "Do the same for off the JS just export the reducer year and an index JS.
+ * Then therefore import the auth reducer from ./auth and assign this as a value
+ * for the auth key in that reducer map."
+ *
+ * auth.js exports:
+ *   export default authSlice.reducer;  // This is what we import
+ *   export const authActions = authSlice.actions;  // Components import this
+ */
+import authReducer from './auth';
+
+/**
+ * ============================================================================
+ * CREATING THE STORE WITH MERGED REDUCERS (Lesson 325)
+ * ============================================================================
+ *
+ * CLEANER STORE CONFIGURATION (Lesson 325):
+ * =========================================
+ * Now that slices are in separate files, the store configuration is much simpler:
+ * - Import reducers from their respective files
+ * - Merge them in the reducer map
+ * - Export the store
+ *
+ * The reducer map creates this state structure:
  * {
- *   counter: {                    // Key from reducer map
- *     counter: 0,                 // Property from initialCounterState
- *     showCounter: true           // Property from initialCounterState
- *   },
- *   auth: {                       // Key from reducer map
- *     isAuthenticated: false      // Property from initialAuthState
- *   }
+ *   counter: { counter: 0, showCounter: true },  // from counterReducer
+ *   auth: { isAuthenticated: false }             // from authReducer
  * }
+ *
+ * STATE ACCESS IN COMPONENTS:
+ * ===========================
+ * - state.counter.counter -> counter value
+ * - state.counter.showCounter -> visibility flag
+ * - state.auth.isAuthenticated -> login status
  */
 const store = configureStore({
   reducer: {
-    counter: counterSlice.reducer,
-    auth: authSlice.reducer,
+    counter: counterReducer,
+    auth: authReducer,
   },
 });
 
 /**
  * ============================================================================
- * ACTION CREATORS - counterSlice.actions (Lesson 322)
+ * EXPORTING THE STORE (Lesson 325)
  * ============================================================================
  *
- * THE QUESTION FROM LESSON 321:
- * ============================
- * INSTRUCTOR QUOTE:
- * "Now the question is, how do we dispatch actions? Because we don't have our
- * own, if checks, we don't know what the identifiers for our actions should be.
- * We just have these method names but how do we now know what to dispatch?"
+ * The store is the only thing exported from index.js now.
  *
- * THE ANSWER - AUTO-GENERATED ACTION CREATORS (Lesson 322):
- * =========================================================
+ * ACTIONS ARE EXPORTED FROM SLICE FILES (Lesson 325):
+ * ===================================================
  * INSTRUCTOR QUOTE:
- * "Now for dispatching actions, createSlice has got us covered. It automatically
- * creates unique action identifiers for our different reducers."
+ * "Now regarding the actions, I want to export those from there, from the files
+ * into which they belong. So the counter actions should be exported here in the
+ * counter JS file still by accessing dot actions and exporting that as a named
+ * export at the same for auth."
  *
- * ACCESSING ACTION CREATORS (Lesson 322):
- * =======================================
+ * WHERE TO IMPORT FROM:
+ * ====================
+ * | What                | Import From           |
+ * |---------------------|----------------------|
+ * | store               | '../store/index'     |
+ * | counterActions      | '../store/counter'   |
+ * | authActions         | '../store/auth'      |
+ *
+ * COMPONENT IMPORT UPDATES (Lesson 325):
+ * ======================================
  * INSTRUCTOR QUOTE:
- * "To get hold of these action identifiers, we can use our counterSlice and
- * access dot actions. That is then an object full of keys, where the the key
- * names, increment, decrement, and so on. Match the method names we have in
- * our createSlice function in the reducers area."
- *
- * counterSlice.actions = {
- *   increment: [Function],   // Creates { type: 'counter/increment' }
- *   decrement: [Function],   // Creates { type: 'counter/decrement' }
- *   increase: [Function],    // Creates { type: 'counter/increase', payload: value }
- *   toggleCounter: [Function] // Creates { type: 'counter/toggleCounter' }
- * }
- *
- * WHAT ARE ACTION CREATORS? (Lesson 322):
- * =======================================
- * INSTRUCTOR QUOTE:
- * "Now we can access those keys on this actions object. And with that we don't
- * access the reducer methods defined up there but instead we get methods created
- * automatically by Redux Toolkit which when called will create action objects
- * for us."
+ * "Now with that, if we saved this we'll need to fix a couple of imports in
+ * counter JS for example, where I try to import counter actions from the index
+ * file we now need to import them from the counter file in the store folder."
  *
  * INSTRUCTOR QUOTE:
- * "These methods on the actions object here which we can call will create action
- * objects for us. Therefore these methods are called action creators and they
- * will create action objects for us where these objects already have a type
- * property with a unique identifier per action. Automatically created behind
- * the scenes."
+ * "In auth JS, we need to import auth the actions from the auth file in the
+ * store folder. In header, we need to import auth actions from the auth file
+ * as well."
  *
- * KEY INSIGHT - NO MORE MANUAL ACTION OBJECTS (Lesson 322):
- * =========================================================
- * INSTRUCTOR QUOTE:
- * "So we don't have to worry about action identifiers. We don't have to create
- * those action objects on our own. We can tap into this actions key into this
- * actions object on our createSlice and execute these action creator methods,
- * which with their name match our reducer methods to dispatch actions, which
- * will then ultimately trigger those different reducer methods."
- *
- * INSTRUCTOR QUOTE:
- * "And that means that we, as a developer, don't have to worry about creating
- * action objects on our own and about coming up with unique identifiers and
- * about avoiding typos."
- *
- * HOW TO USE ACTION CREATORS:
- * ===========================
- * OLD WAY (manual action objects):
- *   dispatch({ type: 'increment' })              // Risk of typos!
- *   dispatch({ type: 'increase', amount: 10 })   // Custom property names
- *
- * NEW WAY (action creators):
- *   dispatch(counterActions.increment())         // No typos possible!
- *   dispatch(counterActions.increase(10))        // Payload auto-stored
- *
- * PASSING PAYLOAD DATA (Lesson 322):
- * ==================================
- * INSTRUCTOR QUOTE:
- * "The question just is what do we do here when we also need a payload? And
- * the answer is we still use our counterActions and then use this automatically
- * generated action creator method here. But then to this method, we pass our
- * payload data."
- *
- * INSTRUCTOR QUOTE:
- * "So for example, an object with any property value pairs of our choice or
- * just the number by which we want to increase here. So any kind of value can
- * be passed to increase."
- *
- * Examples:
- *   counterActions.increase(10)           // payload = 10
- *   counterActions.increase({ value: 10 }) // payload = { value: 10 }
- *   counterActions.increase('hello')      // payload = 'hello'
- */
-
-/**
- * WHY NOT SUBSCRIBE HERE? (Lesson 311)
- * ====================================
- * INSTRUCTOR QUOTE:
- * "Now previously, we did now subscribe here and dispatch from inside this file
- * and that's now not what we wanna do here. Instead now, I wanna connect my
- * React app to this Redux store. So that the components of that app can
- * dispatch and listen. And that's the new part."
- *
- * In a React app:
- * - We DON'T manually subscribe in this file
- * - We DON'T dispatch from this file
- * - Instead, React components will connect to the store
- * - react-redux library handles subscriptions automatically
- */
-
-/**
- * EXPORTING THE STORE (Lesson 311)
- * ================================
- * INSTRUCTOR QUOTE:
- * "For this, I'll start by exporting this store, which we created here, as the
- * default export of this file, so that we can use it outside of this index.js file."
- *
- * We export the store so it can be:
- * 1. Provided to the React app (via Provider component)
- * 2. Used by any component that needs access to Redux state
- *
- * NEXT STEP - PROVIDING THE STORE (Lesson 311):
- * =============================================
- * INSTRUCTOR QUOTE:
- * "And now I want to connect my React application to that store. For this, we
- * need to provide this store to the React app. And since, remember, we only
- * have one Redux store, we only need to provide our store once, the only store
- * we have."
- *
- * This will be done in the main index.js file using the Provider component
- * from react-redux (covered in the next lesson).
+ * Updated imports in components:
+ * - Counter.js: import { counterActions } from '../store/counter';
+ * - Auth.js: import { authActions } from '../store/auth';
+ * - Header.js: import { authActions } from '../store/auth';
  */
 export default store;
 
 /**
  * ============================================================================
- * EXPORTING ACTION CREATORS (Lesson 322)
+ * SUMMARY - LESSON 325 FILE STRUCTURE
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "So that means that what we could do here is at the bottom of this file, we
- * get our counter actions like this. And we then for example, export our counter
- * actions. So we don't just export the store but also our counter actions."
- *
- * WHY EXPORT counterActions? (Lesson 322):
- * ========================================
- * INSTRUCTOR QUOTE:
- * "And by doing this we can then go to the component where we need the actions
- * in this case to counter JS file, and import from our index JS file here, and
- * import the counter actions which we just exported there."
- *
- * INSTRUCTOR QUOTE:
- * "And now, again that's an object which has our reducer names our reducer method
- * names as keys."
- *
- * WHAT WE'RE EXPORTING:
- * =====================
- * counterActions is an object with action creator methods:
- *
- * counterActions = {
- *   increment: () => ({ type: 'counter/increment' }),
- *   decrement: () => ({ type: 'counter/decrement' }),
- *   increase: (payload) => ({ type: 'counter/increase', payload }),
- *   toggleCounter: () => ({ type: 'counter/toggleCounter' })
- * }
- *
- * These action creators:
- * - Have the SAME NAMES as our reducer methods
- * - Create action objects AUTOMATICALLY
- * - Include UNIQUE type identifiers (e.g., 'counter/increment')
- * - Store any payload data in action.payload
- *
- * USAGE IN COMPONENTS:
- * ====================
- * import { counterActions } from '../store/index';
- *
- * // Then dispatch using:
- * dispatch(counterActions.increment());
- * dispatch(counterActions.increase(10));
- */
-export const counterActions = counterSlice.actions;
-
-/**
- * ============================================================================
- * EXPORTING AUTH ACTION CREATORS (Lesson 323)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now, our authSlice, of course, also exposes actions, which we can use and
- * therefore, I wanna expose those as well. So export authActions, which is
- * authSlice.actions."
- *
- * authActions contains:
- * - authActions.login()  -> Sets isAuthenticated to true
- * - authActions.logout() -> Sets isAuthenticated to false
- *
- * USAGE IN COMPONENTS:
- * ====================
- * import { authActions } from '../store/index';
- *
- * // Login button handler:
- * dispatch(authActions.login());
- *
- * // Logout button handler:
- * dispatch(authActions.logout());
- */
-export const authActions = authSlice.actions;
-
-/**
- * ============================================================================
- * SUMMARY - LESSON 311 WORKFLOW
- * ============================================================================
- *
- * 1. CREATE STORE FOLDER:
- *    - Create src/store/ folder (convention, not required)
- *    - Create index.js inside it
- *
- * 2. IMPORT createStore:
- *    import { createStore } from 'redux';
- *
- * 3. CREATE REDUCER:
- *    - Define function with (state, action) parameters
- *    - Set default state value: state = { counter: 0 }
- *    - Handle action types with if/else or switch
- *    - Return new state objects (never mutate!)
- *    - Return unchanged state for unknown actions
- *
- * 4. CREATE STORE:
- *    const store = createStore(counterReducer);
- *
- * 5. EXPORT STORE:
- *    export default store;
- *
- * KEY DIFFERENCES FROM VANILLA REDUX:
+ * BEFORE SPLITTING (All in index.js):
  * ===================================
- * | Vanilla Redux (Node.js)     | Redux with React              |
- * |-----------------------------|-------------------------------|
- * | store.subscribe(fn)         | react-redux handles this      |
- * | store.dispatch(action)      | useDispatch() hook            |
- * | store.getState()            | useSelector() hook            |
- * | Manual subscription mgmt    | Automatic via Provider        |
+ * store/
+ *   index.js
+ *     - createSlice import
+ *     - configureStore import
+ *     - initialCounterState
+ *     - initialAuthState
+ *     - counterSlice definition
+ *     - authSlice definition
+ *     - store configuration
+ *     - counterActions export
+ *     - authActions export
+ *     - store export
  *
- * NEXT STEPS (Upcoming Lessons):
- * ==============================
- * - Provide the store to React app using <Provider>
- * - Use useSelector() to read state in components
- * - Use useDispatch() to dispatch actions from components
+ * AFTER SPLITTING (Lesson 325):
+ * =============================
+ * store/
+ *   index.js (THIS FILE)
+ *     - configureStore import
+ *     - counterReducer import (from ./counter)
+ *     - authReducer import (from ./auth)
+ *     - store configuration with reducer map
+ *     - store export
  *
- * ============================================================================
- * LESSON 316 - ACTION PAYLOADS IN THE REDUCER
- * ============================================================================
+ *   counter.js
+ *     - createSlice import
+ *     - initialCounterState
+ *     - counterSlice definition
+ *     - counterReducer export (default)
+ *     - counterActions export (named)
  *
- * WHY PAYLOADS ARE NEEDED:
- * ========================
- * - Simple actions with only 'type' are inflexible
- * - Payloads allow passing dynamic values to the reducer
- * - One action type can handle many different scenarios
+ *   auth.js
+ *     - createSlice import
+ *     - initialAuthState
+ *     - authSlice definition
+ *     - authReducer export (default)
+ *     - authActions export (named)
  *
- * EXAMPLE: INCREMENT VS INCREASE
- * ==============================
- *
- * INCREMENT (no payload):
- * ----------------------
- * Action:  { type: 'increment' }
- * Reducer: return { counter: state.counter + 1 }  // Always +1
- *
- * INCREASE (with payload):
- * -----------------------
- * Action:  { type: 'increase', amount: 10 }
- * Reducer: return { counter: state.counter + action.amount }  // Flexible!
- *
- * ACCESSING PAYLOAD IN REDUCER:
- * ============================
- * The action parameter contains all properties from the dispatched object:
- *
- * // When dispatched:   dispatch({ type: 'increase', amount: 10 })
- * // In reducer:        action.type === 'increase'
- * //                    action.amount === 10
- *
- * INSTRUCTOR QUOTE:
- * "We could then simply access action.amount here. Because the action is an
- * object and if that object has an amount property set on it, we can read
- * that value with action.amount."
- *
- * PAYLOAD NAMING CONVENTIONS:
- * ==========================
- * The property name is YOUR choice. Common conventions:
- *
- * 1. Descriptive names (recommended for clarity):
- *    { type: 'increase', amount: 10 }
- *    { type: 'addUser', user: { name: 'John' } }
- *    { type: 'setFilter', filterValue: 'active' }
- *
- * 2. Generic 'payload' property (Redux Toolkit convention):
- *    { type: 'increase', payload: 10 }
- *    { type: 'addUser', payload: { name: 'John' } }
- *
- * IMPORTANT: Whatever name you choose, it MUST match between:
- * - The dispatched action: dispatch({ type: 'x', amount: 10 })
- * - The reducer access: action.amount
- *
- * ============================================================================
- * LESSON 317 - WORKING WITH MULTIPLE STATE PROPERTIES
- * ============================================================================
- *
- * LOCAL STATE VS GLOBAL STATE (Lesson 317):
- * =========================================
- * INSTRUCTOR QUOTE:
- * "Now for this, of course, we could use useState. So we could set up some
- * local state in this component which we manage with useState, not with Redux.
- * And that would be the proper way of doing it because showing or hiding the
- * counter is something which only is interesting to this component, not to
- * any other part of the application."
- *
- * WHEN TO USE REDUX VS useState:
- * - Use useState for truly local, component-specific state
- * - Use Redux for state shared across multiple components
- * - In demos/learning, we often use Redux for simplicity even when local state would work
- *
- * ADDING NEW STATE PROPERTIES (Lesson 317):
- * =========================================
- * To add new state to Redux:
- * 1. Add the property to your initial state
- * 2. Include it in EVERY return statement in the reducer
- * 3. Create action type(s) to modify it
- * 4. Access it via useSelector in components
- *
- * CRITICAL CONCEPT: REDUX STATE REPLACEMENT (Lesson 317):
- * =======================================================
- * INSTRUCTOR QUOTE:
- * "Redux won't merge your changes with the existing state. It instead takes
- * what you return and replaces the existing state with it."
- *
- * WRONG - Will lose showCounter:
- * if (action.type === 'increment') {
- *   return { counter: state.counter + 1 };
- *   // showCounter is GONE!
- * }
- *
- * CORRECT - Includes all properties:
- * if (action.type === 'increment') {
- *   return {
- *     counter: state.counter + 1,
- *     showCounter: state.showCounter  // Preserved!
- *   };
- * }
- *
- * MULTIPLE STATE PROPERTIES EXAMPLE (Lesson 317):
- * ===============================================
- *
- * const initialState = {
- *   counter: 0,        // Numeric state
- *   showCounter: true  // Boolean state
- * };
- *
- * // In reducer - ALWAYS include all properties!
- * if (action.type === 'increment') {
- *   return {
- *     counter: state.counter + 1,     // Changed
- *     showCounter: state.showCounter  // Unchanged, but MUST be included
- *   };
- * }
- *
- * if (action.type === 'toggle') {
- *   return {
- *     counter: state.counter,         // Unchanged, but MUST be included
- *     showCounter: !state.showCounter // Changed (inverted)
- *   };
- * }
- *
- * ACCESSING MULTIPLE STATE PROPERTIES IN COMPONENTS (Lesson 317):
- * ===============================================================
- * INSTRUCTOR QUOTE:
- * "We can use this [useSelector] multiple times to retrieve different pieces
- * of data from the state."
- *
- * // In component:
- * const counter = useSelector(state => state.counter);
- * const show = useSelector(state => state.showCounter);
- *
- * Each useSelector call:
- * - Subscribes to that specific piece of state
- * - Re-renders component when that data changes
- *
- * CONDITIONAL RENDERING WITH REDUX STATE (Lesson 317):
- * ====================================================
- * INSTRUCTOR QUOTE:
- * "So now here with show extracted, we now can render this div here
- * conditionally by checking if show and only rendering the div if show
- * is truthy, like this."
- *
- * // JSX pattern:
- * {show && <div className={classes.value}>{counter}</div>}
- *
- * TESTING THE FEATURE (Lesson 317):
- * =================================
- * INSTRUCTOR QUOTE:
- * "If we now save this and reload, if we click Toggle Counter, it's gone,
- * if I click this again, it's there again. I can still increase it even
- * if it's hidden but it only shows up when, well, when I click Toggle Counter."
- *
- * Key observations:
- * - Counter value persists even when hidden
- * - Toggle only affects visibility, not the counter value
- * - Each piece of state is independent but managed together
- *
- * ============================================================================
- * LESSON 318 - NEVER MUTATE STATE! SUMMARY
- * ============================================================================
- *
- * THE GOLDEN RULE OF REDUX (Lesson 318):
- * ======================================
- * INSTRUCTOR QUOTE:
- * "You should never, super important, never mutate the state, the existing state.
- * You should never change the existing state. Instead, always override it by
- * returning a brand new state object."
- *
- * WHY IS THIS SO IMPORTANT? (Lesson 318):
- * =======================================
- * 1. REDUX RELIES ON REFERENCE EQUALITY:
- *    - Redux checks if state changed by comparing object references
- *    - If you mutate and return same object, Redux may not detect changes
- *    - Components may not re-render properly
- *
- * 2. TIME-TRAVEL DEBUGGING BREAKS:
- *    - Redux DevTools stores snapshots of state
- *    - Mutations corrupt the history
- *    - You can't "go back in time" properly
- *
- * 3. HIDDEN BUGS (Lesson 318):
- *    INSTRUCTOR QUOTE:
- *    "This can lead to bugs, unpredictable behavior and it can make debugging
- *    your application harder as well."
- *
- * REFERENCE VS PRIMITIVE VALUES REFRESHER:
- * ========================================
- * See: https://academind.com/tutorials/reference-vs-primitive-values/
- *
- * PRIMITIVES (Numbers, Strings, Booleans):
- * - Stored directly in memory
- * - Copying creates independent value
- *   let a = 5;
- *   let b = a;  // b is now 5, independent of a
- *   b = 10;     // a is still 5
- *
- * REFERENCE TYPES (Objects, Arrays):
- * - Variables store POINTERS to memory location
- * - Copying copies the POINTER, not the data!
- *   let obj = { name: 'Max' };
- *   let obj2 = obj;        // SAME object!
- *   obj2.name = 'Anna';    // Both obj.name and obj2.name are 'Anna'!
- *
- * WHY MUTATIONS ARE DANGEROUS IN REDUX (Lesson 318):
- * ==================================================
- * INSTRUCTOR QUOTE:
- * "And because objects and arrays are reference values in JavaScript, it's easy
- * to accidentally override and change the existing state."
- *
- * When you write:
- *   state.counter++;   // This modifies the ORIGINAL state object!
- *   return state;      // Returns the SAME object reference
- *
- * Redux might think nothing changed because the reference is identical!
- *
- * CORRECT IMMUTABLE PATTERNS:
- * ===========================
- *
- * FOR SIMPLE VALUES:
- * ------------------
- * WRONG:   state.counter++; return state;
- * CORRECT: return { counter: state.counter + 1, ...otherProps };
- *
- * FOR OBJECTS:
- * ------------
- * WRONG:   state.user.name = 'New'; return state;
- * CORRECT: return { ...state, user: { ...state.user, name: 'New' } };
- *
- * FOR ARRAYS:
- * -----------
- * WRONG (push):    state.items.push(newItem); return state;
- * CORRECT (concat): return { ...state, items: state.items.concat(newItem) };
- * CORRECT (spread): return { ...state, items: [...state.items, newItem] };
- *
- * WRONG (splice):   state.items.splice(index, 1); return state;
- * CORRECT (filter): return { ...state, items: state.items.filter((_, i) => i !== index) };
- *
- * WRONG (direct):   state.items[0].completed = true; return state;
- * CORRECT (map):    return {
- *                    ...state,
- *                    items: state.items.map((item, i) =>
- *                      i === 0 ? { ...item, completed: true } : item
- *                    )
- *                  };
- *
- * MUTATING VS NON-MUTATING ARRAY METHODS:
- * =======================================
- *
- * | MUTATES (Avoid!)     | DOESN'T MUTATE (Safe!) |
- * |----------------------|------------------------|
- * | push()               | concat()               |
- * | pop()                | slice()                |
- * | shift()              | filter()               |
- * | unshift()            | map()                  |
- * | splice()             | [...spread]            |
- * | sort()               | toSorted()             |
- * | reverse()            | toReversed()           |
- *
- * IT WORKS, BUT IT'S WRONG (Lesson 318):
- * ======================================
- * INSTRUCTOR QUOTE:
- * "Well, if we do that and we reload, everything works. So it's not easy to see
- * that this is wrong, but it is, even though it works."
- *
- * The danger: Mutations may APPEAR to work in simple cases, but will cause
- * mysterious bugs as your app grows. Issues include:
- * - Components not re-rendering
- * - Stale data appearing
- * - DevTools showing incorrect state
- * - Tests passing but app failing
- *
- * NESTED STATE IS TRICKY (Lesson 318):
- * ====================================
- * INSTRUCTOR QUOTE:
- * "And especially when you have a state with nested objects and arrays, it's
- * easy to accidentally mutate your existing state. And therefore you should
- * be super careful that you do this in an immutable way."
- *
- * EXAMPLE - DEEPLY NESTED STATE:
- * const state = {
- *   users: [
- *     { id: 1, profile: { name: 'Max', settings: { theme: 'dark' } } }
- *   ]
- * };
- *
- * // To change the theme, you must copy at EVERY level:
- * return {
- *   ...state,
- *   users: state.users.map(user =>
- *     user.id === 1
- *       ? {
- *           ...user,
- *           profile: {
- *             ...user.profile,
- *             settings: {
- *               ...user.profile.settings,
- *               theme: 'light'
- *             }
- *           }
- *         }
- *       : user
- *   )
- * };
- *
- * Note: This is verbose! Redux Toolkit (next lesson) makes this much easier.
- *
- * WHY EMPHASIZE THIS NOW? (Lesson 318):
- * =====================================
- * INSTRUCTOR QUOTE:
- * "Now, at this point it might look a little bit too early to emphasize it
- * like this, because this is a fairly simple state here, but it is super
- * important, easy to mess up, and something you should know right from the
- * start which is why I am emphasizing it here."
- *
- * KEY TAKEAWAYS (Lesson 318):
- * ==========================
- * 1. NEVER write: state.property = newValue
- * 2. NEVER write: state.array.push(item)
- * 3. ALWAYS return a brand new object: { ...spread, changes }
- * 4. ALWAYS copy nested objects/arrays at each level
- * 5. Use non-mutating array methods: concat, filter, map, slice
- * 6. Test thoroughly - mutations can hide for a long time
- *
- * ============================================================================
- * LESSON 319 - REDUX CHALLENGES & INTRODUCTION TO REDUX TOOLKIT
- * ============================================================================
- *
- * WHAT WE'VE LEARNED SO FAR (Lesson 319):
- * =======================================
- * INSTRUCTOR QUOTE:
- * "So by now we learned a lot about the important basics of Redux and how we
- * use it. Now the more complex our projects become the more complex it can
- * get to use Redux correctly."
+ * BENEFITS:
+ * =========
+ * 1. Each file has a single responsibility
+ * 2. Easier to find and modify specific features
+ * 3. Better for team collaboration
+ * 4. Scales well as application grows
+ * 5. Cleaner imports in components
  *
  * INSTRUCTOR QUOTE:
- * "Now I wanted to show you the core foundation first so that you understand
- * how it works but now I want to dive into an approach that's a bit easier
- * to set up and maintain."
- *
- * ============================================================================
- * PROBLEM #1: ACTION TYPE IDENTIFIERS (Lesson 319)
- * ============================================================================
- *
- * THE TYPO PROBLEM (Lesson 319):
- * ==============================
- * INSTRUCTOR QUOTE:
- * "One potential issue can be our action types. These identifiers, I mentioned
- * it before, you of course have to avoid typos. If you dispatch an action, you
- * have to make sure that you don't mistype the identifier here otherwise it of
- * course won't be handled by the reducer or won't be handled correctly."
- *
- * EXAMPLES OF ACTION TYPE PROBLEMS:
- * ---------------------------------
- * In our current code, we use string identifiers like:
- *   - 'increment'
- *   - 'decrement'
- *   - 'increase'
- *   - 'toggle'
- *
- * What if someone types:
- *   dispatch({ type: 'incremnt' });  // Typo! Missing 'e'
- *   dispatch({ type: 'INCREMENT' }); // Case mismatch!
- *   dispatch({ type: 'inc' });       // Wrong identifier!
- *
- * None of these would be handled by the reducer - they'd just fall through
- * to the default case and return unchanged state. NO ERROR WOULD BE THROWN!
- *
- * SCALING PROBLEMS (Lesson 319):
- * ==============================
- * INSTRUCTOR QUOTE:
- * "Now that's not a problem in a small app like this but in bigger applications
- * with a lot of developers working on the app and with a lot of different
- * actions it's super easy to imagine that you could mess up one of these
- * identifiers."
- *
- * CLASHING IDENTIFIERS (Lesson 319):
- * ==================================
- * INSTRUCTOR QUOTE:
- * "You could even have clashing identifiers there so clashing identifier names."
- *
- * Example: Two developers might independently create actions with the same name:
- *   - User feature: { type: 'reset' }    // Resets user state
- *   - Cart feature: { type: 'reset' }    // Resets cart state
- *
- * Both actions would trigger BOTH reducers unintentionally!
- *
- * DESIRED SOLUTION (Lesson 319):
- * ==============================
- * INSTRUCTOR QUOTE:
- * "So therefore having some way of defining those identifiers once and then
- * reusing them would be nice."
- *
- * ============================================================================
- * PROBLEM #2: LARGE STATE OBJECTS & LONG REDUCERS (Lesson 319)
- * ============================================================================
- *
- * THE DATA GROWTH PROBLEM (Lesson 319):
- * =====================================
- * INSTRUCTOR QUOTE:
- * "Another potential problem is the amount of data which we manage here. The
- * more data we have the more different pieces of state we have, the bigger
- * our state objects get."
- *
- * COPY EVERYTHING PATTERN (Lesson 319):
- * =====================================
- * INSTRUCTOR QUOTE:
- * "And that means that we need to copy a lot of state when we update the
- * counter we still need to copy and keep all the other state properties."
- *
- * Current simple state:
- * const initialState = {
- *   counter: 0,
- *   showCounter: true,
- * };
- *
- * Imagine a real application state:
- * const initialState = {
- *   user: { id, name, email, preferences, settings, ... },
- *   products: [ ...hundreds of products ],
- *   cart: { items, totals, shipping, ... },
- *   orders: [ ...order history ],
- *   ui: { modals, notifications, loading states, ... },
- *   filters: { search, category, price range, ... },
- *   // ... potentially dozens more properties
- * };
- *
- * Every action would need to spread ALL of this!
- *
- * UNMAINTAINABLE REDUCER FILES (Lesson 319):
- * ==========================================
- * INSTRUCTOR QUOTE:
- * "And it also means that this reducer function gets longer and longer and
- * all of a sudden we might have an unmaintainable big Redux file."
- *
- * SAME PROBLEM AS REACT CONTEXT (Lesson 319):
- * ===========================================
- * INSTRUCTOR QUOTE:
- * "And you might recall that I brought this up as one potential disadvantage
- * of React Context. If we put everything into one context provider file.
- * Now we can end up with the same problem with the Redux but thankfully
- * there are solutions for that with Redux."
- *
- * ============================================================================
- * PROBLEM #3: STATE IMMUTABILITY COMPLEXITY (Lesson 319)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Another potential problem we could be facing is the state immutability
- * which we have to respect. I talked about it in the last lecture. We have
- * to ensure that we always return a brand new state snapshot and that we
- * don't accidentally change the existing state anywhere."
- *
- * NESTED DATA IS ESPECIALLY PROBLEMATIC (Lesson 319):
- * ===================================================
- * INSTRUCTOR QUOTE:
- * "And especially if you have more complex data with nested objects and
- * arrays it's easy to mess this up and accidentally change some nested
- * data even though you didn't want to."
- *
- * INSTRUCTOR QUOTE:
- * "So it would be great if we would have some help with that as well. And
- * if we could ensure that we don't accidentally manipulate nested data or
- * anything like that."
- *
- * Example of accidentally mutating nested state:
- *
- * // WRONG - This mutates nested state!
- * if (action.type === 'updateUserEmail') {
- *   state.user.email = action.email;  // MUTATION!
- *   return { ...state };  // Spread doesn't help - user object was already changed
- * }
- *
- * // CORRECT but verbose:
- * if (action.type === 'updateUserEmail') {
- *   return {
- *     ...state,
- *     user: {
- *       ...state.user,
- *       email: action.email
- *     }
- *   };
- * }
- *
- * ============================================================================
- * TRADITIONAL SOLUTION #1: ACTION TYPE CONSTANTS (Lesson 319)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "For example, for ensuring that we have unique identifiers and we don't
- * miss type we could create constants, let's say a constant named increments
- * which stores this identifier, and we then export this constant."
- *
- * HOW IT WOULD WORK:
- * ==================
- *
- * // In store/index.js - define and export constants:
- * export const INCREMENT = 'increment';
- * export const DECREMENT = 'decrement';
- * export const INCREASE = 'increase';
- * export const TOGGLE = 'toggle';
- *
- * // In reducer - use constants instead of strings:
- * if (action.type === INCREMENT) {  // Not 'increment'
- *   return { ... };
- * }
- *
- * // In component - import and use constants:
- * import { INCREMENT } from '../store/index';
- *
- * const incrementHandler = () => {
- *   dispatch({ type: INCREMENT });  // Not 'increment'
- * };
- *
- * INSTRUCTOR QUOTE:
- * "And we check that constants value here and we then import and use that
- * constant in the counter component so that here we use the type increment
- * and we just import increments."
- *
- * BENEFITS OF CONSTANTS:
- * ======================
- * 1. Typos cause compile errors, not silent failures
- * 2. IDE autocomplete works
- * 3. Single source of truth for action names
- * 4. Easier refactoring
- *
- * INSTRUCTOR QUOTE:
- * "That is something we could do to fix this issue. And these are approaches
- * which we typically used in the past with Redux."
- *
- * ============================================================================
- * TRADITIONAL SOLUTION #2: SPLIT REDUCERS (Lesson 319)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "There also are solutions for splitting your reducer into multiple smaller
- * reducers so that you don't get this large super big file."
- *
- * EXAMPLE - SPLIT BY FEATURE:
- * ===========================
- *
- * // store/reducers/userReducer.js
- * const userReducer = (state, action) => {
- *   // Only handles user-related actions
- * };
- *
- * // store/reducers/cartReducer.js
- * const cartReducer = (state, action) => {
- *   // Only handles cart-related actions
- * };
- *
- * // store/index.js - Combine reducers
- * import { combineReducers, createStore } from 'redux';
- * import userReducer from './reducers/userReducer';
- * import cartReducer from './reducers/cartReducer';
- *
- * const rootReducer = combineReducers({
- *   user: userReducer,
- *   cart: cartReducer
- * });
- *
- * const store = createStore(rootReducer);
- *
- * ============================================================================
- * TRADITIONAL SOLUTION #3: IMMUTABILITY LIBRARIES (Lesson 319)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And there also our solutions and third-party packages which allow you to
- * automatically copy state and ensure that you don't accidentally edit it."
- *
- * EXAMPLE - IMMER LIBRARY:
- * ========================
- * Libraries like Immer let you "mutate" a draft state, and it produces
- * an immutable update behind the scenes:
- *
- * import produce from 'immer';
- *
- * // This LOOKS like mutation but is actually immutable:
- * const nextState = produce(state, draft => {
- *   draft.user.email = action.email;  // Looks like mutation
- *   draft.cart.items.push(newItem);   // Looks like mutation
- * });
- * // nextState is a brand new object with the changes
- *
- * ============================================================================
- * THE MODERN SOLUTION: REDUX TOOLKIT (Lesson 319)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "But we actually don't need to dive into those various solutions anymore.
- * Instead there is another library called Redux Toolkit."
- *
- * WHAT IS REDUX TOOLKIT? (Lesson 319):
- * ====================================
- * INSTRUCTOR QUOTE:
- * "And you can just Google for Redux Toolkit to find its official page.
- * It's actually developed by the same person or the same team as React Redux
- * and Redux itself."
- *
- * INSTRUCTOR QUOTE:
- * "And Redux Toolkit simply as an extra package which makes working with
- * Redux more convenient and easier."
- *
- * IS IT REQUIRED? (Lesson 319):
- * ============================
- * INSTRUCTOR QUOTE:
- * "You don't have to use it, unlike Redux and react Redux which we installed
- * before, you don't have to install and use Redux toolkit but if you use it,
- * certain things will get easier."
- *
- * WHAT REDUX TOOLKIT SOLVES:
- * ==========================
- *
- * | Problem                    | Manual Solution         | Redux Toolkit Solution    |
- * |----------------------------|-------------------------|---------------------------|
- * | Action type typos          | Export constants        | Auto-generated types      |
- * | Large reducer files        | combineReducers         | createSlice               |
- * | State immutability         | Immer library           | Immer built-in            |
- * | Boilerplate code           | Lots of setup           | Minimal configuration     |
- * | Action creators            | Manual functions        | Auto-generated            |
- * | Store configuration        | Manual setup            | configureStore            |
- *
- * WHY LEARN CORE REDUX FIRST? (Lesson 319):
- * =========================================
- * INSTRUCTOR QUOTE:
- * "Now I wanted to show you the core foundation first so that you understand
- * how it works but now I want to dive into an approach that's a bit easier
- * to set up and maintain."
- *
- * Understanding core Redux concepts:
- * - Makes debugging easier
- * - Helps understand what Redux Toolkit does under the hood
- * - Useful when working with legacy codebases
- * - Gives you the foundation to make informed decisions
- *
- * NEXT STEP (Lesson 319):
- * =======================
- * INSTRUCTOR QUOTE:
- * "And therefore, in the next lecture we're going to get started with
- * Redux Toolkit."
- *
- * KEY TAKEAWAYS (Lesson 319):
- * ==========================
- * 1. As Redux apps grow, three main problems emerge:
- *    - Action type management (typos, clashes)
- *    - Large state objects and long reducers
- *    - State immutability complexity
- *
- * 2. Traditional solutions exist (constants, combineReducers, Immer)
- *    but require manual setup and additional code
- *
- * 3. Redux Toolkit is the modern, recommended solution that:
- *    - Is developed by the same team as Redux
- *    - Solves all three problems automatically
- *    - Makes Redux code cleaner and easier to maintain
- *    - Is optional but highly recommended
- *
- * NEXT STEPS (Upcoming Lessons):
- * ==============================
- * - Installing Redux Toolkit
- * - Using createSlice to define state, reducers, and actions together
- * - Using configureStore for simpler store setup
- * - Automatic immutable updates with built-in Immer
+ * "And in bigger application stat can ensure that our code stays maintainable
+ * and is easier to manage because now we have a lean index JS file and then
+ * pretty lean files for our different state slices which are then focused on
+ * one specific type of state, not required here but definitely helpful in
+ * bigger applications. And even here, it certainly doesn't hurt."
  */
