@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lesson 329)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330)
  * ============================================================================
  *
  * THE MORE COMPLEX SLICE (Lesson 329):
@@ -65,19 +65,11 @@ const cartSlice = createSlice({
    * ================
    * {
    *   items: [
-   *     { id: 'p1', title: 'Product 1', price: 6, quantity: 2, totalPrice: 12 },
-   *     { id: 'p2', title: 'Product 2', price: 3, quantity: 1, totalPrice: 3 },
+   *     { id: 'p1', name: 'Product 1', price: 6, quantity: 2, totalPrice: 12 },
+   *     { id: 'p2', name: 'Product 2', price: 3, quantity: 1, totalPrice: 3 },
    *   ],
    *   totalQuantity: 3  // Sum of all quantities (2 + 1)
    * }
-   *
-   * NOTE ON totalAmount (Lesson 329):
-   * =================================
-   * INSTRUCTOR QUOTE:
-   * "And the total amount is probably also something which makes sense, so
-   * the total price which also should be zero initially. Though for this
-   * application we actually don't need this, because we're not showing the
-   * total price anywhere, so I guess we can omit this."
    */
   initialState: {
     items: [],
@@ -242,10 +234,13 @@ const cartSlice = createSlice({
 
     /**
      * =========================================================================
-     * REMOVE ITEM FROM CART (Lesson 329)
+     * REMOVE ITEM FROM CART (Lesson 330)
      * =========================================================================
      *
-     * This is the counterpart to addItemToCart.
+     * INSTRUCTOR QUOTE (Lesson 330):
+     * "Now when we remove items from the cart, we go to the remove item
+     * from cart method and there we do the opposite. So there we also, first
+     * of all, find the existing item."
      *
      * LOGIC:
      * ======
@@ -254,21 +249,62 @@ const cartSlice = createSlice({
      * 3. If quantity is 1: remove the item entirely from array
      * 4. If quantity > 1: just decrement quantity and totalPrice
      *
-     * NOTE: The instructor mentions this action but doesn't fully implement
-     * it in this lesson. The implementation below follows the described logic.
+     * IMPORTANT FIX (Lesson 330):
+     * ===========================
+     * INSTRUCTOR QUOTE:
+     * "In the else case... we also should update the total price of that item.
+     * And that's something I initially forgot here actually. So that's a bug
+     * I would say, which I introduced there."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So here it should be existing item, total price is equal to existing
+     * item, total price minus existing item price, so minus the individual
+     * price of one such item."
      */
     removeItemFromCart(state, action) {
+      /**
+       * GETTING THE ID (Lesson 330):
+       * ============================
+       * Unlike addItemToCart which receives a full item object,
+       * removeItemFromCart only needs the ID to find and update the item.
+       */
       const id = action.payload; // Just the ID, not a full item object
       const existingItem = state.items.find((item) => item.id === id);
 
+      /**
+       * DECREMENT TOTAL QUANTITY:
+       * =========================
+       * Always decrement totalQuantity when removing an item,
+       * regardless of whether we're reducing quantity or removing entirely.
+       */
       state.totalQuantity--;
 
       if (existingItem.quantity === 1) {
-        // Remove item entirely from cart
-        // filter() creates a new array (immutable operation)
+        /**
+         * QUANTITY IS 1 - REMOVE ITEM ENTIRELY (Lesson 330):
+         * ==================================================
+         * INSTRUCTOR QUOTE:
+         * "If the quantity is one and we click Minus, we remove the item
+         * entirely from the cart."
+         *
+         * filter() creates a new array excluding the item with this ID.
+         * This is an immutable operation that Redux Toolkit handles safely.
+         */
         state.items = state.items.filter((item) => item.id !== id);
       } else {
-        // Decrease quantity and total price
+        /**
+         * QUANTITY > 1 - DECREASE QUANTITY (Lesson 330):
+         * ==============================================
+         * INSTRUCTOR QUOTE:
+         * "In the else case... we reduce the quantity by one. And we also should
+         * update the total price of that item. And that's something I initially
+         * forgot here actually. So that's a bug I would say, which I introduced there."
+         *
+         * INSTRUCTOR QUOTE:
+         * "So here it should be existing item, total price is equal to existing
+         * item, total price minus existing item price, so minus the individual
+         * price of one such item."
+         */
         existingItem.quantity--;
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
       }
@@ -285,18 +321,18 @@ const cartSlice = createSlice({
  * - Default export: The slice itself (for configureStore)
  * - Named export: Action creators (for components to dispatch)
  *
- * USAGE IN COMPONENTS:
- * ====================
+ * USAGE IN COMPONENTS (Lesson 330):
+ * =================================
  * import { cartActions } from '../store/cart-slice';
  *
- * // Adding an item:
+ * // Adding an item (from ProductItem):
  * dispatch(cartActions.addItemToCart({
  *   id: 'p1',
  *   title: 'Product Name',
  *   price: 6.99
  * }));
  *
- * // Removing an item:
+ * // Removing an item (from CartItem):
  * dispatch(cartActions.removeItemFromCart('p1')); // Just pass the ID
  */
 export const cartActions = cartSlice.actions;
