@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-321)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-322)
  * ============================================================================
  *
  * This component demonstrates how to:
@@ -9,6 +9,7 @@
  * - Alternative: Using connect() for class-based components (Lesson 315)
  * - Attaching payload data to actions (Lesson 316)
  * - Working with multiple state properties (Lesson 317)
+ * - Using auto-generated action creators (Lesson 322)
  *
  * LESSON 320 - REDUX TOOLKIT createSlice (STORE-SIDE CHANGES):
  * ============================================================
@@ -26,20 +27,19 @@
  * - Can pass single reducer OR a map of reducers (for multiple slices)
  * - Behind the scenes, merges multiple reducers automatically
  *
- * THE DISPATCHING QUESTION (Lesson 321):
- * =====================================
+ * LESSON 322 - ACTION CREATORS (COMPONENT CHANGES):
+ * =================================================
+ * Lesson 322 answers "How do we dispatch actions with createSlice?"
+ *
  * INSTRUCTOR QUOTE:
- * "Now the question is, how do we dispatch actions? Because we don't have our
- * own, if checks, we don't know what the identifiers for our actions should be.
- * We just have these method names but how do we now know what to dispatch?"
+ * "Now for dispatching actions, createSlice has got us covered. It automatically
+ * creates unique action identifiers for our different reducers."
  *
- * Currently, this component still dispatches actions the old way:
- *   dispatch({ type: 'increment' })
- *
- * In the next part of the lesson, we'll use auto-generated action creators:
- *   dispatch(counterActions.increment())
- *
- * This eliminates string-based action types and potential typos!
+ * KEY CHANGES IN THIS COMPONENT:
+ * - Import counterActions from store
+ * - Use counterActions.increment() instead of { type: 'increment' }
+ * - Use counterActions.increase(10) instead of { type: 'increase', amount: 10 }
+ * - No more string-based action types = no more typos!
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -139,6 +139,30 @@ import classes from './Counter.module.css';
  * "Well, there is another hook which we can use, the useDispatch hook."
  */
 import { useSelector, useDispatch } from 'react-redux';
+
+/**
+ * ============================================================================
+ * IMPORTING ACTION CREATORS (Lesson 322)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And by doing this we can then go to the component where we need the actions
+ * in this case to counter JS file, and import from our index JS file here, and
+ * import the counter actions which we just exported there."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And now, again that's an object which has our reducer names our reducer method
+ * names as keys."
+ *
+ * counterActions contains action creator methods:
+ * - counterActions.increment()     -> { type: 'counter/increment' }
+ * - counterActions.decrement()     -> { type: 'counter/decrement' }
+ * - counterActions.increase(10)    -> { type: 'counter/increase', payload: 10 }
+ * - counterActions.toggleCounter() -> { type: 'counter/toggleCounter' }
+ *
+ * These method names MATCH the reducer method names in createSlice!
+ */
+import { counterActions } from '../store/index';
 
 const Counter = () => {
   /**
@@ -276,27 +300,52 @@ const Counter = () => {
    * import { INCREMENT } from '../store/index';
    * dispatch({ type: INCREMENT });  // Now typos cause compile errors!
    *
-   * MODERN SOLUTION - REDUX TOOLKIT (Lesson 319):
+   * MODERN SOLUTION - REDUX TOOLKIT (Lesson 322):
    * =============================================
    * Redux Toolkit auto-generates action types AND action creators,
-   * so you never write string identifiers manually. Coming in next lesson!
+   * so you never write string identifiers manually.
+   *
+   * =========================================================================
+   * USING ACTION CREATORS (Lesson 322)
+   * =========================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "So now if we want to dispatch an action here all we have to do is we have
+   * to access counter actions. And then for example, here, increment and actually
+   * execute this as a method because increment is a method which when executed
+   * creates a full action object with the type set to this automatically created
+   * unique action identifier."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So we get a full action object automatically created for us here."
+   *
+   * OLD WAY:  dispatch({ type: 'increment' })
+   * NEW WAY:  dispatch(counterActions.increment())
+   *
+   * What counterActions.increment() returns:
+   *   { type: 'counter/increment' }
+   *
+   * The action creator:
+   * - Creates the action object FOR us
+   * - Uses a UNIQUE type identifier (counter/increment)
+   * - No chance of typos!
+   * - Full IDE autocomplete support!
    */
   const incrementHandler = () => {
-    dispatch({ type: 'increment' });
+    dispatch(counterActions.increment());
   };
 
   /**
-   * DECREMENT HANDLER (Lesson 314)
-   * ==============================
-   * INSTRUCTOR QUOTE:
-   * "And then here in the decrement handler I'll dispatch an object with a
-   * type property with a value of decrement."
+   * DECREMENT HANDLER (Lessons 314 & 322)
+   * =====================================
+   * INSTRUCTOR QUOTE (Lesson 322):
+   * "And I also want to do this for a decrement, counterActions.decrement"
    *
-   * Same pattern as increment - dispatch an action object with a type
-   * property that matches what the reducer handles.
+   * OLD WAY:  dispatch({ type: 'decrement' })
+   * NEW WAY:  dispatch(counterActions.decrement())
    */
   const decrementHandler = () => {
-    dispatch({ type: 'decrement' });
+    dispatch(counterActions.decrement());
   };
 
   /**
@@ -346,23 +395,46 @@ const Counter = () => {
    * or anything like that. But I'll go with amount because that's most
    * descriptive in my opinion."
    *
-   * ACTION STRUCTURE WITH PAYLOAD:
-   * ==============================
-   * {
-   *   type: 'increase',   // REQUIRED - identifies the action
-   *   amount: 10          // PAYLOAD - extra data for the reducer
-   * }
-   *
-   * The 'amount' property name here MUST match what the reducer expects!
-   * In our reducer: action.amount
+   * =========================================================================
+   * PASSING PAYLOAD WITH ACTION CREATORS (Lesson 322)
+   * =========================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "Of course, we do have to make sure though, that we use the amount property
-   * name here, because that's the name, the property name I'm gonna use when
-   * dispatching this action."
+   * "The question just is what do we do here when we also need a payload? And
+   * the answer is we still use our counterActions and then use this automatically
+   * generated action creator method here. But then to this method, we pass our
+   * payload data."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So for example, an object with any property value pairs of our choice or
+   * just the number by which we want to increase here. So any kind of value can
+   * be passed to increase."
+   *
+   * OLD WAY:  dispatch({ type: 'increase', amount: 10 })
+   * NEW WAY:  dispatch(counterActions.increase(10))
+   *
+   * HOW PAYLOAD WORKS (Lesson 322):
+   * ===============================
+   * INSTRUCTOR QUOTE:
+   * "The only important thing to know here is how you then extract that value
+   * because what Redux Toolkit will do for us here is it will automatically
+   * create action objects which dispatches where the type is some unique
+   * identifier generated by Redux toolkit and any value you pass here. As an
+   * argument to this action method you're executing, will it be stored in an
+   * extra field named payload."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that field name is not up to you. That's the default Redux Toolkit
+   * uses here."
+   *
+   * What counterActions.increase(10) returns:
+   *   { type: 'counter/increase', payload: 10 }
+   *
+   * NOTE: The value is stored in action.payload, NOT action.amount!
+   * The reducer must access action.payload to get the value.
    */
   const increaseHandler = () => {
-    dispatch({ type: 'increase', amount: 10 });
+    dispatch(counterActions.increase(10));
   };
 
   /**
@@ -395,9 +467,20 @@ const Counter = () => {
    * - useState: For truly component-local state (recommended for toggle visibility)
    * - Redux: For state shared across multiple components
    * - In this demo: Using Redux to learn the concepts
+   *
+   * USING ACTION CREATORS (Lesson 322):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "And all the four toggle of course, toggle a counter."
+   *
+   * OLD WAY:  dispatch({ type: 'toggle' })
+   * NEW WAY:  dispatch(counterActions.toggleCounter())
+   *
+   * Note: The method name is toggleCounter (matching the reducer method name),
+   * not just 'toggle'.
    */
   const toggleCounterHandler = () => {
-    dispatch({ type: 'toggle' });
+    dispatch(counterActions.toggleCounter());
   };
 
   return (
