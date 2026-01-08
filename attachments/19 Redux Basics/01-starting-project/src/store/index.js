@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lessons 311-325)
+ * REDUX STORE CONFIGURATION (Lessons 311-326)
  * ============================================================================
  *
  * ============================================================================
@@ -77,7 +77,8 @@
  * - Lesson 322: Auto-generated action creators
  * - Lesson 323: Multiple slices and reducer maps
  * - Lesson 324: Using auth state in components
- * - Lesson 325: Splitting code into separate files (THIS LESSON)
+ * - Lesson 325: Splitting code into separate files
+ * - Lesson 326: Section summary and Redux vs Context (THIS LESSON)
  */
 
 import { configureStore } from '@reduxjs/toolkit';
@@ -258,4 +259,280 @@ export default store;
  * pretty lean files for our different state slices which are then focused on
  * one specific type of state, not required here but definitely helpful in
  * bigger applications. And even here, it certainly doesn't hurt."
+ *
+ * ============================================================================
+ * LESSON 326 - COURSE SECTION SUMMARY
+ * ============================================================================
+ *
+ * SECTION OVERVIEW (Lesson 326):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "Now that is it for this course section. Was again another long section but
+ * it was about a super important topic, Redux."
+ *
+ * WHAT WE LEARNED IN THIS SECTION:
+ * ================================
+ *
+ * 1. REDUX WITHOUT REACT (Lesson 311):
+ *    - How Redux works as a standalone library
+ *    - Creating stores, reducers, and dispatching actions
+ *    - Subscribing to store changes
+ *
+ * 2. REDUX WITHOUT REDUX TOOLKIT (Lessons 311-318):
+ *    - Manual reducer setup with if/else or switch statements
+ *    - Creating action objects manually with type property
+ *    - State immutability rules (never mutate!)
+ *    - Copying state manually in every return statement
+ *
+ * WHY REDUX TOOLKIT IS RECOMMENDED (Lesson 326):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "Now Redux Toolkit is amazing and my strong recommendation is to use it
+ * because as you saw throughout this course section, it's much easier to
+ * manage your state and your reducers and your actions when using Toolkit
+ * instead of having to set up everything on your own."
+ *
+ * WHY WE LEARNED WITHOUT REDUX TOOLKIT FIRST (Lesson 326):
+ * ========================================================
+ * INSTRUCTOR QUOTE:
+ * "Still it's important to know what happens behind the scenes which is why
+ * I did start without Redux Toolkit so that you really know everything about
+ * Redux what you need to know and so that you're also able to dive into
+ * projects that might not be using Redux Toolkit but just Redux."
+ *
+ * CORE REDUX CONCEPTS REVIEWED (Lesson 326):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "Now then you learn about these core Redux concepts and this Redux flow
+ * you learned about actions and reducers or this one root reducer and about
+ * the fact that Redux has this one central data store."
+ *
+ * THE REDUX FLOW:
+ * ===============
+ *
+ *   Component                    Redux Store
+ *   ---------                    -----------
+ *       |                             |
+ *       |  1. dispatch(action)        |
+ *       | --------------------------> |
+ *       |                             |
+ *       |         2. Reducer receives action
+ *       |            Returns new state
+ *       |                             |
+ *       |  3. useSelector reads       |
+ *       |     updated state           |
+ *       | <-------------------------- |
+ *       |                             |
+ *       |  4. Component re-renders    |
+ *
+ * CONFIGURESTORE RECAP (Lesson 326):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "That we can create this store with configure store when using Redux Toolkit.
+ * And that then as an argument, we pass in an object where we assign our route
+ * reducer. We either point at just one reducer function, or we set up such a
+ * map of reducers, which are then merged together into one big reducer behind
+ * the scenes."
+ *
+ * Two ways to configure:
+ *
+ * // Single reducer:
+ * configureStore({
+ *   reducer: counterSlice.reducer
+ * });
+ *
+ * // Reducer map (multiple slices):
+ * configureStore({
+ *   reducer: {
+ *     counter: counterReducer,
+ *     auth: authReducer,
+ *   }
+ * });
+ *
+ * USING REDUX DATA IN COMPONENTS (Lesson 326):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "Now we also learned how we can then use our Redux managed data that we can
+ * use useSelector in our components to read data from our Redux managed state
+ * and that we can use useDispatch to get access to that dispatch function
+ * which we use to dispatch our actions, which then ultimately leads to our
+ * Redux state being changed."
+ *
+ * | Hook          | Purpose                              | Usage                        |
+ * |---------------|--------------------------------------|------------------------------|
+ * | useSelector   | Read state from store                | const val = useSelector(...) |
+ * | useDispatch   | Get dispatch function                | const dispatch = useDispatch()|
+ *
+ * ACTION PAYLOADS (Lesson 326):
+ * ============================
+ * INSTRUCTOR QUOTE:
+ * "We also learned that we can pass extra data to those actions because you
+ * often have actions and reducer function there for which do need extra data."
+ *
+ * // Without payload:
+ * dispatch(counterActions.increment())
+ *
+ * // With payload:
+ * dispatch(counterActions.increase(10))  // 10 becomes action.payload
+ *
+ * CLASS-BASED COMPONENTS (Lesson 326):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "We also learned how we would connect a class-based component to Redux.
+ * We're not going to use that in this course and you might not see it too
+ * often out there but on the other hand, there are a lot of projects which
+ * still only use class based components. So that's definitely also something
+ * you should be aware of."
+ *
+ * - Use connect() from react-redux instead of hooks
+ * - mapStateToProps for reading state
+ * - mapDispatchToProps for dispatching actions
+ *
+ * ============================================================================
+ * REDUX VS REACT CONTEXT (Lesson 326)
+ * ============================================================================
+ *
+ * REDUX IS NOT ALWAYS REQUIRED (Lesson 326):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "Redux is an amazing library. It can replace React context as you learned
+ * but it's also not a must use library. It's always up to you to decide
+ * whether for your project you want to go with React context, or if you
+ * need Redux."
+ *
+ * WHEN REACT CONTEXT MIGHT BE ENOUGH (Lesson 326):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "React context can have certain disadvantages as I mentioned, but they might
+ * not matter in your project. You might not see or measure any performance
+ * issues and you might not have a super complex setup and management. Then
+ * of course, there's nothing wrong with sticking to React context."
+ *
+ * REDUX ADDS BUNDLE SIZE (Lesson 326):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "Because you must not forget that if you use Redux, you do add an extra
+ * third party library. And that of course adds up to the overall code of
+ * your application. It makes your application bigger. So Redux is not
+ * always better."
+ *
+ * DECISION GUIDE: REDUX VS CONTEXT
+ * ================================
+ *
+ * | Factor                      | React Context      | Redux              |
+ * |-----------------------------|--------------------|--------------------|
+ * | Bundle size                 | None (built-in)    | Adds ~10-15KB      |
+ * | Learning curve              | Lower              | Higher             |
+ * | Boilerplate                 | Less               | More (but Toolkit helps) |
+ * | DevTools                    | React DevTools     | Redux DevTools     |
+ * | Performance (large state)   | Can have issues    | Optimized          |
+ * | Middleware support          | Manual             | Built-in           |
+ * | Complex state logic         | Harder             | Easier             |
+ * | Time-travel debugging       | No                 | Yes                |
+ *
+ * WHEN TO CHOOSE REDUX:
+ * =====================
+ * - Large application with complex state
+ * - Many state updates that need to be tracked
+ * - Need for time-travel debugging
+ * - Multiple developers working on state
+ * - Lots of async operations with state
+ * - Performance issues with Context
+ *
+ * WHEN CONTEXT IS FINE:
+ * =====================
+ * - Smaller to medium applications
+ * - Simple state that doesn't change often
+ * - Theme, locale, or auth state only
+ * - No performance issues observed
+ * - Want to minimize dependencies
+ *
+ * CONCLUSION (Lesson 326):
+ * ========================
+ * INSTRUCTOR QUOTE:
+ * "It can be a decent option and now you know how it works and when you should
+ * maybe consider it. Now we are going to work more with it throughout the
+ * course but this is now a solid foundation which you need as a React developer."
+ *
+ * ============================================================================
+ * COMPLETE SECTION REFERENCE (Lessons 311-326)
+ * ============================================================================
+ *
+ * LESSON-BY-LESSON SUMMARY:
+ * =========================
+ *
+ * 311 - Redux without React
+ *       - createStore, reducers, dispatch, subscribe
+ *       - Store folder and file setup
+ *
+ * 312 - Providing store to React
+ *       - Provider component from react-redux
+ *       - Wrapping App component
+ *
+ * 313 - Reading state with useSelector
+ *       - Selector functions
+ *       - Automatic subscriptions
+ *
+ * 314 - Dispatching actions with useDispatch
+ *       - Getting dispatch function
+ *       - Action objects with type property
+ *
+ * 315 - Class-based components with connect()
+ *       - mapStateToProps, mapDispatchToProps
+ *       - Higher-order component pattern
+ *
+ * 316 - Action payloads
+ *       - Adding extra data to actions
+ *       - Accessing payload in reducer
+ *
+ * 317 - Multiple state properties
+ *       - Managing complex state
+ *       - Multiple useSelector calls
+ *
+ * 318 - State immutability rules
+ *       - Never mutate state directly
+ *       - Always return new objects
+ *
+ * 319 - Redux challenges & intro to Toolkit
+ *       - Problems with manual Redux
+ *       - Why Redux Toolkit helps
+ *
+ * 320 - createSlice for slices
+ *       - Slice configuration
+ *       - Immer for immutable updates
+ *
+ * 321 - configureStore for store setup
+ *       - Configuration object
+ *       - Reducer property
+ *
+ * 322 - Auto-generated action creators
+ *       - slice.actions
+ *       - Exporting and using actions
+ *
+ * 323 - Multiple slices and reducer maps
+ *       - Separation of concerns
+ *       - State access changes
+ *
+ * 324 - Using auth state in components
+ *       - Conditional rendering
+ *       - Login/logout functionality
+ *
+ * 325 - Splitting code into separate files
+ *       - One file per slice
+ *       - Clean imports
+ *
+ * 326 - Section summary (THIS LESSON)
+ *       - Redux Toolkit recommendation
+ *       - Redux vs Context
+ *       - When to use each
+ *
+ * KEY TAKEAWAYS:
+ * ==============
+ * 1. Redux provides centralized state management
+ * 2. Redux Toolkit simplifies Redux significantly
+ * 3. useSelector reads state, useDispatch dispatches actions
+ * 4. Slices group related state and reducers together
+ * 5. configureStore merges multiple reducers automatically
+ * 6. Redux is powerful but not always necessary
+ * 7. Choose based on your project's needs
  */
