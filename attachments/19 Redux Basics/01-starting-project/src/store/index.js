@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lessons 311-322)
+ * REDUX STORE CONFIGURATION (Lessons 311-323)
  * ============================================================================
  *
  * This file contains the Redux store setup using Redux Toolkit's createSlice
- * and configureStore.
+ * and configureStore with MULTIPLE SLICES.
  *
  * LESSON 311-319 - CORE REDUX FOUNDATIONS:
  * ========================================
@@ -45,6 +45,18 @@
  * 6. Passing payload data to action creators
  * 7. Payload is stored in action.payload (Redux Toolkit default)
  * 8. No more manual action objects or worrying about typos
+ *
+ * LESSON 323 - KEY LEARNING OBJECTIVES:
+ * =====================================
+ * 1. Authentication state is PERFECT for Redux (app-wide state)
+ * 2. Separation of concerns: Create separate slices for different state
+ * 3. Rename initialState to initialCounterState (for clarity)
+ * 4. Create authSlice with login/logout reducers
+ * 5. Using a REDUCER MAP in configureStore for multiple slices
+ * 6. Still only ONE Redux store, even with multiple slices
+ * 7. Export authActions for use in components
+ * 8. IMPORTANT: State access changes with reducer map (state.counter.counter)
+ * 9. Update selectors in components to use new state structure
  *
  * WHY CREATE A STORE FOLDER? (Lesson 311)
  * ========================================
@@ -118,8 +130,20 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
 
 /**
  * ============================================================================
- * INITIAL STATE CONSTANT (Lesson 317)
+ * INITIAL COUNTER STATE (Lessons 317 & 323)
  * ============================================================================
+ *
+ * RENAMING TO initialCounterState (Lesson 323):
+ * =============================================
+ * INSTRUCTOR QUOTE:
+ * "I'll rename this initialState up here to the initialCounterState because we
+ * will soon have more than one initialState and therefore, I set the initialState
+ * property in this slice to the value stored in initialCounterState."
+ *
+ * Why rename?
+ * - We're adding a second slice (authSlice) with its own initial state
+ * - Clear naming prevents confusion about which state belongs to which slice
+ * - Better organization when multiple slices exist
  *
  * EXTRACTING INITIAL STATE FOR READABILITY (Lesson 317):
  * ======================================================
@@ -128,25 +152,55 @@ import { createSlice, configureStore } from '@reduxjs/toolkit';
  * a constant named initialState like this and assign initialState here then
  * just to make this a bit easier to read."
  *
- * Why extract initial state?
- * - Cleaner reducer function signature
- * - Easier to see all initial values at a glance
- * - Can be reused if needed (e.g., for reset functionality)
- * - Better organization as state grows more complex
- *
- * ADDING showCounter (Lesson 317):
- * ================================
- * INSTRUCTOR QUOTE:
- * "When we start besides having a counter which has a value of zero, I wanna
- * have a showCounter field which has a value of true or false, that's up to you."
- *
- * This demonstrates managing MULTIPLE pieces of state in Redux:
+ * This state belongs to the COUNTER slice:
  * - counter: The numeric value being counted
  * - showCounter: Whether to display the counter (boolean)
  */
-const initialState = {
+const initialCounterState = {
   counter: 0,
   showCounter: true,
+};
+
+/**
+ * ============================================================================
+ * INITIAL AUTH STATE (Lesson 323)
+ * ============================================================================
+ *
+ * WHY AUTHENTICATION STATE IS PERFECT FOR REDUX (Lesson 323):
+ * ==========================================================
+ * INSTRUCTOR QUOTE:
+ * "And unlike the counter state, which was just a basic example, the authentication
+ * state and the answer to the question whether the user is logged in or not is
+ * indeed not just local state, which matters to one specific component but it is
+ * application-wide state, which matters to a lot of components in the application."
+ *
+ * INSTRUCTOR QUOTE:
+ * "It matters to the Header, it matters to the Auth component, it matters to the
+ * UserProfile component in the end. So therefore, this is the user authenticated
+ * state is a perfect example for a state that we could manage with React context
+ * or since this section is about Redux, with Redux."
+ *
+ * LOCAL STATE vs APPLICATION-WIDE STATE:
+ * ======================================
+ * | State Type        | Use Case                | Solution         |
+ * |-------------------|-------------------------|------------------|
+ * | Local state       | One component only      | useState         |
+ * | App-wide state    | Multiple components     | Redux or Context |
+ *
+ * Authentication state:
+ * - Needed in Header (show/hide nav items, logout button)
+ * - Needed in Auth component (show login form)
+ * - Needed in UserProfile component (show user info)
+ * - Needed in App (conditional rendering of components)
+ *
+ * CREATING A SEPARATE INITIAL STATE (Lesson 323):
+ * ===============================================
+ * INSTRUCTOR QUOTE:
+ * "I'll add a const initialAuthState, which again let's say is an object where
+ * we have the isAuthenticated property, which initially is set to false."
+ */
+const initialAuthState = {
+  isAuthenticated: false,
 };
 
 /**
@@ -193,15 +247,21 @@ const counterSlice = createSlice({
   name: 'counter',
 
   /**
-   * INITIAL STATE (Lesson 320):
-   * ===========================
+   * INITIAL STATE (Lessons 320 & 323):
+   * ==================================
    * INSTRUCTOR QUOTE:
    * "Next you need to set up an initial state. And here I wanna set my initial
    * state equal to that object or I therefore just point at initial state."
    *
-   * Using ES6 shorthand: initialState is equivalent to initialState: initialState
+   * UPDATED FOR LESSON 323:
+   * ======================
+   * INSTRUCTOR QUOTE:
+   * "And therefore, I set the initialState property in this slice to the value
+   * stored in initialCounterState."
+   *
+   * Now using initialCounterState (renamed from initialState for clarity)
    */
-  initialState,
+  initialState: initialCounterState,
 
   /**
    * REDUCERS OBJECT (Lesson 320):
@@ -390,6 +450,91 @@ const counterSlice = createSlice({
 
 /**
  * ============================================================================
+ * CREATING THE AUTH SLICE (Lesson 323)
+ * ============================================================================
+ *
+ * WHY A SEPARATE SLICE FOR AUTH? (Lesson 323):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "We could, of course, also add a new property to our state here. Let's say the
+ * isAuthenticated property and set this to false and then add a new reducer,
+ * login, for example, a new reducer method, and in here, we then set
+ * isAuthenticated to true. We could do this but logically it makes no sense."
+ *
+ * SEPARATION OF CONCERNS (Lesson 323):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "The authentication status has nothing to do with the counter. Whilst it would
+ * technically work, in programming we typically wanna separate our concerns. We
+ * wanna make sure that this slice really focuses on the counter-related state
+ * and actions. And we should create a brand new slice for the authentication state."
+ *
+ * WHY NOT PUT EVERYTHING IN ONE SLICE?
+ * ====================================
+ * | Approach               | Pros                  | Cons                    |
+ * |------------------------|-----------------------|-------------------------|
+ * | One big slice          | Simple for tiny apps  | Hard to maintain        |
+ * | Separate slices        | Organized, scalable   | Slightly more setup     |
+ *
+ * CREATING A SECOND SLICE (Lesson 323):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "And then we can add a new slice below the other slice, though the exact position
+ * does not matter. But we can call createSlice again to create another slice and
+ * this slice also, of course, needs an object to be configured, just as our first
+ * slice. This slice will be configured in exactly the same way just with different
+ * values."
+ *
+ * NAMING THE SLICE (Lesson 323):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "So we add a name here and set this to auth, for example, or authentication,
+ * whatever you want."
+ */
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: initialAuthState,
+
+  /**
+   * AUTH REDUCERS (Lesson 323):
+   * ===========================
+   * INSTRUCTOR QUOTE:
+   * "And then we need to register our reducers. These reducer methods, which can
+   * change this state. And here I think two methods make sense. A login method
+   * for well, logging the user in. And a logout method for logging the user out."
+   */
+  reducers: {
+    /**
+     * LOGIN REDUCER (Lesson 323):
+     * ===========================
+     * INSTRUCTOR QUOTE:
+     * "In both methods, we'll receive the current state as an argument automatically
+     * provided by Redux and we can then mutate this state, even though we technically
+     * shouldn't but as I explained, we can do it here because under the hood, our
+     * code will be transformed to actually not mutate the original state. So it's
+     * safe to do that here."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And we can set state.isAuthenticated equal to true here in the login state."
+     */
+    login(state) {
+      state.isAuthenticated = true;
+    },
+
+    /**
+     * LOGOUT REDUCER (Lesson 323):
+     * ============================
+     * INSTRUCTOR QUOTE:
+     * "And here in the logout state, set isAuthenticated to false."
+     */
+    logout(state) {
+      state.isAuthenticated = false;
+    },
+  },
+});
+
+/**
+ * ============================================================================
  * USING THE SLICE WITH configureStore (Lesson 321)
  * ============================================================================
  *
@@ -510,15 +655,79 @@ const counterSlice = createSlice({
  * - Each key becomes a property in the global state
  * - Access via: state.counter, state.auth, state.cart
  *
- * WHY WE USE SINGLE REDUCER HERE (Lesson 321):
- * ============================================
+ * ============================================================================
+ * USING A REDUCER MAP FOR MULTIPLE SLICES (Lesson 323)
+ * ============================================================================
+ *
+ * STILL ONLY ONE REDUX STORE (Lesson 323):
+ * ========================================
  * INSTRUCTOR QUOTE:
- * "And that's an alternative we can use, not an alternative we will use here
- * though because here we only have one reducer so we can direct the assign, that
- * reducer from the counterSlice as our main reducer for configureStore."
+ * "Now, very important, when you work with multiple slices, you still only have
+ * one Redux store, so you still only call configureStore once. This does not change."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this store only has one root reducer here but as I briefly explained earlier,
+ * this reducer actually does not just take a reducer function as an argument but
+ * also an object which acts as a map of reducers."
+ *
+ * CREATING THE REDUCER MAP (Lesson 323):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "...where you can then have any key names of your choice, for example, counter
+ * and then point at your different reducers. Here, for example, add
+ * counterSlice.reducer. And then we also add auth let's say as a key and then
+ * here we add authSlice.reducer."
+ *
+ * AUTOMATIC MERGING (Lesson 323):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "And these individual reducers here will then automatically be merged together
+ * into one main reducer, which is exposed to this store. That's how we can combine
+ * multiple slices and their reducers."
+ *
+ * IMPORTANT - STATE ACCESS CHANGES (Lesson 323):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "Just one important hint, since we are merging our reducers together here, the
+ * way we access data in our store changes slightly and we will need to adjust
+ * this for the counter as well."
+ *
+ * OLD (single reducer):
+ *   reducer: counterSlice.reducer
+ *   Access: state.counter, state.showCounter
+ *
+ * NEW (reducer map):
+ *   reducer: { counter: counterSlice.reducer, auth: authSlice.reducer }
+ *   Access: state.counter.counter, state.counter.showCounter
+ *           state.auth.isAuthenticated
+ *
+ * WHY state.counter.counter? (Lesson 323):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "So for counter, I use counter as an identifier here, hence in the Counter
+ * component, when we wanna access the counter, it's actually state.counter.counter.
+ * This might look strange but with the first .counter, we make React Redux aware
+ * of the fact that we wanna dive into this slice in the end, into the state
+ * produced by this slicer's reducer and then in that state slice, we simply have
+ * a property named counter."
+ *
+ * STATE STRUCTURE WITH REDUCER MAP:
+ * =================================
+ * {
+ *   counter: {                    // Key from reducer map
+ *     counter: 0,                 // Property from initialCounterState
+ *     showCounter: true           // Property from initialCounterState
+ *   },
+ *   auth: {                       // Key from reducer map
+ *     isAuthenticated: false      // Property from initialAuthState
+ *   }
+ * }
  */
 const store = configureStore({
-  reducer: counterSlice.reducer,
+  reducer: {
+    counter: counterSlice.reducer,
+    auth: authSlice.reducer,
+  },
 });
 
 /**
@@ -699,6 +908,32 @@ export default store;
  * dispatch(counterActions.increase(10));
  */
 export const counterActions = counterSlice.actions;
+
+/**
+ * ============================================================================
+ * EXPORTING AUTH ACTION CREATORS (Lesson 323)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, our authSlice, of course, also exposes actions, which we can use and
+ * therefore, I wanna expose those as well. So export authActions, which is
+ * authSlice.actions."
+ *
+ * authActions contains:
+ * - authActions.login()  -> Sets isAuthenticated to true
+ * - authActions.logout() -> Sets isAuthenticated to false
+ *
+ * USAGE IN COMPONENTS:
+ * ====================
+ * import { authActions } from '../store/index';
+ *
+ * // Login button handler:
+ * dispatch(authActions.login());
+ *
+ * // Logout button handler:
+ * dispatch(authActions.logout());
+ */
+export const authActions = authSlice.actions;
 
 /**
  * ============================================================================

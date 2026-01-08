@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-322)
+ * COUNTER COMPONENT - READING & DISPATCHING REDUX STATE (Lessons 313-323)
  * ============================================================================
  *
  * This component demonstrates how to:
@@ -10,6 +10,7 @@
  * - Attaching payload data to actions (Lesson 316)
  * - Working with multiple state properties (Lesson 317)
  * - Using auto-generated action creators (Lesson 322)
+ * - Accessing state with reducer map (state.counter.counter) (Lesson 323)
  *
  * LESSON 320 - REDUX TOOLKIT createSlice (STORE-SIDE CHANGES):
  * ============================================================
@@ -40,6 +41,21 @@
  * - Use counterActions.increment() instead of { type: 'increment' }
  * - Use counterActions.increase(10) instead of { type: 'increase', amount: 10 }
  * - No more string-based action types = no more typos!
+ *
+ * LESSON 323 - STATE ACCESS WITH REDUCER MAP (SELECTOR CHANGES):
+ * ==============================================================
+ * INSTRUCTOR QUOTE:
+ * "If we currently have a look at our application, you see the counter is not being
+ * output down there because we failed to extract it from the store. In the Counter
+ * component, our code hasn't changed but the code here changed."
+ *
+ * KEY CHANGES IN THIS COMPONENT (Lesson 323):
+ * - state.counter → state.counter.counter
+ * - state.showCounter → state.counter.showCounter
+ *
+ * WHY? Because we now use a REDUCER MAP in configureStore:
+ *   reducer: { counter: counterSlice.reducer, auth: authSlice.reducer }
+ * The key 'counter' becomes the first level in state access.
  *
  * LESSON 313 - KEY LEARNING OBJECTIVES:
  * =====================================
@@ -166,8 +182,8 @@ import { counterActions } from '../store/index';
 
 const Counter = () => {
   /**
-   * USING useSelector TO READ REDUX STATE (Lesson 313)
-   * ===================================================
+   * USING useSelector TO READ REDUX STATE (Lessons 313 & 323)
+   * =========================================================
    * Pass a selector function that receives state and returns
    * the specific piece of state you need.
    *
@@ -175,8 +191,38 @@ const Counter = () => {
    * - Sets up subscription to the store
    * - Re-renders component when selected data changes
    * - Clears subscription on unmount
+   *
+   * =========================================================================
+   * UPDATED FOR REDUCER MAP (Lesson 323)
+   * =========================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "All we have to do to make it work again is go to our selectors, so to
+   * useSelector, and when we drill into our state to read a value from there,
+   * we now need to use these identifiers, which we assigned in this reducer map
+   * to drill into our specific state slices."
+   *
+   * WHY state.counter.counter? (Lesson 323):
+   * ========================================
+   * INSTRUCTOR QUOTE:
+   * "So for counter, I use counter as an identifier here, hence in the Counter
+   * component, when we wanna access the counter, it's actually state.counter.counter.
+   * This might look strange but with the first .counter, we make React Redux aware
+   * of the fact that we wanna dive into this slice in the end, into the state
+   * produced by this slicer's reducer and then in that state slice, we simply have
+   * a property named counter."
+   *
+   * BREAKDOWN:
+   * ==========
+   * state.counter.counter
+   *       ^       ^
+   *       |       +-- Property name in initialCounterState (counter: 0)
+   *       +---------- Key name in reducer map (counter: counterSlice.reducer)
+   *
+   * OLD (single reducer):   state.counter
+   * NEW (reducer map):      state.counter.counter
    */
-  const counter = useSelector((state) => state.counter);
+  const counter = useSelector((state) => state.counter.counter);
 
   /**
    * =========================================================================
@@ -206,8 +252,22 @@ const Counter = () => {
    * You could do: const state = useSelector(state => state);
    * But this would re-render on ANY state change, even unrelated ones.
    * Selecting specific pieces is more efficient.
+   *
+   * UPDATED FOR REDUCER MAP (Lesson 323):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "And for showCounter, it's state.counter.showCounter."
+   *
+   * INSTRUCTOR QUOTE:
+   * "If that would be named differently, if that would be value, then in the
+   * Counter component, it would be state.counter.value. But since it isn't
+   * value but counter, I'll revert it... and that's why we have state.counter.counter.
+   * And for showCounter, it's state.counter.showCounter."
+   *
+   * OLD (single reducer):   state.showCounter
+   * NEW (reducer map):      state.counter.showCounter
    */
-  const show = useSelector((state) => state.showCounter);
+  const show = useSelector((state) => state.counter.showCounter);
 
   /**
    * USING useDispatch TO GET THE DISPATCH FUNCTION (Lesson 314)
