@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * UI SLICE - User Interface State Management (Lesson 329)
+ * UI SLICE - User Interface State Management (Lessons 329, 337)
  * ============================================================================
  *
  * SECTION 20: ADVANCED REDUX - INTRODUCTION
@@ -8,7 +8,7 @@
  * This section builds on Section 19 (Redux Basics) and focuses on:
  * - Practical Redux implementation in a shopping cart application
  * - Managing multiple state slices (UI state + cart state)
- * - Handling side effects and asynchronous code with Redux (upcoming lessons)
+ * - Handling side effects and asynchronous code with Redux
  *
  * WHY A SEPARATE UI SLICE? (Lesson 329):
  * ======================================
@@ -19,91 +19,78 @@
  *
  * SEPARATION OF CONCERNS:
  * =======================
- * | Slice      | Responsibility                    | State Properties        |
- * |------------|-----------------------------------|-------------------------|
- * | ui-slice   | UI state (visibility, modals)     | cartIsVisible           |
- * | cart-slice | Business data (cart items)        | items, totalQuantity    |
+ * | Slice      | Responsibility                    | State Properties           |
+ * |------------|-----------------------------------|----------------------------|
+ * | ui-slice   | UI state (visibility, modals)     | cartIsVisible, notification|
+ * | cart-slice | Business data (cart items)        | items, totalQuantity       |
  *
- * INSTRUCTOR QUOTE:
- * "That's not a must do, you could put it all into one code file, but splitting
- * it up ensures that all the code stays maintainable and manageable and we
- * don't end up with super large code files."
+ * ============================================================================
+ * NOTIFICATION STATE (Lesson 337)
+ * ============================================================================
  *
- * WHAT THIS SLICE MANAGES:
- * ========================
- * - Whether the cart is visible or hidden
- * - Could be extended for: notifications, loading states, modal visibility, etc.
+ * INSTRUCTOR QUOTE (Lesson 337):
+ * "Now for this we could import use state and set up some local state in this
+ * component, some is loading state and maybe an error state... We could do all
+ * of that, there would be nothing wrong with that and it would be a good way
+ * of handling this. But since we already have a UI slice here in Redux why not
+ * use that? Why don't we add more to the state we're managing here with Redux
+ * and we managed the notification, which we're showing with help of Redux now."
  *
- * THE FEATURE WE'RE BUILDING (Lesson 329):
- * ========================================
- * INSTRUCTOR QUOTE:
- * "I wanna ensure that if we click the My Cart button, we toggle this cart,
- * so we show it. And if it is already showing up, we hide it."
+ * WHY USE REDUX FOR NOTIFICATIONS?
+ * ================================
+ * Option 1: Local state (useState) - Fine for simple cases
+ * Option 2: Redux state - Better when:
+ *   - Multiple components need to trigger notifications
+ *   - You want centralized notification management
+ *   - The notification is tied to global async operations
+ *
+ * WHAT THIS SLICE NOW MANAGES:
+ * ============================
+ * - cartIsVisible: Whether the cart panel is shown
+ * - notification: Current notification to display (or null)
  */
 
 import { createSlice } from '@reduxjs/toolkit';
 
 /**
  * ============================================================================
- * CREATING THE UI SLICE (Lesson 329)
+ * CREATING THE UI SLICE (Lessons 329, 337)
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 329):
  * "For this in the UI Slice JS file, I'll import something from @reduxjs/toolkit.
  * And that something as you learned, is to create slice function which does
  * what the name implies. When we call it, it creates a slice."
- *
- * SLICE CONFIGURATION (Lesson 329):
- * =================================
- * INSTRUCTOR QUOTE:
- * "And you learned that it needs to object for a configuration where we give
- * this slice a unique name and here I'll choose UI as a name, but of course
- * the name is up to you."
  */
 const uiSlice = createSlice({
-  /**
-   * SLICE NAME (Lesson 329):
-   * ========================
-   * INSTRUCTOR QUOTE:
-   * "We give this slice a unique name and here I'll choose UI as a name,
-   * but of course the name is up to you."
-   *
-   * The name is used to generate action types automatically:
-   * - 'ui/toggle' for the toggle action
-   */
   name: 'ui',
 
   /**
-   * INITIAL STATE (Lesson 329):
-   * ===========================
-   * INSTRUCTOR QUOTE:
-   * "Then in addition we wanna set up some initial state and we can create
-   * a separate constant for this, or do it here on the fly and I'll do the
-   * ladder and my initial state is that the cartIsVisible property is false."
+   * INITIAL STATE (Lessons 329, 337):
+   * =================================
+   * INSTRUCTOR QUOTE (Lesson 329):
+   * "My initial state is that the cartIsVisible property is false."
    *
-   * INSTRUCTOR QUOTE:
-   * "That will be the property which controls whether the cart is visible
-   * or not, as you can probably guess by its name."
-   *
-   * Starting with cart hidden - user must click "My Cart" to see it.
+   * INSTRUCTOR QUOTE (Lesson 337):
+   * "For this I'll add a notification property to initial state and I'll set
+   * it to null initially, so that initially we have no notification."
    */
   initialState: {
     cartIsVisible: false,
+    /**
+     * NOTIFICATION STATE STRUCTURE (Lesson 337):
+     * ==========================================
+     * When null: No notification shown
+     * When set: { status: 'pending'|'success'|'error', title: string, message: string }
+     *
+     * Examples:
+     * - { status: 'pending', title: 'Sending...', message: 'Sending cart data' }
+     * - { status: 'success', title: 'Success!', message: 'Sent cart data successfully' }
+     * - { status: 'error', title: 'Error!', message: 'Sending cart data failed' }
+     */
+    notification: null,
   },
 
-  /**
-   * REDUCERS (Lesson 329):
-   * ======================
-   * INSTRUCTOR QUOTE:
-   * "Then we need the reducers key, which is a map of all the reducers or
-   * to be precise it's a map of methods that represent all the different
-   * cases, the different actions we wanna handle with that reducer."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And here, I actually only need one method. Let's say the toggle method,
-   * which receives the old state and where I then wanna set state.cartIsVisible
-   * to the opposite of what it was."
-   */
   reducers: {
     /**
      * TOGGLE REDUCER (Lesson 329):
@@ -117,44 +104,92 @@ const uiSlice = createSlice({
      * using Redux Toolkit, we are not really mutating the state, even though
      * it looks like we do, but instead Redux Toolkit will kind of capture
      * this code and use another third party library immer to ensure that this
-     * is actually translated to some immutable code which creates a new state
-     * object instead of manipulating the existing one."
-     *
-     * Without Redux Toolkit, you'd have to write:
-     *   return { ...state, cartIsVisible: !state.cartIsVisible };
-     *
-     * With Redux Toolkit:
-     *   state.cartIsVisible = !state.cartIsVisible;
-     *   // Immer handles immutability behind the scenes!
+     * is actually translated to some immutable code."
      */
     toggle(state) {
       state.cartIsVisible = !state.cartIsVisible;
+    },
+
+    /**
+     * =========================================================================
+     * SHOW NOTIFICATION REDUCER (Lesson 337)
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE (Lesson 337):
+     * "But then we can add a new reducer which we could call set notification
+     * or show notification maybe, where we get our state and where we also use
+     * the action because I expect some action payload here because the kind of
+     * notification that should be shown should be encoded in the action as a
+     * payload."
+     *
+     * PAYLOAD STRUCTURE:
+     * ==================
+     * action.payload = {
+     *   status: 'pending' | 'success' | 'error',
+     *   title: string,
+     *   message: string
+     * }
+     *
+     * INSTRUCTOR QUOTE:
+     * "And we then therefore set state notification equal to an object let's say...
+     * where I have a status key which I expect to get from my action payload.
+     * Let's say there, we also expect the status property and status could be
+     * something like pending, error and success. And then we also expect a title
+     * let's say which we also get from the action payload and a message which
+     * we all know I expect as a property on the action payload."
+     *
+     * USAGE IN App.js (Lesson 337):
+     * ============================
+     * // Pending state (when starting to send)
+     * dispatch(uiActions.showNotification({
+     *   status: 'pending',
+     *   title: 'Sending...',
+     *   message: 'Sending cart data'
+     * }));
+     *
+     * // Success state (when done)
+     * dispatch(uiActions.showNotification({
+     *   status: 'success',
+     *   title: 'Success!',
+     *   message: 'Sent cart data successfully'
+     * }));
+     *
+     * // Error state (when failed)
+     * dispatch(uiActions.showNotification({
+     *   status: 'error',
+     *   title: 'Error!',
+     *   message: 'Sending cart data failed'
+     * }));
+     */
+    showNotification(state, action) {
+      state.notification = {
+        status: action.payload.status,
+        title: action.payload.title,
+        message: action.payload.message,
+      };
     },
   },
 });
 
 /**
  * ============================================================================
- * EXPORTING THE SLICE AND ACTIONS (Lesson 329)
+ * EXPORTING THE SLICE AND ACTIONS (Lessons 329, 337)
  * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now I'll store it in a constant UI Slice and then export this as a default
- * here. And actually that's not all I wanna export, I also wanna export the
- * actions, so I'll create a new constant which I export, the UI Actions, which
- * we get by accessing uislice.actions."
  *
  * TWO EXPORTS FROM THIS FILE:
  * ===========================
  * 1. uiSlice (default) - Used in store/index.js for configureStore
  * 2. uiActions (named) - Used in components to dispatch actions
  *
+ * AVAILABLE ACTIONS:
+ * ==================
+ * - uiActions.toggle() - Toggle cart visibility
+ * - uiActions.showNotification(payload) - Show a notification
+ *
  * HOW uiActions WORKS:
  * ====================
- * uiActions.toggle() returns an action object:
- * { type: 'ui/toggle' }
- *
- * This is an auto-generated action creator - no manual action objects needed!
+ * uiActions.toggle() returns: { type: 'ui/toggle' }
+ * uiActions.showNotification({...}) returns: { type: 'ui/showNotification', payload: {...} }
  */
 export const uiActions = uiSlice.actions;
 
