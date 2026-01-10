@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-335)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-335, 338)
  * ============================================================================
  *
  * ============================================================================
@@ -228,6 +228,18 @@
  */
 
 import { createSlice } from '@reduxjs/toolkit';
+
+/**
+ * IMPORTING UI ACTIONS (Lesson 338):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Here this need to get access to the UI actions, so I will import them,
+ * I'll import UI actions from UI slice, from that folder."
+ *
+ * We need uiActions to dispatch showNotification from within our thunk.
+ * This allows us to show pending/success/error notifications.
+ */
+import { uiActions } from './ui-slice';
 
 /**
  * ============================================================================
@@ -634,7 +646,231 @@ const cartSlice = createSlice({
 
 /**
  * ============================================================================
- * EXPORTS (Lesson 329)
+ * CUSTOM ACTION CREATOR - THUNK (Lesson 338)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 338):
+ * "Now before we start fetching data, let's have a look at the alternative,
+ * of putting all that side effect logic into our component. That is perfectly
+ * fine, but we learned that it's only one of the two options. The other option
+ * would be the usage of an action creator."
+ *
+ * WHAT IS A THUNK? (Lesson 338):
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "A thunk is simply a function, that delays an action until later, until
+ * something else finished. And we could write an action creator as a thunk,
+ * to write an action creator, which does not immediately return the action
+ * object, but which instead, returns another function which eventually returns
+ * the action."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that we can run some other code before we then dispatch the actual action
+ * object that we did want to create."
+ *
+ * AUTOMATIC VS CUSTOM ACTION CREATORS (Lesson 338):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "We are using action creators all the time. Something like this here, is an
+ * action creator. We get those action creators automatically by Redux toolkit.
+ * And we call them, to create the action objects which we dispatch. So these
+ * are these automatically created action creators."
+ *
+ * Auto-generated action creators (from createSlice):
+ * - cartActions.addItemToCart({ id, title, price })
+ * - cartActions.removeItemFromCart(id)
+ * - These return action objects like { type: 'cart/addItemToCart', payload: {...} }
+ *
+ * Custom action creator thunk (what we're creating):
+ * - sendCartData(cart)
+ * - Returns a FUNCTION that receives dispatch
+ * - Can run async code and dispatch multiple actions
+ *
+ * WHY CREATE THIS OUTSIDE THE SLICE? (Lesson 338):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "Now to create our own action creator, we can go to the end of that file,
+ * after this slice, that's important. So outside of this slice object, and
+ * there we can create a new function."
+ *
+ * Thunks are created OUTSIDE the createSlice call because:
+ * - createSlice.reducers are for synchronous state transformations
+ * - Thunks need to dispatch multiple actions and run async code
+ * - They are standalone functions that Redux Toolkit can execute
+ *
+ * REDUX TOOLKIT SUPPORTS THUNKS AUTOMATICALLY (Lesson 338):
+ * =========================================================
+ * INSTRUCTOR QUOTE:
+ * "But the great thing about Redux, when using Redux toolkit, is that it's
+ * prepared for that. It does not just accept action objects with a type
+ * property. Instead it also does accept, action creators that return functions.
+ * And if it sees, that you're dispatching, a action which is actually a
+ * function, instead of action object, it will execute that function for you."
+ *
+ * INSTRUCTOR QUOTE:
+ * "It will give us that dispatch argument automatically. So that in that
+ * executed function, we can dispatch again, because there's a such a common
+ * pattern that we wanna have action creators that can perform side effects.
+ * And that can then dispatch other actions, which eventually reached the
+ * reducers, as part of a flow of side-effects, or as a flow of steps that
+ * should be taken."
+ *
+ * WHY USE THUNKS? (Lesson 338):
+ * ============================
+ * INSTRUCTOR QUOTE:
+ * "Why would we wanna use that pattern? Well, it's simply an alternative to
+ * having that logic in your component. You can add that logic in your
+ * components. You can stick to the approach we had before, but it's also not
+ * a bad idea to keep your components lean, to not have too much logic in them."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And at the moment, by moving that logic to this action creator function,
+ * we did achieve this. This component is now leaner. It only dispatches one
+ * action, not multiple actions. It doesn't care about sending the HTTP request,
+ * and all the hard work, happens inside of our custom action creator function,
+ * in our Redux files."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And splitting our code like this, could be considered good, because it keeps
+ * our components lean. That does not mean that the other approach is bad. Both
+ * options are viable and that's why I am showing both here."
+ *
+ * @param {Object} cart - The cart data to send to Firebase
+ * @returns {Function} A function that Redux will execute with dispatch
+ */
+export const sendCartData = (cart) => {
+  /**
+   * THE RETURNED FUNCTION (Lesson 338):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "But we could create, action creator which does not return, such a action
+   * object here, but which instead returns another function. And of course in
+   * JavaScript, you can write functions that return other functions."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now that would be a function that should receive the dispatch function as
+   * a argument. And we'll see where this is coming from in a second."
+   *
+   * This function is what Redux will execute when we dispatch sendCartData(cart).
+   * Redux automatically provides the dispatch function as an argument.
+   *
+   * WHY async? (Lesson 338):
+   * =======================
+   * INSTRUCTOR QUOTE:
+   * "Now I'm using await here. And the great thing is, we can convert this into
+   * async function, this function which we returned here, that is fine."
+   *
+   * Unlike useEffect callbacks, this returned function CAN be async because:
+   * - It's just a function Redux will execute
+   * - Redux doesn't expect a cleanup function
+   * - We control when and how it's called
+   */
+  return async (dispatch) => {
+    /**
+     * DISPATCH PENDING NOTIFICATION (Lesson 338):
+     * ===========================================
+     * INSTRUCTOR QUOTE:
+     * "So in our case here, we could go to app JS, and actually grabbed this
+     * dispatch action, where we dispatch, show notification, copy it, go to
+     * the cart slice, and execute this in here."
+     *
+     * Before sending the HTTP request, we show a "Sending..." notification.
+     * We can dispatch multiple actions from within this thunk!
+     */
+    dispatch(
+      uiActions.showNotification({
+        status: 'pending',
+        title: 'Sending...',
+        message: 'Sending cart data!',
+      })
+    );
+
+    /**
+     * NESTED ASYNC FUNCTION FOR ERROR HANDLING (Lesson 338):
+     * ======================================================
+     * INSTRUCTOR QUOTE:
+     * "Now when it comes to handling the potential errors, I will actually
+     * create a new function, send request here, which is async, and put my
+     * code for sending the request and handling the response, inside of this
+     * function, so that I can, call, send request here, and await that as well,
+     * because it's a async function. It returns a promise."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And I know that it's quite some nesting of functions, but this extra
+     * nesting here is required because of how the fetch API works. Because
+     * now we can, wrap, try catch around this, await block here, and catch
+     * any errors that might be thrown from anywhere inside of this function."
+     *
+     * WHY NEST THIS FUNCTION?
+     * =======================
+     * - sendRequest is async, so it returns a Promise
+     * - We can await it and wrap in try/catch
+     * - Any thrown error (including !response.ok) will be caught
+     * - This pattern cleanly separates the HTTP logic from notification logic
+     */
+    const sendRequest = async () => {
+      const response = await fetch(
+        'https://react-13c13-default-rtdb.firebaseio.com/cart.json',
+        {
+          method: 'PUT',
+          body: JSON.stringify(cart),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Sending cart data failed.');
+      }
+    };
+
+    /**
+     * TRY/CATCH FOR ERROR HANDLING (Lesson 338):
+     * ==========================================
+     * INSTRUCTOR QUOTE:
+     * "Because now we can, wrap, try catch around this, await block here,
+     * and catch any errors that might be thrown from anywhere inside of
+     * this function. And then dispatch our error notification as well."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So here I'll first of all, dispatch success outside of the try block
+     * if this succeeds, but if we make it into this catch block instead,
+     * I wanna dispatch, this error case instead."
+     */
+    try {
+      await sendRequest();
+
+      /**
+       * SUCCESS NOTIFICATION (Lesson 338):
+       * ==================================
+       * Only dispatched if sendRequest() completes without throwing.
+       */
+      dispatch(
+        uiActions.showNotification({
+          status: 'success',
+          title: 'Success!',
+          message: 'Sent cart data successfully!',
+        })
+      );
+    } catch (error) {
+      /**
+       * ERROR NOTIFICATION (Lesson 338):
+       * ================================
+       * Dispatched if sendRequest() throws an error (network failure or
+       * response.ok is false).
+       */
+      dispatch(
+        uiActions.showNotification({
+          status: 'error',
+          title: 'Error!',
+          message: 'Sending cart data failed!',
+        })
+      );
+    }
+  };
+};
+
+/**
+ * ============================================================================
+ * EXPORTS (Lessons 329, 338)
  * ============================================================================
  *
  * Following the same pattern as ui-slice:
@@ -666,8 +902,15 @@ const cartSlice = createSlice({
  * createSlice. They are "synchronous action creators" - they just create
  * action objects.
  *
- * In upcoming lessons, we'll learn about "thunk action creators" that can
- * contain async code and side effects!
+ * EXPORTING THE THUNK (Lesson 338):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "Therefore I'll export it in cart slice, and then app JS can import. I'll
+ * import, send cart data so that function which we just exported, from store
+ * cart slice, from that file."
+ *
+ * sendCartData is our custom thunk action creator. Unlike cartActions which
+ * return action objects, sendCartData returns a function that Redux executes.
  */
 export const cartActions = cartSlice.actions;
 
