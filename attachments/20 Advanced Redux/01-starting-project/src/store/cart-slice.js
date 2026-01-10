@@ -1,10 +1,95 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332)
  * ============================================================================
  *
+ * ============================================================================
+ * CRITICAL RULE: REDUCERS AND SIDE EFFECTS (Lesson 332)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 332):
+ * "Keep in mind, reducers must be pure, side effect free, and synchronous.
+ * So when we have any code that produces a side effect or is asynchronous,
+ * like sending a HTTP request, such code must not go into our reducer functions."
+ *
+ * WHAT THIS MEANS:
+ * ================
+ * INSTRUCTOR QUOTE:
+ * "So we can't send our HTTP request inside of the reducers in our cart slice
+ * after we edited our state here. We can't go to the end of the reducer and
+ * then use the fetch API and send the request to the backend."
+ *
+ * INSTRUCTOR QUOTE:
+ * "This would totally be against the idea of Redux. It would be super bad and
+ * you must never do something like this. Don't perform a side effect inside
+ * of your reducer. No matter if it's synchronous or asynchronous, don't do it
+ * inside of the reducer and never run any asynchronous code in the reducer
+ * in general."
+ *
+ * WHAT REDUCERS CAN DO:
+ * =====================
+ * ✓ Pure state transformations (current state + action → new state)
+ * ✓ Synchronous operations only
+ * ✓ No side effects (no HTTP, no localStorage, no timers, no console.log)
+ *
+ * WHAT REDUCERS CANNOT DO:
+ * ========================
+ * ✗ Send HTTP requests (fetch, axios, etc.)
+ * ✗ Access localStorage or sessionStorage
+ * ✗ Use timers (setTimeout, setInterval)
+ * ✗ Generate random values or dates
+ * ✗ Modify anything outside of state
+ *
+ * TWO OPTIONS FOR HANDLING SIDE EFFECTS (Lesson 332):
+ * ===================================================
+ * INSTRUCTOR QUOTE:
+ * "Instead, when it comes to running such code, we have two main options
+ * where to put such code. We can execute it in the components. So we can
+ * simply ignore Redux, if you want to call it like this. Or we create
+ * something which is called an action creator which we only used indirectly
+ * thus far which also would allow us to run asynchronous code or generally
+ * any side effect code. These are our two main options."
+ *
+ * Option 1: Execute side effects in React components
+ *   - Use useEffect to send HTTP requests
+ *   - Dispatch Redux actions with the results
+ *   - Redux only handles the synchronous state updates
+ *
+ * Option 2: Use action creators (thunks)
+ *   - Create custom action creators that return functions
+ *   - These functions can contain async code
+ *   - Redux Toolkit supports this via createAsyncThunk or custom thunks
+ *
+ * ============================================================================
+ * FIREBASE BACKEND (Lesson 332)
+ * ============================================================================
+ *
+ * BACKEND URL: https://react-13c13-default-rtdb.firebaseio.com/
+ *
+ * INSTRUCTOR QUOTE (Lesson 332):
+ * "Now for that as a backend, I will again use Firebase because it's that
+ * easy to use, no backend code required, backend, which simply, well, makes
+ * our life as a developer a bit easier."
+ *
+ * GOAL (Lesson 332):
+ * ==================
+ * INSTRUCTOR QUOTE:
+ * "My idea is that whenever I edit the cart, because we add items or we reduce
+ * the quantity or remove items, whenever that happens, I wanna send a request
+ * to a backend server to store that updated cart on the backend so that when
+ * we reload this front-end application, we can fetch that saved cart from
+ * the server, load it and display it here."
+ *
+ * CURRENT PROBLEM:
+ * ================
+ * INSTRUCTOR QUOTE:
+ * "Because currently, if we add something to the cart, if we edit our cart,
+ * once I reload, all that data is lost because currently we're not storing
+ * that cart anywhere."
+ *
+ * ============================================================================
  * THE MORE COMPLEX SLICE (Lesson 329):
- * ====================================
+ * ============================================================================
  * INSTRUCTOR QUOTE:
  * "Now the missing part and arguably the more difficult part, is that we now
  * also wanna manage the content of the cart. So the cart items should be
@@ -43,6 +128,12 @@ import { createSlice } from '@reduxjs/toolkit';
  * slice from Redux @reduxtoolkit. Then we create a slice here and configure
  * it with an object. It gets a name, for example, cart, it gets an initial
  * state and it will get some reducers."
+ *
+ * REMEMBER (Lesson 332):
+ * ======================
+ * All reducers below are PURE and SYNCHRONOUS. They only transform state.
+ * Side effects (HTTP requests to Firebase) will be handled OUTSIDE of
+ * these reducers - either in React components or in action creators (thunks).
  */
 const cartSlice = createSlice({
   name: 'cart',
@@ -83,6 +174,15 @@ const cartSlice = createSlice({
    * "Now we also need functions in our reducer, so different actions which
    * this part of our state should handle in the end. And here be clearly
    * need a addItemToCart action and a removeItemFromCart action, I would argue."
+   *
+   * IMPORTANT REMINDER (Lesson 332):
+   * ================================
+   * These reducers ONLY handle state transformation. They do NOT:
+   * - Send HTTP requests to Firebase
+   * - Perform any side effects
+   * - Run any async code
+   *
+   * The HTTP sync with Firebase will be handled separately!
    */
   reducers: {
     /**
@@ -118,6 +218,12 @@ const cartSlice = createSlice({
      * 2. Check if item already exists in cart (by ID)
      * 3. If NOT exists: push new item with quantity 1
      * 4. If EXISTS: increment quantity and totalPrice of existing item
+     *
+     * NOTE (Lesson 332):
+     * ==================
+     * After this reducer runs, the cart state is updated in Redux.
+     * But the cart is NOT yet saved to Firebase! That happens separately
+     * using side effects (in components or action creators).
      */
     addItemToCart(state, action) {
       /**
@@ -230,6 +336,23 @@ const cartSlice = createSlice({
         existingItem.quantity++;
         existingItem.totalPrice = existingItem.totalPrice + newItem.price;
       }
+
+      /**
+       * WHAT WE CANNOT DO HERE (Lesson 332):
+       * ====================================
+       * INSTRUCTOR QUOTE:
+       * "So we can't send our HTTP request inside of the reducers in our cart
+       * slice after we edited our state here."
+       *
+       * ❌ WRONG - DO NOT DO THIS:
+       * fetch('https://react-13c13-default-rtdb.firebaseio.com/cart.json', {
+       *   method: 'PUT',
+       *   body: JSON.stringify(state)
+       * });
+       *
+       * This would violate the reducer purity rule!
+       * Side effects will be handled outside the reducer.
+       */
     },
 
     /**
@@ -334,6 +457,20 @@ const cartSlice = createSlice({
  *
  * // Removing an item (from CartItem):
  * dispatch(cartActions.removeItemFromCart('p1')); // Just pass the ID
+ *
+ * ABOUT ACTION CREATORS (Lesson 332):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "Or we create something which is called an action creator which we only
+ * used indirectly thus far which also would allow us to run asynchronous
+ * code or generally any side effect code."
+ *
+ * The action creators exported here (cartActions) are auto-generated by
+ * createSlice. They are "synchronous action creators" - they just create
+ * action objects.
+ *
+ * In upcoming lessons, we'll learn about "thunk action creators" that can
+ * contain async code and side effects!
  */
 export const cartActions = cartSlice.actions;
 

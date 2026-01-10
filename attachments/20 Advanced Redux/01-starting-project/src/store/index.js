@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lesson 329)
+ * REDUX STORE CONFIGURATION (Lessons 329, 332)
  * ============================================================================
  *
  * SECTION 20: ADVANCED REDUX
@@ -8,10 +8,54 @@
  * This section builds on Section 19 (Redux Basics) and focuses on:
  * - Practical implementation of Redux in a shopping cart app
  * - Managing multiple state slices
- * - Side effects and async code with Redux (upcoming lessons)
+ * - Side effects and async code with Redux (Lesson 332+)
  *
- * PROJECT SETUP (Lesson 329):
- * ===========================
+ * ============================================================================
+ * FIREBASE BACKEND INTEGRATION (Lesson 332)
+ * ============================================================================
+ *
+ * BACKEND URL: https://react-13c13-default-rtdb.firebaseio.com/
+ *
+ * INSTRUCTOR QUOTE (Lesson 332):
+ * "Now for that as a backend, I will again use Firebase because it's that
+ * easy to use, no backend code required, backend, which simply, well, makes
+ * our life as a developer a bit easier."
+ *
+ * WHAT WE'RE BUILDING (Lesson 332):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "My idea is that whenever I edit the cart, because we add items or we reduce
+ * the quantity or remove items, whenever that happens, I wanna send a request
+ * to a backend server to store that updated cart on the backend so that when
+ * we reload this front-end application, we can fetch that saved cart from
+ * the server, load it and display it here."
+ *
+ * THE PROBLEM WE'RE SOLVING (Lesson 332):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "Because currently, if we add something to the cart, if we edit our cart,
+ * once I reload, all that data is lost because currently we're not storing
+ * that cart anywhere."
+ *
+ * KEY REDUX RULE (Lesson 332):
+ * ============================
+ * INSTRUCTOR QUOTE:
+ * "Keep in mind, reducers must be pure, side effect free, and synchronous.
+ * So when we have any code that produces a side effect or is asynchronous,
+ * like sending a HTTP request, such code must not go into our reducer functions."
+ *
+ * TWO OPTIONS FOR SIDE EFFECTS (Lesson 332):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "We can execute it in the components. So we can simply ignore Redux, if you
+ * want to call it like this. Or we create something which is called an action
+ * creator which we only used indirectly thus far which also would allow us to
+ * run asynchronous code or generally any side effect code."
+ *
+ * ============================================================================
+ * PROJECT SETUP (Lesson 329)
+ * ============================================================================
+ *
  * INSTRUCTOR QUOTE:
  * "Now I got another starting project for you to which we're now going to add
  * Redux and some logic. And that will then be the project which will be used
@@ -117,6 +161,12 @@ import cartSlice from './cart-slice';
  * - state.ui.cartIsVisible - Whether cart is shown
  * - state.cart.items - Array of cart items
  * - state.cart.totalQuantity - Total items in cart
+ *
+ * ABOUT MIDDLEWARE (Lesson 332 - Preview):
+ * =========================================
+ * configureStore automatically sets up middleware that allows us to
+ * dispatch "thunks" (functions instead of action objects). This will
+ * be important for handling async code with Redux!
  */
 const store = configureStore({
   reducer: {
