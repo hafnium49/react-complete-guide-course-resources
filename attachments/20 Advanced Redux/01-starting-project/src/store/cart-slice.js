@@ -1,7 +1,64 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-333)
  * ============================================================================
+ *
+ * ============================================================================
+ * WHY THE REDUCER DOES SO MUCH WORK (Lesson 333)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 333):
+ * "Therefore it's important to recognize that the code we need to write on
+ * the frontend and where we write that code will depend on our backend code."
+ *
+ * OUR BACKEND IS A "DUMB" BACKEND (Lesson 333):
+ * =============================================
+ * INSTRUCTOR QUOTE:
+ * "Instead here we have a backend that does not do a lot of work. It basically
+ * just stores incoming data in the format it receives it in. And that means
+ * that we do need to do more work on the frontend."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Firebase the way we are using it does not have any logic on its own on
+ * the backend. So if we send some product data there, that product data would
+ * simply be added to the database but all the logic we have in the reducer
+ * for checking whether a product is already part of the cart and if it is
+ * updating its quantity, if it's not adding it - that kind of logic simply
+ * does not run on Firebase."
+ *
+ * WHAT THIS MEANS FOR OUR CODE:
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "We are not just getting the finished cart as a payload on the action,
+ * instead we get a product and we need to find out how to add it to the
+ * cart here in this code."
+ *
+ * The reducers below (addItemToCart, removeItemFromCart) contain all the
+ * transformation logic because Firebase won't do it for us:
+ * - Check if product already exists in cart
+ * - Update quantity if it exists
+ * - Add new item if it doesn't exist
+ * - Calculate totalPrice
+ * - Handle removal logic
+ *
+ * IF WE HAD A "SMART" BACKEND (Lesson 333):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "Now if we would have a backend API that does a lot of work so that does
+ * not just store incoming data but also transform it. If we had an API like
+ * this then our frontend application could do less work. It could just send
+ * data like data for a product that should be added to a cart. It could send
+ * that data to the backend, let the backend do the transformation and then
+ * use the response on the frontend to then just there hand it off to the
+ * reducer."
+ *
+ * With a smart backend, our reducer could be much simpler:
+ * replaceCart(state, action) {
+ *   state.items = action.payload.items;
+ *   state.totalQuantity = action.payload.totalQuantity;
+ * }
+ *
+ * But that's not our scenario here!
  *
  * ============================================================================
  * CRITICAL RULE: REDUCERS AND SIDE EFFECTS (Lesson 332)
@@ -168,12 +225,37 @@ const cartSlice = createSlice({
   },
 
   /**
-   * REDUCERS - ACTIONS FOR CART MANAGEMENT (Lesson 329):
-   * ====================================================
+   * REDUCERS - ACTIONS FOR CART MANAGEMENT (Lessons 329, 333):
+   * ==========================================================
    * INSTRUCTOR QUOTE:
    * "Now we also need functions in our reducer, so different actions which
    * this part of our state should handle in the end. And here be clearly
    * need a addItemToCart action and a removeItemFromCart action, I would argue."
+   *
+   * WHY THESE REDUCERS DO TRANSFORMATION WORK (Lesson 333):
+   * =======================================================
+   * INSTRUCTOR QUOTE:
+   * "We are not just getting the finished cart as a payload on the action,
+   * instead we get a product and we need to find out how to add it to the
+   * cart here in this code. And the same for removing."
+   *
+   * Because Firebase is a "dumb" backend that just stores data:
+   * - addItemToCart: receives { id, title, price }, transforms into cart item
+   * - removeItemFromCart: receives id, updates quantity or removes item
+   *
+   * THE CHALLENGE (Lesson 333):
+   * ===========================
+   * INSTRUCTOR QUOTE:
+   * "Therefore we will need to find a way to still do the work here on the
+   * frontend and at the same time then send that transformed data to the
+   * backend without doing that sending inside of the reducer because we
+   * learned that we're not allowed to do it there."
+   *
+   * SOLUTION (coming in next lessons):
+   * ==================================
+   * 1. Reducers do the transformation (this file - pure, sync)
+   * 2. After state updates, useEffect in App.js detects change
+   * 3. useEffect sends the TRANSFORMED cart to Firebase
    *
    * IMPORTANT REMINDER (Lesson 332):
    * ================================
