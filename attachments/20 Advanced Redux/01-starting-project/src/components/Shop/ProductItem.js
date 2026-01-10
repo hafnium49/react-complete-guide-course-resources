@@ -1,7 +1,31 @@
 /**
  * ============================================================================
- * PRODUCT ITEM COMPONENT - Individual Product Display (Lessons 330, 333-334)
+ * PRODUCT ITEM COMPONENT - Individual Product Display (Lessons 330, 333-335)
  * ============================================================================
+ *
+ * ============================================================================
+ * THE OPTIMAL APPROACH (Lesson 335)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 335):
+ * "Instead of doing that we wanna stick to the approach from before. We wanna
+ * dispatch the addItemToCart action and do all this heavy work inside of the
+ * Reducer function."
+ *
+ * WHAT THIS COMPONENT DOES (SIMPLE!):
+ * ===================================
+ * 1. User clicks "Add to Cart"
+ * 2. Component dispatches addItemToCart with { id, title, price }
+ * 3. That's it! The reducer handles all transformation logic.
+ *
+ * WHAT HAPPENS AFTER (Lesson 335):
+ * ================================
+ * 1. Reducer transforms state (adds item, updates quantity, calculates totalPrice)
+ * 2. Redux store updates
+ * 3. useEffect in App.js detects cart changed
+ * 4. App.js sends PUT request to Firebase with transformed cart
+ *
+ * This keeps the component LEAN while the reducer stays FAT (with logic)!
  *
  * ============================================================================
  * THE SUBOPTIMAL APPROACH - DO NOT USE (Lesson 334)
@@ -49,46 +73,13 @@
  * our code such that it doesn't mutate the state, but that only applies inside
  * of those reducer methods."
  *
- * INSTRUCTOR QUOTE:
- * "In product item so in a regular component, that's not the case and if here
- * I would set cart.totalQuantity equal to cart.totalQuantity + one then I would
- * change a JavaScript object in memory which is all the part of the Redux store
- * without making Redux aware of it because I would be changing it outside of a
- * reducer function, which is horrible which you must avoid."
- *
  * THE PROBLEMS WITH THIS APPROACH (Lesson 334):
  * =============================================
- * INSTRUCTOR QUOTE:
- * "The problem is, that if we would use this in all the parts of our application,
- * where we need to update the cart. So if we would also use it instead of cart
- * item to be precise, then we would need to copy all that logic here which I
- * added to this component to the cart item component as well."
- *
- * Problems:
  * 1. ❌ Transformation logic in component, not reducer
  * 2. ❌ Would need to duplicate this code in CartItem
  * 3. ❌ Must manually handle immutability (no Immer help)
  * 4. ❌ Easy to accidentally mutate Redux state
  * 5. ❌ Goes against "fat reducers" philosophy
- *
- * INSTRUCTOR QUOTE:
- * "We do the data transformation in some helper function and in the end
- * directly in our components, we don't do the transformation in our reducers.
- * We would be able to get rid of add item to cart if we used this replace cart
- * approach in all the places in the application and that means that our redux
- * reducers wouldn't do a lot of work. They'd just get some data and store it."
- *
- * INSTRUCTOR QUOTE:
- * "We have sub optimal code because we are performing the data transformation
- * in the component and not inside of the reducer if we rely on replace cart
- * and that is sub optimal, that's the reason why we didn't write this code
- * together."
- *
- * THE BETTER APPROACH (What we'll do instead):
- * ============================================
- * Keep transformation logic in the reducer (addItemToCart)
- * and find a different way to handle the HTTP side effect!
- * This is what the next lessons will cover.
  *
  * ============================================================================
  * THE SIDE EFFECT CHALLENGE (Lesson 333)

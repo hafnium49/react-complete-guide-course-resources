@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-334)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-335)
  * ============================================================================
  *
  * ============================================================================
@@ -305,11 +305,20 @@ const cartSlice = createSlice({
    * backend without doing that sending inside of the reducer because we
    * learned that we're not allowed to do it there."
    *
-   * SOLUTION (coming in next lessons):
-   * ==================================
+   * SOLUTION - useEffect IN App.js (Lesson 335):
+   * =============================================
+   * INSTRUCTOR QUOTE (Lesson 335):
+   * "We can simply switch the order. We can first do the work on the front end
+   * and let Redux update its store. And then in a second step thereafter we
+   * send the request to the server."
+   *
+   * THE FLOW:
    * 1. Reducers do the transformation (this file - pure, sync)
-   * 2. After state updates, useEffect in App.js detects change
-   * 3. useEffect sends the TRANSFORMED cart to Firebase
+   * 2. Redux store updates with new cart state
+   * 3. useSelector in App.js detects change
+   * 4. useEffect in App.js sends PUT request to Firebase
+   *
+   * See App.js for the implementation!
    *
    * IMPORTANT REMINDER (Lesson 332):
    * ================================
