@@ -1,7 +1,35 @@
 /**
  * ============================================================================
- * APP COMPONENT - Root Component with Redux & Firebase Sync (Lessons 329, 335, 337, 338)
+ * APP COMPONENT - Root Component with Redux & Firebase Sync (Lessons 329, 335, 337, 338, 339)
  * ============================================================================
+ *
+ * ============================================================================
+ * FETCHING CART DATA ON APP LOAD (Lesson 339)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 339):
+ * "Now what we learned about thunks and thunk action creators, so these action
+ * creator functions here. Now, did we learn about that, let's build an action
+ * creator that fetches the cart when the application loads. Because at the
+ * moment we're only sending data but we never fetched data when the application
+ * loads. And therefore, if we reload, all our state is still lost and that's
+ * of course not the goal."
+ *
+ * NEW IN LESSON 339:
+ * ==================
+ * - Thunks moved to separate cart-actions.js file
+ * - Added fetchCartData thunk to load cart from Firebase
+ * - Added second useEffect with empty dependency array
+ * - Known issue: fetch triggers unnecessary send (fixed in Lesson 340)
+ *
+ * FILE ORGANIZATION (Lesson 339):
+ * ===============================
+ * | File              | Contents                                |
+ * |-------------------|-----------------------------------------|
+ * | cart-slice.js     | Slice definition, reducers, actions     |
+ * | cart-actions.js   | Thunk action creators (sendCartData,    |
+ * |                   | fetchCartData)                          |
+ * | App.js            | Dispatches thunks via useEffect         |
  *
  * ============================================================================
  * USING ACTION CREATOR THUNKS (Lesson 338)
@@ -132,22 +160,38 @@ import { useSelector, useDispatch } from 'react-redux';
 import Notification from './components/UI/Notification';
 
 /**
- * IMPORTING THE THUNK ACTION CREATOR (Lesson 338):
- * ================================================
- * INSTRUCTOR QUOTE:
+ * IMPORTING THUNK ACTION CREATORS (Lessons 338, 339):
+ * ===================================================
+ * INSTRUCTOR QUOTE (Lesson 338):
  * "Therefore I'll export it in cart slice, and then app JS can import. I'll
  * import, send cart data so that function which we just exported, from store
  * cart slice, from that file."
+ *
+ * IMPORT PATH CHANGE (Lesson 339):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "But since this file is now getting bigger and bigger, I'm a fan of creating
+ * a separate file for that. Let's maybe name it cart-actions.js."
+ *
+ * We now import from cart-actions.js instead of cart-slice.js because:
+ * - cart-slice.js: Contains ONLY the slice definition (reducers)
+ * - cart-actions.js: Contains ONLY thunk action creators (async side effects)
+ *
+ * IMPORTING fetchCartData (Lesson 339):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "So, in app JS, we then just import fetchCartData from store cart actions
+ * and that's all we need to import there."
  *
  * NOTE: We no longer import uiActions here!
  * =========================================
  * INSTRUCTOR QUOTE (Lesson 338):
  * "I'll get rid of my UI actions import."
  *
- * The notification dispatching is now handled INSIDE the sendCartData thunk
- * in cart-slice.js. This component doesn't need to know about notifications!
+ * The notification dispatching is now handled INSIDE the thunks
+ * in cart-actions.js. This component doesn't need to know about notifications!
  */
-import { sendCartData } from './store/cart-slice';
+import { sendCartData, fetchCartData } from './store/cart-actions';
 
 import Cart from './components/Cart/Cart';
 import Layout from './components/Layout/Layout';
@@ -369,6 +413,73 @@ function App() {
    * were still being hit, and all the data, is still being stored in there.
    * That still works, because that is a supported pattern by Redux."
    */
+
+  /**
+   * =========================================================================
+   * FETCH CART DATA ON APP LOAD (Lesson 339) - NEW!
+   * =========================================================================
+   *
+   * INSTRUCTOR QUOTE (Lesson 339):
+   * "And then, well, we have to use that action here, that fetchCartData
+   * action. So in app JS, we then just import fetchCartData from store cart
+   * actions and that's all we need to import there."
+   *
+   * WHY A SECOND useEffect (Lesson 339):
+   * ====================================
+   * INSTRUCTOR QUOTE:
+   * "And then to use it we can add yet another useEffect in the app component
+   * which only runs once when the app starts. So we get a useEffect here and
+   * we have an empty dependencies array. No dependencies means it has no
+   * dependencies and it will never rerun because none of these non-existent
+   * dependencies changed."
+   *
+   * TWO useEffect HOOKS WITH DIFFERENT PURPOSES:
+   * ============================================
+   * | useEffect #1 (above)    | useEffect #2 (this one)           |
+   * |-------------------------|-----------------------------------|
+   * | Dependencies: [cart]    | Dependencies: [] (empty)          |
+   * | Runs: On every cart     | Runs: Once on app load            |
+   * |        change           |                                   |
+   * | Purpose: SEND cart      | Purpose: FETCH cart               |
+   * |          to Firebase    |          from Firebase            |
+   *
+   * DISPATCHING fetchCartData (Lesson 339):
+   * =======================================
+   * INSTRUCTOR QUOTE:
+   * "And in here we can now dispatch our fetchCartData action. And when we
+   * do that, we dispatch our thunk action creator, Redux will execute that
+   * function with the dispatch function and then fetch our data."
+   *
+   * KNOWN ISSUE - FETCH TRIGGERS SEND (Lesson 339):
+   * ===============================================
+   * INSTRUCTOR QUOTE:
+   * "It looks like it still works, but if we then reload, if I reload, you
+   * see we got this error. Now fetching cart data failed. Interesting. Why
+   * is that?"
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that's a problem we have to address. We basically have a problem
+   * that we're sending the card when the app starts, even though it was just
+   * initially set with the data we loaded. So we're basically overriding the
+   * data we load."
+   *
+   * THE PROBLEM EXPLAINED:
+   * ======================
+   * 1. App loads → fetchCartData runs → gets cart from Firebase
+   * 2. replaceCart updates the Redux store with fetched data
+   * 3. cart state changed → first useEffect runs
+   * 4. isInitial is now false → sendCartData sends the cart back!
+   * 5. This creates an unnecessary PUT request on every reload
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that's what we're going to fix in the next lecture."
+   *
+   * This issue will be fixed in Lesson 340 by adding a "changed" flag
+   * to track whether the cart was modified by the user vs. just loaded.
+   */
+  useEffect(() => {
+    dispatch(fetchCartData());
+  }, [dispatch]);
 
   return (
     /**
