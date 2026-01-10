@@ -1,7 +1,61 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-333)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-334)
  * ============================================================================
+ *
+ * ============================================================================
+ * FAT REDUCERS vs FAT COMPONENTS vs FAT ACTIONS (Lesson 334)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 334):
+ * "When we consider where to put our logic, our code, then we have to
+ * differentiate between synchronous, side-effect free code and code with
+ * side effects or code that is asynchronous."
+ *
+ * THE KEY QUESTION: WHERE TO PUT YOUR CODE?
+ * ==========================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  TYPE OF CODE              │  WHERE TO PUT IT                          │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │  Synchronous,              │  ✓ PREFER Reducers (fat reducers)         │
+ * │  Side-effect free          │  ✗ Avoid action creators                  │
+ * │  (data transformation)     │  ✗ Avoid components                       │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │  Asynchronous,             │  ✓ PREFER Action creators (thunks)        │
+ * │  Side effects              │  ✓ OR Components (useEffect)              │
+ * │  (HTTP requests, etc.)     │  ✗ NEVER in reducers                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE (Lesson 334):
+ * "If we're dealing with synchronous side-effect free code. So if we basically
+ * just have some data transformation... then you typically should prefer
+ * reducers. Now, if you personally have a different opinion, if you like
+ * having your code in the component, that of course is fine, but generally
+ * it is considered a bit better to prefer reducers."
+ *
+ * WHY FAT REDUCERS ARE PREFERRED (Lesson 334):
+ * ============================================
+ * 1. Reducers are the NATURAL place for state transformation logic
+ * 2. Redux Toolkit/Immer handles immutability automatically
+ * 3. Logic is centralized, not scattered across components
+ * 4. No need to duplicate transformation logic in multiple components
+ * 5. Components stay lean and focused on UI
+ *
+ * THE SUBOPTIMAL APPROACH (Lesson 334):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "We have sub optimal code because we are performing the data transformation
+ * in the component and not inside of the reducer if we rely on replace cart
+ * and that is sub optimal."
+ *
+ * The instructor demonstrated code where:
+ * - ProductItem does all the cart transformation manually
+ * - A simple `replaceCart` reducer just stores the result
+ * - This is SUBOPTIMAL because it puts logic in components
+ *
+ * See the `replaceCart` reducer below and the comments in ProductItem.js
+ * for the full explanation of why this approach is not recommended.
  *
  * ============================================================================
  * WHY THE REDUCER DOES SO MUCH WORK (Lesson 333)
@@ -377,7 +431,7 @@ const cartSlice = createSlice({
          * "Maybe we should also add the title or the name, however you want to
          * name it after product and I expect this on newItem.title."
          */
-        state.items.push({
+        state.items.push({ // Safe to use push() with Redux Toolkit
           id: newItem.id,
           price: newItem.price,
           quantity: 1,
@@ -415,7 +469,7 @@ const cartSlice = createSlice({
          * 2. Redux Toolkit/Immer tracks these changes
          * 3. Immer creates a new state object with these updates
          */
-        existingItem.quantity++;
+        existingItem.quantity++; // Safe direct mutation with Redux Toolkit
         existingItem.totalPrice = existingItem.totalPrice + newItem.price;
       }
 
@@ -513,6 +567,58 @@ const cartSlice = createSlice({
         existingItem.quantity--;
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
       }
+    },
+
+    /**
+     * =========================================================================
+     * REPLACE CART (Lesson 334) - FOR SUBOPTIMAL APPROACH
+     * =========================================================================
+     *
+     * ⚠️ WARNING: This reducer exists to demonstrate a SUBOPTIMAL approach!
+     *
+     * INSTRUCTOR QUOTE (Lesson 334):
+     * "I added a new reducer in the store, the replace cart reducer. I added
+     * that off screen and that simply gets the new total quantity and the new
+     * items from the payload and overrides it in the Redux store."
+     *
+     * WHAT THIS REDUCER DOES:
+     * =======================
+     * This is a "dumb" reducer that just stores whatever data is passed to it.
+     * It doesn't do any transformation - it expects the caller to have already
+     * done all the work of:
+     * - Checking if item exists
+     * - Updating quantities
+     * - Calculating totalPrice
+     * - Creating the final cart structure
+     *
+     * WHY THIS APPROACH IS SUBOPTIMAL (Lesson 334):
+     * =============================================
+     * INSTRUCTOR QUOTE:
+     * "The problem is, that if we would use this in all the parts of our
+     * application, where we need to update the cart. So if we would also use
+     * it instead of cart item to be precise, then we would need to copy all
+     * that logic here which I added to this component to the cart item
+     * component as well."
+     *
+     * Problems with this approach:
+     * 1. Data transformation logic is in COMPONENTS, not REDUCERS
+     * 2. Would need to DUPLICATE this logic in every component (ProductItem, CartItem)
+     * 3. Goes against the Redux philosophy of "fat reducers"
+     * 4. Makes the reducer "dumb" when it should be "smart"
+     *
+     * WHEN WOULD THIS BE USED:
+     * ========================
+     * - When fetching cart data from a backend (we'll do this later)
+     * - When the transformation is already done elsewhere
+     * - NOT as the primary way to update cart state
+     *
+     * @param {Object} action.payload - Complete cart data
+     * @param {number} action.payload.totalQuantity - Total items count
+     * @param {Array} action.payload.items - Array of cart items
+     */
+    replaceCart(state, action) {
+      state.totalQuantity = action.payload.totalQuantity;
+      state.items = action.payload.items;
     },
   },
 });

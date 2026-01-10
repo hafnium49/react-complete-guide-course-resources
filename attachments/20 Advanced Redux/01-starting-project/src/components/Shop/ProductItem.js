@@ -1,7 +1,94 @@
 /**
  * ============================================================================
- * PRODUCT ITEM COMPONENT - Individual Product Display (Lessons 330, 333)
+ * PRODUCT ITEM COMPONENT - Individual Product Display (Lessons 330, 333-334)
  * ============================================================================
+ *
+ * ============================================================================
+ * THE SUBOPTIMAL APPROACH - DO NOT USE (Lesson 334)
+ * ============================================================================
+ *
+ * In Lesson 334, the instructor demonstrates a SUBOPTIMAL approach where
+ * all the cart transformation logic is done IN THE COMPONENT instead of
+ * in the reducer. This approach is shown to explain WHY it's not recommended.
+ *
+ * INSTRUCTOR QUOTE (Lesson 334):
+ * "I did not write this code together with you because this will not be the
+ * final code we'll use because it has problems."
+ *
+ * THE SUBOPTIMAL CODE PATTERN (Lesson 334):
+ * =========================================
+ * ```javascript
+ * // ❌ SUBOPTIMAL - Don't do this!
+ * const cart = useSelector((state) => state.cart);
+ *
+ * const addToCartHandler = () => {
+ *   // Manually calculate new total quantity
+ *   const newTotalQuantity = cart.totalQuantity + 1;
+ *
+ *   // Manually copy items array to avoid mutation
+ *   const updatedItems = cart.items.slice();
+ *
+ *   // Manually check if item exists, update or add...
+ *   const existingItem = updatedItems.find((item) => item.id === id);
+ *   if (existingItem) {
+ *     const updatedItem = { ...existingItem }; // Must copy to avoid mutation!
+ *     updatedItem.quantity++;
+ *     // ... lots more manual work ...
+ *   }
+ *
+ *   // Dispatch the fully transformed cart
+ *   dispatch(cartActions.replaceCart(newCart));
+ * };
+ * ```
+ *
+ * WHY YOU MUST BE CAREFUL ABOUT MUTATION (Lesson 334):
+ * ====================================================
+ * INSTRUCTOR QUOTE:
+ * "We can write this mutating code here inside of the reducer function in our
+ * slice because Redux toolkit has this internal transformation for changing
+ * our code such that it doesn't mutate the state, but that only applies inside
+ * of those reducer methods."
+ *
+ * INSTRUCTOR QUOTE:
+ * "In product item so in a regular component, that's not the case and if here
+ * I would set cart.totalQuantity equal to cart.totalQuantity + one then I would
+ * change a JavaScript object in memory which is all the part of the Redux store
+ * without making Redux aware of it because I would be changing it outside of a
+ * reducer function, which is horrible which you must avoid."
+ *
+ * THE PROBLEMS WITH THIS APPROACH (Lesson 334):
+ * =============================================
+ * INSTRUCTOR QUOTE:
+ * "The problem is, that if we would use this in all the parts of our application,
+ * where we need to update the cart. So if we would also use it instead of cart
+ * item to be precise, then we would need to copy all that logic here which I
+ * added to this component to the cart item component as well."
+ *
+ * Problems:
+ * 1. ❌ Transformation logic in component, not reducer
+ * 2. ❌ Would need to duplicate this code in CartItem
+ * 3. ❌ Must manually handle immutability (no Immer help)
+ * 4. ❌ Easy to accidentally mutate Redux state
+ * 5. ❌ Goes against "fat reducers" philosophy
+ *
+ * INSTRUCTOR QUOTE:
+ * "We do the data transformation in some helper function and in the end
+ * directly in our components, we don't do the transformation in our reducers.
+ * We would be able to get rid of add item to cart if we used this replace cart
+ * approach in all the places in the application and that means that our redux
+ * reducers wouldn't do a lot of work. They'd just get some data and store it."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We have sub optimal code because we are performing the data transformation
+ * in the component and not inside of the reducer if we rely on replace cart
+ * and that is sub optimal, that's the reason why we didn't write this code
+ * together."
+ *
+ * THE BETTER APPROACH (What we'll do instead):
+ * ============================================
+ * Keep transformation logic in the reducer (addItemToCart)
+ * and find a different way to handle the HTTP side effect!
+ * This is what the next lessons will cover.
  *
  * ============================================================================
  * THE SIDE EFFECT CHALLENGE (Lesson 333)
