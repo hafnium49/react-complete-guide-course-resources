@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * REDUX STORE CONFIGURATION (Lessons 329, 332)
+ * REDUX STORE CONFIGURATION (Lessons 329, 332, 341)
  * ============================================================================
  *
  * SECTION 20: ADVANCED REDUX
@@ -9,6 +9,80 @@
  * - Practical implementation of Redux in a shopping cart app
  * - Managing multiple state slices
  * - Side effects and async code with Redux (Lesson 332+)
+ * - Redux DevTools for debugging (Lesson 341)
+ *
+ * ============================================================================
+ * REDUX DEVTOOLS (Lesson 341)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 341):
+ * "Besides handling async tasks and side effects with Redux and understanding
+ * where to put our code there was another important topic I wanted to have a
+ * look at in this module. And that would be the Redux Devtools."
+ *
+ * WHY USE REDUX DEVTOOLS? (Lesson 341):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "These are extra tools which we can use which make debugging Redux and our
+ * Redux state a bit easier. Because in more complex applications with a lot of
+ * Redux state handled by a lot of different slices and a lot of different
+ * actions going on it can be difficult to find errors in your debug state in
+ * the order of your actions and so on."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And sometimes it might be interesting to look into the current state of your
+ * overall Redux store without having to dive into different parts of the UI to
+ * verify that everything works correctly."
+ *
+ * INSTALLATION (Lesson 341):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "You can simply search for Redux Devtools and you'll find a GitHub repository
+ * about the Redux Devtools and the Redux Devtools can be used and installed as
+ * a browser extension."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You can always install them as a stand alone app but I personally find the
+ * browser extension easiest to use."
+ *
+ * Install as browser extension:
+ * - Chrome: Search "Redux DevTools" in Chrome Web Store
+ * - Firefox: Search "Redux DevTools" in Firefox Add-ons
+ * - Edge: Search "Redux DevTools" in Edge Add-ons
+ *
+ * WORKS OUT OF THE BOX WITH REDUX TOOLKIT (Lesson 341):
+ * =====================================================
+ * INSTRUCTOR QUOTE:
+ * "When using Redux without Redux toolkit you had to set up some extra code to
+ * make Redux Devtools work. With Redux tool kit it will conveniently work out
+ * of the box and you should then have access to that extension."
+ *
+ * No additional configuration needed! configureStore() automatically sets up
+ * Redux DevTools integration. Just install the browser extension and it works!
+ *
+ * ACCESSING DEVTOOLS (Lesson 341):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "When I do so I have this Redux Devtools icon here or in the browser Devtools
+ * you also should find Redux here as an option."
+ *
+ * Two ways to access:
+ * 1. Click the Redux DevTools icon in browser toolbar
+ * 2. Open browser DevTools (F12) → Find "Redux" tab
+ *
+ * WHAT YOU CAN SEE (Lesson 341):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "And now here, you have insights into your Redux store into your actions and
+ * much more. On the left side, you for example, see the actions that were
+ * dispatched."
+ *
+ * Features:
+ * - See all dispatched actions
+ * - View action payloads
+ * - Inspect state after each action
+ * - See state "diff" (what changed)
+ * - Time travel debugging (jump to previous states)
  *
  * ============================================================================
  * FIREBASE BACKEND INTEGRATION (Lesson 332)
@@ -167,12 +241,53 @@ import cartSlice from './cart-slice';
  * configureStore automatically sets up middleware that allows us to
  * dispatch "thunks" (functions instead of action objects). This will
  * be important for handling async code with Redux!
+ *
+ * REDUX DEVTOOLS INTEGRATION (Lesson 341):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "With Redux tool kit it will conveniently work out of the box and you
+ * should then have access to that extension."
+ *
+ * configureStore() automatically:
+ * - Enables Redux DevTools browser extension
+ * - Sets up action logging
+ * - Enables state inspection
+ * - Enables time-travel debugging
+ *
+ * No extra code needed! Just install the browser extension.
+ *
+ * WHAT DEVTOOLS SHOWS FOR THIS STORE (Lesson 341):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "And if I reload, we see that's in it and replace cart. In it, is this
+ * automatically dispatched first action that applies all your initial states
+ * to Redux so that initializes the store and replace card was dispatched
+ * because we fetched the card initially."
+ *
+ * On app load, DevTools will show:
+ * 1. @@INIT - Initializes the store with initial state
+ * 2. cart/replaceCart - From fetchCartData thunk
+ *
+ * When adding items:
+ * 1. cart/addItemToCart - The add action
+ * 2. ui/showNotification (pending) - From sendCartData thunk
+ * 3. ui/showNotification (success/error) - After HTTP completes
  */
 const store = configureStore({
   reducer: {
     ui: uiSlice.reducer,
     cart: cartSlice.reducer,
   },
+  /**
+   * NOTE ON DEVTOOLS (Lesson 341):
+   * ==============================
+   * Redux Toolkit's configureStore automatically enables DevTools.
+   * If you wanted to disable it in production, you could add:
+   *
+   * devTools: process.env.NODE_ENV !== 'production'
+   *
+   * But by default, it's enabled and works automatically!
+   */
 });
 
 /**

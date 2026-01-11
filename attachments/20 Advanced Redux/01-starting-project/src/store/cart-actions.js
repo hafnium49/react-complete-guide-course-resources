@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART ACTIONS - Thunk Action Creators for Cart Side Effects (Lessons 339-340)
+ * CART ACTIONS - Thunk Action Creators for Cart Side Effects (Lessons 339-341)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE (Lesson 339):
@@ -28,6 +28,57 @@
  *    - Updated in Lesson 340 to handle empty items array
  *
  * FIREBASE URL: https://react-13c13-default-rtdb.firebaseio.com/
+ *
+ * ============================================================================
+ * HOW THUNKS APPEAR IN REDUX DEVTOOLS (Lesson 341)
+ * ============================================================================
+ *
+ * IMPORTANT: Thunks themselves do NOT appear in Redux DevTools!
+ *
+ * INSTRUCTOR QUOTE (Lesson 341):
+ * "First add item to cart it's dispatched and when that card state then changed
+ * user App.js kicks in and dispatches send card data that's not locked because
+ * that itself is not an action type but instead as part of send card data we
+ * then do dispatch these notification actions which is why we see them here
+ * as well."
+ *
+ * WHAT DEVTOOLS SHOWS FOR THUNKS:
+ * ===============================
+ * When you dispatch sendCartData(cart):
+ * - sendCartData itself: NOT visible (it's a function, not an action)
+ * - ui/showNotification (pending): VISIBLE
+ * - ui/showNotification (success/error): VISIBLE
+ *
+ * When you dispatch fetchCartData():
+ * - fetchCartData itself: NOT visible (it's a function, not an action)
+ * - cart/replaceCart: VISIBLE (after fetch completes)
+ * - ui/showNotification (error): VISIBLE (only if error occurs)
+ *
+ * WHY THUNKS ARE INVISIBLE:
+ * =========================
+ * Thunks are functions that:
+ * 1. Get intercepted by Redux middleware
+ * 2. Get executed with dispatch passed to them
+ * 3. Can dispatch REAL actions (which ARE visible)
+ *
+ * DevTools only shows actual action objects (with type property),
+ * not the thunk functions themselves.
+ *
+ * DEBUGGING THUNKS:
+ * =================
+ * To debug thunk behavior, look at:
+ * 1. The actions dispatched BY the thunk
+ * 2. The order and timing of those actions
+ * 3. The payloads of those actions
+ *
+ * Example sequence when adding an item:
+ * | Step | Action in DevTools          | Source                    |
+ * |------|----------------------------|---------------------------|
+ * | 1    | cart/addItemToCart         | ProductItem component     |
+ * | 2    | ui/showNotification        | sendCartData thunk        |
+ * | 3    | ui/showNotification        | sendCartData thunk        |
+ *
+ * You won't see "sendCartData" but you'll see its EFFECTS!
  */
 
 import { uiActions } from './ui-slice';

@@ -754,7 +754,7 @@ const cartSlice = createSlice({
 
 /**
  * ============================================================================
- * EXPORTS (Lessons 329, 338, 339)
+ * EXPORTS (Lessons 329, 338, 339, 341)
  * ============================================================================
  *
  * Following the same pattern as ui-slice:
@@ -774,6 +774,62 @@ const cartSlice = createSlice({
  *
  * // Removing an item (from CartItem):
  * dispatch(cartActions.removeItemFromCart('p1')); // Just pass the ID
+ *
+ * ============================================================================
+ * HOW ACTIONS APPEAR IN REDUX DEVTOOLS (Lesson 341)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 341):
+ * "Here, we can also see the automatically created unique identifiers Redux
+ * toolkit gives us as you see it's basically your slice name. So, in card
+ * it's this slice name and then the method name of this reducer method that
+ * is the unique identifier created by Redux toolkit."
+ *
+ * ACTION TYPE NAMING CONVENTION:
+ * ==============================
+ * Redux Toolkit auto-generates action types in format: "sliceName/reducerName"
+ *
+ * For this slice (name: 'cart'), the action types are:
+ * - cart/addItemToCart
+ * - cart/removeItemFromCart
+ * - cart/replaceCart
+ *
+ * VIEWING ACTIONS IN DEVTOOLS (Lesson 341):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "And you can click on those actions to get insights into the data that was
+ * transported by that action and how that changed your state. You see the data,
+ * if you click on action there you see the payload off the action."
+ *
+ * When you click on an action in DevTools:
+ * - "Action" tab: Shows action type and payload
+ * - "State" tab: Shows full state after action
+ * - "Diff" tab: Shows what changed in state
+ *
+ * EXAMPLE DIFF FOR addItemToCart (Lesson 341):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "Therefore add item to cart we see that the total quantity was changed from
+ * six to seven, changed one set from false to true and in the items we see
+ * that the quantity of that first item changed and so on. So, that's super
+ * useful to understand the impact of your actions."
+ *
+ * TIME TRAVEL DEBUGGING (Lesson 341):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "You can even do something which is called time traveling. You can jump to
+ * an older state like this one by clicking on it and then clicking on jump
+ * and you see now the notification is gone and we're back to the card with
+ * six items."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And we can then start debugging here again if we want to and we can then
+ * also jump back to a newer state if we want to."
+ *
+ * This allows you to:
+ * - See your app at any previous state
+ * - Replay actions step by step
+ * - Find exactly where a bug was introduced
  *
  * THUNK ACTION CREATORS MOVED (Lesson 339):
  * =========================================
