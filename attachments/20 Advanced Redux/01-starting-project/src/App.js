@@ -1,7 +1,43 @@
 /**
  * ============================================================================
- * APP COMPONENT - Root Component with Redux & Firebase Sync (Lessons 329, 335, 337, 338, 339)
+ * APP COMPONENT - Root Component with Redux & Firebase Sync (Lessons 329, 335, 337-340)
  * ============================================================================
+ *
+ * ============================================================================
+ * FIXING THE FETCH-TRIGGERS-SEND BUG (Lesson 340)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 340):
+ * "As always in programming, there will be multiple ways of fixing that issue
+ * we detected in the last lecture, where we automatically resent the cart,
+ * when the application loaded."
+ *
+ * THE SOLUTION (Lesson 340):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "One possible solution, could be to go to our cart-slice and here in that
+ * initial state, we, for example, add a changed property, which is false,
+ * let's say."
+ *
+ * HOW THE FIX WORKS:
+ * ==================
+ * 1. cart-slice.js has `changed: false` in initial state
+ * 2. addItemToCart and removeItemFromCart set `changed: true`
+ * 3. replaceCart (used when fetching) does NOT change the flag
+ * 4. Here in App.js, we check `if (cart.changed)` before sending
+ *
+ * INSTRUCTOR QUOTE:
+ * "Well in App.js, where we have this effect for sending CartData, we can also
+ * check if cart changed. So if our cart, which we're selecting here, if that
+ * changed property, is true and only if it's true, we wanna dispatch and send
+ * the CartData. If it's false, so if it hasn't changed locally, we don't wanna
+ * send it."
+ *
+ * THE RESULT:
+ * ===========
+ * INSTRUCTOR QUOTE:
+ * "With this simple change implemented, if we reload, we're not sending this
+ * again. Only if I add something to the cart."
  *
  * ============================================================================
  * FETCHING CART DATA ON APP LOAD (Lesson 339)
@@ -373,26 +409,60 @@ function App() {
     }
 
     /**
-     * DISPATCH THE THUNK (Lesson 338):
-     * ================================
-     * INSTRUCTOR QUOTE:
-     * "I wanna use send cart data as a action creator. So in app JS, I still
-     * wanna dispatch, after this initial check, and I wanna dispatch, this
-     * send cart data action so to say."
+     * =========================================================================
+     * CHECK cart.changed BEFORE SENDING (Lesson 340) - THE FIX!
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE (Lesson 340):
+     * "Well in App.js, where we have this effect for sending CartData, we can
+     * also check if cart changed. So if our cart, which we're selecting here,
+     * if that changed property, is true and only if it's true, we wanna dispatch
+     * and send the CartData."
      *
      * INSTRUCTOR QUOTE:
-     * "So dispatching this here will work. And when we dispatch, Redux will go
-     * ahead, and it will execute this function for us. And therefore all our
-     * other actions will be dispatched, and the HTTP request will be sent."
+     * "If it's false, so if it hasn't changed locally, we don't wanna send it."
      *
-     * This single line replaces all the async logic we had before!
-     * The thunk in cart-slice.js handles:
-     * - Dispatching pending notification
-     * - Sending HTTP PUT request to Firebase
-     * - Dispatching success notification
-     * - Catching errors and dispatching error notification
+     * WHY THIS WORKS:
+     * ===============
+     * - When app loads, fetchCartData fetches from Firebase
+     * - replaceCart updates Redux BUT keeps changed: false
+     * - This effect runs (cart reference changed)
+     * - cart.changed is false → we don't send!
+     *
+     * - When user adds/removes items
+     * - addItemToCart/removeItemFromCart set changed: true
+     * - This effect runs (cart reference changed)
+     * - cart.changed is true → we send to Firebase!
+     *
+     * RESULT (Lesson 340):
+     * ====================
+     * INSTRUCTOR QUOTE:
+     * "With this simple change implemented, if we reload, we're not sending
+     * this again. Only if I add something to the cart."
      */
-    dispatch(sendCartData(cart));
+    if (cart.changed) {
+      /**
+       * DISPATCH THE THUNK (Lesson 338):
+       * ================================
+       * INSTRUCTOR QUOTE:
+       * "I wanna use send cart data as a action creator. So in app JS, I still
+       * wanna dispatch, after this initial check, and I wanna dispatch, this
+       * send cart data action so to say."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So dispatching this here will work. And when we dispatch, Redux will go
+       * ahead, and it will execute this function for us. And therefore all our
+       * other actions will be dispatched, and the HTTP request will be sent."
+       *
+       * This single line replaces all the async logic we had before!
+       * The thunk in cart-actions.js handles:
+       * - Dispatching pending notification
+       * - Sending HTTP PUT request to Firebase
+       * - Dispatching success notification
+       * - Catching errors and dispatching error notification
+       */
+      dispatch(sendCartData(cart));
+    }
   }, [cart, dispatch]);
   /**
    * DEPENDENCY ARRAY (Lessons 335, 337):
@@ -450,9 +520,9 @@ function App() {
    * do that, we dispatch our thunk action creator, Redux will execute that
    * function with the dispatch function and then fetch our data."
    *
-   * KNOWN ISSUE - FETCH TRIGGERS SEND (Lesson 339):
-   * ===============================================
-   * INSTRUCTOR QUOTE:
+   * KNOWN ISSUE - FETCH TRIGGERS SEND (Lesson 339) - FIXED IN LESSON 340:
+   * =====================================================================
+   * INSTRUCTOR QUOTE (Lesson 339):
    * "It looks like it still works, but if we then reload, if I reload, you
    * see we got this error. Now fetching cart data failed. Interesting. Why
    * is that?"
@@ -471,11 +541,13 @@ function App() {
    * 4. isInitial is now false → sendCartData sends the cart back!
    * 5. This creates an unnecessary PUT request on every reload
    *
-   * INSTRUCTOR QUOTE:
-   * "And that's what we're going to fix in the next lecture."
-   *
-   * This issue will be fixed in Lesson 340 by adding a "changed" flag
-   * to track whether the cart was modified by the user vs. just loaded.
+   * ✅ FIXED IN LESSON 340:
+   * ======================
+   * This was fixed by adding a `changed` flag to cart state:
+   * - addItemToCart/removeItemFromCart set changed: true
+   * - replaceCart does NOT set changed (stays false)
+   * - The first useEffect checks cart.changed before sending
+   * - If cart.changed is false, we skip sending!
    */
   useEffect(() => {
     dispatch(fetchCartData());

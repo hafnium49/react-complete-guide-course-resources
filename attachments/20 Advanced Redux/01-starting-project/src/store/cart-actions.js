@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART ACTIONS - Thunk Action Creators for Cart Side Effects (Lesson 339)
+ * CART ACTIONS - Thunk Action Creators for Cart Side Effects (Lessons 339-340)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE (Lesson 339):
@@ -23,7 +23,9 @@
  * WHAT THIS FILE CONTAINS:
  * ========================
  * 1. sendCartData - Sends cart to Firebase (PUT request)
- * 2. fetchCartData - Fetches cart from Firebase (GET request) - NEW in Lesson 339
+ *    - Updated in Lesson 340 to exclude 'changed' property
+ * 2. fetchCartData - Fetches cart from Firebase (GET request)
+ *    - Updated in Lesson 340 to handle empty items array
  *
  * FIREBASE URL: https://react-13c13-default-rtdb.firebaseio.com/
  */
@@ -33,7 +35,7 @@ import { cartActions } from './cart-slice';
 
 /**
  * ============================================================================
- * SEND CART DATA THUNK (Moved from cart-slice.js in Lesson 339)
+ * SEND CART DATA THUNK (Lessons 338, 339, 340)
  * ============================================================================
  *
  * This thunk was originally in cart-slice.js (Lesson 338).
@@ -42,8 +44,21 @@ import { cartActions } from './cart-slice';
  * WHAT THIS THUNK DOES:
  * =====================
  * 1. Dispatches pending notification
- * 2. Sends PUT request to Firebase with cart data
+ * 2. Sends PUT request to Firebase with cart data (excluding 'changed' property)
  * 3. Dispatches success or error notification based on result
+ *
+ * LESSON 340 UPDATE - EXCLUDING 'changed' PROPERTY:
+ * =================================================
+ * INSTRUCTOR QUOTE (Lesson 340):
+ * "Now, as a side note, this changed property is now all the part of Firebase,
+ * because we're sending the overall cart state, as it's stored by Redux to Firebase."
+ *
+ * INSTRUCTOR QUOTE:
+ * "If we would wanna avoid this, we could of course, go to the cart-actions and
+ * there, where we send our cart data, instead of taking the whole cart, we could
+ * create a new objects, where we then just use items from cart items and just
+ * the totalQuantity from cart.totalQuantity. So we would create a new object,
+ * which does not contain changed."
  *
  * @param {Object} cart - The cart data to send to Firebase
  * @returns {Function} A function that Redux will execute with dispatch
@@ -70,11 +85,34 @@ export const sendCartData = (cart) => {
      * to handle both network errors and HTTP errors (!response.ok).
      */
     const sendRequest = async () => {
+      /**
+       * CREATE OBJECT WITHOUT 'changed' PROPERTY (Lesson 340):
+       * =======================================================
+       * INSTRUCTOR QUOTE (Lesson 340):
+       * "Instead of taking the whole cart, we could create a new object, where
+       * we then just use items from cart.items and just the totalQuantity from
+       * cart.totalQuantity. So we would create a new object, which does not
+       * contain changed."
+       *
+       * INSTRUCTOR QUOTE:
+       * "That's something we could do. And with that, it is removed, if we send
+       * something. Now it's no longer part of Firebase."
+       *
+       * WHY WE DO THIS:
+       * ===============
+       * - The `changed` flag is a frontend-only concern
+       * - It tracks whether cart was modified locally (for deciding when to send)
+       * - We don't need/want to store it in Firebase
+       * - This keeps Firebase data clean and focused on actual cart data
+       */
       const response = await fetch(
         'https://react-13c13-default-rtdb.firebaseio.com/cart.json',
         {
           method: 'PUT',
-          body: JSON.stringify(cart),
+          body: JSON.stringify({
+            items: cart.items,
+            totalQuantity: cart.totalQuantity,
+          }),
         }
       );
 
@@ -295,9 +333,9 @@ export const fetchCartData = () => {
       const cartData = await fetchData();
 
       /**
-       * DISPATCH replaceCart ACTION (Lesson 339):
-       * =========================================
-       * INSTRUCTOR QUOTE:
+       * DISPATCH replaceCart ACTION (Lessons 339, 340):
+       * ================================================
+       * INSTRUCTOR QUOTE (Lesson 339):
        * "So, in cart-actions, we just wanna import our cartActions from the
        * cart slice, so these automatically generated actions now. And here,
        * I then wanna dispatch cartActions.replaceCart and pass my cartData
@@ -311,6 +349,46 @@ export const fetchCartData = () => {
        * - Fetching on load should be seamless
        * - User doesn't need to know data was fetched
        * - Only show notification if something goes wrong
+       *
+       * ================================================================
+       * HANDLING EMPTY CART / UNDEFINED ITEMS (Lesson 340):
+       * ================================================================
+       * INSTRUCTOR QUOTE (Lesson 340):
+       * "We're getting this error because I cleared my cart entirely and I
+       * reloaded and therefore I fetched my cart data from Firebase. Since I
+       * cleared the cart entirely though, we see that on Firebase here, we
+       * have no items key in the cart anymore."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So we fetched that data from Firebase and we set our local carts to
+       * the fetched cart. And that means that items is now not an empty array,
+       * but undefined and therefore trying to call find on undefined, fails."
+       *
+       * THE PROBLEM:
+       * ============
+       * When cart is completely empty on Firebase:
+       * - Firebase doesn't store empty arrays
+       * - cartData.items will be undefined, not []
+       * - Redux state gets items: undefined
+       * - Calling .find() on undefined throws error!
+       *
+       * THE FIX:
+       * ========
+       * INSTRUCTOR QUOTE (Lesson 340):
+       * "To solve this, we should go to cart-actions and to the place where we
+       * fetch our cart. And then, when we replace our cart with cartData, there
+       * indeed is a tiny transformation we should make. We should make sure,
+       * that the payload we pass to replaceCart, is a object which always has
+       * a items key, which is either cartsData.items, or if that should be
+       * undefined and therefore a falsy and empty array."
+       *
+       * INSTRUCTOR QUOTE:
+       * "With that, we ensure that we never end up with items being undefined.
+       * Instead, it will always be an empty array."
+       *
+       * Using || [] fallback:
+       * - If cartData.items exists → use it
+       * - If cartData.items is undefined/null → use empty array []
        */
       dispatch(
         cartActions.replaceCart({

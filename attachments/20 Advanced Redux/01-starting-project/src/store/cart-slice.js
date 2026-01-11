@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-335, 338-339)
+ * CART SLICE - Shopping Cart State Management (Lessons 329-330, 332-335, 338-340)
  * ============================================================================
  *
  * ============================================================================
@@ -310,6 +310,46 @@ const cartSlice = createSlice({
   initialState: {
     items: [],
     totalQuantity: 0,
+    /**
+     * =========================================================================
+     * CHANGED FLAG (Lesson 340) - NEW!
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE (Lesson 340):
+     * "One possible solution, could be to go to our cart-slice and here in that
+     * initial state, we, for example, add a changed property, which is false,
+     * let's say."
+     *
+     * WHY WE NEED THIS FLAG:
+     * ======================
+     * Problem (from Lesson 339):
+     * - When app loads, fetchCartData gets cart from Firebase
+     * - replaceCart updates Redux state
+     * - This triggers the useEffect in App.js that watches [cart]
+     * - sendCartData is dispatched, re-sending the data back to Firebase!
+     *
+     * Solution:
+     * - Add a `changed` flag that tracks if cart was modified LOCALLY
+     * - Set `changed: true` ONLY when user adds/removes items
+     * - Do NOT set `changed` when replacing cart from Firebase fetch
+     * - In App.js, only send cart if `cart.changed` is true
+     *
+     * INSTRUCTOR QUOTE (Lesson 340):
+     * "And we don't change this if we replaced a cart, but we do change it if
+     * we add or remove items, to or from the cart. Then we set state.changed
+     * to true. And removeItemFromcart and addItemToCart, are only executed
+     * from our local application."
+     *
+     * FLAG BEHAVIOR:
+     * ==============
+     * | Action              | changed becomes |
+     * |---------------------|-----------------|
+     * | Initial state       | false           |
+     * | addItemToCart       | true            |
+     * | removeItemFromCart  | true            |
+     * | replaceCart (fetch) | stays false     |
+     */
+    changed: false,
   },
 
   /**
@@ -438,6 +478,24 @@ const cartSlice = createSlice({
        * regardless of whether it's new or existing.
        */
       state.totalQuantity++;
+
+      /**
+       * SET CHANGED FLAG (Lesson 340):
+       * ==============================
+       * INSTRUCTOR QUOTE (Lesson 340):
+       * "And we don't change this if we replaced a cart, but we do change it
+       * if we add or remove items, to or from the cart. Then we set state.changed
+       * to true."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And removeItemFromcart and addItemToCart, are only executed from our
+       * local application. So, when we fetch data from Firebase, where we then
+       * execute replaceCart, this will not change. It will stay false."
+       *
+       * This flag tells App.js that the cart was modified locally by the user,
+       * not just loaded from Firebase. App.js will only send data when this is true.
+       */
+      state.changed = true;
 
       if (!existingItem) {
         /**
@@ -581,6 +639,14 @@ const cartSlice = createSlice({
        */
       state.totalQuantity--;
 
+      /**
+       * SET CHANGED FLAG (Lesson 340):
+       * ==============================
+       * Same as in addItemToCart - mark the cart as changed locally.
+       * This ensures App.js knows to send the updated cart to Firebase.
+       */
+      state.changed = true;
+
       if (existingItem.quantity === 1) {
         /**
          * QUANTITY IS 1 - REMOVE ITEM ENTIRELY (Lesson 330):
@@ -595,17 +661,31 @@ const cartSlice = createSlice({
         state.items = state.items.filter((item) => item.id !== id);
       } else {
         /**
-         * QUANTITY > 1 - DECREASE QUANTITY (Lesson 330):
-         * ==============================================
-         * INSTRUCTOR QUOTE:
+         * QUANTITY > 1 - DECREASE QUANTITY (Lessons 330, 340):
+         * ====================================================
+         * INSTRUCTOR QUOTE (Lesson 330):
          * "In the else case... we reduce the quantity by one. And we also should
          * update the total price of that item. And that's something I initially
          * forgot here actually. So that's a bug I would say, which I introduced there."
          *
-         * INSTRUCTOR QUOTE:
-         * "So here it should be existing item, total price is equal to existing
-         * item, total price minus existing item price, so minus the individual
-         * price of one such item."
+         * BUG REDISCOVERED IN LESSON 340:
+         * ================================
+         * INSTRUCTOR QUOTE (Lesson 340):
+         * "I just detected that we have a issue regarding the price, that does not
+         * update correctly if I reduce my cart quantity. So let's quickly look into
+         * that here, in cart-slice and removeItemFromCart. Yeah, for existing items,
+         * I am reducing the quantity, but I'm not updating the price. We should of
+         * course be doing that."
+         *
+         * INSTRUCTOR QUOTE (Lesson 340):
+         * "I'll set totalPrice equal to existingItem.totalPrice, not totalQuantity,
+         * thank you, totalPrice, minus existingItem.price. To reduce the total price,
+         * by the price of a single item, since we're removing a single item."
+         *
+         * THE FIX:
+         * ========
+         * When reducing quantity, we must also reduce totalPrice by the single item price.
+         * totalPrice = totalPrice - price (for one item)
          */
         existingItem.quantity--;
         existingItem.totalPrice = existingItem.totalPrice - existingItem.price;
@@ -614,54 +694,60 @@ const cartSlice = createSlice({
 
     /**
      * =========================================================================
-     * REPLACE CART (Lesson 334) - FOR SUBOPTIMAL APPROACH
+     * REPLACE CART (Lessons 334, 339, 340)
      * =========================================================================
      *
-     * ⚠️ WARNING: This reducer exists to demonstrate a SUBOPTIMAL approach!
-     *
+     * ORIGINAL PURPOSE (Lesson 334) - SUBOPTIMAL APPROACH:
+     * =====================================================
      * INSTRUCTOR QUOTE (Lesson 334):
      * "I added a new reducer in the store, the replace cart reducer. I added
      * that off screen and that simply gets the new total quantity and the new
      * items from the payload and overrides it in the Redux store."
      *
-     * WHAT THIS REDUCER DOES:
-     * =======================
-     * This is a "dumb" reducer that just stores whatever data is passed to it.
-     * It doesn't do any transformation - it expects the caller to have already
-     * done all the work of:
-     * - Checking if item exists
-     * - Updating quantities
-     * - Calculating totalPrice
-     * - Creating the final cart structure
+     * CURRENT PURPOSE (Lesson 339) - FETCHING FROM FIREBASE:
+     * ======================================================
+     * Now primarily used when fetching cart data from Firebase on app load.
+     * The fetchCartData thunk in cart-actions.js calls this reducer.
      *
-     * WHY THIS APPROACH IS SUBOPTIMAL (Lesson 334):
-     * =============================================
+     * WHY WE DON'T SET changed HERE (Lesson 340):
+     * ============================================
+     * INSTRUCTOR QUOTE (Lesson 340):
+     * "And we don't change this if we replaced a cart, but we do change it if
+     * we add or remove items, to or from the cart."
+     *
      * INSTRUCTOR QUOTE:
-     * "The problem is, that if we would use this in all the parts of our
-     * application, where we need to update the cart. So if we would also use
-     * it instead of cart item to be precise, then we would need to copy all
-     * that logic here which I added to this component to the cart item
-     * component as well."
+     * "So, when we fetch data from Firebase, where we then execute replaceCart,
+     * this will not change. It will stay false."
      *
-     * Problems with this approach:
-     * 1. Data transformation logic is in COMPONENTS, not REDUCERS
-     * 2. Would need to DUPLICATE this logic in every component (ProductItem, CartItem)
-     * 3. Goes against the Redux philosophy of "fat reducers"
-     * 4. Makes the reducer "dumb" when it should be "smart"
+     * CRITICAL INSIGHT:
+     * =================
+     * - addItemToCart and removeItemFromCart set changed = true
+     * - replaceCart does NOT set changed (it stays false)
+     * - This is intentional! It solves the fetch-triggers-send problem.
      *
-     * WHEN WOULD THIS BE USED:
-     * ========================
-     * - When fetching cart data from a backend (we'll do this later)
-     * - When the transformation is already done elsewhere
-     * - NOT as the primary way to update cart state
+     * THE PROBLEM IT SOLVES (Lesson 340):
+     * ===================================
+     * Without this distinction:
+     * 1. App loads → fetchCartData → replaceCart → cart state changes
+     * 2. useEffect in App.js detects cart change
+     * 3. sendCartData sends the cart BACK to Firebase (unnecessary!)
      *
-     * @param {Object} action.payload - Complete cart data
+     * With the `changed` flag:
+     * 1. App loads → fetchCartData → replaceCart → cart changes BUT changed stays false
+     * 2. useEffect checks cart.changed → it's false → skip sending!
+     * 3. Only when user adds/removes items → changed becomes true → then we send
+     *
+     * @param {Object} action.payload - Complete cart data from Firebase
      * @param {number} action.payload.totalQuantity - Total items count
      * @param {Array} action.payload.items - Array of cart items
      */
     replaceCart(state, action) {
       state.totalQuantity = action.payload.totalQuantity;
       state.items = action.payload.items;
+      /**
+       * NOTE: We intentionally do NOT set state.changed here!
+       * This is the key to preventing the fetch-triggers-send loop.
+       */
     },
   },
 });
