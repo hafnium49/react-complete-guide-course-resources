@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ROOT LAYOUT COMPONENT (Lesson 350)
+ * ROOT LAYOUT COMPONENT (Lessons 350-351)
  * ============================================================================
  *
  * WHAT IS A LAYOUT? (Lesson 350):
@@ -130,13 +130,35 @@ import { Outlet } from 'react-router-dom';
 import MainNavigation from '../components/MainNavigation';
 
 /**
- * CSS MODULE IMPORT (Lesson 350):
- * ================================
+ * CSS MODULE REMOVED (Lesson 351):
+ * =================================
+ * INSTRUCTOR QUOTE (Lesson 351):
+ * "And remove this import and remove this class name, so that we now have the
+ * same styling, not just for our default layout, which is used if things go
+ * right, but also on this error page, which is used when things go wrong."
+ *
+ * BEFORE (Lesson 350):
+ * ====================
+ * import classes from './Root.module.css';
+ * <main className={classes.content}>
+ *
+ * AFTER (Lesson 351):
+ * ===================
+ * No import needed - styling is now in index.css applied to all <main> elements.
+ * <main>
+ *
+ * WHY THIS CHANGE? (Lesson 351):
+ * ==============================
  * INSTRUCTOR QUOTE:
- * "And then in root JS, we can import our CSS classes from this root dot
- * module dot CSS file."
+ * "Now to ensure that we also have the appropriate styling for this main
+ * element, we could grab this definition from the root.module file, and
+ * actually copy that into index css, add it down there, and apply that to
+ * all main elements we find, and remove the root module css file."
+ *
+ * Moving styles to index.css ensures:
+ * 1. RootLayout's <main> gets the styling (normal pages)
+ * 2. ErrorPage's <main> gets the SAME styling (error pages)
  */
-import classes from './Root.module.css';
 
 /**
  * ROOT LAYOUT COMPONENT:
@@ -174,13 +196,21 @@ function RootLayout() {
       <MainNavigation />
 
       {/**
-       * STYLED CONTENT AREA (Lesson 350):
-       * ==================================
+       * CONTENT AREA (Lessons 350-351):
+       * ================================
+       * INSTRUCTOR QUOTE (Lesson 350):
+       * "And then wrap our outlet, here, with the default main element."
+       *
+       * UPDATED (Lesson 351):
+       * =====================
        * INSTRUCTOR QUOTE:
-       * "And then wrap our outlet, here, with the default main element and
-       * add this class of content, which you just added to this element."
+       * "Remove this class name, so that we now have the same styling, not
+       * just for our default layout, which is used if things go right, but
+       * also on this error page, which is used when things go wrong."
+       *
+       * The className was removed because styling is now global in index.css.
        */}
-      <main className={classes.content}>
+      <main>
         {/**
          * OUTLET - WHERE CHILD ROUTES RENDER (Lesson 350):
          * =================================================

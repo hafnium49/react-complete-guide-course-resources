@@ -48,3 +48,40 @@ ul {
   margin: 0;
   padding: 0;
 }
+
+/**
+ * ============================================================================
+ * MAIN ELEMENT STYLING (Lesson 351)
+ * ============================================================================
+ *
+ * WHY MOVE THIS FROM Root.module.css? (Lesson 351):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "Now to ensure that we also have the appropriate styling for this main
+ * element, we could grab this definition from the root.module file, and
+ * actually copy that into index css, add it down there, and apply that to
+ * all main elements we find."
+ *
+ * BEFORE (Lesson 350):
+ * ====================
+ * Styling was in Root.module.css and applied only via className:
+ *   <main className={classes.content}>...</main>
+ *
+ * Problem: ErrorPage's <main> wouldn't have the same styling.
+ *
+ * AFTER (Lesson 351):
+ * ===================
+ * Styling is in index.css (global) and applies to ALL <main> elements:
+ *   <main>...</main>
+ *
+ * Benefit: Both RootLayout and ErrorPage share consistent styling.
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that we now have the same styling, not just for our default layout,
+ * which is used if things go right, but also on this error page, which is
+ * used when things go wrong."
+ */
+main {
+  margin: 2rem auto;
+  text-align: center;
+}
