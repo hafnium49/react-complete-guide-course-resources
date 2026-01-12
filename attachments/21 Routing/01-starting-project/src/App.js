@@ -1,11 +1,35 @@
 /**
  * ============================================================================
- * APP COMPONENT - Router Configuration (Lesson 346)
+ * APP COMPONENT - Router Configuration (Lessons 346-347)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
  * This file now contains the router configuration using createBrowserRouter.
+ *
+ * ============================================================================
+ * ADDING MORE ROUTES (Lesson 347)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 347):
+ * "So let's add more pages."
+ *
+ * To add more routes:
+ * 1. Create a page component in /pages folder
+ * 2. Import the component in App.js
+ * 3. Add a route object to the router array with path and element
+ *
+ * CHOOSING PATHS (Lesson 347):
+ * ============================
+ * INSTRUCTOR QUOTE:
+ * "It is of course up to you which paths you wanna support. But 'slash products'
+ * might be a path that makes a lot of sense if we're loading a page that might
+ * display some product items."
+ *
+ * Path naming should be:
+ * - Descriptive of the content (e.g., /products for product listings)
+ * - SEO-friendly and user-readable
+ * - Consistent with your application's structure
  *
  * ============================================================================
  * STEP 1: DEFINE ROUTES (Lesson 346)
@@ -135,10 +159,18 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
  * Pages are imported and used in route definitions.
  */
 import HomePage from './pages/Home';
+/**
+ * PRODUCTS PAGE IMPORT (Lesson 347):
+ * ===================================
+ * INSTRUCTOR QUOTE (Lesson 347):
+ * "Therefore, we're importing the products page, and we're using it in our
+ * JSX code for this element property."
+ */
+import ProductsPage from './pages/Products';
 
 /**
- * ROUTER DEFINITION (Lesson 346):
- * ================================
+ * ROUTER DEFINITION (Lessons 346-347):
+ * =====================================
  * INSTRUCTOR QUOTE:
  * "Let's call this function and store the created router in a constant which
  * could also be named router."
@@ -151,15 +183,25 @@ import HomePage from './pages/Home';
  * "We can set it to a custom component. For example, we could set this to
  * the home page component once we create that."
  *
- * Route structure:
- * | Path | Element   | Description                    |
- * |------|-----------|--------------------------------|
- * | /    | HomePage  | Root path, main landing page   |
+ * Route structure (Lesson 347):
+ * | Path      | Element      | Description                    |
+ * |-----------|--------------|--------------------------------|
+ * | /         | HomePage     | Root path, main landing page   |
+ * | /products | ProductsPage | Products listing page          |
+ *
+ * UNSUPPORTED PATHS (Lesson 347):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "If we enter something totally different, we get an error, though, because
+ * we try to visit a URL, a path, that's not supported yet."
+ *
+ * Visiting a path not defined in this array will show React Router's
+ * default error page. Error handling will be covered in later lessons.
  */
 const router = createBrowserRouter([
   /**
-   * HOME ROUTE:
-   * ===========
+   * HOME ROUTE (Lesson 346):
+   * ========================
    * INSTRUCTOR QUOTE:
    * "For example for the starting page of a website, that typically is just
    * a slash because that's the path we have if we just visit a domain."
@@ -168,6 +210,36 @@ const router = createBrowserRouter([
    * This route matches and HomePage component is rendered.
    */
   { path: '/', element: <HomePage /> },
+
+  /**
+   * PRODUCTS ROUTE (Lesson 347):
+   * ============================
+   * INSTRUCTOR QUOTE (Lesson 347):
+   * "We do that by adding a second element here to this array of route
+   * definitions. And now the path could be 'slash products.'"
+   *
+   * INSTRUCTOR QUOTE:
+   * "'Slash products' might be a path that makes a lot of sense if we're
+   * loading a page that might display some product items."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And, as an element, I want to load the products page."
+   *
+   * When user visits: example.com/products or localhost:3000/products
+   * This route matches and ProductsPage component is rendered.
+   *
+   * TESTING THE ROUTE (Lesson 347):
+   * ===============================
+   * INSTRUCTOR QUOTE:
+   * "With that we're supporting this second page, for 'slash products,' and
+   * therefore if we save everything, and we go back and we enter 'slash
+   * products,' after a local host 3000, and hit enter, we load the products page."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And, of course, hopefully, unsurprisingly, if we delete 'slash products,'
+   * we load the homepage."
+   */
+  { path: '/products', element: <ProductsPage /> },
 ]);
 
 /**
