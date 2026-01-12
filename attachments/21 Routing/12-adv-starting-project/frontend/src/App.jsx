@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lesson 358)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-359)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -13,6 +13,46 @@
  *
  * INSTRUCTOR QUOTE:
  * "But before we do so, it's time to practice what you learned."
+ *
+ * ============================================================================
+ * PRACTICE CHALLENGE - TRY IT YOURSELF (Lesson 359)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, before we're actually going to dive into advanced features I want you
+ * to practice what you learned up to this point, because it is super important
+ * that you understand all these routing basics."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, in this 'react-frontend' folder in the 'src' folder, in the
+ * 'App.js' file you'll find an exercise, a challenge with multiple steps,
+ * with multiple tasks that you should complete."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And of course, these steps here will require you to use the knowledge you
+ * gained over the previous lectures. You will need to install the react routers,
+ * set up routing, set up some route definitions, add links, and much more."
+ *
+ * WHY PRACTICE? (Lesson 359):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "So, definitely go through these tasks, these instructions and then try to
+ * solve all these tasks, all these challenges on your own."
+ *
+ * INSTRUCTOR QUOTE:
+ * "In the next lecture, we'll of course solve them together but you definitely
+ * should try it on your own first so that you get the most out of this course."
+ *
+ * ABOUT THE BONUS TASK (Lesson 359):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "By the way, the last step is a bonus task which you can theoretically solve,
+ * but which requires you to do something we haven't done before. So, don't
+ * worry if you're not able to complete this task."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You will of course also see the solution for that in the next lecture.
+ * But definitely feel free to give it a try on your own first."
  *
  * ============================================================================
  * PROJECT STRUCTURE (Lesson 358)
@@ -108,11 +148,14 @@
  * this course section."
  *
  * ============================================================================
- * PRACTICE CHALLENGE (Lesson 358)
+ * PRACTICE CHALLENGE (Lessons 358-359)
  * ============================================================================
  *
  * This file contains a practice exercise to apply what you learned in
  * Lessons 346-357 about React Router. The challenge tasks are listed below.
+ *
+ * IMPORTANT (Lesson 359): Try to complete these tasks on your own FIRST
+ * before looking at the solution in Lesson 360!
  *
  * CONCEPTS TO PRACTICE:
  * =====================
@@ -142,8 +185,13 @@
 
 /**
  * ============================================================================
- * CHALLENGE / EXERCISE TASKS
+ * CHALLENGE / EXERCISE TASKS (Lesson 359)
  * ============================================================================
+ *
+ * TRY IT YOURSELF FIRST!
+ * ======================
+ * Before looking at the solution (Lesson 360), attempt all tasks below.
+ * This is crucial for understanding routing basics before advancing.
  *
  * Complete these tasks to practice your React Router skills:
  *
@@ -190,10 +238,14 @@
  * Use useParams() hook to get the event ID from the URL.
  * Display it on EventDetailPage (Lesson 354).
  *
- * BONUS: Nested Events Layout
- * ===========================
+ * BONUS: Nested Events Layout (Lesson 359 - Advanced)
+ * ====================================================
  * Add a nested layout for /events/* routes that includes <EventsNavigation>.
  * This demonstrates multiple layout routes (Lesson 350).
+ *
+ * NOTE FROM LESSON 359:
+ * This bonus task "requires you to do something we haven't done before."
+ * Don't worry if you can't complete it - the solution is in Lesson 360.
  *
  * ============================================================================
  */

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS NAVIGATION COMPONENT (Lesson 358 - Pre-built Component)
+ * EVENTS NAVIGATION COMPONENT (Lessons 358-359 - Pre-built Component)
  * ============================================================================
  *
  * PRE-BUILT COMPONENT (Lesson 358):
@@ -15,8 +15,19 @@
  * It provides links to view all events or create a new event.
  *
  * ============================================================================
- * BONUS CHALLENGE: Nested Events Layout
+ * BONUS CHALLENGE: Nested Events Layout (Lesson 359)
  * ============================================================================
+ *
+ * ABOUT THIS BONUS TASK (Lesson 359):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "By the way, the last step is a bonus task which you can theoretically solve,
+ * but which requires you to do something we haven't done before. So, don't
+ * worry if you're not able to complete this task."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You will of course also see the solution for that in the next lecture.
+ * But definitely feel free to give it a try on your own first."
  *
  * Use this component in a nested layout route that wraps all /events/* routes.
  *
