@@ -1,50 +1,60 @@
 /**
  * ============================================================================
- * PRODUCTS PAGE COMPONENT (Lesson 347)
+ * PRODUCTS PAGE COMPONENT (Lessons 347, 349)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE (Lesson 347):
  * "So let's add more pages. And for that I'm first of all going to add another
- * component to the pages folder. And I'll name it 'Products JS.' The name of
- * course is up to you, though."
+ * component to the pages folder. And I'll name it 'Products JS.'"
  *
- * ADDING MULTIPLE PAGES (Lesson 347):
- * ===================================
- * This lesson demonstrates how to:
- * 1. Add additional page components to the /pages folder
- * 2. Create route definitions for each page
- * 3. Access different pages via different URL paths
+ * ============================================================================
+ * NAVIGATION WITH LINK COMPONENT (Lesson 349)
+ * ============================================================================
  *
- * PAGE NAMING CONVENTION:
- * =======================
- * - File: Products.js (or ProductsPage.js)
- * - Component: ProductsPage (descriptive name indicating it's a page)
- * - Location: /pages folder (separates page components from reusable components)
+ * Just like in Home.js, we use the Link component here for navigation.
+ * This ensures users can navigate back to the home page without:
+ * - Sending a new HTTP request
+ * - Reloading the entire application
+ * - Losing application state
  *
- * DUMMY PAGE (Lesson 347):
- * ========================
- * INSTRUCTOR QUOTE:
- * "Here I'll add a products page, but it will still just be a dummy page,
- * without any actual real content on it."
- *
- * For learning routing, we start with simple placeholder content.
- * In a real application, this would contain:
- * - Product listings
- * - Filtering/sorting options
- * - Links to individual product pages
+ * See Home.js for detailed explanation of Link vs anchor tags.
  */
+
+import { Link } from 'react-router-dom';
 
 /**
  * PRODUCTS PAGE COMPONENT:
  * ========================
  * INSTRUCTOR QUOTE (Lesson 347):
- * "Here I will then return an H-1 element, where I say 'the products page.'"
+ * "Here I'll add a products page, but it will still just be a dummy page,
+ * without any actual real content on it."
  *
- * This component will be rendered when the user visits /products.
- * The routing configuration in App.js maps the path to this component.
+ * This component demonstrates:
+ * 1. A page component rendered by React Router
+ * 2. Using Link for navigation back to home
  */
 function ProductsPage() {
-  return <h1>The Products Page</h1>;
+  return (
+    <>
+      <h1>The Products Page</h1>
+
+      {/**
+       * LINK BACK TO HOME (Lesson 349):
+       * ================================
+       * Using Link component for client-side navigation.
+       *
+       * The 'to' attribute specifies the path:
+       * - "/" means the root path (home page)
+       * - This matches the path defined in App.js route configuration
+       *
+       * INSTRUCTOR QUOTE (Lesson 349):
+       * "That is how we should navigate between pages with react-router-dom."
+       */}
+      <p>
+        <Link to="/">Back to Home</Link>
+      </p>
+    </>
+  );
 }
 
 export default ProductsPage;

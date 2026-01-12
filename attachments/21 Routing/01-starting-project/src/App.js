@@ -1,11 +1,65 @@
 /**
  * ============================================================================
- * APP COMPONENT - Router Configuration (Lessons 346-347)
+ * APP COMPONENT - Router Configuration (Lessons 346-348)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
  * This file now contains the router configuration using createBrowserRouter.
+ *
+ * ============================================================================
+ * TWO WAYS TO DEFINE ROUTES (Lesson 348)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 348):
+ * "So we now added our first two route definitions. There is of course way
+ * more we can and we should do when building a page that, or a website that
+ * supports routing. But before we do that, I wanna show you an alternative
+ * way of defining your routes here."
+ *
+ * APPROACH 1: OBJECT-BASED (Current - Recommended):
+ * =================================================
+ * INSTRUCTOR QUOTE (Lesson 348):
+ * "You can define them like this with an array of route definition objects.
+ * And in my opinion, this is quite an intuitive approach."
+ *
+ * const router = createBrowserRouter([
+ *   { path: '/', element: <HomePage /> },
+ *   { path: '/products', element: <ProductsPage /> },
+ * ]);
+ *
+ * APPROACH 2: JSX-BASED (Alternative):
+ * ====================================
+ * INSTRUCTOR QUOTE (Lesson 348):
+ * "But especially if you worked with older versions of react-router-dom, it
+ * might also be a bit of a strange approach because in older versions you
+ * actually defined all your routes with help of components and JSX code
+ * instead of JavaScript Objects in array."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And you can still do this in this version here in this latest version."
+ *
+ * Using createRoutesFromElements and Route component:
+ * const routeDefinitions = createRoutesFromElements(
+ *   <Route>
+ *     <Route path="/" element={<HomePage />} />
+ *     <Route path="/products" element={<ProductsPage />} />
+ *   </Route>
+ * );
+ * const router = createBrowserRouter(routeDefinitions);
+ *
+ * WHY TWO APPROACHES EXIST (Lesson 348):
+ * ======================================
+ * - Object-based: Newer, more programmatic, easier to work with data
+ * - JSX-based: Familiar for those from older react-router versions
+ * - Both produce the same result!
+ *
+ * INSTRUCTOR'S PREFERENCE (Lesson 348):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "Ultimately, it is up to you what you prefer. I'll switch back to this
+ * object-based solution, but you could also define your routes with JSX
+ * code instead, if you preferred that."
  *
  * ============================================================================
  * ADDING MORE ROUTES (Lesson 347)
@@ -150,6 +204,29 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 /**
+ * ============================================================================
+ * ALTERNATIVE JSX-BASED IMPORTS (Lesson 348) - Commented Out
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 348):
+ * "You can import another function from react-router-dom, and that's the
+ * create routes from elements function."
+ *
+ * INSTRUCTOR QUOTE:
+ * "To be precise, you import a route component from react-router-dom."
+ *
+ * These imports are needed for the JSX-based approach:
+ * - createRoutesFromElements: Converts JSX route definitions to route objects
+ * - Route: Component used to define individual routes in JSX
+ */
+// import {
+//   createBrowserRouter,
+//   RouterProvider,
+//   createRoutesFromElements,
+//   Route,
+// } from 'react-router-dom';
+
+/**
  * PAGE COMPONENTS:
  * ================
  * INSTRUCTOR QUOTE (Lesson 346):
@@ -169,7 +246,69 @@ import HomePage from './pages/Home';
 import ProductsPage from './pages/Products';
 
 /**
- * ROUTER DEFINITION (Lessons 346-347):
+ * ============================================================================
+ * ALTERNATIVE: JSX-BASED ROUTE DEFINITIONS (Lesson 348) - Commented Out
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 348):
+ * "And you can create a new constant call route definitions, for example,
+ * and call create routes from elements and to dysfunction, you pass a bunch
+ * of JSX code."
+ *
+ * HOW IT WORKS:
+ * =============
+ * INSTRUCTOR QUOTE:
+ * "With one wrapper route, you could then add your nested routes here where
+ * every route receives a path prop like slash nothing, and an element prop
+ * which could, for example, load the homepage JSX code."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So of course you might see that this line is the same as this route
+ * definition down there. Just with JSX code and components."
+ *
+ * COMPARISON:
+ * ===========
+ * | Object-based                              | JSX-based                        |
+ * |-------------------------------------------|----------------------------------|
+ * | { path: '/', element: <HomePage /> }      | <Route path="/" element={...} /> |
+ * | Array of plain JavaScript objects         | Uses Route components            |
+ * | More programmatic                         | More familiar to old users       |
+ *
+ * USING THE JSX DEFINITIONS (Lesson 348):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "You can then take those route definitions created with create routes from
+ * elements and use that to create your browser router."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We could also create our router now by calling create browser router, but
+ * instead of passing this array of route definition objects to it, we pass
+ * the route definitions that were created with create routes from elements
+ * to this router."
+ *
+ * RESULT (Lesson 348):
+ * ====================
+ * INSTRUCTOR QUOTE:
+ * "With that, if we save that, we still get our homepage and we can still
+ * visit slash products, but now we're using this different approach of
+ * defining our routes."
+ */
+// const routeDefinitions = createRoutesFromElements(
+//   <Route>
+//     <Route path="/" element={<HomePage />} />
+//     <Route path="/products" element={<ProductsPage />} />
+//   </Route>
+// );
+
+/**
+ * CREATING ROUTER WITH JSX DEFINITIONS (Lesson 348) - Commented Out:
+ * ===================================================================
+ * If using the JSX-based approach, you would create the router like this:
+ */
+// const router = createBrowserRouter(routeDefinitions);
+
+/**
+ * ROUTER DEFINITION (Lessons 346-347) - OBJECT-BASED APPROACH:
  * =====================================
  * INSTRUCTOR QUOTE:
  * "Let's call this function and store the created router in a constant which
