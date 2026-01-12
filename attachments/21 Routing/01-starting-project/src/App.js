@@ -1,158 +1,199 @@
 /**
  * ============================================================================
- * APP COMPONENT - Root Component for Routing (Lesson 345)
+ * APP COMPONENT - Router Configuration (Lesson 346)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
- * This section teaches how to implement client-side routing in React using
- * the react-router-dom package.
+ * This file now contains the router configuration using createBrowserRouter.
  *
  * ============================================================================
- * WHAT IS ROUTING? (Lesson 345)
+ * STEP 1: DEFINE ROUTES (Lesson 346)
  * ============================================================================
  *
- * Routing is the feature of:
- * - Watching the URL in the browser
- * - Loading different content based on the URL path
- * - Allowing users to navigate between different "pages" without full reloads
- *
- * INSTRUCTOR QUOTE (Lesson 345):
- * "This Routing functionality, this feature of watching the URL and loading
- * different content is not built into React."
- *
- * ============================================================================
- * WHY USE A ROUTING LIBRARY? (Lesson 345)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Whilst we could try to write our own logic, our own router, so to say,
- * that would be rather complex because there are a lot of nuances and features
- * you might wanna have to properly support these URL changes and different
- * use cases."
- *
- * That's why we use react-router-dom - it handles all the complexity for us!
- *
- * ============================================================================
- * INSTALLING REACT ROUTER (Lesson 345)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "We'll install an extra package with npm install here in the terminal and
- * we'll install the react-router-dom package."
- *
- * INSTALLATION COMMAND:
- * ====================
- * npm install react-router-dom
- *
- * ABOUT THE PACKAGE (Lesson 345):
- * ===============================
- * INSTRUCTOR QUOTE:
- * "This react-router-dom package belongs to the React Router tool. And you can
- * visit reactrouter.com to learn all about this tool and this package."
- *
- * DOCUMENTATION: https://reactrouter.com
- *
- * INSTRUCTOR QUOTE:
- * "Here you can learn about all its features and behaviors and its entire API,
- * so all the functionalities exposed by this package."
- *
- * ============================================================================
- * THREE STEPS TO ADD ROUTING (Lesson 345)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "This is actually a multi-step process."
- *
- * STEP 1: DEFINE ROUTES
- * =====================
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 346):
  * "The first step, is that we must define the routes we wanna support, so we
  * must define which URLs, which paths we wanna support, and which components
  * should be loaded for different paths."
  *
- * Example:
- * | Path        | Component to Load |
- * |-------------|-------------------|
- * | /           | HomePage          |
- * | /products   | ProductsPage      |
- * | /about      | AboutPage         |
- *
- * STEP 2: ACTIVATE THE ROUTER
- * ===========================
+ * IMPORTING createBrowserRouter (Lesson 346):
+ * ============================================
  * INSTRUCTOR QUOTE:
- * "The second step is to activate our router and load the route definitions
- * that we defined in the first step."
+ * "We want to import something from that react-router-dom package... the
+ * create browser router function."
  *
- * This is done by wrapping your app with a Router provider component.
+ * INSTRUCTOR QUOTE:
+ * "This is a function we can call to create a new router. And in that function,
+ * we then define our routes."
  *
- * STEP 3: COMPONENTS & NAVIGATION
+ * WHY "BROWSER" ROUTER? (Lesson 346):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "The reason why it's called create browser router is because this will then
+ * create a router which supports these browser-built-in mechanisms for dealing
+ * with URLs and for changing the URL."
+ *
+ * Browser mechanisms used:
+ * - History API (pushState, replaceState)
+ * - URL changes without full page reload
+ * - Back/forward button support
+ *
+ * ROUTE DEFINITIONS (Lesson 346):
  * ===============================
  * INSTRUCTOR QUOTE:
- * "The third step of course, is to make sure that we have all these components
- * that we do wanna load and that we maybe also provide some means of navigating
- * between those pages so that our users can move smoothly between the different
- * pages."
+ * "This function takes an array of route definition objects. These are simply
+ * JavaScript objects where every object represents one route."
  *
- * This includes:
- * - Creating page components for each route
- * - Adding navigation links (Link, NavLink components)
- * - Handling navigation programmatically (useNavigate hook)
+ * Route object structure:
+ * {
+ *   path: '/some-path',    // URL path to match
+ *   element: <Component /> // Component to render when path matches
+ * }
+ *
+ * THE PATH PROPERTY (Lesson 346):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "The path for which this route should be active. And that's the path part
+ * of the URL after the domain."
+ *
+ * Examples:
+ * - path: '/'       -> example.com/
+ * - path: '/about'  -> example.com/about
+ * - path: '/users'  -> example.com/users
+ *
+ * INSTRUCTOR QUOTE:
+ * "For example for the starting page of a website, that typically is just a
+ * slash because that's the path we have if we just visit a domain."
+ *
+ * THE ELEMENT PROPERTY (Lesson 346):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "The element property... Now you set this to the JSX code that should be
+ * rendered when that route becomes active, so when that path becomes active."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You can set this to any JSX code you want. And of course, that also means
+ * that you can set it to a custom component."
  *
  * ============================================================================
- * PROJECT STRUCTURE (Lesson 345)
+ * STEP 2: ACTIVATE THE ROUTER (Lesson 346)
+ * ============================================================================
+ *
+ * IMPORTING RouterProvider (Lesson 346):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "To tell React that this router should be used, we need to import another
+ * thing from react-router-dom and that's the router provider component."
+ *
+ * USING RouterProvider (Lesson 346):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Now the idea is that we render this router provider component in our app
+ * and we add the router prop to this component and we set this to the router
+ * we created."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And with that, we're activating this router and we're telling React router
+ * that this router should be used to render the appropriate page, the
+ * appropriate element for the currently active path."
+ *
+ * ============================================================================
+ * MODERN vs CLASSIC APPROACH (Lesson 346)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "It is a very simple project created with create-react-app, and it doesn't
- * contain a lot of content, just some basic styles with which we can work and
- * an empty root component, the app component."
+ * "This way of defining the router of defining the routes and then providing
+ * this router is the most modern and also the recommended approach when using
+ * react-router-dom version 6.4 or higher."
  *
  * INSTRUCTOR QUOTE:
- * "We'll use this project to learn about the basics of Routing before we then
- * later in this course section we'll also build a slightly more realistic
- * project and use more advanced Routing features."
+ * "Older tutorials might also use the browser router component from that same
+ * package where you would wrap your app component with it and define these
+ * route definitions as JSX code. That's another approach, but it's not the
+ * approach that's recommended anymore when using version 6.4 or newer."
  *
- * Current project structure:
- * src/
- *   App.js      <- THIS FILE: Root component (empty for now)
- *   index.js    <- Entry point
- *   index.css   <- Basic styles
+ * Modern approach (recommended - v6.4+):
+ * - createBrowserRouter for route definitions
+ * - RouterProvider to activate the router
+ * - Data loading/actions supported
  *
- * ============================================================================
- * WHAT WE'LL BUILD IN THIS SECTION
- * ============================================================================
- *
- * Basic Routing Features (coming in next lessons):
- * - Route definitions with createBrowserRouter
- * - RouterProvider for activating routes
- * - Page components for different routes
- * - Link and NavLink for navigation
- * - Dynamic routes with parameters
- * - Nested routes and layouts
- * - Error handling with errorElement
- *
- * Advanced Routing Features (later lessons):
- * - Data loading with loaders
- * - Form handling with actions
- * - Deferred loading and Suspense
- * - Protected routes
- * - And more!
+ * Classic approach (older):
+ * - BrowserRouter wrapper component
+ * - Routes and Route components as JSX
+ * - Some features not available
  */
 
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
 /**
- * APP COMPONENT (Lesson 345):
+ * PAGE COMPONENTS:
+ * ================
+ * INSTRUCTOR QUOTE (Lesson 346):
+ * "I'll add a folder named pages here to this project to hold the components
+ * that will be loaded as pages by the router."
+ *
+ * Pages are imported and used in route definitions.
+ */
+import HomePage from './pages/Home';
+
+/**
+ * ROUTER DEFINITION (Lesson 346):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "Let's call this function and store the created router in a constant which
+ * could also be named router."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Every object represents one route and such an object should have a path
+ * property which defines the path for which this route should be active."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can set it to a custom component. For example, we could set this to
+ * the home page component once we create that."
+ *
+ * Route structure:
+ * | Path | Element   | Description                    |
+ * |------|-----------|--------------------------------|
+ * | /    | HomePage  | Root path, main landing page   |
+ */
+const router = createBrowserRouter([
+  /**
+   * HOME ROUTE:
+   * ===========
+   * INSTRUCTOR QUOTE:
+   * "For example for the starting page of a website, that typically is just
+   * a slash because that's the path we have if we just visit a domain."
+   *
+   * When user visits: example.com/ or localhost:3000/
+   * This route matches and HomePage component is rendered.
+   */
+  { path: '/', element: <HomePage /> },
+]);
+
+/**
+ * APP COMPONENT (Lesson 346):
  * ===========================
  * INSTRUCTOR QUOTE:
- * "An empty root component, the app component."
+ * "Now the idea is that we render this router provider component in our app."
  *
- * This component is currently empty. In the next lessons, we'll:
- * 1. Define routes using createBrowserRouter
- * 2. Wrap this with RouterProvider
- * 3. Add page components and navigation
+ * INSTRUCTOR QUOTE:
+ * "We add the router prop to this component and we set this to the router
+ * we created."
+ *
+ * The App component now:
+ * 1. Renders RouterProvider as its root element
+ * 2. Passes the router configuration via the `router` prop
+ * 3. React Router takes over rendering based on the current URL
+ *
+ * HOW IT WORKS:
+ * =============
+ * 1. RouterProvider receives the router configuration
+ * 2. React Router watches the browser URL
+ * 3. When URL matches a path, corresponding element is rendered
+ * 4. No full page reload - just component swap (client-side routing)
  */
 function App() {
-  return <div></div>;
+  return <RouterProvider router={router} />;
 }
 
 export default App;
