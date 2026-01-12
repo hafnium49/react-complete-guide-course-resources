@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MAIN NAVIGATION STYLES (Lesson 350)
+ * MAIN NAVIGATION STYLES (Lessons 350, 352)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE (Lesson 350):
@@ -29,13 +29,77 @@
   gap: 1rem;
 }
 
+/**
+ * DEFAULT LINK STYLING (Lesson 352):
+ * ==================================
+ * INSTRUCTOR QUOTE (Lesson 352):
+ * "And we're targeting the anchor here instead of link, because as mentioned
+ * before, this link component provided by react-router-dom does render a
+ * regular anchor element."
+ *
+ * Why target 'a' instead of Link/NavLink?
+ * - Link and NavLink components render as <a> tags in the DOM
+ * - CSS can only target actual DOM elements, not React components
+ * - So we style 'a' which is what gets rendered
+ */
 .list a {
   text-decoration: none;
   color: var(--color-primary-400);
 }
 
+/**
+ * ============================================================================
+ * HOVER AND ACTIVE LINK STYLES (Lesson 352)
+ * ============================================================================
+ *
+ * THE PROBLEM (Lesson 352):
+ * =========================
+ * INSTRUCTOR QUOTE:
+ * "At the moment you might notice that we got no real feedback when we're
+ * hovering over these links. And you might also of course see that we can't
+ * tell which link is currently active when we're on a page."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Of course we can take a look at the URL, and of course the page content
+ * might help us understand which page this is but it's also quite common
+ * that the currently active link that led to the page that's active is
+ * highlighted somehow. And at the moment that's missing."
+ *
+ * THE SOLUTION (Lesson 352):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "For highlighting the active link, we can start by going to our
+ * MainNavigation.module CSS file, and actually add maybe a hover style for
+ * the anchor tag but also support an active class on the anchor element."
+ *
+ * TWO TRIGGERS FOR THESE STYLES:
+ * ==============================
+ * 1. :hover   - When user hovers over a link (mouse pointer on it)
+ * 2. .active  - When the link leads to the currently active route
+ *               (This class is added dynamically via NavLink - see MainNavigation.js)
+ *
+ * HOW .active CLASS GETS APPLIED (Lesson 352):
+ * ============================================
+ * The .active class doesn't exist by default on links.
+ * NavLink component conditionally adds it based on the current route.
+ * See MainNavigation.js for the className function that applies this class.
+ */
 .list a:hover,
 .list a.active {
+  /**
+   * ACTIVE STYLING (Lesson 352):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "So here, to indicate if a link is active, we could for example change
+   * its color. And I got a couple of CSS variables here for different colors
+   * we can use. We could, for example, try this one here. The primary 800
+   * color with this CSS code."
+   *
+   * INSTRUCTOR QUOTE:
+   * "To make it a bit clearer to see that this link is active, we could
+   * also add text decoration underline. And now in addition to changing
+   * the color, we add this underline effect."
+   */
   color: var(--color-primary-800);
   text-decoration: underline;
 }
