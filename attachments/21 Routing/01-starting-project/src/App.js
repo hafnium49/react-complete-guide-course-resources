@@ -1,11 +1,70 @@
 /**
  * ============================================================================
- * APP COMPONENT - Router Configuration (Lessons 346-354)
+ * APP COMPONENT - Router Configuration (Lessons 346-357)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
  * This file now contains the router configuration using createBrowserRouter.
+ *
+ * ============================================================================
+ * INDEX ROUTES - DEFAULT CHILD ROUTES (Lesson 357)
+ * ============================================================================
+ *
+ * WHAT ARE INDEX ROUTES? (Lesson 357):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "This turns this route into a so-called index route, which simply means
+ * it's the default route that should be displayed if the parent route's path
+ * is currently active."
+ *
+ * THE SCENARIO (Lesson 357):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "In the end, it doesn't have a path. Instead, the homepage should be loaded
+ * for the same path as we have it here on the parent route. We have two
+ * different routes because we want to have that wrapping layout, though."
+ *
+ * INSTRUCTOR QUOTE:
+ * "But it is quite common that you might have such a wrapping layout route,
+ * as we have it here. And then you have one child route that should be loaded
+ * for the parent's route path."
+ *
+ * TWO WAYS TO SOLVE THIS (Lesson 357):
+ * ====================================
+ * | Approach            | Syntax                              | Result        |
+ * |---------------------|-------------------------------------|---------------|
+ * | Empty/No path       | { path: '/', element: <Home /> }    | Home at /     |
+ * | Index route         | { index: true, element: <Home /> }  | Home at /     |
+ *
+ * Both approaches work, but index routes are more explicit about intent.
+ *
+ * HOW INDEX ROUTES WORK (Lesson 357):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "So it will not be loaded for products or products/productId. But if we're
+ * on just /nothing in this case, this index route will be activated."
+ *
+ * Parent route: path: '/'
+ * Index route:  index: true
+ *
+ * | URL                | Route Loaded         | Why?                          |
+ * |--------------------|----------------------|-------------------------------|
+ * | /                  | Index route (Home)   | Parent path exactly matched   |
+ * | /products          | Products route       | Different child path          |
+ * | /products/p1       | ProductDetail route  | Different child path          |
+ *
+ * WHY USE INDEX ROUTES? (Lesson 357):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "You should be aware of this feature called index routes, which allows you
+ * to define the default route that should be loaded if the parent routes
+ * path is active."
+ *
+ * Benefits:
+ * - More explicit/semantic (clearly marks the "default" child)
+ * - Avoids confusion about empty paths
+ * - Common pattern in React Router applications
  *
  * ============================================================================
  * DYNAMIC ROUTES & PATH PARAMETERS (Lesson 354)
@@ -138,16 +197,18 @@
  * of this route. So, this route acts as a parent route to these routes and it
  * acts as a wrapper to these routes."
  *
- * ROUTE STRUCTURE (Lesson 350):
- * =============================
+ * ROUTE STRUCTURE (Lessons 350, 357):
+ * ===================================
  * {
  *   path: '/',
  *   element: <RootLayout />,    // Parent layout (with <Outlet />)
  *   children: [                 // Child routes rendered at <Outlet />
- *     { path: '/', element: <HomePage /> },
+ *     { index: true, element: <HomePage /> },      // Index route (Lesson 357)
  *     { path: '/products', element: <ProductsPage /> },
  *   ]
  * }
+ *
+ * Note: `index: true` makes HomePage the default when parent path is active.
  *
  * MULTIPLE LAYOUTS (Lesson 350):
  * ==============================
@@ -505,13 +566,16 @@ import ProductDetailPage from './pages/ProductDetail';
  * "Let's call this function and store the created router in a constant which
  * could also be named router."
  *
- * Updated route structure (Lessons 350, 354):
+ * Updated route structure (Lessons 350, 354, 357):
  * | Path                 | Element           | Parent    | Description                |
  * |----------------------|-------------------|-----------|----------------------------|
  * | /                    | RootLayout        | -         | Layout wrapper w/ nav      |
- * |   /                  | HomePage          | RootLayout| Main landing page          |
+ * |   (index)            | HomePage          | RootLayout| Default/index route        |
  * |   /products          | ProductsPage      | RootLayout| Products listing page      |
  * |   /products/:productId| ProductDetailPage| RootLayout| Dynamic product detail     |
+ *
+ * NOTE (Lesson 357): HomePage uses `index: true` instead of `path: '/'`
+ * This marks it as the default route when parent path is active.
  *
  * UNSUPPORTED PATHS (Lessons 347, 351):
  * =====================================
@@ -600,17 +664,72 @@ const router = createBrowserRouter([
      */
     children: [
       /**
-       * HOME ROUTE - CHILD (Lessons 346, 350):
-       * ======================================
+       * =====================================================================
+       * HOME ROUTE - INDEX ROUTE (Lessons 346, 350, 357)
+       * =====================================================================
+       *
+       * BEFORE LESSON 357 (using path):
+       * ================================
        * INSTRUCTOR QUOTE (Lesson 346):
        * "For example for the starting page of a website, that typically is
        * just a slash because that's the path we have if we just visit a domain."
        *
+       * Original approach: { path: '/', element: <HomePage /> }
+       *
+       * AFTER LESSON 357 (using index):
+       * ================================
+       * INSTRUCTOR QUOTE (Lesson 357):
+       * "You could solve it like this by adding no path. But alternatively,
+       * you can add the special index property and set this to true."
+       *
+       * THE index PROPERTY (Lesson 357):
+       * ================================
+       * INSTRUCTOR QUOTE:
+       * "This turns this route into a so-called index route, which simply
+       * means it's the default route that should be displayed if the parent
+       * route's path is currently active."
+       *
+       * WHAT THIS MEANS (Lesson 357):
+       * =============================
+       * INSTRUCTOR QUOTE:
+       * "So it will not be loaded for products or products/productId. But
+       * if we're on just /nothing in this case, this index route will be
+       * activated."
+       *
        * When user visits: localhost:3000/
        * - RootLayout renders (MainNavigation visible)
-       * - HomePage renders at <Outlet />
+       * - HomePage renders at <Outlet /> (because it's the index route)
+       *
+       * THE RESULT (Lesson 357):
+       * ========================
+       * INSTRUCTOR QUOTE:
+       * "And if we save that, we therefore get the same behavior as before.
+       * The application works as before, but this is now a different way
+       * of solving this."
+       *
+       * WHY USE INDEX ROUTES? (Lesson 357):
+       * ===================================
+       * INSTRUCTOR QUOTE:
+       * "And you should be aware of this feature called index routes, which
+       * allows you to define the default route that should be loaded if the
+       * parent routes path is active."
+       *
+       * INSTRUCTOR QUOTE:
+       * "Of course, you don't have to have index routes. It depends on your
+       * use case and application, but often you want such default routes.
+       * And that is how you could solve it alternatively to adding this
+       * empty path here."
+       *
+       * COMPARISON:
+       * ===========
+       * | Approach        | Code                                | Behavior     |
+       * |-----------------|-------------------------------------|--------------|
+       * | Path approach   | { path: '/', element: <Home /> }    | Home at /    |
+       * | Index approach  | { index: true, element: <Home /> }  | Home at /    |
+       *
+       * Both work! Index is more explicit about being the "default" child.
        */
-      { path: '/', element: <HomePage /> },
+      { index: true, element: <HomePage /> },
 
       /**
        * PRODUCTS ROUTE - CHILD (Lessons 347, 350):
