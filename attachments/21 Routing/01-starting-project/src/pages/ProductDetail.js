@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PRODUCT DETAIL PAGE COMPONENT (Lesson 354)
+ * PRODUCT DETAIL PAGE COMPONENT (Lessons 354, 356)
  * ============================================================================
  *
  * WHY A PRODUCT DETAIL PAGE? (Lesson 354):
@@ -125,16 +125,27 @@
  */
 
 /**
- * useParams HOOK IMPORT (Lesson 354):
- * ===================================
+ * IMPORTS (Lessons 354, 356):
+ * ===========================
+ * useParams (Lesson 354):
+ * -----------------------
  * INSTRUCTOR QUOTE (Lesson 354):
  * "And that tool which we get from React Router DOM is the useParams hook."
  *
  * useParams returns an object containing:
  * - Key: The parameter name from the route definition (after the colon)
  * - Value: The actual value from the current URL
+ *
+ * Link (Lesson 356):
+ * ------------------
+ * INSTRUCTOR QUOTE (Lesson 356):
+ * "Now if on the productdetail.js file we add another paragraph with a link...
+ * where I say back, we could implement this behavior by adding the to prop
+ * and adding two dots."
+ *
+ * Link is used here for the "Back" navigation to return to the products list.
  */
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 /**
  * PRODUCT DETAIL PAGE COMPONENT:
@@ -210,6 +221,87 @@ function ProductDetailPage() {
        * backend and fetch the data for this product."
        */}
       <p>{params.productId}</p>
+
+      {/**
+       * ================================================================
+       * BACK LINK WITH RELATIVE PATH (Lesson 356)
+       * ================================================================
+       *
+       * ABSOLUTE vs RELATIVE PATHS (Lesson 356):
+       * ========================================
+       * INSTRUCTOR QUOTE:
+       * "If you have a path that starts with a slash, that means it's an
+       * absolute path. So if I have slash products here, this means this
+       * path will be added directly after the domain name."
+       *
+       * INSTRUCTOR QUOTE:
+       * "If you remove the leading slash, this becomes a relative path.
+       * And relative paths are appended after the currently active routes
+       * path."
+       *
+       * | Path Type | Example        | URL Result                        |
+       * |-----------|----------------|-----------------------------------|
+       * | Absolute  | "/products"    | domain.com/products               |
+       * | Relative  | "products"     | domain.com/{current-path}/products|
+       *
+       * USING ".." TO GO BACK (Lesson 356):
+       * ===================================
+       * INSTRUCTOR QUOTE:
+       * "We could implement this behavior by adding the to prop and adding
+       * two dots, and with that, we would go back one level."
+       *
+       * THE relative PROP (Lesson 356):
+       * ===============================
+       * INSTRUCTOR QUOTE:
+       * "There also is this relative prop and this prop can be set to route,
+       * which is the default, or path. Now if it's set to route, which is
+       * the default, the two dots here in the to prop will go back one
+       * level in the route definition."
+       *
+       * relative="route" (DEFAULT):
+       * ---------------------------
+       * INSTRUCTOR QUOTE:
+       * "If I add products/:productId as a child of products, and then I
+       * add '..' as the to prop... it goes back to products and as you
+       * learned we don't have any element for that route."
+       *
+       * With our route structure:
+       *   { path: '/', children: [
+       *     { path: 'products', ... },           ← ".." would go here
+       *     { path: 'products/:productId', ... } ← We are here
+       *   ]}
+       *
+       * relative="path":
+       * ----------------
+       * INSTRUCTOR QUOTE:
+       * "If we set this to path, React Router will instead take a look at
+       * the currently active path and simply remove one segment from that
+       * path."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So if we're on /products/p1, it removes /p1 and goes back to
+       * /products."
+       *
+       * | Current URL      | to=".." | relative   | Result URL    |
+       * |------------------|---------|------------|---------------|
+       * | /products/p1     | ..      | "route"    | /             |
+       * | /products/p1     | ..      | "path"     | /products     |
+       *
+       * WHY WE USE relative="path" HERE (Lesson 356):
+       * =============================================
+       * INSTRUCTOR QUOTE:
+       * "And that's why we use relative path here because it makes sure
+       * that we go back to /products instead of going back to just /."
+       *
+       * We want to return to the products list (/products), not the
+       * home page (/), so we use relative="path" to remove just one
+       * URL segment instead of following the route definition hierarchy.
+       */}
+      <p>
+        <Link to=".." relative="path">
+          Back
+        </Link>
+      </p>
     </>
   );
 }
@@ -246,4 +338,36 @@ export default ProductDetailPage;
  * INSTRUCTOR QUOTE (Lesson 354):
  * "But that's something we'll do later, when we will dive deeper into the
  * data fetching capabilities of React Router DOM."
+ *
+ * ============================================================================
+ * SUMMARY: ABSOLUTE vs RELATIVE PATHS (Lesson 356)
+ * ============================================================================
+ *
+ * ABSOLUTE PATHS:
+ * ===============
+ * - Start with "/" (e.g., "/products")
+ * - Added directly after domain name
+ * - Example: "/products" → domain.com/products
+ *
+ * RELATIVE PATHS:
+ * ===============
+ * - No leading "/" (e.g., "products")
+ * - Appended after currently active route's path
+ * - Example: On "/admin", "products" → domain.com/admin/products
+ *
+ * THE relative PROP ON Link:
+ * ==========================
+ * | Value   | Behavior                                              |
+ * |---------|-------------------------------------------------------|
+ * | "route" | (Default) ".." goes back one level in route hierarchy |
+ * | "path"  | ".." removes one segment from current URL path        |
+ *
+ * WHEN TO USE EACH:
+ * =================
+ * - relative="route": When your route structure matches URL structure
+ * - relative="path": When you want to navigate based on URL segments
+ *
+ * INSTRUCTOR QUOTE (Lesson 356):
+ * "If we set this to path, React Router will instead take a look at the
+ * currently active path and simply remove one segment from that path."
  */
