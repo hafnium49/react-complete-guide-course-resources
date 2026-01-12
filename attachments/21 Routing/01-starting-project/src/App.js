@@ -1,11 +1,54 @@
 /**
  * ============================================================================
- * APP COMPONENT - Router Configuration (Lessons 346-351)
+ * APP COMPONENT - Router Configuration (Lessons 346-354)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
  * This file now contains the router configuration using createBrowserRouter.
+ *
+ * ============================================================================
+ * DYNAMIC ROUTES & PATH PARAMETERS (Lesson 354)
+ * ============================================================================
+ *
+ * THE PROBLEM - HARDCODING PATHS (Lesson 354):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "Now of course we could add multiple paths like this. Now we have three route
+ * definitions with slightly different paths. But that of course is not a
+ * realistic approach because the more products we have, the more paths must
+ * be added."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And typically we don't even know in advance how many products we'll have.
+ * And we also will add more products dynamically... We don't want to add it
+ * to code all the time. Just because a new product was added."
+ *
+ * THE SOLUTION - DYNAMIC PATH SEGMENTS (Lesson 354):
+ * ==================================================
+ * INSTRUCTOR QUOTE:
+ * "And that's why React Router DOM supports dynamic path segments or path
+ * parameters as it's also called. You add a parameter to a path. So such
+ * dynamic path segment. By adding a colon and then any identifier of your
+ * choice like Id or product Id."
+ *
+ * SYNTAX:
+ * =======
+ * path: '/products/:productId'
+ *
+ * - The colon (:) marks the segment as dynamic
+ * - "productId" is the parameter name (your choice)
+ * - Any value after /products/ will match this route
+ *
+ * INSTRUCTOR QUOTE:
+ * "The colon is very important though. This signals to React Router DOM that
+ * this part of the path is dynamic."
+ *
+ * ACCESSING THE PARAMETER:
+ * ========================
+ * In the component, use useParams() hook:
+ * const params = useParams();
+ * const productId = params.productId;  // "p1", "abc", etc.
  *
  * ============================================================================
  * ERROR HANDLING WITH errorElement (Lesson 351)
@@ -377,6 +420,21 @@ import RootLayout from './pages/Root';
  * - Any error occurs that bubbles up to a route with errorElement
  */
 import ErrorPage from './pages/Error';
+/**
+ * PRODUCT DETAIL PAGE IMPORT (Lesson 354):
+ * ========================================
+ * INSTRUCTOR QUOTE (Lesson 354):
+ * "Now, in order to do so, what you would typically have is a separate page,
+ * maybe called 'Product Detail'. So the product detail page like this."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Hence I'm importing that page here, the 'Product Detail' page. And I'm
+ * defining it as an element."
+ *
+ * This page is loaded for the dynamic route: /products/:productId
+ * It uses useParams() to access the productId from the URL.
+ */
+import ProductDetailPage from './pages/ProductDetail';
 
 /**
  * ============================================================================
@@ -447,12 +505,13 @@ import ErrorPage from './pages/Error';
  * "Let's call this function and store the created router in a constant which
  * could also be named router."
  *
- * Updated route structure (Lesson 350):
- * | Path      | Element      | Parent    | Description                    |
- * |-----------|--------------|-----------|--------------------------------|
- * | /         | RootLayout   | -         | Layout wrapper with navigation |
- * |   /       | HomePage     | RootLayout| Root path, main landing page   |
- * |   /products| ProductsPage| RootLayout| Products listing page          |
+ * Updated route structure (Lessons 350, 354):
+ * | Path                 | Element           | Parent    | Description                |
+ * |----------------------|-------------------|-----------|----------------------------|
+ * | /                    | RootLayout        | -         | Layout wrapper w/ nav      |
+ * |   /                  | HomePage          | RootLayout| Main landing page          |
+ * |   /products          | ProductsPage      | RootLayout| Products listing page      |
+ * |   /products/:productId| ProductDetailPage| RootLayout| Dynamic product detail     |
  *
  * UNSUPPORTED PATHS (Lessons 347, 351):
  * =====================================
@@ -572,6 +631,66 @@ const router = createBrowserRouter([
        * add here to this children array, in the future."
        */
       { path: '/products', element: <ProductsPage /> },
+
+      /**
+       * =====================================================================
+       * DYNAMIC ROUTE - PRODUCT DETAIL (Lesson 354)
+       * =====================================================================
+       *
+       * INSTRUCTOR QUOTE (Lesson 354):
+       * "And that's why React Router DOM supports dynamic path segments or
+       * path parameters as it's also called. You add a parameter to a path.
+       * So such dynamic path segment. By adding a colon and then any
+       * identifier of your choice like Id or product Id."
+       *
+       * THE COLON SYNTAX (Lesson 354):
+       * ==============================
+       * INSTRUCTOR QUOTE:
+       * "The colon is very important though. This signals to React Router
+       * DOM that this part of the path is dynamic. So that you actually
+       * don't want to load this element for /products:/productId. But
+       * instead /products/ any value that will be used as an actual value
+       * for this product Id placeholder."
+       *
+       * HOW IT MATCHES (Lesson 354):
+       * ============================
+       * | URL                  | Matches? | :productId value |
+       * |----------------------|----------|------------------|
+       * | /products/p1         | Yes      | "p1"             |
+       * | /products/product-1  | Yes      | "product-1"      |
+       * | /products/abc        | Yes      | "abc"            |
+       * | /products/123        | Yes      | "123"            |
+       * | /products            | No       | (different route)|
+       *
+       * INSTRUCTOR QUOTE:
+       * "So now we load the same component for all these paths because the
+       * part after /products is dynamic and we can plug in any value of
+       * our choice for this placeholder."
+       *
+       * ACCESSING THE PARAMETER (Lesson 354):
+       * =====================================
+       * INSTRUCTOR QUOTE:
+       * "And therefore React Router DOM gives us another tool for getting
+       * hold of the actual value used instead of that placeholder. Instead
+       * of :productId. And that tool which we get from React Router DOM is
+       * the useParams hook."
+       *
+       * In ProductDetailPage:
+       * const params = useParams();
+       * console.log(params.productId); // "p1", "abc", etc.
+       *
+       * WHY "productId"? (Lesson 354):
+       * ==============================
+       * INSTRUCTOR QUOTE:
+       * "So in my case here, I got a property called productId on this
+       * params object because in my route definition I chose productId as
+       * an identifier for this placeholder, for this path parameter, for
+       * this dynamic path segment."
+       *
+       * You can use any name: :id, :productId, :slug, etc.
+       * Just match it in useParams(): params.id, params.productId, params.slug
+       */
+      { path: '/products/:productId', element: <ProductDetailPage /> },
     ],
   },
 ]);
