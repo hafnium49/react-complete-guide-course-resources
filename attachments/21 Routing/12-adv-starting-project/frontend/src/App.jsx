@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-359)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-360)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -53,6 +53,13 @@
  * INSTRUCTOR QUOTE:
  * "You will of course also see the solution for that in the next lecture.
  * But definitely feel free to give it a try on your own first."
+ *
+ * ============================================================================
+ * SOLUTION WALKTHROUGH (Lesson 360)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So did you succeed? Let's now solve all these tasks together."
  *
  * ============================================================================
  * PROJECT STRUCTURE (Lesson 358)
@@ -148,137 +155,249 @@
  * this course section."
  *
  * ============================================================================
- * PRACTICE CHALLENGE (Lessons 358-359)
+ * COMPLETED TASKS SUMMARY (Lesson 360)
  * ============================================================================
  *
- * This file contains a practice exercise to apply what you learned in
- * Lessons 346-357 about React Router. The challenge tasks are listed below.
- *
- * IMPORTANT (Lesson 359): Try to complete these tasks on your own FIRST
- * before looking at the solution in Lesson 360!
- *
- * CONCEPTS TO PRACTICE:
- * =====================
- * From previous lessons:
- * - createBrowserRouter & RouterProvider (Lesson 346)
- * - Adding multiple routes (Lesson 347)
- * - Nested routes & layouts (Lesson 350)
- * - Error handling with errorElement (Lesson 351)
- * - NavLink for active link highlighting (Lesson 352)
- * - Programmatic navigation with useNavigate (Lesson 353)
- * - Dynamic routes with :paramName (Lesson 354)
- * - useParams hook to access parameters (Lesson 354)
- * - Building links for dynamic routes (Lesson 355)
- * - Relative vs absolute paths (Lesson 356)
- * - Index routes (Lesson 357)
- *
- * PRE-BUILT COMPONENTS PROVIDED:
- * ==============================
- * - MainNavigation: Main site navigation (needs Link/NavLink updates)
- * - EventsNavigation: Secondary nav for events section (for nested layout)
- * - EventsList: Displays list of events (needs Link updates)
- * - EventItem: Single event details display
- * - EventForm: Form for creating/editing events
+ * INSTRUCTOR QUOTE:
+ * "With that, we now did solve it together. We got all these challenges,
+ * all these tasks here completed and solved. And now we're ready to dive
+ * into some brand new, more advanced features."
  *
  * ============================================================================
  */
 
 /**
  * ============================================================================
- * CHALLENGE / EXERCISE TASKS (Lesson 359)
+ * TASK 2 SOLUTION - IMPORTING ROUTER COMPONENTS (Lesson 360)
  * ============================================================================
  *
- * TRY IT YOURSELF FIRST!
- * ======================
- * Before looking at the solution (Lesson 360), attempt all tasks below.
- * This is crucial for understanding routing basics before advancing.
+ * INSTRUCTOR QUOTE:
+ * "And for that, I will now import something from react-router-dom. I will
+ * import from react-router-dom, and I will import two things."
  *
- * Complete these tasks to practice your React Router skills:
+ * RouterProvider (Lesson 360):
+ * ============================
+ * INSTRUCTOR QUOTE:
+ * "The first thing is the RouterProvider component which will be needed to
+ * apply and activate our route definitions."
  *
- * TASK 1: Create Page Components
- * ==============================
- * Add five new (dummy) page components (content can be simple <h1> elements):
- *   - HomePage         → Main landing page
- *   - EventsPage       → List of all events
- *   - EventDetailPage  → Details of a specific event
- *   - NewEventPage     → Form to create new event
- *   - EditEventPage    → Form to edit existing event
- *
- * TASK 2: Add Route Definitions
- * =============================
- * Set up routing for these pages:
- *   - /                    → HomePage
- *   - /events              → EventsPage
- *   - /events/<some-id>    → EventDetailPage (dynamic route)
- *   - /events/new          → NewEventPage
- *   - /events/<some-id>/edit → EditEventPage (dynamic + nested)
- *
- * TASK 3: Root Layout
- * ===================
- * Add a root layout that includes <MainNavigation> above all pages.
- * Use nested routes with <Outlet /> (Lesson 350).
- *
- * TASK 4: Navigation Links
- * ========================
- * Update MainNavigation to use <Link> or <NavLink> instead of <a> tags.
- * This enables client-side routing (Lesson 349).
- *
- * TASK 5: Active Link Styling
- * ===========================
- * Use <NavLink> with className function to add "active" class.
- * Remember the `end` prop for the home route (Lesson 352).
- *
- * TASK 6: Events List
- * ===================
- * Display dummy events on EventsPage using the EventsList component.
- * Each event should link to its EventDetailPage (Lesson 355).
- *
- * TASK 7: Display Event ID
- * ========================
- * Use useParams() hook to get the event ID from the URL.
- * Display it on EventDetailPage (Lesson 354).
- *
- * BONUS: Nested Events Layout (Lesson 359 - Advanced)
- * ====================================================
- * Add a nested layout for /events/* routes that includes <EventsNavigation>.
- * This demonstrates multiple layout routes (Lesson 350).
- *
- * NOTE FROM LESSON 359:
- * This bonus task "requires you to do something we haven't done before."
- * Don't worry if you can't complete it - the solution is in Lesson 360.
- *
- * ============================================================================
+ * createBrowserRouter (Lesson 360):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "But that's then of course the other thing that must be imported, the
+ * function that allows us to create these route definitions, and that's
+ * the createBrowserRouter function."
  */
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
+/**
+ * ============================================================================
+ * TASK 1 SOLUTION - PAGE COMPONENT IMPORTS (Lesson 360)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I will of course start with task number one which requires me to add a
+ * couple of pages here. And for that, I'll add a brand new folder, the
+ * pages folder."
+ *
+ * FILE NAMING (Lesson 360):
+ * =========================
+ * INSTRUCTOR QUOTE:
+ * "And actually, I'll remove the word page from the file names. We could
+ * also leave it there, but since the folder is already named pages, I'll
+ * omit page from the file name."
+ */
+import HomePage from './pages/Home';
+import EventsPage from './pages/Events';
+import EventDetailPage from './pages/EventDetail';
+import NewEventPage from './pages/NewEvent';
+import EditEventPage from './pages/EditEvent';
+
+/**
+ * TASK 3 & BONUS - LAYOUT IMPORTS (Lesson 360):
+ * =============================================
+ * RootLayout wraps all routes with MainNavigation.
+ * EventsRootLayout wraps /events/* routes with EventsNavigation.
+ */
+import RootLayout from './pages/Root';
+import EventsRootLayout from './pages/EventsRoot';
+
+/**
+ * ============================================================================
+ * TASK 2 SOLUTION - CREATING THE ROUTER (Lesson 360)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With these two imports added, we can create our router here by calling
+ * createBrowserRouter."
+ *
+ * ROUTE DEFINITION STYLES (Lesson 360):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "And now it's up to you whether you also want to use the
+ * createRoutesFromElements function and use these JSX elements to define
+ * your routes or if you want to pass an array to createBrowserRouter and
+ * then use these objects here to define the routes. I'll do the latter."
+ *
+ * ============================================================================
+ * NESTING ROUTES UNDER ROOT LAYOUT (Lesson 360)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And now all the other routes should become children of this root route.
+ * So we can move all these routes into this root route so that they will
+ * benefit from this root layout."
+ *
+ * ABSOLUTE VS RELATIVE PATHS (Lesson 360):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "Now a quick note about these paths, as you learned, it could matter
+ * whether they are absolute or relative. And therefore here, I'll actually
+ * convert them all to relative paths so that they are relative to the path
+ * defined in the parent route here in the route definitions."
+ *
+ * INDEX ROUTE (Lesson 360):
+ * =========================
+ * INSTRUCTOR QUOTE:
+ * "And I'll actually turn this first route here, for the HomePage, into my
+ * index route instead of defining this empty path, which is also something
+ * you learned about in the previous lectures."
+ */
+const router = createBrowserRouter([
+  {
+    /**
+     * ROOT ROUTE (Lesson 360):
+     * ========================
+     * INSTRUCTOR QUOTE:
+     * "And I will start with a route for my root route for slash nothing
+     * where the element is the HomePage because that is the page that
+     * should be loaded if we are on our domain slash nothing."
+     *
+     * After Task 3, this becomes a layout route:
+     * INSTRUCTOR QUOTE:
+     * "And that can be done by adding a special new route, which will be
+     * a parent route for all other routes."
+     */
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      /**
+       * INDEX ROUTE - HOME PAGE (Lesson 360):
+       * =====================================
+       * INSTRUCTOR QUOTE:
+       * "I'll actually turn this first route here, for the HomePage, into
+       * my index route instead of defining this empty path."
+       *
+       * Using { index: true } instead of { path: '' }
+       */
+      { index: true, element: <HomePage /> },
+      {
+        /**
+         * EVENTS LAYOUT ROUTE - BONUS TASK (Lesson 360):
+         * ==============================================
+         * INSTRUCTOR QUOTE:
+         * "We just add a new route definition where the path is events,
+         * not /events, but events because it is nested in this root route
+         * and I want to have a relative to this parent route path."
+         *
+         * INSTRUCTOR QUOTE:
+         * "Then here, the element is a new page, which we have yet to add,
+         * which is the EventsRoot. So here we have the EventsRootLayout
+         * component, that is how we could name it."
+         */
+        path: 'events',
+        element: <EventsRootLayout />,
+        children: [
+          /**
+           * EVENTS INDEX ROUTE (Lesson 360):
+           * ================================
+           * INSTRUCTOR QUOTE:
+           * "And of course this first route here can again be turned into
+           * a index route, now an index route for this events parent route."
+           */
+          { index: true, element: <EventsPage /> },
+          /**
+           * DYNAMIC EVENT ROUTE (Lesson 360):
+           * =================================
+           * INSTRUCTOR QUOTE:
+           * "And then we wanna have a route that supports basically all kinds
+           * of IDs and should then load the EventDetailPage for these different
+           * IDs. So we need a route where the path contains a parameter, where
+           * we have a dynamic path segment."
+           *
+           * INSTRUCTOR QUOTE:
+           * "And you learned how that can be defined. We add a colon and then
+           * any identifier of our choice, like, for example, eventId."
+           */
+          { path: ':eventId', element: <EventDetailPage /> },
+          /**
+           * NEW EVENT ROUTE - ROUTE SPECIFICITY (Lesson 360):
+           * =================================================
+           * INSTRUCTOR QUOTE:
+           * "Now the next path which I want to add is /events/new. So therefore
+           * here, I add /events/new. And the element is NewEventPage."
+           *
+           * WHY THIS WORKS (doesn't conflict with :eventId):
+           * INSTRUCTOR QUOTE:
+           * "This could happen in theory, but actually React Router is smart
+           * and understands that this route path is more specific than this
+           * route path. So indeed, if you would visit /events/new, it would
+           * prefer this route definition over this route definition."
+           *
+           * INSTRUCTOR QUOTE:
+           * "And that's just something to be aware of that you don't need to
+           * worry about accidentally overriding this route definition and that
+           * you don't need to worry about the order of route definitions. This
+           * route here, /events/new, will win over this route."
+           */
+          { path: 'new', element: <NewEventPage /> },
+          /**
+           * EDIT EVENT ROUTE - DYNAMIC + STATIC (Lesson 360):
+           * =================================================
+           * INSTRUCTOR QUOTE:
+           * "So now the last route definition which I want to add is this
+           * definition where we wanna load the EditEventPage if we are on
+           * /events, then, some-id/edit."
+           *
+           * INSTRUCTOR QUOTE:
+           * "The path therefore is /events. Then, again, my dynamic segment
+           * and then edit. This is something we didn't do before, but it is
+           * absolutely a path you can add to your route definitions."
+           *
+           * INSTRUCTOR QUOTE:
+           * "You can have another hard-coded segment after a dynamic segment,
+           * that is allowed and possible."
+           */
+          { path: ':eventId/edit', element: <EditEventPage /> },
+        ],
+      },
+    ],
+  },
+]);
+
+/**
+ * ============================================================================
+ * APP COMPONENT - RENDERING THE ROUTER (Lesson 360)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now we can render the RouterProvider component and set the router prop
+ * to our router object that contains these route definitions."
+ *
+ * TESTING THE ROUTES (Lesson 360):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "And with that, we should be able to visit these different pages. If we
+ * go back, we start on the HomePage. If we type in /events, we see the
+ * EventsPage. If I type in events/e1, for example, which could be an eventId,
+ * I see the EventDetailPage. If I add /edit thereafter, I see the
+ * EditEventPage. And if I replace e1 with new, I see the NewEventPage."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So this is all working and we are able to reach all these different pages."
+ */
 function App() {
-  /**
-   * TODO: Replace this with RouterProvider
-   *
-   * Example structure:
-   * const router = createBrowserRouter([
-   *   {
-   *     path: '/',
-   *     element: <RootLayout />,
-   *     errorElement: <ErrorPage />,
-   *     children: [
-   *       { index: true, element: <HomePage /> },
-   *       {
-   *         path: 'events',
-   *         element: <EventsLayout />,  // Optional: for EventsNavigation
-   *         children: [
-   *           { index: true, element: <EventsPage /> },
-   *           { path: ':eventId', element: <EventDetailPage /> },
-   *           { path: 'new', element: <NewEventPage /> },
-   *           { path: ':eventId/edit', element: <EditEventPage /> },
-   *         ]
-   *       }
-   *     ]
-   *   }
-   * ]);
-   *
-   * return <RouterProvider router={router} />;
-   */
-  return <div></div>;
+  return <RouterProvider router={router} />;
 }
 
 export default App;

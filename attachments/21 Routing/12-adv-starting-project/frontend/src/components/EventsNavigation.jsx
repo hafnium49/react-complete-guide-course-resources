@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS NAVIGATION COMPONENT (Lessons 358-359 - Pre-built Component)
+ * EVENTS NAVIGATION COMPONENT (Lessons 358-360 - Bonus Task Solution)
  * ============================================================================
  *
  * PRE-BUILT COMPONENT (Lesson 358):
@@ -15,7 +15,7 @@
  * It provides links to view all events or create a new event.
  *
  * ============================================================================
- * BONUS CHALLENGE: Nested Events Layout (Lesson 359)
+ * BONUS TASK SOLUTION - EVENTS NAVIGATION (Lesson 360)
  * ============================================================================
  *
  * ABOUT THIS BONUS TASK (Lesson 359):
@@ -25,35 +25,56 @@
  * but which requires you to do something we haven't done before. So, don't
  * worry if you're not able to complete this task."
  *
+ * FIXING THE LINKS (Lesson 360):
+ * ==============================
  * INSTRUCTOR QUOTE:
- * "You will of course also see the solution for that in the next lecture.
- * But definitely feel free to give it a try on your own first."
+ * "So now with this events navigation added in this EventsRootLayout as a
+ * nested layout route that wraps all these events specific routes, I just
+ * wanna fix the links in the EventsNavigation.js file."
  *
- * Use this component in a nested layout route that wraps all /events/* routes.
+ * USING NavLink (Lesson 360):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "And I will again do this by importing NavLink from react-router-dom and
+ * replace this anchor element with NavLink. Also here for the closing tag,
+ * of course."
  *
- * IMPLEMENTATION HINT:
+ * INSTRUCTOR QUOTE:
+ * "And then here, we have to /events and to /events new."
+ *
+ * ADDING className AND end PROP (Lesson 360):
+ * ===========================================
+ * INSTRUCTOR QUOTE:
+ * "And now I just also want to add my className here, where I get this
+ * isActive prop with destructuring and where I will check if it's true.
+ * And if it is, I will add classes.active and otherwise, undefined."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I will do the same here for the New Event."
+ *
+ * INSTRUCTOR QUOTE:
+ * "I will also add the end prop here to the first NavLink so that this is
+ * not active if we are on /events new, but only if we are on just /events."
+ *
+ * RESULT (Lesson 360):
  * ====================
- * Create an EventsLayout component:
+ * INSTRUCTOR QUOTE:
+ * "With that, we also get some active styling here and we can navigate
+ * between these pages."
  *
- * function EventsLayout() {
+ * ============================================================================
+ * NESTED LAYOUT STRUCTURE
+ * ============================================================================
+ *
+ * This component is used inside EventsRootLayout:
+ *
+ * function EventsRootLayout() {
  *   return (
  *     <>
- *       <EventsNavigation />
+ *       <EventsNavigation />  ← This component
  *       <Outlet />
  *     </>
  *   );
- * }
- *
- * Then in your route definitions:
- * {
- *   path: 'events',
- *   element: <EventsLayout />,
- *   children: [
- *     { index: true, element: <EventsPage /> },
- *     { path: ':eventId', element: <EventDetailPage /> },
- *     { path: 'new', element: <NewEventPage /> },
- *     { path: ':eventId/edit', element: <EditEventPage /> },
- *   ]
  * }
  *
  * This creates a nested layout:
@@ -66,8 +87,11 @@
  * │  ┌───────────────────────────┐  │
  * │  │    <Outlet />             │  │
  * │  │  ┌─────────────────────┐  │  │
- * │  │  │  EventsLayout       │  │  │
- * │  │  │  [All Events] [New] │  │  │
+ * │  │  │  EventsRootLayout   │  │  │
+ * │  │  │  ┌───────────────┐  │  │  │
+ * │  │  │  │EventsNavigation│ │  │  │
+ * │  │  │  │[All Events][New]│ │  │  │
+ * │  │  │  └───────────────┘  │  │  │
  * │  │  │  ┌───────────────┐  │  │  │
  * │  │  │  │ <Outlet />    │  │  │  │
  * │  │  │  │ (Events Page) │  │  │  │
@@ -76,10 +100,10 @@
  * │  └───────────────────────────┘  │
  * └─────────────────────────────────┘
  *
- * IMPORTS NEEDED (after updating):
- * ================================
- * import { NavLink } from 'react-router-dom';
+ * ============================================================================
  */
+import { NavLink } from 'react-router-dom';
+
 import classes from './EventsNavigation.module.css';
 
 /**
@@ -87,11 +111,13 @@ import classes from './EventsNavigation.module.css';
  * ============================
  * Secondary navigation for the events section.
  *
- * CURRENT STATE: Uses plain <a> tags with href
- * TARGET STATE: Use <NavLink> with active styling
+ * SOLUTION IMPLEMENTED:
+ * - Uses <NavLink> instead of <a> tags
+ * - className function for active styling
+ * - `end` prop on "All Events" link
  *
- * Note: Currently uses regular <a href="..."> which causes full page reloads.
- * Should be updated to use <NavLink> for proper SPA behavior.
+ * This navigation appears on ALL /events/* pages due to
+ * the nested layout route structure.
  */
 function EventsNavigation() {
   return (
@@ -100,34 +126,49 @@ function EventsNavigation() {
         <ul className={classes.list}>
           <li>
             {/**
-             * TODO: Replace with NavLink
+             * ALL EVENTS LINK (Lesson 360):
+             * =============================
+             * ABSOLUTE PATH: to="/events"
+             * - Navigates to the events index page
              *
-             * <NavLink
-             *   to="/events"
-             *   className={({ isActive }) =>
-             *     isActive ? classes.active : undefined
-             *   }
-             *   end  // Only active on exactly /events, not /events/new etc.
-             * >
-             *   All Events
-             * </NavLink>
+             * end PROP - IMPORTANT:
+             * - Without this, "/events" would match /events/new, /events/e1, etc.
+             * - With end, "/events" only matches when URL is exactly "/events"
+             *
+             * INSTRUCTOR QUOTE:
+             * "I will also add the end prop here to the first NavLink so that
+             * this is not active if we are on /events new, but only if we are
+             * on just /events."
              */}
-            <a href="/events">All Events</a>
+            <NavLink
+              to="/events"
+              className={({ isActive }) =>
+                isActive ? classes.active : undefined
+              }
+              end
+            >
+              All Events
+            </NavLink>
           </li>
           <li>
             {/**
-             * TODO: Replace with NavLink
+             * NEW EVENT LINK (Lesson 360):
+             * ============================
+             * ABSOLUTE PATH: to="/events/new"
+             * - Navigates to the new event form page
              *
-             * <NavLink
-             *   to="/events/new"
-             *   className={({ isActive }) =>
-             *     isActive ? classes.active : undefined
-             *   }
-             * >
-             *   New Event
-             * </NavLink>
+             * NO end PROP NEEDED:
+             * - This is a terminal route (no child routes)
+             * - Will only be active when URL is exactly "/events/new"
              */}
-            <a href="/events/new">New Event</a>
+            <NavLink
+              to="/events/new"
+              className={({ isActive }) =>
+                isActive ? classes.active : undefined
+              }
+            >
+              New Event
+            </NavLink>
           </li>
         </ul>
       </nav>
