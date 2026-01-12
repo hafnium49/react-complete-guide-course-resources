@@ -1,0 +1,41 @@
+/**
+ * ============================================================================
+ * MAIN NAVIGATION STYLES (Lesson 350)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 350):
+ * "And for main navigation, I actually created a styling file which you find
+ * attached to this lecture. The main navigation dot module dot CSS file."
+ *
+ * CSS MODULES:
+ * ============
+ * This file uses CSS Modules (notice the .module.css extension).
+ * - Classes are scoped to this component only
+ * - Avoids global CSS conflicts
+ * - Import as: import classes from './MainNavigation.module.css'
+ * - Use as: className={classes.header}
+ */
+
+.header {
+  max-width: 60rem;
+  margin: auto;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.list {
+  display: flex;
+  gap: 1rem;
+}
+
+.list a {
+  text-decoration: none;
+  color: var(--color-primary-400);
+}
+
+.list a:hover,
+.list a.active {
+  color: var(--color-primary-800);
+  text-decoration: underline;
+}

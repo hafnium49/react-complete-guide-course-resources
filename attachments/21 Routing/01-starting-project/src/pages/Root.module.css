@@ -1,0 +1,38 @@
+/**
+ * ============================================================================
+ * ROOT LAYOUT STYLES (Lesson 350)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 350):
+ * "Now, with that root layout added, we can also add some styling, and add a
+ * root dot module dot CSS file, for example."
+ *
+ * WHY ADD STYLING? (Lesson 350):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "We also might wanna apply some default styling and, for example, make sure
+ * that the content doesn't sit right on the edges here."
+ *
+ * CSS MODULES:
+ * ============
+ * This file uses CSS Modules for scoped styling.
+ * Import as: import classes from './Root.module.css'
+ * Use as: className={classes.content}
+ */
+
+/**
+ * CONTENT CLASS (Lesson 350):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "Where we might want to style the content class and add a margin of two REM,
+ * top and bottom, and some auto spacing left and right, and maybe also add
+ * text align center. We can always change this later, but that's something
+ * we might want to add here."
+ *
+ * This class is applied to the <main> element that wraps <Outlet />.
+ * It provides consistent spacing and centering for all page content.
+ */
+.content {
+  margin: 2rem auto;
+  text-align: center;
+}

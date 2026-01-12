@@ -1,11 +1,70 @@
 /**
  * ============================================================================
- * APP COMPONENT - Router Configuration (Lessons 346-348)
+ * APP COMPONENT - Router Configuration (Lessons 346-350)
  * ============================================================================
  *
  * SECTION 21: REACT ROUTER
  * ========================
  * This file now contains the router configuration using createBrowserRouter.
+ *
+ * ============================================================================
+ * NESTED ROUTES & LAYOUTS (Lesson 350)
+ * ============================================================================
+ *
+ * THE PROBLEM - REPEATING NAVIGATION (Lesson 350):
+ * ================================================
+ * INSTRUCTOR QUOTE:
+ * "This main navigation should, now, be visible on all our pages. So therefore,
+ * one thing we can do, is we can go to home JS and import the main navigation
+ * there... But of course, the more pages we're going to add the more we must
+ * repeat that step."
+ *
+ * WHY NOT WRAP RouterProvider? (Lesson 350):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "Now, you could try to render the navigation above this router provider
+ * component... but this would not work if you plan to add links to your layout,
+ * because those links only work if they're rendered inside of the router
+ * provider, so to say, not above or next to it or as a wrapper of it."
+ *
+ * THE SOLUTION - NESTED ROUTES (Lesson 350):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "What you wanna do instead... is you add an extra route to your route
+ * definitions and you use a path of slash nothing. And then here, you add an
+ * element that actually loads the layout wrapper that should be wrapped around
+ * the other routes."
+ *
+ * THE children PROPERTY (Lesson 350):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "Now, to actually wrap these two routes and their components with this layout,
+ * we must add another property to this special route here... The children
+ * property. That takes an array, and it is actually an array of more route
+ * definitions and we can move these two route definitions into this array."
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, we make these two route definitions, here, child route definitions
+ * of this route. So, this route acts as a parent route to these routes and it
+ * acts as a wrapper to these routes."
+ *
+ * ROUTE STRUCTURE (Lesson 350):
+ * =============================
+ * {
+ *   path: '/',
+ *   element: <RootLayout />,    // Parent layout (with <Outlet />)
+ *   children: [                 // Child routes rendered at <Outlet />
+ *     { path: '/', element: <HomePage /> },
+ *     { path: '/products', element: <ProductsPage /> },
+ *   ]
+ * }
+ *
+ * MULTIPLE LAYOUTS (Lesson 350):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "And, of course, for more complex pages, you could have multiple root routes,
+ * for example, one for slash admin, which then has a totally different set of
+ * children, which might have a different layout that's wrapped around them."
  *
  * ============================================================================
  * TWO WAYS TO DEFINE ROUTES (Lesson 348)
@@ -244,6 +303,20 @@ import HomePage from './pages/Home';
  * JSX code for this element property."
  */
 import ProductsPage from './pages/Products';
+/**
+ * ROOT LAYOUT IMPORT (Lesson 350):
+ * =================================
+ * INSTRUCTOR QUOTE (Lesson 350):
+ * "For a first step, I'll add our root dot JS file here in pages and name this
+ * root layout, for example... Now, this root layout component will be loaded as
+ * the element for this route here."
+ *
+ * RootLayout provides:
+ * - MainNavigation component (visible on all pages)
+ * - <Outlet /> where child routes render
+ * - Consistent styling wrapper
+ */
+import RootLayout from './pages/Root';
 
 /**
  * ============================================================================
@@ -308,25 +381,18 @@ import ProductsPage from './pages/Products';
 // const router = createBrowserRouter(routeDefinitions);
 
 /**
- * ROUTER DEFINITION (Lessons 346-347) - OBJECT-BASED APPROACH:
- * =====================================
+ * ROUTER DEFINITION (Lessons 346-350) - WITH NESTED ROUTES:
+ * ==========================================================
  * INSTRUCTOR QUOTE:
  * "Let's call this function and store the created router in a constant which
  * could also be named router."
  *
- * INSTRUCTOR QUOTE:
- * "Every object represents one route and such an object should have a path
- * property which defines the path for which this route should be active."
- *
- * INSTRUCTOR QUOTE:
- * "We can set it to a custom component. For example, we could set this to
- * the home page component once we create that."
- *
- * Route structure (Lesson 347):
- * | Path      | Element      | Description                    |
- * |-----------|--------------|--------------------------------|
- * | /         | HomePage     | Root path, main landing page   |
- * | /products | ProductsPage | Products listing page          |
+ * Updated route structure (Lesson 350):
+ * | Path      | Element      | Parent    | Description                    |
+ * |-----------|--------------|-----------|--------------------------------|
+ * | /         | RootLayout   | -         | Layout wrapper with navigation |
+ * |   /       | HomePage     | RootLayout| Root path, main landing page   |
+ * |   /products| ProductsPage| RootLayout| Products listing page          |
  *
  * UNSUPPORTED PATHS (Lesson 347):
  * ===============================
@@ -339,46 +405,80 @@ import ProductsPage from './pages/Products';
  */
 const router = createBrowserRouter([
   /**
-   * HOME ROUTE (Lesson 346):
-   * ========================
-   * INSTRUCTOR QUOTE:
-   * "For example for the starting page of a website, that typically is just
-   * a slash because that's the path we have if we just visit a domain."
+   * =========================================================================
+   * ROOT LAYOUT ROUTE - PARENT ROUTE (Lesson 350)
+   * =========================================================================
    *
-   * When user visits: example.com/ or localhost:3000/
-   * This route matches and HomePage component is rendered.
+   * INSTRUCTOR QUOTE (Lesson 350):
+   * "What you wanna do instead... is you add an extra route to your route
+   * definitions and you use a path of slash nothing. And then here, you add
+   * an element that actually loads the layout wrapper that should be wrapped
+   * around the other routes."
+   *
+   * HOW IT WORKS:
+   * =============
+   * 1. This route matches the base path "/"
+   * 2. RootLayout is rendered (contains MainNavigation + <Outlet />)
+   * 3. Child routes are rendered where <Outlet /> is placed
+   *
+   * INSTRUCTOR QUOTE:
+   * "And having such a root route, that acts as a layout, is totally standard
+   * and totally normal when using React router. You implement layouts like
+   * this by adding wrapping routes like this."
    */
-  { path: '/', element: <HomePage /> },
+  {
+    path: '/',
+    element: <RootLayout />,
+    /**
+     * CHILDREN PROPERTY (Lesson 350):
+     * ================================
+     * INSTRUCTOR QUOTE:
+     * "The children property. That takes an array, and it is actually an array
+     * of more route definitions and we can move these two route definitions
+     * into this array."
+     *
+     * INSTRUCTOR QUOTE:
+     * "With that, we make these two route definitions, here, child route
+     * definitions of this route. So, this route acts as a parent route to
+     * these routes and it acts as a wrapper to these routes."
+     *
+     * Child routes are rendered at the <Outlet /> component in RootLayout.
+     */
+    children: [
+      /**
+       * HOME ROUTE - CHILD (Lessons 346, 350):
+       * ======================================
+       * INSTRUCTOR QUOTE (Lesson 346):
+       * "For example for the starting page of a website, that typically is
+       * just a slash because that's the path we have if we just visit a domain."
+       *
+       * When user visits: localhost:3000/
+       * - RootLayout renders (MainNavigation visible)
+       * - HomePage renders at <Outlet />
+       */
+      { path: '/', element: <HomePage /> },
 
-  /**
-   * PRODUCTS ROUTE (Lesson 347):
-   * ============================
-   * INSTRUCTOR QUOTE (Lesson 347):
-   * "We do that by adding a second element here to this array of route
-   * definitions. And now the path could be 'slash products.'"
-   *
-   * INSTRUCTOR QUOTE:
-   * "'Slash products' might be a path that makes a lot of sense if we're
-   * loading a page that might display some product items."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And, as an element, I want to load the products page."
-   *
-   * When user visits: example.com/products or localhost:3000/products
-   * This route matches and ProductsPage component is rendered.
-   *
-   * TESTING THE ROUTE (Lesson 347):
-   * ===============================
-   * INSTRUCTOR QUOTE:
-   * "With that we're supporting this second page, for 'slash products,' and
-   * therefore if we save everything, and we go back and we enter 'slash
-   * products,' after a local host 3000, and hit enter, we load the products page."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And, of course, hopefully, unsurprisingly, if we delete 'slash products,'
-   * we load the homepage."
-   */
-  { path: '/products', element: <ProductsPage /> },
+      /**
+       * PRODUCTS ROUTE - CHILD (Lessons 347, 350):
+       * ==========================================
+       * INSTRUCTOR QUOTE (Lesson 347):
+       * "We do that by adding a second element here to this array of route
+       * definitions. And now the path could be 'slash products.'"
+       *
+       * When user visits: localhost:3000/products
+       * - RootLayout renders (MainNavigation visible)
+       * - ProductsPage renders at <Outlet />
+       *
+       * THE RESULT (Lesson 350):
+       * ========================
+       * INSTRUCTOR QUOTE:
+       * "If we do that, we see the navigation, here, above our pages and now
+       * we got this navigation on all the pages and all the pages we might
+       * add here to this children array, in the future."
+       */
+      { path: '/products', element: <ProductsPage /> },
+    ],
+  },
 ]);
 
 /**
