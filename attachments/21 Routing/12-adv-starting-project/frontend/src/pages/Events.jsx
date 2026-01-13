@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-368 - Loaders, useLoaderData, Browser APIs)
+ * EVENTS PAGE COMPONENT (Lessons 361-369 - Loaders, useLoaderData, Error Handling)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -12,7 +12,8 @@
  * Lesson 365: Explained WHEN loaders execute (on navigation start)
  * Lesson 366: Introduced useNavigation hook for loading state (see Root.jsx)
  * Lesson 367: Returning Response objects from loaders
- * Lesson 368: What you CAN and CANNOT do in loaders (CURRENT)
+ * Lesson 368: What you CAN and CANNOT do in loaders
+ * Lesson 369: Error handling with loaders (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -617,17 +618,80 @@ export async function loader() {
   const response = await fetch('http://localhost:8080/events');
 
   /**
-   * ERROR HANDLING (placeholder):
-   * =============================
-   * INSTRUCTOR QUOTE (Lesson 367):
-   * "You can return your response like this, with or without checking whether
-   * it's okay, that is up to you and I'll get back to error handling in a
-   * couple of minutes."
+   * ============================================================================
+   * ERROR HANDLING IN LOADERS (Lesson 369)
+   * ============================================================================
    *
-   * Error handling will be covered in later lessons.
+   * TWO APPROACHES TO ERROR HANDLING (Lesson 369):
+   * ==============================================
+   *
+   * APPROACH 1: Return error data (NOT USED HERE):
+   * -----------------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "What we can do in that case is we can return a different response, for
+   * example, or just return an object. Doesn't have to be a response, as you
+   * learned. Where we could add is error key and a message like 'could not
+   * fetch events'."
+   *
+   * Example (commented out - not the approach we use):
+   * if (!response.ok) {
+   *   return { isError: true, message: 'Could not fetch events.' };
+   * }
+   *
+   * Then in component:
+   * if (data.isError) {
+   *   return <p>{data.message}</p>;
+   * }
+   *
+   * INSTRUCTOR QUOTE:
+   * "With that we still have a pretty lean component. We only added this code
+   * here and we have the error generation and handling code in our loader
+   * where it belongs, arguably."
+   *
+   * APPROACH 2: Throw an error (USED HERE):
+   * ---------------------------------------
+   * INSTRUCTOR QUOTE:
+   * "As an alternative to returning this data here to the component, we could
+   * throw an error. For this we can construct a new error object with the
+   * built in error constructor, or we throw any other kind of object as an
+   * error."
+   *
+   * WHAT HAPPENS WHEN YOU THROW (Lesson 369):
+   * =========================================
+   * INSTRUCTOR QUOTE:
+   * "Now, when an error gets thrown in a loader something special happens.
+   * React router will simply render the closest error element."
+   *
+   * ERROR BUBBLING (Lesson 369):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "Even though I'm throwing an error here in the loader of the events page.
+   * So in this route here, which is a deeply nested route, errors will bubble
+   * up."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We could add error element to this route as well. And in that case, this
+   * error element would be rendered if this loader threw an error. But we can
+   * also just have this Root level error element and the error would bubble
+   * up until it reaches that route."
    */
   if (!response.ok) {
-    // Error handling will be covered in later lessons
+    /**
+     * THROWING AN ERROR (Lesson 369):
+     * ===============================
+     * INSTRUCTOR QUOTE:
+     * "For this we can construct a new error object with the built in error
+     * constructor, or we throw any other kind of object as an error. And here
+     * we could then also, for example, include a message and say, 'could not
+     * fetch events'."
+     *
+     * When this error is thrown:
+     * 1. React Router catches it
+     * 2. Looks for the closest errorElement in the route hierarchy
+     * 3. Renders that errorElement (our Error.jsx page)
+     * 4. The error bubbles up if no errorElement is found on current route
+     */
+    throw new Error('Could not fetch events.');
   }
 
   /**

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-368)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-369)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -279,6 +279,25 @@ import EventsRootLayout from './pages/EventsRoot';
 
 /**
  * ============================================================================
+ * LESSON 369: ERROR PAGE IMPORT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore what we can do is we can add an error page again here with pages
+ * and create our error page component in there and export this."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Then it's added here with error element on that Root path."
+ *
+ * This page is displayed when:
+ * 1. User navigates to an invalid/unsupported path (404)
+ * 2. A loader throws an error (e.g., failed fetch)
+ * 3. Any route-related error occurs
+ */
+import ErrorPage from './pages/Error';
+
+/**
+ * ============================================================================
  * TASK 2 SOLUTION - CREATING THE ROUTER (Lesson 360)
  * ============================================================================
  *
@@ -335,6 +354,56 @@ const router = createBrowserRouter([
      */
     path: '/',
     element: <RootLayout />,
+    /**
+     * ================================================================
+     * LESSON 369: errorElement - ERROR HANDLING FOR ALL ROUTES
+     * ================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "We can go back to App.js and add error element here on this Root
+     * route and render our error page like that."
+     *
+     * WHY ON THE ROOT ROUTE? (Lesson 369):
+     * ====================================
+     * INSTRUCTOR QUOTE:
+     * "With that, this page, this error page, will be displayed whenever
+     * we basically have any kind of error anywhere in our routes because
+     * even though I'm throwing an error here in the loader of the events
+     * page. So in this route here, which is a deeply nested route, errors
+     * will bubble up."
+     *
+     * TWO USE CASES FOR errorElement (Lesson 369):
+     * ============================================
+     * INSTRUCTOR QUOTE:
+     * "Well, turns out that error element is not just there to show a
+     * fallback page in case of invalid route paths. That is one use case
+     * but not the only one. Instead, the error element will be shown to
+     * the screen whenever an error is generated in any route related code,
+     * including loaders."
+     *
+     * | Use Case              | When It's Triggered                        |
+     * |-----------------------|--------------------------------------------|
+     * | 404 Not Found         | User navigates to invalid path             |
+     * | Loader Error          | Loader throws an error (e.g., fetch fails) |
+     * | Action Error (future) | Action throws an error during form submit  |
+     *
+     * ERROR BUBBLING (Lesson 369):
+     * ============================
+     * INSTRUCTOR QUOTE:
+     * "We could add error element to this route as well. And in that case,
+     * this error element would be rendered if this loader threw an error.
+     * But we can also just have this Root level error element and the error
+     * would bubble up until it reaches that route."
+     *
+     * Route hierarchy showing error bubbling:
+     * =======================================
+     * / (Root - HAS errorElement)        ← Catches all bubbled errors
+     *   └── /events (EventsRootLayout)
+     *         └── /events (index)        ← Loader can throw error here
+     *               ↑
+     *         Error bubbles UP to root errorElement
+     */
+    errorElement: <ErrorPage />,
     children: [
       /**
        * INDEX ROUTE - HOME PAGE (Lesson 360):
