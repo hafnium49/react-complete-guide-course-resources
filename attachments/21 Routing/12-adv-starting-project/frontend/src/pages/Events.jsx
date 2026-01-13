@@ -1,301 +1,233 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lesson 361 - Data Fetching Introduction)
+ * EVENTS PAGE COMPONENT (Lessons 361-362 - useLoaderData Hook)
  * ============================================================================
  *
- * LESSON OVERVIEW (Lesson 361):
- * =============================
- * INSTRUCTOR QUOTE:
- * "We are now ready to dive deeper into Routing and explore more advanced
- * features of React router. And one of the most important feature sets offered
- * by React router is related to data fetching and submission and that's there
- * for what we'll explore next."
- *
- * INSTRUCTOR QUOTE:
- * "For that attached, you find a new file Events.js which you should use to
- * replace your Events.js file in the pages folder with it."
+ * EVOLUTION OF THIS FILE:
+ * =======================
+ * Lesson 361: Showed traditional useEffect approach and its problems
+ * Lesson 362: Refactored to use useLoaderData for cleaner code
  *
  * ============================================================================
- * TRADITIONAL DATA FETCHING APPROACH (Lesson 361)
- * ============================================================================
- *
- * This file demonstrates the TRADITIONAL approach to fetching data in React:
- * - Using useEffect to trigger the fetch when component mounts
- * - Managing loading, error, and data states with useState
- * - Rendering different UI based on these states
- *
- * INSTRUCTOR QUOTE:
- * "And this code should look familiar to you. Fraud discourse, you already
- * learned how you can send http requests to a backend and how you can leverage
- * useEffect to fetch data from a backend. So this should be familiar code here."
- *
- * ============================================================================
- * PROBLEMS WITH THIS APPROACH (Lesson 361)
- * ============================================================================
- *
- * PROBLEM 1: Boilerplate Code
- * ===========================
- * INSTRUCTOR QUOTE:
- * "Now, there is nothing wrong with debt code, but of course it is worth
- * noting that it's quite some boiler plate code, which you have to repeat
- * every time you are sending a request to a backend."
- *
- * INSTRUCTOR QUOTE:
- * "Though you could kind of mitigate that by creating a custom hook and you
- * could outsource that logic into a custom hook. But nonetheless, it's quite
- * some code that must be written to handle these different http request states
- * and to fetch that data."
- *
- * PROBLEM 2: Request Timing
- * =========================
- * INSTRUCTOR QUOTE:
- * "And in addition, what's all the worth noting is that of course this request
- * will only be sent once we reached this page. So once we navigate it to this
- * page... So we only start sending that request as soon as we reach the events
- * page. We don't start sending the request any earlier instead only once we
- * reach this page."
- *
- * INSTRUCTOR QUOTE:
- * "And that of course means that this entire events page component must be
- * rendered before this request is sent. That's not necessarily a problem.
- * And here it is a pretty straightforward, simple component."
- *
- * PROBLEM 3: Complex Components
- * =============================
- * INSTRUCTOR QUOTE:
- * "But of course, in more complex applications this component could be rather
- * complex and it could also have a bunch of nested child components and having
- * to render and evaluate all these components before we actually start sending
- * that request for that data which we absolutely need, is suboptimal."
- *
- * ============================================================================
- * THE BETTER APPROACH - React Router's loader (Lesson 361)
+ * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "You could argue that it would be much nicer if React router would initiate
- * the data fetching as soon as we start navigating to this page. So as soon
- * as we start rendering this component, so to say or even before we render
- * the component and we then render the component with the fetched data instead
- * of first rendering the component without the fetched data with the loading
- * state fallback instead and then fetching data after it has been rendered as
- * it's currently happening."
+ * "So how do we now get access to that data returned by our loader? Well,
+ * for that we have to go to the component where we want to use it. Like
+ * for example, the events page component."
+ *
+ * CLEANING UP THE COMPONENT (Lesson 362):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "There, as a first step, I can get rid of all that remaining code, which
+ * we had in there before, all that state management, and useEffect, and get
+ * rid of this div here, which shows my loading and error estates."
  *
  * INSTRUCTOR QUOTE:
- * "It could be preferable to do it the other way around and first fetched the
- * data and then render this component. And that's exactly what React router
- * allows us to do. And where React router helps us."
+ * "We will see how we can implement those states again in the near future,
+ * but for the moment, we can get rid of that."
  *
  * INSTRUCTOR QUOTE:
- * "With React router at least if you're using version six or higher you don't
- * have to write all that code for fetching data and for handling these different
- * states. Instead, React router helps you with all of that."
+ * "Of course, we also get rid of these checks here therefore and just return
+ * events list like that, and we can get rid of these imports."
  *
  * ============================================================================
- * DATA FLOW COMPARISON
+ * THE useLoaderData HOOK (Lesson 362)
  * ============================================================================
  *
- * TRADITIONAL APPROACH (Current):
+ * INSTRUCTOR QUOTE:
+ * "And now to get access to the data returned by the loader function for
+ * this page, we can import 'use loader data' from React-router-dom."
+ *
+ * WHAT IT DOES (Lesson 362):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "This is a special hook which we can execute to get access to the closest
+ * loader data, and I will show you what 'closest loader data' means in just
+ * a second."
+ *
+ * "Closest loader data" means:
+ * - The loader data from the route that rendered this component
+ * - If component is nested, it gets data from the nearest parent route
+ *   that has a loader
+ *
+ * NAMING THE RESULT (Lesson 362):
  * ===============================
- * 1. User clicks link to /events
- * 2. React Router renders EventsPage component
- * 3. Component renders with loading state
- * 4. useEffect triggers after render
- * 5. Fetch request is sent
- * 6. Response received
- * 7. State updated, component re-renders with data
+ * INSTRUCTOR QUOTE:
+ * "So here, I now get my data by calling 'use loader data.' We could also
+ * name it 'events' since we know that it will be a list of events in case
+ * of this component here, due to the code we wrote in this loader."
  *
- * Timeline: Navigate → Render → Effect → Fetch → Re-render
- *
- * REACT ROUTER LOADER APPROACH (Better):
- * ======================================
- * 1. User clicks link to /events
- * 2. React Router calls loader function BEFORE rendering
- * 3. Fetch request is sent
- * 4. Response received
- * 5. Component renders WITH the data already available
- *
- * Timeline: Navigate → Fetch → Render (with data)
+ * WHAT YOU GET (Lesson 362):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "And events here will really be that data returned by that loader."
  *
  * ============================================================================
- * BACKEND API REQUIREMENT (Lesson 361)
+ * PROMISES ARE AUTOMATICALLY RESOLVED (Lesson 362)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And you should make sure that that backend API server is up and running in
- * a separate terminal window as shown a couple of lectures ago."
+ * "Now since I'm using a single weight, technically this loader function
+ * will return a promise. Any data returned in that function will be wrapped
+ * by a promise, that's how a single weight works."
  *
- * Make sure the backend is running:
- * cd backend
- * npm start
+ * INSTRUCTOR QUOTE:
+ * "But React Router will actually check if a promise is returned and
+ * automatically get the resolved data from that promise for you."
  *
- * The backend runs on http://localhost:8080
+ * INSTRUCTOR QUOTE:
+ * "So you don't need to worry about whether you are returning a promise
+ * here or not, you will always get the final data that would be yielded
+ * by the promise with help of use loader data."
+ *
+ * ============================================================================
+ * THE RESULT - CLEANER CODE (Lesson 362)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And therefore now it's this events object, this array of events, which
+ * we can pass as a value to this events prop on events list."
+ *
+ * INSTRUCTOR QUOTE:
+ * "If we save that all, you will see that we got the same result as before,
+ * we got this list of events, in this case only one event, but if we had
+ * multiple events returned by the backend, we would see multiple events here."
+ *
+ * BENEFITS (Lesson 362):
+ * ======================
+ * INSTRUCTOR QUOTE:
+ * "And of course that's much less code than what we had before, and it's
+ * also not part of the component function, which makes the component function
+ * way leaner and easier to reason about."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Of course, we're also not managing any loading or error estate yet, but
+ * nonetheless we got a way leaner events page component and that's definitely
+ * a decent improvement over what we had before."
+ *
+ * ============================================================================
+ * CODE COMPARISON
+ * ============================================================================
+ *
+ * BEFORE (Traditional useEffect approach - ~50 lines):
+ * ====================================================
+ * - 3 useState hooks (isLoading, fetchedEvents, error)
+ * - useEffect with async function
+ * - Conditional rendering for loading/error/data states
+ * - Complex JSX with multiple conditions
+ *
+ * AFTER (useLoaderData approach - ~5 lines):
+ * ==========================================
+ * - 1 hook call: useLoaderData()
+ * - Simple JSX returning EventsList with data
+ * - No state management in component
+ * - Data fetching handled by route loader
+ *
+ * ============================================================================
+ * DATA FLOW WITH useLoaderData
+ * ============================================================================
+ *
+ * 1. User navigates to /events
+ * 2. React Router sees this route has a `loader` property
+ * 3. Loader function is called (fetch happens)
+ * 4. Loader returns data (resData.events)
+ * 5. React Router stores this data
+ * 6. Component renders
+ * 7. useLoaderData() retrieves the stored data
+ * 8. EventsList receives the events and displays them
  *
  * ============================================================================
  */
-import { useEffect, useState } from 'react';
+import { useLoaderData } from 'react-router-dom';
 
 import EventsList from '../components/EventsList';
 
 /**
- * EVENTS PAGE COMPONENT - TRADITIONAL APPROACH:
- * =============================================
- * This version uses the traditional useEffect pattern for data fetching.
+ * EVENTS PAGE COMPONENT (Lesson 362):
+ * ====================================
+ * Dramatically simplified compared to the traditional approach!
  *
- * STATE MANAGEMENT:
- * - isLoading: Track whether request is in progress
- * - fetchedEvents: Store the fetched event data
- * - error: Store any error message
+ * NO MORE:
+ * - useState for loading, error, data
+ * - useEffect for triggering fetch
+ * - Conditional rendering for different states
  *
- * This approach requires managing 3 separate states and handling
- * all the different UI scenarios manually.
+ * JUST:
+ * - Call useLoaderData() to get the data
+ * - Pass it to the child component
+ *
+ * The loader in App.jsx handles all the data fetching.
  */
 function EventsPage() {
   /**
-   * STATE HOOKS (Traditional Approach):
-   * ===================================
-   * Three separate pieces of state to manage the HTTP request lifecycle:
-   *
-   * 1. isLoading - Shows loading indicator while fetching
-   * 2. fetchedEvents - Stores the array of events from backend
-   * 3. error - Stores error message if request fails
+   * useLoaderData HOOK (Lesson 362):
+   * ================================
+   * This hook returns whatever was returned by the loader function
+   * defined for this route in App.jsx.
    *
    * INSTRUCTOR QUOTE:
-   * "An error is stored with help of state if it's a invalid response, for
-   * example because we got an error back from the backend. If we don't have
-   * an error, we instead extract the data from the response and store that
-   * with help of state as well. And we're all managing the loading state."
+   * "This is a special hook which we can execute to get access to the
+   * closest loader data."
+   *
+   * In our case, the loader returns `resData.events` which is an array
+   * of event objects from the backend API.
+   *
+   * PROMISE HANDLING:
+   * =================
+   * INSTRUCTOR QUOTE:
+   * "But React Router will actually check if a promise is returned and
+   * automatically get the resolved data from that promise for you."
+   *
+   * So even though the async loader returns a Promise, we get the
+   * resolved value here - no need for .then() or await.
    */
-  const [isLoading, setIsLoading] = useState(false);
-  const [fetchedEvents, setFetchedEvents] = useState();
-  const [error, setError] = useState();
+  const events = useLoaderData();
 
   /**
-   * useEffect FOR DATA FETCHING (Traditional Approach):
-   * ====================================================
-   * This pattern is familiar from earlier in the course.
-   *
-   * TIMING ISSUE:
-   * - This effect runs AFTER the component renders
-   * - The fetch request only starts after initial render
-   * - User sees loading state before seeing actual data
-   *
+   * SIMPLIFIED RETURN (Lesson 362):
+   * ===============================
    * INSTRUCTOR QUOTE:
-   * "So we only start sending that request as soon as we reach the events
-   * page. We don't start sending the request any earlier instead only once
-   * we reach this page."
-   */
-  useEffect(() => {
-    /**
-     * ASYNC FUNCTION FOR FETCHING:
-     * ============================
-     * We define an async function inside useEffect because
-     * useEffect callback itself cannot be async.
-     */
-    async function fetchEvents() {
-      setIsLoading(true);
-
-      /**
-       * FETCH REQUEST TO BACKEND:
-       * =========================
-       * Sends GET request to the dummy backend API.
-       * Backend must be running on port 8080.
-       */
-      const response = await fetch('http://localhost:8080/events');
-
-      /**
-       * ERROR HANDLING:
-       * ===============
-       * Check if response is OK (status 200-299).
-       * If not, store error message in state.
-       */
-      if (!response.ok) {
-        setError('Fetching events failed.');
-      } else {
-        /**
-         * EXTRACT EVENT DATA:
-         * ===================
-         * Parse JSON response and extract events array.
-         *
-         * INSTRUCTOR QUOTE:
-         * "My response data object is actually an object that will have an
-         * events property which holds the actual array of events. That's
-         * simply how the backend API returns the response for this request."
-         */
-        const resData = await response.json();
-        setFetchedEvents(resData.events);
-      }
-      setIsLoading(false);
-    }
-
-    // Execute the fetch function
-    fetchEvents();
-  }, []); // Empty dependency array = run once on mount
-
-  /**
-   * CONDITIONAL RENDERING (Traditional Approach):
-   * ==============================================
-   * Must manually handle all the different states:
-   * - Loading state: Show loading indicator
-   * - Error state: Show error message
-   * - Success state: Show the fetched data
+   * "Of course, we also get rid of these checks here therefore and just
+   * return events list like that."
    *
-   * INSTRUCTOR QUOTE:
-   * "And then all these states are used down here to either show a loading
-   * text, an error message or to render the fetched events which are now
-   * fetched from the dummy backend some dummy event data from the backend."
+   * No more conditional rendering for:
+   * - {isLoading && <p>Loading...</p>}
+   * - {error && <p>{error}</p>}
+   * - {!isLoading && fetchedEvents && <EventsList ... />}
+   *
+   * Just return the EventsList with the data we got from the loader.
+   * Loading and error states will be handled differently (future lessons).
    */
-  return (
-    <>
-      <div style={{ textAlign: 'center' }}>
-        {/* Show loading indicator while fetching */}
-        {isLoading && <p>Loading...</p>}
-        {/* Show error message if fetch failed */}
-        {error && <p>{error}</p>}
-      </div>
-      {/**
-       * RENDER EVENTS LIST:
-       * ===================
-       * Only render EventsList when:
-       * - Not loading (fetch completed)
-       * - fetchedEvents exists (data was successfully fetched)
-       *
-       * INSTRUCTOR QUOTE:
-       * "Those events are rendered here with help of that events list
-       * component which exists to this components folder already."
-       */}
-      {!isLoading && fetchedEvents && <EventsList events={fetchedEvents} />}
-    </>
-  );
+  return <EventsList events={events} />;
 }
 
 export default EventsPage;
 
 /**
  * ============================================================================
- * NEXT: REACT ROUTER'S loader PROPERTY (Lesson 361)
+ * SUMMARY: WHY THIS IS BETTER (Lesson 362)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And it helps you with all of that by giving you an extra property which
- * you can add to your route definitions. Now we're currently talking about
- * this events page. That's this page where we're fetching data, and in our
- * route definitions we can add an extra property to that route definition
- * of that page. We can add the extra loader property."
+ * "And of course that's much less code than what we had before, and it's
+ * also not part of the component function, which makes the component
+ * function way leaner and easier to reason about."
  *
- * INSTRUCTOR QUOTE:
- * "Now, loader is a property that wants a function as a value, a regular
- * function or an error function that does not matter. And this function
- * will be executed by a React router whenever you are about to visit this
- * route. So just before this route gets rendered, just before this JSX code
- * gets rendered, this loader function will be triggered and executed by a
- * React router."
+ * BENEFITS:
+ * =========
+ * 1. Component only focuses on RENDERING, not data fetching
+ * 2. Data fetching logic is in the route definition (App.jsx)
+ * 3. Separation of concerns: loading logic vs presentation logic
+ * 4. Much easier to test - component just needs data passed in
+ * 5. Data is available BEFORE component renders
  *
- * INSTRUCTOR QUOTE:
- * "And it's in this loader function where you can therefore load and fetch
- * your data."
- *
- * See App.jsx for the loader implementation!
+ * REMAINING QUESTIONS (for future lessons):
+ * ==========================================
+ * - How to show loading state while loader is running?
+ * - How to handle errors from the loader?
+ * - How to access loader data in nested components?
  *
  * ============================================================================
  */

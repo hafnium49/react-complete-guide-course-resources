@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-361)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-362)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -394,12 +394,29 @@ const router = createBrowserRouter([
            * then method here since Thatcher returns a promise but async await
            * is a bit easier to read."
            *
-           * NOTE: Currently EventsPage uses the traditional useEffect approach.
-           * See Events.jsx for the full transition explanation.
-           * The loader function below shows how to fetch data the React Router way.
+           * ================================================================
+           * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
+           * ================================================================
            *
-           * FUTURE LESSON: How to access this data in the component using
-           * useLoaderData() hook.
+           * The component accesses this loader's data using useLoaderData():
+           *
+           * import { useLoaderData } from 'react-router-dom';
+           *
+           * function EventsPage() {
+           *   const events = useLoaderData();  // Gets data returned by loader
+           *   return <EventsList events={events} />;
+           * }
+           *
+           * INSTRUCTOR QUOTE (Lesson 362):
+           * "This is a special hook which we can execute to get access to the
+           * closest loader data."
+           *
+           * PROMISE HANDLING (Lesson 362):
+           * INSTRUCTOR QUOTE:
+           * "But React Router will actually check if a promise is returned and
+           * automatically get the resolved data from that promise for you."
+           *
+           * See Events.jsx for the full useLoaderData implementation.
            */
           {
             index: true,
