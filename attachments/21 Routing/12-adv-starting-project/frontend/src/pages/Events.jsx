@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-362 - useLoaderData Hook)
+ * EVENTS PAGE COMPONENT (Lessons 361-363 - useLoaderData Hook)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 361: Showed traditional useEffect approach and its problems
  * Lesson 362: Refactored to use useLoaderData for cleaner code
+ * Lesson 363: Explored where useLoaderData can/cannot be used
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -223,11 +224,43 @@ export default EventsPage;
  * 4. Much easier to test - component just needs data passed in
  * 5. Data is available BEFORE component renders
  *
+ * ============================================================================
+ * LESSON 363: LOADER DATA SCOPE
+ * ============================================================================
+ *
+ * WHERE CAN useLoaderData BE USED? (Lesson 363):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "You can access loaded data with help of useLoaderData in any component
+ * on the same level or lower level than the component where you added the
+ * loader, so the route on which you added the loader."
+ *
+ * ✅ WORKS: EventsPage (this component - same level as loader)
+ * ✅ WORKS: EventsList (child component - lower level)
+ * ❌ FAILS: RootLayout (parent route - higher level, returns undefined)
+ * ❌ FAILS: EventsRootLayout (parent route - higher level)
+ *
+ * INSTRUCTOR QUOTE:
+ * "You just have to be careful that you're not accidentally using
+ * useLoaderData on a higher level than you're fetching the data."
+ *
+ * ALTERNATIVE APPROACHES (Lesson 363):
+ * ====================================
+ * 1. Use useLoaderData HERE and pass as props (CURRENT APPROACH)
+ *    - More explicit data flow
+ *    - EventsList is reusable
+ *
+ * 2. Use useLoaderData directly in EventsList
+ *    - Works because EventsList is lower level
+ *    - Couples EventsList to React Router
+ *
+ * INSTRUCTOR QUOTE:
+ * "Ultimately, it's up to you."
+ *
  * REMAINING QUESTIONS (for future lessons):
  * ==========================================
  * - How to show loading state while loader is running?
  * - How to handle errors from the loader?
- * - How to access loader data in nested components?
  *
  * ============================================================================
  */

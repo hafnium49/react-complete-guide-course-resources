@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS LIST COMPONENT (Lesson 358 - Pre-built Component)
+ * EVENTS LIST COMPONENT (Lessons 358, 363 - Pre-built + Loader Data Access)
  * ============================================================================
  *
  * PRE-BUILT COMPONENT (Lesson 358):
@@ -15,62 +15,103 @@
  * Each event card links to its detail page.
  *
  * ============================================================================
- * CHALLENGE TASK 6: Display Events with Links
+ * LESSON 363: USING useLoaderData IN CHILD COMPONENTS
  * ============================================================================
  *
- * CURRENT STATE:
- * ==============
- * - Uses <a href="..."> with a placeholder href
- * - Causes full page reloads (not SPA behavior)
+ * INSTRUCTOR QUOTE:
+ * "Now before we dive deeper into this entire loader thing, and also talk
+ * about error handling and so on, let's see where else we could use this
+ * useLoaderData hook."
  *
- * TARGET STATE:
- * =============
- * - Use <Link> from react-router-dom
- * - Build dynamic paths using template literals
- * - Navigate to event detail pages without reload
+ * ALTERNATIVE APPROACH - Using useLoaderData Here (Lesson 363):
+ * =============================================================
+ * INSTRUCTOR QUOTE:
+ * "We can use it in this page, which is rendered by the route on which we
+ * added the loader, but where else can we use it? Well, we could also use
+ * it directly inside the EventsList component."
  *
- * IMPLEMENTATION (Lesson 355 - Building Links for Dynamic Routes):
+ * INSTRUCTOR QUOTE:
+ * "So instead of using it here, and instead of importing it here, we could
+ * go to this EventsList component and use this hook there."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Here we can also import useLoaderData from react-router-dom, and then
+ * call this in this component, even though it's not a page component."
+ *
+ * NO DIFFERENCE BETWEEN PAGE AND REGULAR COMPONENTS (Lesson 363):
  * ================================================================
+ * INSTRUCTOR QUOTE:
+ * "But there technically is no difference between page components and other
+ * components, so therefore we can use it here as well."
  *
- * 1. Import Link:
- *    import { Link } from 'react-router-dom';
+ * ALTERNATIVE IMPLEMENTATION (If we used useLoaderData directly here):
+ * ====================================================================
+ * import { useLoaderData } from 'react-router-dom';
  *
- * 2. Replace <a href="..."> with dynamic Link:
- *    <Link to={`/events/${event.id}`}>
- *      ...
- *    </Link>
+ * function EventsList() {  // Note: No props needed!
+ *   const events = useLoaderData();  // Gets data from parent route's loader
  *
- * Template Literal Explanation:
- * =============================
- * `/events/${event.id}` produces:
- * - For event.id = "e1" → "/events/e1"
- * - For event.id = "e2" → "/events/e2"
+ *   return (
+ *     <div className={classes.events}>
+ *       ...
+ *     </div>
+ *   );
+ * }
  *
- * These paths match the dynamic route: /events/:eventId
+ * INSTRUCTOR QUOTE:
+ * "And if we do that, you will see that this events object, which we're
+ * getting here will be available and everything will work. I just need to
+ * make sure that I'm no longer waiting for events props here, which I try
+ * to destructure."
  *
- * PROPS:
- * ======
- * @param {Array} events - Array of event objects with:
- *   - id: string (unique identifier)
- *   - title: string
- *   - image: string (URL)
- *   - date: string (formatted date)
+ * ============================================================================
+ * WHY WE USE THE PROPS APPROACH INSTEAD
+ * ============================================================================
  *
- * USAGE IN EventsPage:
- * ====================
- * const DUMMY_EVENTS = [
- *   { id: 'e1', title: 'Event 1', image: '...', date: '2024-01-01' },
- *   { id: 'e2', title: 'Event 2', image: '...', date: '2024-02-01' },
- * ];
+ * INSTRUCTOR QUOTE:
+ * "With that, I will actually change my code again, and useLoaderData in
+ * the Events page component and bring back that events property on which
+ * I pass my events queue EventsList, and I will get rid of my loader data
+ * usage here in EventsList, and instead bring back this object destructure
+ * here in my parameter list to extract the events from my props."
  *
- * <EventsList events={DUMMY_EVENTS} />
+ * CURRENT APPROACH (Props-based):
+ * ===============================
+ * - EventsPage uses useLoaderData() to get events
+ * - EventsPage passes events to EventsList as props
+ * - EventsList receives events via props destructuring
+ *
+ * BENEFITS OF PROPS APPROACH:
+ * ===========================
+ * 1. EventsList is more reusable (not tied to React Router)
+ * 2. Easier to test (just pass mock data as props)
+ * 3. Clear data flow (parent fetches, child receives)
+ * 4. EventsList can be used with any data source
+ *
+ * INSTRUCTOR QUOTE:
+ * "Ultimately, it's up to you."
+ *
+ * ============================================================================
  */
+import { Link } from 'react-router-dom';
+
 import classes from './EventsList.module.css';
 
 /**
- * EVENTS LIST COMPONENT:
- * ======================
+ * EVENTS LIST COMPONENT (Lesson 363):
+ * ====================================
  * Renders a grid of event cards, each linking to event details.
+ *
+ * TWO WAYS TO GET DATA:
+ * =====================
+ * 1. Via props (current approach) - More flexible and reusable
+ * 2. Via useLoaderData() - Works because this component is rendered
+ *    by a child route that has a loader
+ *
+ * INSTRUCTOR QUOTE:
+ * "You can access loaded data with help of useLoaderData in any component
+ * on the same level or lower level than the component where you added the
+ * loader, so the route on which you added the loader."
  *
  * @param {Object} props
  * @param {Array} props.events - Array of event objects to display
@@ -83,9 +124,6 @@ function EventsList({ events }) {
         {/**
          * MAPPING EVENTS TO LIST ITEMS:
          * =============================
-         * Similar to what we learned in Lesson 355 about building
-         * links for dynamic routes.
-         *
          * Each event gets its own list item with:
          * - key prop for React's reconciliation
          * - Link to the event's detail page
@@ -94,33 +132,23 @@ function EventsList({ events }) {
         {events.map((event) => (
           <li key={event.id} className={classes.item}>
             {/**
-             * TODO: Replace with Link
+             * DYNAMIC LINK TO EVENT DETAIL:
+             * =============================
+             * Using template literal to build the path:
+             * `/events/${event.id}` produces:
+             * - For event.id = "e1" → "/events/e1"
+             * - For event.id = "e2" → "/events/e2"
              *
-             * <Link to={`/events/${event.id}`}>
-             *   <img src={event.image} alt={event.title} />
-             *   <div className={classes.content}>
-             *     <h2>{event.title}</h2>
-             *     <time>{event.date}</time>
-             *   </div>
-             * </Link>
-             *
-             * This creates links like:
-             * - /events/e1
-             * - /events/e2
-             *
-             * Which will be matched by route:
+             * These paths match the dynamic route:
              * { path: ':eventId', element: <EventDetailPage /> }
-             *
-             * And the eventId parameter can be accessed via:
-             * const { eventId } = useParams();
              */}
-            <a href="...">
+            <Link to={`/events/${event.id}`}>
               <img src={event.image} alt={event.title} />
               <div className={classes.content}>
                 <h2>{event.title}</h2>
                 <time>{event.date}</time>
               </div>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

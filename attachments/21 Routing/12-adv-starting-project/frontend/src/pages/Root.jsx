@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ROOT LAYOUT COMPONENT (Lesson 360 - Task 3 Solution)
+ * ROOT LAYOUT COMPONENT (Lessons 360, 363 - Task 3 Solution + Loader Scope)
  * ============================================================================
  *
  * TASK 3 SOLUTION (Lesson 360):
@@ -90,6 +90,68 @@
  *     }
  *   ]
  * }
+ *
+ * ============================================================================
+ * LESSON 363: WHY useLoaderData DOESN'T WORK HERE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, one place where we can't get those events is in a higher level route.
+ * So for example, if you would go to the RootLayout here, which is part of
+ * my root route."
+ *
+ * WHAT HAPPENS IF WE TRY (Lesson 363):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "If I go to this RootLayout and I useLoaderData here, by first of all
+ * importing useLoaderData, and then calling that hook here, you will see
+ * that if I try to get my events here, and I console log my events, this
+ * will not work as expected. Instead, it logs undefined."
+ *
+ * Example (THIS WOULD NOT WORK):
+ * ==============================
+ * import { useLoaderData } from 'react-router-dom';
+ *
+ * function RootLayout() {
+ *   const events = useLoaderData();  // ⚠️ Returns undefined!
+ *   console.log(events);  // logs: undefined
+ *   ...
+ * }
+ *
+ * WHY IT DOESN'T WORK (Lesson 363):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "The reason for that is that I'm trying to get data from a route that's
+ * actually defined on a lower level. I'm trying to get data that's loaded
+ * from this route, in this root route, which is on a much higher level.
+ * After all, this is a deeply nested route, and that's not possible."
+ *
+ * THE RULE (Lesson 363):
+ * ======================
+ * INSTRUCTOR QUOTE:
+ * "Instead, you can access loaded data with help of useLoaderData in any
+ * component on the same level or lower level than the component where you
+ * added the loader, so the route on which you added the loader."
+ *
+ * ROUTE HIERARCHY:
+ * ================
+ * RootLayout (path: '/')           ← CANNOT access events loader data
+ *   └── EventsRootLayout (path: 'events')   ← CANNOT access (parent of loader)
+ *         └── EventsPage (index: true, HAS LOADER)  ← CAN access
+ *               └── EventsList (child component)    ← CAN access
+ *
+ * SUMMARY:
+ * ========
+ * - ✅ Same level (EventsPage) - CAN use useLoaderData
+ * - ✅ Lower level (EventsList) - CAN use useLoaderData
+ * - ❌ Higher level (RootLayout, EventsRootLayout) - CANNOT use useLoaderData
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that is simply how that works and what you should keep in mind."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You just have to be careful that you're not accidentally using
+ * useLoaderData on a higher level than you're fetching the data."
  *
  * ============================================================================
  */
