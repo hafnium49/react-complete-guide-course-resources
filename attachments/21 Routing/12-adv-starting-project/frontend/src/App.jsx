@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-360)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-361)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -164,6 +164,35 @@
  * into some brand new, more advanced features."
  *
  * ============================================================================
+ * ADVANCED ROUTING - DATA FETCHING WITH LOADERS (Lesson 361)
+ * ============================================================================
+ *
+ * LESSON OVERVIEW (Lesson 361):
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "We are now ready to dive deeper into Routing and explore more advanced
+ * features of React router. And one of the most important feature sets offered
+ * by React router is related to data fetching and submission and that's there
+ * for what we'll explore next."
+ *
+ * THE loader PROPERTY:
+ * ====================
+ * React Router 6+ introduces the `loader` property on route definitions.
+ * This allows data fetching to happen BEFORE the component renders.
+ *
+ * BENEFITS OF LOADERS:
+ * ====================
+ * 1. No boilerplate state management (isLoading, error, data)
+ * 2. Data fetching starts as soon as navigation begins
+ * 3. Component renders WITH data already available
+ * 4. Cleaner component code - no useEffect for data fetching
+ *
+ * INSTRUCTOR QUOTE:
+ * "With React router at least if you're using version six or higher you don't
+ * have to write all that code for fetching data and for handling these different
+ * states. Instead, React router helps you with all of that."
+ *
+ * ============================================================================
  */
 
 /**
@@ -309,13 +338,131 @@ const router = createBrowserRouter([
         element: <EventsRootLayout />,
         children: [
           /**
-           * EVENTS INDEX ROUTE (Lesson 360):
-           * ================================
-           * INSTRUCTOR QUOTE:
+           * EVENTS INDEX ROUTE (Lessons 360-361):
+           * =====================================
+           * INSTRUCTOR QUOTE (Lesson 360):
            * "And of course this first route here can again be turned into
            * a index route, now an index route for this events parent route."
+           *
+           * ================================================================
+           * LESSON 361: THE LOADER PROPERTY - DATA FETCHING
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "And it helps you with all of that by giving you an extra property
+           * which you can add to your route definitions. Now we're currently
+           * talking about this events page. That's this page where we're
+           * fetching data, and in our route definitions we can add an extra
+           * property to that route definition of that page. We can add the
+           * extra loader property."
+           *
+           * WHAT IS A LOADER? (Lesson 361):
+           * ===============================
+           * INSTRUCTOR QUOTE:
+           * "Now, loader is a property that wants a function as a value, a
+           * regular function or an error function that does not matter. And
+           * this function will be executed by a React router whenever you are
+           * about to visit this route."
+           *
+           * WHEN DOES IT RUN? (Lesson 361):
+           * ===============================
+           * INSTRUCTOR QUOTE:
+           * "So just before this route gets rendered, just before this JSX code
+           * gets rendered, this loader function will be triggered and executed
+           * by a React router."
+           *
+           * WHY USE LOADERS? (Lesson 361):
+           * ==============================
+           * INSTRUCTOR QUOTE:
+           * "And it's in this loader function where you can therefore load and
+           * fetch your data."
+           *
+           * RETURNING DATA FROM LOADER (Lesson 361):
+           * ========================================
+           * INSTRUCTOR QUOTE:
+           * "Well, the great thing is that when you define such a loader function,
+           * React router will automatically take any value you return in that
+           * function, for example, the response data and will make that data
+           * available in that page that's being rendered here as well as any
+           * other components where you need it."
+           *
+           * USING async/await (Lesson 361):
+           * ===============================
+           * INSTRUCTOR QUOTE:
+           * "For example, we should add the async keyword here so that we can
+           * use the await keyword. Alternatively, we could of course add the
+           * then method here since Thatcher returns a promise but async await
+           * is a bit easier to read."
+           *
+           * NOTE: Currently EventsPage uses the traditional useEffect approach.
+           * See Events.jsx for the full transition explanation.
+           * The loader function below shows how to fetch data the React Router way.
+           *
+           * FUTURE LESSON: How to access this data in the component using
+           * useLoaderData() hook.
            */
-          { index: true, element: <EventsPage /> },
+          {
+            index: true,
+            element: <EventsPage />,
+            /**
+             * LOADER FUNCTION (Lesson 361):
+             * =============================
+             * This function runs BEFORE the component renders.
+             *
+             * Timeline comparison:
+             * - WITHOUT loader: Navigate → Render → useEffect → Fetch → Re-render
+             * - WITH loader: Navigate → Fetch (loader) → Render (with data)
+             *
+             * INSTRUCTOR QUOTE:
+             * "So we can go back to events JS and grab this code where we fetch
+             * the data and where we evaluate the response and cut that and
+             * instead move it into this loader function."
+             *
+             * INSTRUCTOR QUOTE:
+             * "We also don't need to set any state values here, so we get rid
+             * of all of that."
+             */
+            loader: async () => {
+              /**
+               * FETCH IN LOADER (Lesson 361):
+               * =============================
+               * Same fetch call as in useEffect, but now executed
+               * BEFORE the component renders.
+               */
+              const response = await fetch('http://localhost:8080/events');
+
+              /**
+               * ERROR HANDLING (Lesson 361):
+               * ============================
+               * INSTRUCTOR QUOTE:
+               * "Instead here, we'll deal with that incorrect response case later
+               * and we'll focus on the scenario that we do have a valid response."
+               *
+               * For now, we assume success. Error handling covered in later lessons.
+               */
+              if (!response.ok) {
+                // Error handling will be covered in later lessons
+              } else {
+                /**
+                 * RETURN DATA FROM LOADER (Lesson 361):
+                 * =====================================
+                 * INSTRUCTOR QUOTE:
+                 * "In that case, we got the response data in this loader function.
+                 * And of course, we wanna get that data to that events page component
+                 * because that's where we need the data."
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "So we return rest data here. To be precise, I wanna return
+                 * resData.events because my response data object is actually an
+                 * object that will have an events property which holds the actual
+                 * array of events. That's simply how the backend API returns the
+                 * response for this request."
+                 */
+                const resData = await response.json();
+                return resData.events;
+              }
+            },
+          },
           /**
            * DYNAMIC EVENT ROUTE (Lesson 360):
            * =================================
