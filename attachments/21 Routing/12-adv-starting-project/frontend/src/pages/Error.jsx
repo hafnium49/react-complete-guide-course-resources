@@ -1,100 +1,132 @@
 /**
  * ============================================================================
- * ERROR PAGE COMPONENT (Lesson 369 - Error Handling with Loaders)
+ * ERROR PAGE COMPONENT (Lessons 369-370 - Error Handling with useRouteError)
  * ============================================================================
  *
- * PURPOSE (Lesson 369):
- * =====================
- * This page is displayed when an error occurs anywhere in our route-related code,
- * including loaders. It serves as a fallback error page for the entire application.
- *
- * INSTRUCTOR QUOTE:
- * "Therefore what we can do is we can add an error page again here with pages
- * and create our error page component in there and export this. And then here
- * we can of course output a message like 'an error occurred' for a start."
+ * EVOLUTION OF THIS FILE:
+ * =======================
+ * Lesson 369: Basic error page with simple "An error occurred!" message
+ * Lesson 370: Enhanced with useRouteError hook, PageContent styling, and
+ *             differentiated error handling (404 vs 500 vs other errors)
  *
  * ============================================================================
- * WHY errorElement EXISTS (Lesson 369)
+ * LESSON 370: IMPROVING THE ERROR PAGE
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And you might remember we covered error elements earlier in this section
- * when we added an error element to the Root Route to have a fallback page
- * that would be displayed in case of 404 errors. So if we navigated to paths
- * that aren't supported."
+ * "Now of course this error page here isn't too beautiful and too helpful.
+ * And they offer to improve it a little bit."
  *
- * TWO USE CASES FOR errorElement (Lesson 369):
- * ============================================
- * INSTRUCTOR QUOTE:
- * "Well, turns out that error element is not just there to show a fallback
- * page in case of invalid route paths. That is one use case but not the only
- * one. Instead, the error element will be shown to the screen whenever an
- * error is generated in any route related code, including loaders."
- *
- * | Use Case                    | When It's Triggered                     |
- * |-----------------------------|-----------------------------------------|
- * | 404 Not Found               | User navigates to invalid/unsupported path |
- * | Loader Error                | Loader throws an error (e.g., fetch fails) |
- * | Action Error (future)       | Action throws an error during form submit |
- * | Component Error             | Error thrown during render of route element |
+ * IMPROVEMENTS IN THIS LESSON:
+ * ============================
+ * 1. Added PageContent component for better styling
+ * 2. Added useRouteError hook to access error details
+ * 3. Differentiate between 404 errors and other errors (500, etc.)
+ * 4. Display custom error messages from thrown Response objects
  *
  * ============================================================================
- * ERROR BUBBLING (Lesson 369)
+ * THE useRouteError HOOK (Lesson 370)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "With that, this page, this error page, will be displayed whenever we
- * basically have any kind of error anywhere in our routes because even
- * though I'm throwing an error here in the loader of the events page. So
- * in this route here, which is a deeply nested route, errors will bubble up."
+ * "And for that React-Router-Dom gives you another special hook which we
+ * import from react-router-dom. And that's the use route error hook."
  *
- * HOW ERROR BUBBLING WORKS:
- * =========================
- * 1. Error is thrown in a deeply nested route (e.g., /events loader)
- * 2. React Router looks for errorElement on that route
- * 3. If not found, it bubbles up to parent route
- * 4. Continues until it finds an errorElement or reaches root
- * 5. Root errorElement catches all unhandled errors
- *
- * Route hierarchy example:
- * ========================
- * / (Root - HAS errorElement)        ← Catches all bubbled errors
- *   └── /events (EventsRootLayout)
- *         └── /events (index - EventsPage)  ← Loader throws error here
- *
+ * WHAT IT RETURNS (Lesson 370):
+ * =============================
  * INSTRUCTOR QUOTE:
- * "We could add error element to this route as well. And in that case, this
- * error element would be rendered if this loader threw an error. But we can
- * also just have this Root level error element and the error would bubble up
- * until it reaches that route."
+ * "This gives us an error object if you want to call it like this. And the
+ * shape of that object now depends on whether you threw a response or any
+ * other kind of object or data."
+ *
+ * ERROR OBJECT SHAPE - DEPENDS ON WHAT WAS THROWN:
+ * ================================================
+ *
+ * 1. If you threw a Response (recommended):
+ *    INSTRUCTOR QUOTE:
+ *    "If you threw a response as I'm doing it here now, this error object
+ *    will include a status field which actually reflects the status of the
+ *    response you threw."
+ *
+ *    error = {
+ *      status: 500,           // The HTTP status code you set
+ *      statusText: "...",     // Status text
+ *      data: "...",           // The JSON string you passed to Response
+ *      ...other properties
+ *    }
+ *
+ * 2. If you threw a regular object/Error:
+ *    INSTRUCTOR QUOTE:
+ *    "If you threw any other kind of object, like a regular JavaScript object,
+ *    then this error object would already be that thrown object. So then there
+ *    would not be this special status property."
+ *
+ *    error = { whatever you threw }
+ *
+ * WHY THROW RESPONSES? (Lesson 370):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "But that's why you might wanna throw responses instead of regular objects
+ * because it does allow you to include this extra status property, this extra
+ * status field, which helps with building a generic error handling component."
  *
  * ============================================================================
- * TESTING THE ERROR PAGE (Lesson 369)
+ * ERROR STATUS CODES (Lesson 370)
+ * ============================================================================
+ *
+ * | Status | Meaning                    | When It Occurs                    |
+ * |--------|----------------------------|-----------------------------------|
+ * | 404    | Not Found                  | User visits invalid/unknown path  |
+ * | 500    | Server Error               | Loader throws error (e.g., fetch) |
+ * | Other  | Various errors             | Other thrown errors               |
+ *
+ * INSTRUCTOR QUOTE:
+ * "For example, we might want to differentiate between 404 errors and other
+ * errors like the one we have here from our loader, where we actually have
+ * an error message that we might wanna display instead of the default error
+ * message I defined here."
+ *
+ * ============================================================================
+ * ACCESSING ERROR DATA (Lesson 370)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So with that, if we save this, you see that we get 'an error occurred'
- * once we visit slash events and we get the same page if we try to visit
- * an invalid route, by the way. Of course the other routes still work but
- * trying to visit events gives us this error."
+ * "Now error.data gives us access to the data that's included in this error
+ * response that was thrown. So, to this object here, in my case."
  *
- * To test this page:
- * 1. Visit /events with a broken backend URL → Shows error page
- * 2. Visit /some-invalid-path → Shows error page (404)
- * 3. Visit / or /events/new → Works normally (no error)
+ * IMPORTANT - JSON PARSING (Lesson 370):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "This data object here, actually, first of all must be converted back to
+ * an object because otherwise it's still JSON, in JSON format. So we must
+ * use JSON Parse here, and then access message on the parse data."
+ *
+ * Example:
+ * const errorData = JSON.parse(error.data);
+ * const message = errorData.message;
+ *
+ * ============================================================================
+ * ADDING MAIN NAVIGATION (Lesson 370)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Of course, we could now improve this error page even more by maybe also
+ * adding our main navigation here. With that added, we now have a way of
+ * going somewhere else after we triggered an error. So that might be a better
+ * user experience than having this full screen error page."
  *
  * ============================================================================
  */
+import { useRouteError } from 'react-router-dom';
+
 import MainNavigation from '../components/MainNavigation';
+import PageContent from '../components/PageContent';
 
 /**
- * ERROR PAGE COMPONENT (Lesson 369):
- * ==================================
- * A simple error page that displays when something goes wrong.
- *
- * INSTRUCTOR QUOTE:
- * "And then here we can of course output a message like 'an error occurred'
- * for a start."
+ * ERROR PAGE COMPONENT (Lessons 369-370):
+ * =======================================
+ * A generic error handling page that displays different messages based on
+ * the type of error that occurred.
  *
  * This component is registered as the errorElement on the root route in App.jsx:
  *
@@ -105,40 +137,163 @@ import MainNavigation from '../components/MainNavigation';
  *   children: [...]
  * }
  *
- * NOTE: We include MainNavigation here because when an error occurs,
- * the RootLayout is NOT rendered (errorElement replaces the entire route).
- * So we need to add navigation manually if we want it on the error page.
+ * INSTRUCTOR QUOTE:
+ * "And that's why we might want to throw responses in the places where things
+ * go wrong and add such a generic error handling page which is rendered with
+ * help of an error element added to the root route."
  */
 function ErrorPage() {
   /**
-   * BASIC ERROR MESSAGE (Lesson 369):
-   * =================================
-   * For now, we display a simple message.
-   * In later lessons, we may enhance this to show more details about the error
-   * using the useRouteError hook.
+   * ============================================================================
+   * useRouteError HOOK (Lesson 370)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And for that React-Router-Dom gives you another special hook which we
+   * import from react-router-dom. And that's the use route error hook."
+   *
+   * INSTRUCTOR QUOTE:
+   * "This gives us an error object if you want to call it like this."
+   *
+   * The error object contains information about what went wrong:
+   * - If a Response was thrown: has status, statusText, data properties
+   * - If an Error/object was thrown: contains the thrown value directly
+   */
+  const error = useRouteError();
+
+  /**
+   * ============================================================================
+   * DEFAULT VALUES (Lesson 370)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Because now an error JS in this error page, we can create our title and
+   * our message and set these two default values, but override them with more
+   * fitting values based on which error we have."
+   *
+   * These are the fallback values shown if the error doesn't match any
+   * specific status code we handle.
+   */
+  let title = 'An error occurred!';
+  let message = 'Something went wrong.';
+
+  /**
+   * ============================================================================
+   * CONDITIONAL ERROR HANDLING (Lesson 370)
+   * ============================================================================
+   *
+   * Check the error status to provide appropriate messages:
+   *
+   * INSTRUCTOR QUOTE:
+   * "So we could, for example, have these default values here, but then we can
+   * check if error dot status is maybe 500, in which case we might want to keep
+   * the title. But set the message to error.data.message."
+   */
+
+  /**
+   * HANDLE 500 ERRORS - Server/Backend Errors (Lesson 370):
+   * =======================================================
+   * INSTRUCTOR QUOTE:
+   * "So we could, for example, have these default values here, but then we can
+   * check if error dot status is maybe 500, in which case we might want to keep
+   * the title."
+   *
+   * 500 errors typically occur when:
+   * - A loader throws an error (e.g., fetch fails)
+   * - Backend returns an error response
+   * - Something goes wrong during data fetching
+   */
+  if (error.status === 500) {
+    /**
+     * PARSE THE ERROR DATA (Lesson 370):
+     * ==================================
+     * INSTRUCTOR QUOTE:
+     * "This data object here, actually, first of all must be converted back
+     * to an object because otherwise it's still JSON, in JSON format. So we
+     * must use JSON Parse here, and then access message on the parse data."
+     *
+     * When we throw a Response in the loader, we pass JSON.stringify({ message: ... })
+     * So we need to JSON.parse() it here to get the actual object back.
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that object has a message and we can assume that most objects that
+     * are included in error responses will have message properties."
+     */
+    message = JSON.parse(error.data).message;
+  }
+
+  /**
+   * HANDLE 404 ERRORS - Not Found (Lesson 370):
+   * ===========================================
+   * INSTRUCTOR QUOTE:
+   * "But we could, for example, also check if the error status is maybe 404,
+   * which is the default status set by React router if you enter a path that's
+   * not supported."
+   *
+   * 404 errors occur when:
+   * - User navigates to a path that doesn't exist
+   * - No route matches the current URL
+   * - React Router automatically throws a 404 Response
+   */
+  if (error.status === 404) {
+    /**
+     * CUSTOM 404 MESSAGE (Lesson 370):
+     * ================================
+     * INSTRUCTOR QUOTE:
+     * "And in that case, we could set the title to not found, and the message
+     * to could not find resource or page."
+     */
+    title = 'Not found!';
+    message = 'Could not find resource or page.';
+  }
+
+  /**
+   * RENDER THE ERROR PAGE (Lesson 370):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "And now we can use these values down here and set the title to our title,
+   * which we set conditionally and also output our message here, which is set
+   * to different values based on different status codes."
    */
   return (
     <>
       {/**
-       * Include navigation so users can still navigate away from the error page.
-       * Without this, users would be stuck on the error page.
+       * MAIN NAVIGATION (Lesson 370):
+       * =============================
+       * INSTRUCTOR QUOTE:
+       * "Of course, we could now improve this error page even more by maybe
+       * also adding our main navigation here."
+       *
+       * INSTRUCTOR QUOTE:
+       * "With that added, we now have a way of going somewhere else after we
+       * triggered an error. So that might be a better user experience than
+       * having this full screen error page."
+       *
+       * NOTE: We include MainNavigation here because when an error occurs,
+       * the RootLayout is NOT rendered (errorElement replaces the entire route).
+       * So we need to add navigation manually if we want it on the error page.
        */}
       <MainNavigation />
+      {/**
+       * PAGE CONTENT WITH STYLING (Lesson 370):
+       * =======================================
+       * INSTRUCTOR QUOTE:
+       * "For that we must import page content from and then components page
+       * content. And here we can set a title property and set it to an error
+       * occurred."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And we can then also pass some content between the opening and closing
+       * tags of page content. And for example, add a paragraph where we say
+       * something went wrong."
+       *
+       * INSTRUCTOR QUOTE:
+       * "Now this looks a bit nicer."
+       */}
       <main>
-        {/**
-         * ERROR MESSAGE (Lesson 369):
-         * ===========================
-         * INSTRUCTOR QUOTE:
-         * "And then here we can of course output a message like 'an error
-         * occurred' for a start."
-         *
-         * This simple message is shown for:
-         * - Loader errors (e.g., failed fetch)
-         * - 404 errors (invalid routes)
-         * - Any other route-related errors
-         */}
-        <h1>An error occurred!</h1>
-        <p>Could not find this page.</p>
+        <PageContent title={title}>
+          <p>{message}</p>
+        </PageContent>
       </main>
     </>
   );
@@ -148,24 +303,38 @@ export default ErrorPage;
 
 /**
  * ============================================================================
- * FUTURE ENHANCEMENTS (Preview)
+ * TESTING THE ERROR PAGE (Lesson 370)
  * ============================================================================
  *
- * In upcoming lessons, we may enhance this error page with:
+ * INSTRUCTOR QUOTE:
+ * "With that done, you see I got this error output in case of my error due to
+ * me visiting events. And if I enter invalid URL instead, I get this not found
+ * page. It's always the same component, but now with this generic error
+ * handling code."
  *
- * 1. useRouteError hook - To access the actual error object:
- *    const error = useRouteError();
- *    console.log(error.message);
+ * TO TEST:
+ * ========
+ * 1. Break the backend URL in Events.jsx loader → Shows 500 error with custom message
+ * 2. Visit /some-invalid-path → Shows 404 "Not found!" message
+ * 3. Visit / or /events/new → Works normally (no error)
  *
- * 2. isRouteErrorResponse - To check if it's a Response error:
- *    if (isRouteErrorResponse(error)) {
- *      // Handle HTTP error responses
- *    }
+ * SUMMARY (Lesson 370):
+ * =====================
+ * INSTRUCTOR QUOTE:
+ * "And that's why we might want to throw responses in the places where things
+ * go wrong and add such a generic error handling page which is rendered with
+ * help of an error element added to the root route. That's one way of handling
+ * errors and embracing those features that are built into React router."
  *
- * 3. Dynamic messages - Show different messages based on error type:
- *    - 404: "Page not found"
- *    - 500: "Server error"
- *    - Custom loader errors: Show the error message
+ * ============================================================================
+ * FINAL NOTE (Lesson 370)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that though, I'll go back to events JS, and fix this path so that we
+ * can fetch events successfully again."
+ *
+ * After testing error handling, remember to fix the backend URL in the loader!
  *
  * ============================================================================
  */

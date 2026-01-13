@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-369 - Loaders, useLoaderData, Error Handling)
+ * EVENTS PAGE COMPONENT (Lessons 361-370 - Loaders, useLoaderData, Error Handling)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -13,7 +13,8 @@
  * Lesson 366: Introduced useNavigation hook for loading state (see Root.jsx)
  * Lesson 367: Returning Response objects from loaders
  * Lesson 368: What you CAN and CANNOT do in loaders
- * Lesson 369: Error handling with loaders (CURRENT)
+ * Lesson 369: Error handling with loaders - throwing Error objects
+ * Lesson 370: Throwing Response objects for better error handling (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -677,21 +678,72 @@ export async function loader() {
    */
   if (!response.ok) {
     /**
-     * THROWING AN ERROR (Lesson 369):
-     * ===============================
-     * INSTRUCTOR QUOTE:
-     * "For this we can construct a new error object with the built in error
-     * constructor, or we throw any other kind of object as an error. And here
-     * we could then also, for example, include a message and say, 'could not
-     * fetch events'."
+     * ============================================================================
+     * THROWING A RESPONSE (Lesson 370)
+     * ============================================================================
      *
-     * When this error is thrown:
-     * 1. React Router catches it
-     * 2. Looks for the closest errorElement in the route hierarchy
-     * 3. Renders that errorElement (our Error.jsx page)
-     * 4. The error bubbles up if no errorElement is found on current route
+     * WHY THROW A RESPONSE INSTEAD OF AN ERROR? (Lesson 370):
+     * =======================================================
+     * INSTRUCTOR QUOTE:
+     * "So to differentiate between errors what we can do is instead of throwing
+     * a object, we can throw a response by again creating a new response."
+     *
+     * INSTRUCTOR QUOTE:
+     * "But that's why you might wanna throw responses instead of regular objects
+     * because it does allow you to include this extra status property, this extra
+     * status field, which helps with building a generic error handling component."
+     *
+     * BENEFITS OF THROWING RESPONSE:
+     * ==============================
+     * 1. Includes a status code (404, 500, etc.) for differentiated handling
+     * 2. Can include structured data (message, details, etc.)
+     * 3. Enables generic error handling in ErrorPage component
+     * 4. Works with useRouteError hook's error.status property
+     *
+     * CREATING THE RESPONSE (Lesson 370):
+     * ===================================
+     * INSTRUCTOR QUOTE:
+     * "And then we can include some data into that response. For this, we have
+     * to call JSON stringify if we want to pass an object to the response."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And then we could add a message prop and say could not fetch events."
+     *
+     * SETTING THE STATUS CODE (Lesson 370):
+     * =====================================
+     * INSTRUCTOR QUOTE:
+     * "Now we can add this second argument to the response constructor and set
+     * the status, for example, to 500 to indicate that something went wrong on
+     * the back end."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now I'm doing this because you can actually get hold of the data that's
+     * being thrown as an error inside of the component that's being rendered
+     * as an error element."
+     *
+     * Response constructor:
+     * new Response(body, { status: statusCode })
+     *
+     * - body: Must be a string (use JSON.stringify for objects)
+     * - status: HTTP status code (500 = server error, 404 = not found, etc.)
+     *
+     * COMPARISON (Lessons 369 vs 370):
+     * ================================
+     * LESSON 369 (throw Error):
+     * throw new Error('Could not fetch events.');
+     * - Simple, but no status code
+     * - Limited error differentiation in ErrorPage
+     *
+     * LESSON 370 (throw Response):
+     * throw new Response(JSON.stringify({ message: '...' }), { status: 500 });
+     * - Includes status code for error type differentiation
+     * - Structured data accessible via error.data in ErrorPage
+     * - Better for generic error handling
      */
-    throw new Error('Could not fetch events.');
+    throw new Response(
+      JSON.stringify({ message: 'Could not fetch events.' }),
+      { status: 500 }
+    );
   }
 
   /**

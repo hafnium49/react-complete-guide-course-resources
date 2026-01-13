@@ -1,0 +1,38 @@
+/**
+ * ============================================================================
+ * PAGE CONTENT STYLES (Lesson 370 - Error Page Styling)
+ * ============================================================================
+ *
+ * PURPOSE (Lesson 370):
+ * =====================
+ * This CSS module provides styling for the PageContent component.
+ * It's used to create a centered, visually appealing error page.
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's a little helper component that provides us some styling which I'll
+ * use to render it here, on this error page."
+ *
+ * CSS MODULES:
+ * ============
+ * This file uses CSS Modules (.module.css) which:
+ * - Scopes styles to the component that imports them
+ * - Prevents class name conflicts
+ * - Transforms .content to a unique class like .PageContent_content__abc123
+ *
+ * ============================================================================
+ */
+
+/**
+ * CONTENT CLASS (Lesson 370):
+ * ===========================
+ * Centers all text content within the PageContent component.
+ * This creates a clean, centered error message presentation.
+ *
+ * Applied to:
+ * - Error page title ("An error occurred!")
+ * - Error page message ("Something went wrong.")
+ * - 404 page content
+ */
+.content {
+  text-align: center;
+}
