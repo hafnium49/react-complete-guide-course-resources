@@ -1,3 +1,45 @@
+/**
+ * ============================================================================
+ * EVENTS ROUTES - BACKEND API (Lesson 365 - Loader Timing Demonstration)
+ * ============================================================================
+ *
+ * This is the Express.js backend code that handles event-related API requests.
+ * It's NOT React code - it's Node.js/Express code that runs on the server.
+ *
+ * INSTRUCTOR QUOTE (Lesson 365):
+ * "And I actually already mentioned it before. The loader for a page will be
+ * called right when we start navigating to that page. So not after the page
+ * component has been rendered, but before we actually go there."
+ *
+ * ============================================================================
+ * LESSON 365: DEMONSTRATING LOADER TIMING WITH A TIMEOUT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And you can see that that's the case if you go to the backend API, and
+ * there to routes, events.js, and here this very first route, that's the code,
+ * the backend code, that's responsible for returning data to the front end."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We don't fully need to understand it, but what we can do here, between this
+ * 'const events' line and the 'res.json' line, is that we add a timeout."
+ *
+ * THE TIMEOUT DEMONSTRATION:
+ * ==========================
+ * By adding a setTimeout of 1.5 seconds before sending the response, we can
+ * observe the loader timing behavior:
+ * - Click "Events" link on homepage
+ * - Nothing happens visually for 1.5 seconds
+ * - Then the page transitions to /events with data already loaded
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because the data fetching is initiated as soon as we initiate the route
+ * transition. But by default, React router will actually wait for the data
+ * to be fetched, so for the loader to be finished before it then renders
+ * the page with the fetched data."
+ *
+ * ============================================================================
+ */
 const express = require('express');
 
 const { getAll, get, add, replace, remove } = require('../data/event');
@@ -9,10 +51,80 @@ const {
 
 const router = express.Router();
 
+/**
+ * ============================================================================
+ * GET ALL EVENTS ROUTE (Lesson 365 - Timeout Demonstration)
+ * ============================================================================
+ *
+ * This is the route that handles GET requests to /events.
+ * The frontend's loader function calls this endpoint.
+ *
+ * ADDING A DELAY FOR DEMONSTRATION (Lesson 365):
+ * ==============================================
+ * INSTRUCTOR QUOTE:
+ * "And here we could set a timeout of let's say one and a half seconds and
+ * move that 'res.json' code into the timeout callback function. Now this
+ * will simply ensure that the response is only sent back from the backend
+ * to the frontend after one and a half seconds."
+ *
+ * WHAT THIS DEMONSTRATES (Lesson 365):
+ * ====================================
+ * INSTRUCTOR QUOTE:
+ * "If we now go to the terminal where we started the backend server, and we
+ * quit that server and restart it, since we changed our backend code, I can
+ * go back go to the homepage and click on 'events'. And you will see that at
+ * first nothing happens, and only after one and a half seconds we go there."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here I click, and now we wait. And now we go there."
+ *
+ * ADVANTAGES OF THIS BEHAVIOR (Lesson 365):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "The advantage of this approach is that you can rely on the data being there
+ * once the events page component is being rendered. You don't need to worry
+ * about whether the data is there yet or not and therefore you don't need to
+ * render a loading state on this event's page component."
+ *
+ * DISADVANTAGES (Lesson 365):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "The downside, of course, is that we have this delay where it looks to the
+ * user as if nothing is happening."
+ *
+ * SOLUTIONS COMING (Lesson 365):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "And we'll see how we can improve this user experience in a couple of seconds,
+ * and actually also later, again, towards the end of the section because React
+ * Router gives us various tools for improving that user experience."
+ */
 router.get('/', async (req, res, next) => {
   try {
     const events = await getAll();
-    res.json({ events: events });
+    /**
+     * TIMEOUT FOR DEMONSTRATION (Lesson 365):
+     * =======================================
+     * This 1.5 second delay simulates a slow network/database response.
+     *
+     * INSTRUCTOR QUOTE:
+     * "And here we could set a timeout of let's say one and a half seconds
+     * and move that 'res.json' code into the timeout callback function."
+     *
+     * WHAT YOU'LL OBSERVE:
+     * ====================
+     * 1. Click "Events" link on homepage
+     * 2. URL stays at "/" for 1.5 seconds (nothing visible happens)
+     * 3. After 1.5 seconds, page transitions to "/events" with data
+     *
+     * This proves the loader runs BEFORE navigation completes, not after.
+     *
+     * NOTE: Remove or comment out this setTimeout for production!
+     * This is purely for educational demonstration purposes.
+     */
+    setTimeout(() => {
+      res.json({ events: events });
+    }, 1500);
   } catch (error) {
     next(error);
   }

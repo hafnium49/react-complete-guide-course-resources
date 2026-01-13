@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-364 - useLoaderData Hook + Loader Export)
+ * EVENTS PAGE COMPONENT (Lessons 361-365 - Loaders, useLoaderData, Timing)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -8,7 +8,8 @@
  * Lesson 361: Showed traditional useEffect approach and its problems
  * Lesson 362: Refactored to use useLoaderData for cleaner code
  * Lesson 363: Explored where useLoaderData can/cannot be used
- * Lesson 364: Moved loader function from App.jsx to this file (CURRENT)
+ * Lesson 364: Moved loader function from App.jsx to this file
+ * Lesson 365: Explained WHEN loaders execute (on navigation start)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -279,6 +280,91 @@ export default EventsPage;
  * // NewEvent.jsx exports: loader (imported as newEventLoader)
  *
  * This keeps related code together and makes App.jsx cleaner.
+ *
+ * ============================================================================
+ * LESSON 365: WHEN DOES THE LOADER EXECUTE?
+ * ============================================================================
+ *
+ * KEY CONCEPT (Lesson 365):
+ * =========================
+ * INSTRUCTOR QUOTE:
+ * "The loader for a page will be called right when we start navigating to that
+ * page. So not after the page component has been rendered, but before we
+ * actually go there."
+ *
+ * TIMING COMPARISON:
+ * ==================
+ *
+ * TRADITIONAL useEffect APPROACH:
+ * -------------------------------
+ * 1. User clicks link to /events
+ * 2. Navigation happens IMMEDIATELY
+ * 3. EventsPage component renders (without data)
+ * 4. useEffect runs after render
+ * 5. Fetch starts
+ * 6. Component shows "Loading..." state
+ * 7. Fetch completes
+ * 8. Component re-renders with data
+ *
+ * LOADER APPROACH (React Router):
+ * -------------------------------
+ * 1. User clicks link to /events
+ * 2. Loader function starts executing (fetch begins)
+ * 3. User waits on current page (navigation paused)
+ * 4. Fetch completes
+ * 5. Navigation happens
+ * 6. EventsPage component renders WITH data already available
+ *
+ * DEMONSTRATION (Lesson 365):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "And you can see that that's the case if you go to the backend API, and
+ * there to routes, events.js, and here this very first route... we can do
+ * here, between this 'const events' line and the 'res.json' line, is that
+ * we add a timeout."
+ *
+ * INSTRUCTOR QUOTE:
+ * "If we now go to the homepage and click on 'events'. And you will see that
+ * at first nothing happens, and only after one and a half seconds we go there.
+ * So here I click, and now we wait. And now we go there."
+ *
+ * ADVANTAGES (Lesson 365):
+ * ========================
+ * INSTRUCTOR QUOTE:
+ * "The advantage of this approach is that you can rely on the data being there
+ * once the events page component is being rendered. You don't need to worry
+ * about whether the data is there yet or not and therefore you don't need to
+ * render a loading state on this event's page component."
+ *
+ * This is why EventsPage is so simple - it doesn't need:
+ * - Loading state management
+ * - Conditional rendering for loading/error/data states
+ * - The data is GUARANTEED to be available
+ *
+ * DISADVANTAGES (Lesson 365):
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "The downside, of course, is that we have this delay where it looks to the
+ * user as if nothing is happening."
+ *
+ * From the user's perspective:
+ * - They click "Events"
+ * - Nothing visible happens
+ * - They might think the app is broken
+ * - After the delay, they suddenly see the new page
+ *
+ * SOLUTIONS (Lesson 365):
+ * =======================
+ * INSTRUCTOR QUOTE:
+ * "And we'll see how we can improve this user experience in a couple of
+ * seconds, and actually also later, again, towards the end of the section
+ * because React Router gives us various tools for improving that user
+ * experience."
+ *
+ * Coming in future lessons:
+ * - useNavigation hook (shows loading indicator during navigation)
+ * - Deferred data loading
+ * - Suspense integration
  *
  * ============================================================================
  */

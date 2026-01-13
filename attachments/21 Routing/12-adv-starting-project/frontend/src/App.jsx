@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-364)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-365)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -531,7 +531,7 @@ const router = createBrowserRouter([
            * you don't need to worry about the order of route definitions. This
            * route here, /events/new, will win over this route."
            */
-          { path: 'new', element: <NewEventPage /> },
+          { path: 'new', element: <NewEventPage /> }, // this router will be over :eventId automatically
           /**
            * EDIT EVENT ROUTE - DYNAMIC + STATIC (Lesson 360):
            * =================================================
