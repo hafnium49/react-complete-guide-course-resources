@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-362)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-364)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -237,7 +237,33 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
  * omit page from the file name."
  */
 import HomePage from './pages/Home';
-import EventsPage from './pages/Events';
+/**
+ * ============================================================================
+ * LESSON 364: IMPORTING LOADER FROM COMPONENT FILE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Then back in app.js, we can simply import that loader here and give it an
+ * LES like events loader from that file where I define this loader function."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So I import it from dot slash pages slash events, and then we just use
+ * events loader which is that pointer at that function and use that as a
+ * value for this loader property here."
+ *
+ * WHY USE AN ALIAS (eventsLoader)?
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "You're not forced to use an alias, but as your application grows, you might
+ * have loaders in different files, and different files might export something
+ * named loader. Hence assigning unique aliases helps you differentiate between
+ * these different loaders."
+ *
+ * Import pattern: { loader as eventsLoader }
+ * - `loader` is what's exported from Events.jsx
+ * - `eventsLoader` is the alias we use here to avoid conflicts
+ */
+import EventsPage, { loader as eventsLoader } from './pages/Events';
 import EventDetailPage from './pages/EventDetail';
 import NewEventPage from './pages/NewEvent';
 import EditEventPage from './pages/EditEvent';
@@ -422,63 +448,54 @@ const router = createBrowserRouter([
             index: true,
             element: <EventsPage />,
             /**
-             * LOADER FUNCTION (Lesson 361):
-             * =============================
-             * This function runs BEFORE the component renders.
+             * ================================================================
+             * LOADER PROPERTY (Lessons 361-364)
+             * ================================================================
+             *
+             * LESSON 361 - WHAT IS A LOADER:
+             * ==============================
+             * INSTRUCTOR QUOTE:
+             * "Now, loader is a property that wants a function as a value, a
+             * regular function or an error function that does not matter. And
+             * this function will be executed by a React router whenever you are
+             * about to visit this route."
              *
              * Timeline comparison:
              * - WITHOUT loader: Navigate → Render → useEffect → Fetch → Re-render
              * - WITH loader: Navigate → Fetch (loader) → Render (with data)
              *
-             * INSTRUCTOR QUOTE:
-             * "So we can go back to events JS and grab this code where we fetch
-             * the data and where we evaluate the response and cut that and
-             * instead move it into this loader function."
+             * ================================================================
+             * LESSON 364 - REFACTORING TO EXTERNAL FILE
+             * ================================================================
              *
              * INSTRUCTOR QUOTE:
-             * "We also don't need to set any state values here, so we get rid
-             * of all of that."
+             * "Now there's nothing wrong with putting this code here, by the way,
+             * but a common pattern and a recommendation if you wanna call it like
+             * that, is that you do actually put that loader code here into your
+             * component file where you need it."
+             *
+             * INSTRUCTOR QUOTE:
+             * "So I import it from dot slash pages slash events, and then we just
+             * use events loader which is that pointer at that function and use
+             * that as a value for this loader property here."
+             *
+             * BEFORE (inline loader - Lessons 361-363):
+             * ========================================
+             * loader: async () => {
+             *   const response = await fetch('http://localhost:8080/events');
+             *   if (!response.ok) { ... }
+             *   const resData = await response.json();
+             *   return resData.events;
+             * },
+             *
+             * AFTER (imported loader - Lesson 364):
+             * ====================================
+             * loader: eventsLoader,
+             *
+             * The loader function is now defined in Events.jsx and imported here.
+             * See Events.jsx for the full loader implementation.
              */
-            loader: async () => {
-              /**
-               * FETCH IN LOADER (Lesson 361):
-               * =============================
-               * Same fetch call as in useEffect, but now executed
-               * BEFORE the component renders.
-               */
-              const response = await fetch('http://localhost:8080/events');
-
-              /**
-               * ERROR HANDLING (Lesson 361):
-               * ============================
-               * INSTRUCTOR QUOTE:
-               * "Instead here, we'll deal with that incorrect response case later
-               * and we'll focus on the scenario that we do have a valid response."
-               *
-               * For now, we assume success. Error handling covered in later lessons.
-               */
-              if (!response.ok) {
-                // Error handling will be covered in later lessons
-              } else {
-                /**
-                 * RETURN DATA FROM LOADER (Lesson 361):
-                 * =====================================
-                 * INSTRUCTOR QUOTE:
-                 * "In that case, we got the response data in this loader function.
-                 * And of course, we wanna get that data to that events page component
-                 * because that's where we need the data."
-                 *
-                 * INSTRUCTOR QUOTE:
-                 * "So we return rest data here. To be precise, I wanna return
-                 * resData.events because my response data object is actually an
-                 * object that will have an events property which holds the actual
-                 * array of events. That's simply how the backend API returns the
-                 * response for this request."
-                 */
-                const resData = await response.json();
-                return resData.events;
-              }
-            },
+            loader: eventsLoader,
           },
           /**
            * DYNAMIC EVENT ROUTE (Lesson 360):

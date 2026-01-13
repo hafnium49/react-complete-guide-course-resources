@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-363 - useLoaderData Hook)
+ * EVENTS PAGE COMPONENT (Lessons 361-364 - useLoaderData Hook + Loader Export)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -8,6 +8,7 @@
  * Lesson 361: Showed traditional useEffect approach and its problems
  * Lesson 362: Refactored to use useLoaderData for cleaner code
  * Lesson 363: Explored where useLoaderData can/cannot be used
+ * Lesson 364: Moved loader function from App.jsx to this file (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -205,6 +206,137 @@ function EventsPage() {
 }
 
 export default EventsPage;
+
+/**
+ * ============================================================================
+ * LESSON 364: STORING LOADERS IN COMPONENT FILES
+ * ============================================================================
+ *
+ * WHY MOVE THE LOADER? (Lesson 364):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Now we got a pretty lean events page component, but one thing I wanna do
+ * before we move on is I wanna restructure where we put that loader code."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now there's nothing wrong with putting this code here, by the way, but a
+ * common pattern and a recommendation if you wanna call it like that, is that
+ * you do actually put that loader code here into your component file where you
+ * need it."
+ *
+ * WHERE TO PUT THE LOADER (Lesson 364):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "In this case, that's the events.js file in the pages folder. And here we
+ * can simply export a function which we could name loader for example."
+ *
+ * NAMING CONVENTION (Lesson 364):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "Well, there is a loader function already, the load or property wants a
+ * function, but actually you could name this function anything you want."
+ *
+ * INSTRUCTOR QUOTE:
+ * "It doesn't have to be named loader, but this is a name you will see
+ * commonly, which is why I'm using this name here."
+ *
+ * THE FUNCTION CODE (Lesson 364):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "And then it's this loader function here which should hold that code that
+ * we currently have in App.js for this loader property. So cut the code and
+ * put it in here."
+ *
+ * IMPORTING IN App.jsx (Lesson 364):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Then back in app.js, we can simply import that loader here and give it an
+ * LES like events loader from that file where I define this loader function."
+ *
+ * USING THE IMPORTED LOADER (Lesson 364):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "So I import it from dot slash pages slash events, and then we just use
+ * events loader which is that pointer at that function and use that as a
+ * value for this loader property here."
+ *
+ * WHY USE AN ALIAS? (Lesson 364):
+ * ===============================
+ * INSTRUCTOR QUOTE:
+ * "You're not forced to use an alias, but as your application grows, you might
+ * have loaders in different files, and different files might export something
+ * named loader. Hence assigning unique aliases helps you differentiate between
+ * these different loaders. And here we have only one, so it's not a problem,
+ * but it's a good practice."
+ *
+ * MULTIPLE LOADERS PATTERN:
+ * =========================
+ * When you have many routes with loaders, each page file exports its own
+ * loader function:
+ *
+ * // Events.jsx exports: loader (imported as eventsLoader)
+ * // EventDetail.jsx exports: loader (imported as eventDetailLoader)
+ * // NewEvent.jsx exports: loader (imported as newEventLoader)
+ *
+ * This keeps related code together and makes App.jsx cleaner.
+ *
+ * ============================================================================
+ */
+
+/**
+ * EXPORTED LOADER FUNCTION (Lesson 364):
+ * ======================================
+ * This is the loader function that was previously defined inline in App.jsx.
+ *
+ * INSTRUCTOR QUOTE:
+ * "In this case, that's the events.js file in the pages folder. And here we
+ * can simply export a function which we could name loader for example."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And then it's this loader function here which should hold that code that
+ * we currently have in App.js for this loader property."
+ *
+ * This function:
+ * 1. Is executed by React Router BEFORE EventsPage renders
+ * 2. Fetches events data from the backend API
+ * 3. Returns the events array for useLoaderData() to access
+ *
+ * BENEFITS OF THIS PATTERN:
+ * =========================
+ * 1. Keeps data fetching logic close to the component that uses it
+ * 2. Makes App.jsx cleaner (just imports and route definitions)
+ * 3. Easier to find and maintain loader code
+ * 4. Each page can manage its own data requirements
+ */
+export async function loader() {
+  /**
+   * FETCH EVENTS FROM BACKEND:
+   * ==========================
+   * Same fetch call as before, just moved from App.jsx to here.
+   */
+  const response = await fetch('http://localhost:8080/events');
+
+  /**
+   * ERROR HANDLING (placeholder):
+   * =============================
+   * Error handling will be covered in later lessons.
+   * For now, we assume the request succeeds.
+   */
+  if (!response.ok) {
+    // Error handling will be covered in later lessons
+  } else {
+    /**
+     * RETURN EVENTS DATA:
+     * ===================
+     * The backend returns { events: [...] }, so we extract
+     * resData.events to return just the array.
+     *
+     * This is what useLoaderData() will receive in EventsPage.
+     */
+    const resData = await response.json();
+    return resData.events;
+  }
+}
 
 /**
  * ============================================================================
