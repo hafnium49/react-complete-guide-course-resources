@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS ROUTES - BACKEND API (Lesson 365 - Loader Timing Demonstration)
+ * EVENTS ROUTES - BACKEND API (Lessons 365-366 - Loader Timing Demonstration)
  * ============================================================================
  *
  * This is the Express.js backend code that handles event-related API requests.
@@ -103,28 +103,27 @@ router.get('/', async (req, res, next) => {
   try {
     const events = await getAll();
     /**
-     * TIMEOUT FOR DEMONSTRATION (Lesson 365):
-     * =======================================
-     * This 1.5 second delay simulates a slow network/database response.
-     *
+     * TIMEOUT REMOVED (Lesson 366):
+     * =============================
      * INSTRUCTOR QUOTE:
-     * "And here we could set a timeout of let's say one and a half seconds
-     * and move that 'res.json' code into the timeout callback function."
+     * "Now with all that done, though, I will go back and remove this Timeout
+     * here on the back end and move back to the code we had originally on that
+     * back end, because I, now, no longer wanna simulate this."
      *
-     * WHAT YOU'LL OBSERVE:
-     * ====================
-     * 1. Click "Events" link on homepage
-     * 2. URL stays at "/" for 1.5 seconds (nothing visible happens)
-     * 3. After 1.5 seconds, page transitions to "/events" with data
+     * The setTimeout was used in Lesson 365 to demonstrate loader timing.
+     * It's now removed to return to normal operation.
      *
-     * This proves the loader runs BEFORE navigation completes, not after.
+     * TO RE-ENABLE THE DEMONSTRATION:
+     * ===============================
+     * Uncomment the setTimeout below and comment out the direct res.json():
      *
-     * NOTE: Remove or comment out this setTimeout for production!
-     * This is purely for educational demonstration purposes.
+     * setTimeout(() => {
+     *   res.json({ events: events });
+     * }, 1500);
+     *
+     * Then restart the backend server to see the loading behavior.
      */
-    setTimeout(() => {
-      res.json({ events: events });
-    }, 1500);
+    res.json({ events: events });
   } catch (error) {
     next(error);
   }

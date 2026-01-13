@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ROOT LAYOUT COMPONENT (Lessons 360, 363 - Task 3 Solution + Loader Scope)
+ * ROOT LAYOUT COMPONENT (Lessons 360, 363, 366 - Layout + Loader Scope + Navigation State)
  * ============================================================================
  *
  * TASK 3 SOLUTION (Lesson 360):
@@ -154,8 +154,100 @@
  * useLoaderData on a higher level than you're fetching the data."
  *
  * ============================================================================
+ * LESSON 366: useNavigation HOOK - SHOWING LOADING STATE
+ * ============================================================================
+ *
+ * THE PROBLEM (Lesson 366):
+ * =========================
+ * When using loaders, the page waits for data before transitioning.
+ * The user sees nothing happening, which is poor UX.
+ *
+ * INSTRUCTOR QUOTE:
+ * "So, how could we give the user some feedback that something's going on
+ * here after clicking on Events?"
+ *
+ * THE SOLUTION - useNavigation HOOK (Lesson 366):
+ * ===============================================
+ * INSTRUCTOR QUOTE:
+ * "Well, React Router gives us a special hook, which we can use to check the
+ * current route transitions state. So, to find out if a transition has been
+ * initiated and we're currently still waiting for data to arrive, or if we're
+ * done."
+ *
+ * WHERE TO USE IT (Lesson 366):
+ * =============================
+ * INSTRUCTOR QUOTE:
+ * "Now, we could go to the Root Layout component and there we can use the
+ * useNavigation hook; which is a hook provided by React Router that lets us
+ * find out whether we're currently in an active transition, if we're loading
+ * data, or if we have no active transition going on."
+ *
+ * THE navigation OBJECT (Lesson 366):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "We get a Navigation object when we call useNavigation and that Navigation
+ * object has a couple of properties; but for us, the state property is the
+ * most important one."
+ *
+ * THE state PROPERTY VALUES (Lesson 366):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "This is simply a string which is either idle, loading, or submitting;
+ * depending on whether we don't have any active route transition, if we're
+ * having an active transition and we're loading data, or if we're submitting
+ * data; which is something we'll take a look at later."
+ *
+ * | State       | Meaning                                      |
+ * |-------------|----------------------------------------------|
+ * | 'idle'      | No active transition - page is stable        |
+ * | 'loading'   | Route transition in progress, loading data   |
+ * | 'submitting'| Form submission in progress (covered later)  |
+ *
+ * CONDITIONAL RENDERING (Lesson 366):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "With that, we could add a Loading text here, in our main section, for
+ * example, which is only shown if navigation.state is equal to loading."
+ *
+ * Example:
+ * {navigation.state === 'loading' && <p>Loading...</p>}
+ *
+ * TESTING THE LOADING STATE (Lesson 366):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "With that added, if we go to Home and back to Events, you see that Loading
+ * text here which signals to the user that we are loading data. So, which
+ * gives the user some feedback that something is happening."
+ *
+ * KEY INSIGHT - WHERE LOADING INDICATOR APPEARS (Lesson 366):
+ * ===========================================================
+ * INSTRUCTOR QUOTE:
+ * "It's just important to recognize that the loading indicator won't be added
+ * on the page which you're transitioning to, but instead on some page, or a
+ * component, which is already visible on the screen when the transition is
+ * started. That's different compared to what we had before with useEffect
+ * and a separate loading state."
+ *
+ * COMPARISON:
+ * ===========
+ * | Approach         | Where loading indicator shows        |
+ * |------------------|--------------------------------------|
+ * | useEffect        | ON the target page (after navigate)  |
+ * | useNavigation    | ON the current page (before navigate)|
+ *
+ * ALTERNATIVE SOLUTIONS (Lesson 366):
+ * ===================================
+ * INSTRUCTOR QUOTE:
+ * "Now, I'm going to get rid of it here because we'll actually learn about a
+ * different solution later in this section, but this is one way of finding
+ * out whether you are currently waiting for data or not, and how you could
+ * bring back such a loading indicator."
+ *
+ * Coming later: Deferred data loading, Suspense integration, etc.
+ *
+ * ============================================================================
  */
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigation } from 'react-router-dom';
 import MainNavigation from '../components/MainNavigation';
 
 /**
@@ -167,10 +259,33 @@ import MainNavigation from '../components/MainNavigation';
  * - Consistent MainNavigation header across all pages
  * - Semantic <main> wrapper for page content
  * - Outlet for rendering child route content
+ * - Navigation state awareness (Lesson 366)
  *
  * This pattern is called a "Layout Route" in React Router.
  */
 function RootLayout() {
+  /**
+   * ============================================================================
+   * useNavigation HOOK (Lesson 366)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "We get a Navigation object when we call useNavigation and that Navigation
+   * object has a couple of properties; but for us, the state property is the
+   * most important one."
+   *
+   * The navigation object contains:
+   * - state: 'idle' | 'loading' | 'submitting'
+   * - location: the location being navigated to (when loading/submitting)
+   * - formMethod: the method of the form being submitted
+   * - formAction: the action of the form being submitted
+   * - formData: the FormData being submitted
+   * - formEncType: the encType of the form being submitted
+   *
+   * We primarily use navigation.state to show loading indicators.
+   */
+  const navigation = useNavigation();
+
   return (
     /**
      * JSX FRAGMENT (Lesson 360):
@@ -193,6 +308,49 @@ function RootLayout() {
        * This is optional but good for accessibility and SEO.
        */}
       <main>
+        {/**
+         * ================================================================
+         * LOADING INDICATOR (Lesson 366)
+         * ================================================================
+         *
+         * INSTRUCTOR QUOTE:
+         * "With that, we could add a Loading text here, in our main section,
+         * for example, which is only shown if navigation.state is equal to
+         * loading, like this."
+         *
+         * INSTRUCTOR QUOTE:
+         * "With that added, if we go to Home and back to Events, you see
+         * that Loading text here which signals to the user that we are
+         * loading data."
+         *
+         * NOTE: The instructor removes this at the end of the lesson:
+         * INSTRUCTOR QUOTE:
+         * "Now, I'm going to get rid of it here because we'll actually
+         * learn about a different solution later in this section."
+         *
+         * The code below is commented out to match the final state,
+         * but uncomment it to see the loading indicator in action!
+         *
+         * IMPORTANT INSIGHT (Lesson 366):
+         * ===============================
+         * INSTRUCTOR QUOTE:
+         * "It's just important to recognize that the loading indicator
+         * won't be added on the page which you're transitioning to, but
+         * instead on some page, or a component, which is already visible
+         * on the screen when the transition is started."
+         */}
+        {/**
+         * LOADING INDICATOR IMPLEMENTATION (Lesson 366):
+         * ==============================================
+         * Shows "Loading..." when a route transition is in progress.
+         *
+         * NOTE: The instructor removes this at the end of the lesson
+         * in favor of a different solution covered later. We keep it
+         * here for educational purposes - you can comment it out if desired.
+         *
+         * To test: Add a setTimeout delay to the backend (see backend/routes/events.js)
+         */}
+        {navigation.state === 'loading' && <p>Loading...</p>}
         {/**
          * OUTLET COMPONENT (Lesson 360):
          * ==============================

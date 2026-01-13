@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-365 - Loaders, useLoaderData, Timing)
+ * EVENTS PAGE COMPONENT (Lessons 361-366 - Loaders, useLoaderData, Navigation)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -10,6 +10,7 @@
  * Lesson 363: Explored where useLoaderData can/cannot be used
  * Lesson 364: Moved loader function from App.jsx to this file
  * Lesson 365: Explained WHEN loaders execute (on navigation start)
+ * Lesson 366: Introduced useNavigation hook for loading state (see Root.jsx)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
