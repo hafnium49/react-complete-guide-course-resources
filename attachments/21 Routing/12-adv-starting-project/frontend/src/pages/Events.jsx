@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-366 - Loaders, useLoaderData, Navigation)
+ * EVENTS PAGE COMPONENT (Lessons 361-367 - Loaders, useLoaderData, Response Objects)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -11,6 +11,7 @@
  * Lesson 364: Moved loader function from App.jsx to this file
  * Lesson 365: Explained WHEN loaders execute (on navigation start)
  * Lesson 366: Introduced useNavigation hook for loading state (see Root.jsx)
+ * Lesson 367: Returning Response objects from loaders (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -166,45 +167,54 @@ import EventsList from '../components/EventsList';
  */
 function EventsPage() {
   /**
-   * useLoaderData HOOK (Lesson 362):
-   * ================================
+   * useLoaderData HOOK (Lessons 362, 367):
+   * ======================================
    * This hook returns whatever was returned by the loader function
    * defined for this route in App.jsx.
    *
-   * INSTRUCTOR QUOTE:
+   * INSTRUCTOR QUOTE (Lesson 362):
    * "This is a special hook which we can execute to get access to the
    * closest loader data."
    *
-   * In our case, the loader returns `resData.events` which is an array
-   * of event objects from the backend API.
+   * RESPONSE OBJECT SUPPORT (Lesson 367):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "Whenever you return such a response in your loaders, the React Router
+   * package will automatically extract the data from your response when
+   * using useLoaderData."
    *
-   * PROMISE HANDLING:
-   * =================
+   * Since we now return the response directly from the loader (Lesson 367),
+   * useLoaderData automatically extracts the JSON data from it.
+   * The extracted data is an object with an `events` key: { events: [...] }
+   *
+   * INSTRUCTOR QUOTE:
+   * "I just have to make sure that I do extract my events from that data
+   * object which I get here because that is actually an object with an
+   * events key."
+   *
+   * PROMISE HANDLING (Lesson 362):
+   * ==============================
    * INSTRUCTOR QUOTE:
    * "But React Router will actually check if a promise is returned and
    * automatically get the resolved data from that promise for you."
-   *
-   * So even though the async loader returns a Promise, we get the
-   * resolved value here - no need for .then() or await.
    */
-  const events = useLoaderData();
+  const data = useLoaderData();
 
   /**
-   * SIMPLIFIED RETURN (Lesson 362):
-   * ===============================
+   * EXTRACTING EVENTS FROM DATA (Lesson 367):
+   * =========================================
+   * Since we now return the full Response object from our loader,
+   * useLoaderData gives us the parsed JSON: { events: [...] }
+   *
+   * We extract the events array to pass to EventsList.
+   *
    * INSTRUCTOR QUOTE:
-   * "Of course, we also get rid of these checks here therefore and just
-   * return events list like that."
-   *
-   * No more conditional rendering for:
-   * - {isLoading && <p>Loading...</p>}
-   * - {error && <p>{error}</p>}
-   * - {!isLoading && fetchedEvents && <EventsList ... />}
-   *
-   * Just return the EventsList with the data we got from the loader.
-   * Loading and error states will be handled differently (future lessons).
+   * "I just have to make sure that I do extract my events from that data
+   * object which I get here because that is actually an object with an
+   * events key, just as I extracted events from the response data in my
+   * loader a couple of seconds ago."
    */
-  return <EventsList events={events} />;
+  return <EventsList events={data.events} />;
 }
 
 export default EventsPage;
@@ -368,25 +378,120 @@ export default EventsPage;
  * - Suspense integration
  *
  * ============================================================================
+ * LESSON 367: RETURNING RESPONSE OBJECTS FROM LOADERS
+ * ============================================================================
+ *
+ * LOADERS CAN RETURN ANY DATA (Lesson 367):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "Now, one important aspect of a loader is to understand that you can return
+ * any kind of data in that loader. Here, I'm returning this events property,
+ * or the values stored in the events property of my response data, and in
+ * this case, it will actually be an array that I return. But we could return
+ * a number, some text, an object, whatever you want."
+ *
+ * RESPONSE OBJECTS (Lesson 367):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "And what you can also return is a response object."
+ *
+ * BROWSER'S BUILT-IN RESPONSE CONSTRUCTOR (Lesson 367):
+ * =====================================================
+ * INSTRUCTOR QUOTE:
+ * "Well, in the browser you can create a new response object, which I'll name
+ * res, here, by instantiating the built-in response constructor function.
+ * Now this is built into the browser. This is a modern browser feature."
+ *
+ * Example of creating a custom Response:
+ * const res = new Response(someData, { status: 200 });
+ *
+ * CRITICAL CONCEPT - LOADER CODE RUNS IN BROWSER (Lesson 367):
+ * ============================================================
+ * INSTRUCTOR QUOTE:
+ * "Now what's really important to understand at this point is that this loader
+ * code will not execute on a server. This is still all happening in the browser
+ * here, even though it's not in a component it's still in the browser. This is
+ * still client-side code. That's really important."
+ *
+ * REACT ROUTER AUTO-EXTRACTS RESPONSE DATA (Lesson 367):
+ * ======================================================
+ * INSTRUCTOR QUOTE:
+ * "Whenever you return such a response in your loaders, the React Router
+ * package will automatically extract the data from your response when using
+ * useLoaderData. So the data returned by useLoaderData will still be the
+ * response data that was part of the response you returned in your loader."
+ *
+ * WHY THIS IS USEFUL (Lesson 367):
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "This feature exists because it's quite common that in this loader function,
+ * you reach out to some backend with the browser's built-in fetch function.
+ * And this fetch function actually returns a promise that resolves to a response."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Combined with React Router's support for these response objects and its
+ * automatic data extraction, that simply means that you can, in the end, take
+ * that response, which you get here, so this response object, and return that
+ * in your loader. You don't need to manually extract the data from the response."
+ *
+ * CODE COMPARISON (Lesson 367):
+ * =============================
+ *
+ * BEFORE (manual extraction):
+ * ---------------------------
+ * export async function loader() {
+ *   const response = await fetch('http://localhost:8080/events');
+ *   if (!response.ok) { ... }
+ *   const resData = await response.json();  // Manual extraction
+ *   return resData.events;                   // Return just the events
+ * }
+ *
+ * AFTER (return Response directly):
+ * ---------------------------------
+ * export async function loader() {
+ *   const response = await fetch('http://localhost:8080/events');
+ *   if (!response.ok) { ... }
+ *   return response;  // Return the Response object directly!
+ * }
+ *
+ * BENEFITS OF RETURNING RESPONSE (Lesson 367):
+ * ============================================
+ * INSTRUCTOR QUOTE:
+ * "But with that, we can reduce our loader code and leverage this built-in
+ * support for response objects. And that's why I also wanted to mention that
+ * this special kind of return object is supported by React Router and its
+ * loader functions."
+ *
+ * 1. Less code - no need to call .json() manually
+ * 2. Cleaner loaders - just fetch and return
+ * 3. React Router handles the data extraction
+ * 4. Works seamlessly with the Fetch API
+ *
+ * IMPORTANT - EXTRACT DATA IN COMPONENT (Lesson 367):
+ * ===================================================
+ * INSTRUCTOR QUOTE:
+ * "I just have to make sure that I do extract my events from that data object
+ * which I get here because that is actually an object with an events key."
+ *
+ * Since we return the full response (which contains { events: [...] }),
+ * the component must now use: data.events instead of just events
+ *
+ * ============================================================================
  */
 
 /**
- * EXPORTED LOADER FUNCTION (Lesson 364):
- * ======================================
+ * EXPORTED LOADER FUNCTION (Lessons 364, 367):
+ * ============================================
  * This is the loader function that was previously defined inline in App.jsx.
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 364):
  * "In this case, that's the events.js file in the pages folder. And here we
  * can simply export a function which we could name loader for example."
- *
- * INSTRUCTOR QUOTE:
- * "And then it's this loader function here which should hold that code that
- * we currently have in App.js for this loader property."
  *
  * This function:
  * 1. Is executed by React Router BEFORE EventsPage renders
  * 2. Fetches events data from the backend API
- * 3. Returns the events array for useLoaderData() to access
+ * 3. Returns the Response object directly (Lesson 367)
  *
  * BENEFITS OF THIS PATTERN:
  * =========================
@@ -394,35 +499,54 @@ export default EventsPage;
  * 2. Makes App.jsx cleaner (just imports and route definitions)
  * 3. Easier to find and maintain loader code
  * 4. Each page can manage its own data requirements
+ * 5. Less code by returning Response directly (Lesson 367)
  */
 export async function loader() {
   /**
    * FETCH EVENTS FROM BACKEND:
    * ==========================
-   * Same fetch call as before, just moved from App.jsx to here.
+   * The fetch() function returns a Promise that resolves to a Response object.
+   *
+   * INSTRUCTOR QUOTE (Lesson 367):
+   * "It's quite common that in this loader function, you reach out to some
+   * backend with the browser's built-in fetch function. And this fetch function
+   * actually returns a promise that resolves to a response."
    */
   const response = await fetch('http://localhost:8080/events');
 
   /**
    * ERROR HANDLING (placeholder):
    * =============================
+   * INSTRUCTOR QUOTE (Lesson 367):
+   * "You can return your response like this, with or without checking whether
+   * it's okay, that is up to you and I'll get back to error handling in a
+   * couple of minutes."
+   *
    * Error handling will be covered in later lessons.
-   * For now, we assume the request succeeds.
    */
   if (!response.ok) {
     // Error handling will be covered in later lessons
-  } else {
-    /**
-     * RETURN EVENTS DATA:
-     * ===================
-     * The backend returns { events: [...] }, so we extract
-     * resData.events to return just the array.
-     *
-     * This is what useLoaderData() will receive in EventsPage.
-     */
-    const resData = await response.json();
-    return resData.events;
   }
+
+  /**
+   * RETURN RESPONSE DIRECTLY (Lesson 367):
+   * ======================================
+   * INSTRUCTOR QUOTE:
+   * "Instead, you can return your response like this... and useLoaderData
+   * will then automatically give us the data that's part of the response."
+   *
+   * INSTRUCTOR QUOTE:
+   * "But with that, we can reduce our loader code and leverage this built-in
+   * support for response objects."
+   *
+   * React Router will:
+   * 1. Detect that we returned a Response object
+   * 2. Automatically call .json() to extract the data
+   * 3. Provide that data via useLoaderData()
+   *
+   * The component will receive: { events: [...] }
+   */
+  return response;
 }
 
 /**
