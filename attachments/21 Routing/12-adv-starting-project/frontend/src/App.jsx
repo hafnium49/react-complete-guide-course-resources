@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-367)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-368)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):

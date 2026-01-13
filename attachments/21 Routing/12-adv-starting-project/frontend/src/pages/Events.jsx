@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-367 - Loaders, useLoaderData, Response Objects)
+ * EVENTS PAGE COMPONENT (Lessons 361-368 - Loaders, useLoaderData, Browser APIs)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -11,7 +11,8 @@
  * Lesson 364: Moved loader function from App.jsx to this file
  * Lesson 365: Explained WHEN loaders execute (on navigation start)
  * Lesson 366: Introduced useNavigation hook for loading state (see Root.jsx)
- * Lesson 367: Returning Response objects from loaders (CURRENT)
+ * Lesson 367: Returning Response objects from loaders
+ * Lesson 368: What you CAN and CANNOT do in loaders (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -477,10 +478,111 @@ export default EventsPage;
  * the component must now use: data.events instead of just events
  *
  * ============================================================================
+ * LESSON 368: WHAT YOU CAN AND CANNOT DO IN LOADERS
+ * ============================================================================
+ *
+ * KEY REMINDER (Lesson 368):
+ * ==========================
+ * INSTRUCTOR QUOTE:
+ * "This might look like backend code. It might look like it's decoupled from
+ * the React application, and it kind of is. But as mentioned before, this code
+ * that's defined in the loader, executes in the browser, not on some server."
+ *
+ * WHAT YOU CAN DO IN LOADERS (Lesson 368):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "And I'm highlighting this because that, of course, means that you can use
+ * any browser APIs in your loader functions."
+ *
+ * ✅ ALLOWED - Browser APIs:
+ * --------------------------
+ * INSTRUCTOR QUOTE:
+ * "You can, for example, access local storage here. You can access cookies here.
+ * You can do anything you can do in the other JavaScript code as well."
+ *
+ * Examples of what you CAN do in loaders:
+ *
+ * 1. localStorage:
+ *    const token = localStorage.getItem('authToken');
+ *    if (!token) { return redirect('/login'); }
+ *
+ * 2. cookies:
+ *    const cookies = document.cookie;
+ *
+ * 3. sessionStorage:
+ *    const sessionData = sessionStorage.getItem('userData');
+ *
+ * 4. fetch() / XMLHttpRequest:
+ *    const response = await fetch('/api/data');
+ *
+ * 5. URL manipulation:
+ *    const url = new URL(window.location.href);
+ *
+ * 6. navigator APIs:
+ *    const isOnline = navigator.onLine;
+ *
+ * 7. Any standard JavaScript:
+ *    Arrays, Objects, Date, Math, etc.
+ *
+ * WHAT YOU CANNOT DO IN LOADERS (Lesson 368):
+ * ===========================================
+ * INSTRUCTOR QUOTE:
+ * "What you can't do in your loader function is, for example, use React Hooks
+ * like useState. That does not work because those Hooks are only available in
+ * React components and the loader function is not a React component."
+ *
+ * ❌ NOT ALLOWED - React Hooks:
+ * -----------------------------
+ * These will NOT work in loaders:
+ *
+ * export async function loader() {
+ *   const [state, setState] = useState();  // ❌ ERROR!
+ *   const data = useContext(SomeContext);  // ❌ ERROR!
+ *   useEffect(() => {});                   // ❌ ERROR!
+ *   const ref = useRef();                  // ❌ ERROR!
+ * }
+ *
+ * WHY HOOKS DON'T WORK (Lesson 368):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "That does not work because those Hooks are only available in React components
+ * and the loader function is not a React component."
+ *
+ * Loaders are:
+ * - Regular JavaScript functions
+ * - Called by React Router, not by React
+ * - Executed before the component renders
+ * - Not part of the React component tree
+ *
+ * THE ONLY LIMITATION (Lesson 368):
+ * =================================
+ * INSTRUCTOR QUOTE:
+ * "But that's the only limitation. Any other default browser features can be
+ * used in loader functions."
+ *
+ * SUMMARY TABLE:
+ * ==============
+ * | Feature                | Can Use in Loader? |
+ * |------------------------|-------------------|
+ * | fetch()                | ✅ YES            |
+ * | localStorage           | ✅ YES            |
+ * | sessionStorage         | ✅ YES            |
+ * | document.cookie        | ✅ YES            |
+ * | window.location        | ✅ YES            |
+ * | navigator              | ✅ YES            |
+ * | URL, URLSearchParams   | ✅ YES            |
+ * | JSON, Date, Math       | ✅ YES            |
+ * | useState               | ❌ NO             |
+ * | useEffect              | ❌ NO             |
+ * | useContext             | ❌ NO             |
+ * | useRef                 | ❌ NO             |
+ * | Any React Hook         | ❌ NO             |
+ *
+ * ============================================================================
  */
 
 /**
- * EXPORTED LOADER FUNCTION (Lessons 364, 367):
+ * EXPORTED LOADER FUNCTION (Lessons 364, 367, 368):
  * ============================================
  * This is the loader function that was previously defined inline in App.jsx.
  *
