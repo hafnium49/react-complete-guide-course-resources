@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-370 - Loaders, useLoaderData, Error Handling)
+ * EVENTS PAGE COMPONENT (Lessons 361-371 - Loaders, useLoaderData, Error Handling)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -14,7 +14,8 @@
  * Lesson 367: Returning Response objects from loaders
  * Lesson 368: What you CAN and CANNOT do in loaders
  * Lesson 369: Error handling with loaders - throwing Error objects
- * Lesson 370: Throwing Response objects for better error handling (CURRENT)
+ * Lesson 370: Throwing Response objects for better error handling
+ * Lesson 371: The json() utility function for simpler responses (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -148,7 +149,34 @@
  *
  * ============================================================================
  */
-import { useLoaderData } from 'react-router-dom';
+/**
+ * ============================================================================
+ * IMPORTS (Lessons 362, 371)
+ * ============================================================================
+ *
+ * useLoaderData (Lesson 362):
+ * ===========================
+ * Hook to access data returned by the route's loader function.
+ *
+ * json (Lesson 371):
+ * ==================
+ * INSTRUCTOR QUOTE:
+ * "Now, constructing responses manually like this is possible, but a bit
+ * annoying. That's why React router gives you a little helper, utility."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And json is a function that can be imported from react-router-dom."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now json is a function that creates a response object that includes
+ * data in the json format."
+ *
+ * The json() function simplifies creating Response objects:
+ * - Automatically converts objects to JSON (no JSON.stringify needed)
+ * - Automatically parses JSON when reading (no JSON.parse needed)
+ * - Cleaner, more readable code
+ */
+import { useLoaderData, json } from 'react-router-dom';
 
 import EventsList from '../components/EventsList';
 
@@ -679,7 +707,7 @@ export async function loader() {
   if (!response.ok) {
     /**
      * ============================================================================
-     * THROWING A RESPONSE (Lesson 370)
+     * THROWING A RESPONSE WITH json() HELPER (Lessons 370-371)
      * ============================================================================
      *
      * WHY THROW A RESPONSE INSTEAD OF AN ERROR? (Lesson 370):
@@ -693,55 +721,86 @@ export async function loader() {
      * because it does allow you to include this extra status property, this extra
      * status field, which helps with building a generic error handling component."
      *
-     * BENEFITS OF THROWING RESPONSE:
+     * ============================================================================
+     * THE json() UTILITY FUNCTION (Lesson 371)
+     * ============================================================================
+     *
+     * WHY USE json() INSTEAD OF new Response()? (Lesson 371):
+     * =======================================================
+     * INSTRUCTOR QUOTE:
+     * "Now when using React router, you will from time to time construct responses
+     * as we're doing it here, especially when it comes to throwing errors. For all
+     * the reasons mentioned in the previous lectures. Now, constructing responses
+     * manually like this is possible, but a bit annoying."
+     *
+     * INSTRUCTOR QUOTE:
+     * "That's why React router gives you a little helper, utility."
+     *
+     * HOW json() WORKS (Lesson 371):
      * ==============================
-     * 1. Includes a status code (404, 500, etc.) for differentiated handling
-     * 2. Can include structured data (message, details, etc.)
-     * 3. Enables generic error handling in ErrorPage component
-     * 4. Works with useRouteError hook's error.status property
-     *
-     * CREATING THE RESPONSE (Lesson 370):
-     * ===================================
      * INSTRUCTOR QUOTE:
-     * "And then we can include some data into that response. For this, we have
-     * to call JSON stringify if we want to pass an object to the response."
+     * "Instead of creating your response like this and returning it like this,
+     * you can return the result of calling json, written like this."
      *
      * INSTRUCTOR QUOTE:
-     * "And then we could add a message prop and say could not fetch events."
+     * "Now json is a function that creates a response object that includes data
+     * in the json format."
      *
-     * SETTING THE STATUS CODE (Lesson 370):
-     * =====================================
+     * ARGUMENTS (Lesson 371):
+     * =======================
      * INSTRUCTOR QUOTE:
-     * "Now we can add this second argument to the response constructor and set
-     * the status, for example, to 500 to indicate that something went wrong on
-     * the back end."
+     * "To this json function, you simply pass your data that should be included
+     * in the response, in my case, my object, and you don't need to convert it
+     * to json manually. Instead, that will be done for you."
      *
      * INSTRUCTOR QUOTE:
-     * "Now I'm doing this because you can actually get hold of the data that's
-     * being thrown as an error inside of the component that's being rendered
-     * as an error element."
+     * "And you can pass a second argument where you can set that extra response
+     * metadata like this status. And here I set this status to 500 again."
      *
-     * Response constructor:
-     * new Response(body, { status: statusCode })
-     *
-     * - body: Must be a string (use JSON.stringify for objects)
-     * - status: HTTP status code (500 = server error, 404 = not found, etc.)
-     *
-     * COMPARISON (Lessons 369 vs 370):
+     * BENEFITS OF json() (Lesson 371):
      * ================================
-     * LESSON 369 (throw Error):
-     * throw new Error('Could not fetch events.');
-     * - Simple, but no status code
-     * - Limited error differentiation in ErrorPage
+     * INSTRUCTOR QUOTE:
+     * "Now with this json function, you don't just have to type less code here,
+     * but in the place where you use that response data you also don't have to
+     * parse the json format manually. Instead, you can simplify the code to this
+     * because the parsing will now be done by React router for you."
      *
-     * LESSON 370 (throw Response):
-     * throw new Response(JSON.stringify({ message: '...' }), { status: 500 });
-     * - Includes status code for error type differentiation
-     * - Structured data accessible via error.data in ErrorPage
-     * - Better for generic error handling
+     * INSTRUCTOR QUOTE:
+     * "And that of course is a great simplification and hence it is quite common
+     * to use this json function for building responses with less effort."
+     *
+     * CODE COMPARISON (Lessons 370 vs 371):
+     * =====================================
+     *
+     * LESSON 370 (manual Response):
+     * -----------------------------
+     * throw new Response(
+     *   JSON.stringify({ message: 'Could not fetch events.' }),
+     *   { status: 500 }
+     * );
+     * - Must use JSON.stringify() when creating
+     * - Must use JSON.parse() when reading in ErrorPage
+     * - More verbose
+     *
+     * LESSON 371 (json() helper):
+     * ---------------------------
+     * throw json(
+     *   { message: 'Could not fetch events.' },
+     *   { status: 500 }
+     * );
+     * - No JSON.stringify() needed (automatic)
+     * - No JSON.parse() needed in ErrorPage (automatic)
+     * - Cleaner, less code
+     *
+     * | Aspect            | new Response()           | json()               |
+     * |-------------------|--------------------------|----------------------|
+     * | Stringify data    | Manual (JSON.stringify)  | Automatic            |
+     * | Parse data        | Manual (JSON.parse)      | Automatic            |
+     * | Code verbosity    | More verbose             | Concise              |
+     * | Error prone       | Easy to forget stringify | Less error prone     |
      */
-    throw new Response(
-      JSON.stringify({ message: 'Could not fetch events.' }),
+    throw json(
+      { message: 'Could not fetch events.' },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ERROR PAGE COMPONENT (Lessons 369-370 - Error Handling with useRouteError)
+ * ERROR PAGE COMPONENT (Lessons 369-371 - Error Handling with useRouteError)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -8,6 +8,7 @@
  * Lesson 369: Basic error page with simple "An error occurred!" message
  * Lesson 370: Enhanced with useRouteError hook, PageContent styling, and
  *             differentiated error handling (404 vs 500 vs other errors)
+ * Lesson 371: Simplified data access thanks to json() helper (no JSON.parse needed)
  *
  * ============================================================================
  * LESSON 370: IMPROVING THE ERROR PAGE
@@ -87,23 +88,37 @@
  * message I defined here."
  *
  * ============================================================================
- * ACCESSING ERROR DATA (Lesson 370)
+ * ACCESSING ERROR DATA (Lessons 370-371)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
  * "Now error.data gives us access to the data that's included in this error
  * response that was thrown. So, to this object here, in my case."
  *
- * IMPORTANT - JSON PARSING (Lesson 370):
- * ======================================
+ * JSON PARSING - BEFORE AND AFTER json() (Lessons 370-371):
+ * =========================================================
+ *
+ * LESSON 370 (with new Response + JSON.stringify):
+ * ------------------------------------------------
  * INSTRUCTOR QUOTE:
  * "This data object here, actually, first of all must be converted back to
  * an object because otherwise it's still JSON, in JSON format. So we must
  * use JSON Parse here, and then access message on the parse data."
  *
- * Example:
+ * Old approach (manual parsing required):
  * const errorData = JSON.parse(error.data);
  * const message = errorData.message;
+ *
+ * LESSON 371 (with json() helper):
+ * --------------------------------
+ * INSTRUCTOR QUOTE:
+ * "Now with this json function, you don't just have to type less code here,
+ * but in the place where you use that response data you also don't have to
+ * parse the json format manually. Instead, you can simplify the code to this
+ * because the parsing will now be done by React router for you."
+ *
+ * New approach (automatic parsing):
+ * const message = error.data.message;  // No JSON.parse needed!
  *
  * ============================================================================
  * ADDING MAIN NAVIGATION (Lesson 370)
@@ -205,21 +220,47 @@ function ErrorPage() {
    */
   if (error.status === 500) {
     /**
-     * PARSE THE ERROR DATA (Lesson 370):
-     * ==================================
+     * ============================================================================
+     * ACCESSING ERROR DATA (Lessons 370-371)
+     * ============================================================================
+     *
+     * LESSON 370 (manual parsing - BEFORE json() helper):
+     * ====================================================
      * INSTRUCTOR QUOTE:
      * "This data object here, actually, first of all must be converted back
      * to an object because otherwise it's still JSON, in JSON format. So we
      * must use JSON Parse here, and then access message on the parse data."
      *
-     * When we throw a Response in the loader, we pass JSON.stringify({ message: ... })
-     * So we need to JSON.parse() it here to get the actual object back.
+     * Old code (with new Response + JSON.stringify):
+     * message = JSON.parse(error.data).message;
+     *
+     * LESSON 371 (automatic parsing - WITH json() helper):
+     * =====================================================
+     * INSTRUCTOR QUOTE:
+     * "Now with this json function, you don't just have to type less code here,
+     * but in the place where you use that response data you also don't have to
+     * parse the json format manually. Instead, you can simplify the code to this
+     * because the parsing will now be done by React router for you."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that of course is a great simplification and hence it is quite common
+     * to use this json function for building responses with less effort."
+     *
+     * New code (with json() helper - parsing done automatically):
+     * message = error.data.message;
      *
      * INSTRUCTOR QUOTE:
      * "And that object has a message and we can assume that most objects that
      * are included in error responses will have message properties."
+     *
+     * WHY THIS WORKS:
+     * ===============
+     * When we use json() in the loader instead of new Response(JSON.stringify(...)):
+     * - json() automatically stringifies on the throwing side
+     * - React Router automatically parses on the receiving side
+     * - error.data is already a parsed JavaScript object, not a JSON string
      */
-    message = JSON.parse(error.data).message;
+    message = error.data.message;
   }
 
   /**
