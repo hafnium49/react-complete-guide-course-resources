@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * NEW EVENT PAGE COMPONENT (Lessons 360, 374, 375, 378 - Action + Validation)
+ * NEW EVENT PAGE COMPONENT (Lessons 360, 374, 375, 378, 379 - Shared Action)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -8,7 +8,8 @@
  * Lesson 360: Basic page with placeholder content (Task 1 solution)
  * Lesson 374: Added EventForm and introduced action concept
  * Lesson 375: Implemented action function with redirect
- * Lesson 378: Added validation error handling (return instead of throw) (CURRENT)
+ * Lesson 378: Added validation error handling (return instead of throw)
+ * Lesson 379: MOVED action to EventForm.jsx for reuse (CURRENT)
  *
  * ============================================================================
  * LESSON 375: IMPLEMENTING THE ACTION FUNCTION
@@ -207,13 +208,40 @@
  *
  * ============================================================================
  */
-import { redirect } from 'react-router-dom';
-
+/**
+ * ============================================================================
+ * LESSON 379: ACTION MOVED TO EventForm.jsx
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now before we're done with this module, I actually wanna reuse this action
+ * here that currently lives in new event for editing events as well."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's why I will now move this action function to the event form
+ * component so that we can use it both for creating and for editing events."
+ *
+ * WHAT CHANGED IN LESSON 379:
+ * ===========================
+ * BEFORE: This file had its own action function
+ * AFTER: Action moved to EventForm.jsx for reuse
+ *
+ * WHY MOVE THE ACTION? (Lesson 379):
+ * ==================================
+ * INSTRUCTOR QUOTE:
+ * "Because EventForm is used both by the new event page and by the edit event
+ * page. And therefore, we can register the same action on both routes."
+ *
+ * The redirect import was removed because the action (which uses redirect)
+ * is now in EventForm.jsx.
+ *
+ * ============================================================================
+ */
 import EventForm from '../components/EventForm';
 
 /**
- * NEW EVENT PAGE COMPONENT (Lessons 374-375):
- * ===========================================
+ * NEW EVENT PAGE COMPONENT (Lessons 374-375, 379):
+ * ================================================
  * Form page for creating a new event.
  *
  * INSTRUCTOR QUOTE:
@@ -227,362 +255,84 @@ import EventForm from '../components/EventForm';
  *
  * DIFFERENCE FROM EditEventPage:
  * ==============================
- * - EditEventPage: <EventForm event={data.event} /> (pre-populated)
- * - NewEventPage: <EventForm /> (empty fields)
+ * - EditEventPage: <EventForm method="patch" event={data.event} /> (pre-populated, PATCH)
+ * - NewEventPage: <EventForm method="post" /> (empty fields, POST)
+ *
+ * ============================================================================
+ * LESSON 379: PASSING method PROP
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In NewEvent, I could set method to post and in EditEvent, I could set it
+ * to patch."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can use post for creating new events and patch for editing an event."
+ *
+ * HOW method="post" WORKS:
+ * ========================
+ * 1. NewEventPage passes method="post" to EventForm
+ * 2. EventForm forwards it: <Form method="post">
+ * 3. When submitted, React Router creates Request with method='POST'
+ * 4. Action checks request.method === 'POST'
+ * 5. Action sends POST to http://localhost:8080/events (creates new event)
  */
 function NewEventPage() {
-  return <EventForm />;
+  return <EventForm method="post" />;
 }
 
 export default NewEventPage;
 
 /**
  * ============================================================================
- * LESSON 375: ACTION FUNCTION FOR NEW EVENT
+ * LESSON 379: ACTION MOVED TO EventForm.jsx
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So here we can export a function called action. The name is up to you again,
- * we can add the async keyword here if we want to use async await in here."
+ * "I'll grab this code here where I define and export my action in NewEvent JS.
+ * And I'm adding it to EventForm JS."
  *
- * INSTRUCTOR QUOTE:
- * "And now in this action function we can send requests to the backend."
- *
- * ============================================================================
- * HOW THIS ACTION GETS TRIGGERED
- * ============================================================================
- *
- * 1. User fills out the form on NewEventPage
- * 2. User clicks "Save" button (submit)
- * 3. <Form method="post"> intercepts the submission
- * 4. React Router creates a Request object with form data
- * 5. React Router calls this action function
- * 6. This function receives { request, params }
- * 7. We extract data, send to backend, and redirect
+ * The action function that was previously defined here has been moved to
+ * EventForm.jsx for reuse between NewEventPage and EditEventPage.
  *
  * ============================================================================
- * REGISTERING THE ACTION (Lesson 375)
+ * WHERE THE ACTION IS NOW (Lesson 379)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "With that action defined, we can go back to app JS and there we can now
- * import this action from new event. Here, action as new event action."
+ * "And that's why I will now move this action function to the event form
+ * component so that we can use it both for creating and for editing events."
+ *
+ * The action is now exported from:
+ * /src/components/EventForm.jsx
+ *
+ * And imported in App.jsx as:
+ * import { action as manipulateEventAction } from './components/EventForm';
  *
  * INSTRUCTOR QUOTE:
- * "We can import this and then use this new event action down here as a value
- * for this action property on this route definition."
- *
- * In App.jsx:
- * import NewEventPage, { action as newEventAction } from './pages/NewEvent';
- * ...
- * { path: 'new', element: <NewEventPage />, action: newEventAction }
+ * "Import my action as manipulateEventAction... from components EventForm."
  *
  * ============================================================================
- */
-export async function action({ request, params }) {
-  /**
-   * EXTRACTING FORM DATA (Lesson 375):
-   * ==================================
-   * INSTRUCTOR QUOTE:
-   * "To get hold of that forum data, we have to call the special forum data
-   * method on the request object and awaited. That will give us a data object
-   * that includes this form data."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And on this data object we can call the get method to get access to the
-   * different input field values that were submitted."
-   *
-   * The request object comes from React Router's <Form> component.
-   * request.formData() returns a FormData object with all form values.
-   */
-  const data = await request.formData();
-
-  /**
-   * BUILDING THE EVENT DATA OBJECT (Lesson 375):
-   * ============================================
-   * INSTRUCTOR QUOTE:
-   * "So we could, for example, get the title like this the entered title could
-   * be extracted like this. And of course that can be repeated for all the fields."
-   *
-   * INSTRUCTOR QUOTE:
-   * "I will simply create an event data object here where I have my title which
-   * is set equal to the extracted title like this where I then have my image
-   * like this, where I then also have the date that was picked and submitted
-   * like this and where I get my description like this."
-   *
-   * INSTRUCTOR QUOTE:
-   * "To get we pass a string with the different identifiers of our input fields.
-   * So that would be the values we chose as names for the input fields like
-   * title or image in my case."
-   *
-   * The .get() method takes the 'name' attribute of the input field:
-   * - <input name="title" />    → data.get('title')
-   * - <input name="image" />    → data.get('image')
-   * - <input name="date" />     → data.get('date')
-   * - <textarea name="description" /> → data.get('description')
-   */
-  const eventData = {
-    title: data.get('title'),
-    image: data.get('image'),
-    date: data.get('date'),
-    description: data.get('description'),
-  };
-
-  /**
-   * SENDING DATA TO THE BACKEND (Lesson 375):
-   * =========================================
-   * INSTRUCTOR QUOTE:
-   * "But very often, you might wanna send a request with the good old fetch
-   * function again. And here indeed, I wanna send a request to local host 8080.
-   * So to my dummy backend API which listens on port 8080 and their slash events."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And I actually wanna send a post request which we can do like that, and
-   * add some data to the request."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And here the data I wanna send is that data that was submitted with the form."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now with that, it's this event data that should be sent to the backend,
-   * and we have to convert it to JSON here by wrapping it with JSON stringify."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And I'll also add some extra headers where I set the content type to
-   * application JSON so that the data is handled and extracted correctly on
-   * the backend."
-   *
-   * REMEMBER: This is client-side code!
-   * ===================================
-   * INSTRUCTOR QUOTE:
-   * "Now what's again important to understand and keep in mind is that we're
-   * still on the client side here. Just as with the loader, this is code that
-   * executes in the browser, this is not backend code."
-   */
-  const response = await fetch('http://localhost:8080/events', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(eventData),
-  });
-
-  /**
-   * ============================================================================
-   * LESSON 378: HANDLING VALIDATION ERRORS (STATUS 422)
-   * ============================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "I wanna leverage the fact that on the back-end I'm sending back an error
-   * response with status code 422 if I found some validation errors there."
-   *
-   * INSTRUCTOR QUOTE:
-   * "On the front-end, in the new event page component file here, for example,
-   * in this action where I do submit to the data, I wanna react to such
-   * potential back-end validation errors."
-   *
-   * WHY RETURN INSTEAD OF THROW? (Lesson 378):
-   * ==========================================
-   * INSTRUCTOR QUOTE:
-   * "And I wanna react by not showing my default error page so I don't want to
-   * throw an error response, but instead I wanna show such validation errors
-   * here right above this form because that makes more sense than showing an
-   * error page because that would discard all the values entered by the user
-   * and not really offer a good user experience."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Therefore, I wanna stay on this page, but I wanna output some data. And
-   * you can easily do this in actions by returning the data you wanna output
-   * above the forum or anywhere in your routes."
-   *
-   * | Action Response  | Behavior                                          |
-   * |------------------|---------------------------------------------------|
-   * | throw response   | Shows ErrorPage, discards user input              |
-   * | return response  | Stays on page, data available via useActionData   |
-   *
-   * BACKEND VALIDATION STRUCTURE:
-   * =============================
-   * When validation fails, the backend returns status 422 with:
-   * {
-   *   message: "General validation error message",
-   *   errors: {
-   *     title: "Title validation error message",
-   *     image: "Image validation error message",
-   *     date: "Date validation error message",
-   *     description: "Description validation error message"
-   *   }
-   * }
-   */
-  if (response.status === 422) {
-    /**
-     * RETURN RESPONSE FOR VALIDATION ERRORS (Lesson 378):
-     * ===================================================
-     * INSTRUCTOR QUOTE:
-     * "For that, I will simply check if my response status code is equal to 422,
-     * which is that validation status code I'm setting on the back-end in case
-     * of validation errors. And if I have that status code, then I want to
-     * return my response."
-     *
-     * INSTRUCTOR QUOTE:
-     * "So I'm not returning and redirecting, and I'm not throwing an error
-     * response, but I'm returning the response I got back from the back-end
-     * if I have this 422 status code on the response."
-     *
-     * KEY DIFFERENCE:
-     * ===============
-     * - throw → Shows ErrorPage (bad UX for validation errors)
-     * - return → Stays on form page, data accessible via useActionData
-     *
-     * Just like loaders can return responses that are automatically parsed
-     * and made available via useLoaderData, actions can return responses
-     * that are available via useActionData.
-     */
-    return response;
-  }
-
-  /**
-   * ERROR HANDLING FOR OTHER ERRORS (Lesson 375):
-   * =============================================
-   * INSTRUCTOR QUOTE:
-   * "We can, for example, again, check if it's maybe not okay and in that case
-   * throw an error response with that built-in JSON function which we can get
-   * from react-router-dom."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And that would then display our error page if we throw an error response
-   * like this. So this works for actions just as it worked for loaders."
-   *
-   * INSTRUCTOR QUOTE:
-   * "So here we could then have a message where we say could not save event
-   * and set the status code maybe to 500 again."
-   *
-   * For non-422 errors (500, network errors, etc.), we still throw
-   * to show the ErrorPage because these are unexpected server errors,
-   * not user input validation errors.
-   */
-  if (!response.ok) {
-    throw Response.json({ message: 'Could not save event.' }, { status: 500 });
-  }
-
-  /**
-   * REDIRECTING AFTER SUCCESS (Lesson 375):
-   * ======================================
-   * INSTRUCTOR QUOTE:
-   * "And typically when submitting a forum what you want to happen is that you
-   * navigate the user away to a different page after successfully submitting
-   * the form."
-   *
-   * INSTRUCTOR QUOTE:
-   * "To do that, we can go back to our action in new event JS and then return
-   * the result of calling Redirect."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Redirect, like JSON is a special function you can import from react-router-dom
-   * and like JSON, Redirect creates a response object. However, it's a special
-   * response object that simply redirects the user to a different page."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now, the heavy lifting is handled behind the scenes by react-router. Here
-   * you just specify the path to which you wanna redirect the user and react-router
-   * will take care about the rest."
-   *
-   * WHY NOT useNavigate()?
-   * ======================
-   * - We're in an action function, not a component
-   * - Hooks can only be used in components
-   * - redirect() is the action equivalent of useNavigate()
-   *
-   * | Context      | Navigation method    |
-   * |--------------|---------------------|
-   * | Component    | useNavigate()       |
-   * | Action       | redirect()          |
-   * | Loader       | redirect()          |
-   */
-  return redirect('/events');
-}
-
-/**
- * ============================================================================
- * TESTING THE ACTION (Lesson 375)
+ * HOW THIS PAGE USES THE SHARED ACTION (Lesson 379)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "With that, if we save everything we should be able to create a new event here.
- * For that I'm also picking some image here and enter this image address then
- * pick a date and add a description."
+ * "We use the same action on different routes but this action is written such
+ * that it will do slightly different things depending on the method it gets."
  *
- * INSTRUCTOR QUOTE:
- * "If you now click save, it looks like nothing happened. But actually, if you
- * click on events you should see that your event was added."
+ * 1. This page passes method="post" to EventForm
+ * 2. EventForm forwards it to <Form method="post">
+ * 3. When submitted, request.method will be 'POST'
+ * 4. The shared action in EventForm.jsx checks for method
+ * 5. Since method is 'POST', it sends to http://localhost:8080/events (create)
  *
- * BEFORE ADDING redirect():
- * ========================
- * - Form submits successfully
- * - Event is created in backend
- * - But user stays on the same page (confusing UX)
+ * PREVIOUS LESSONS REFERENCE:
+ * ===========================
+ * For historical context about how the action was originally implemented:
+ * - Lesson 375: Action basics, redirect(), error handling
+ * - Lesson 378: Validation error handling (return vs throw for 422)
  *
- * INSTRUCTOR QUOTE:
- * "But why did nothing happen after clicking save? Well, because we didn't
- * specify what should happen thereafter."
- *
- * AFTER ADDING redirect():
- * ========================
- * - Form submits successfully
- * - Event is created in backend
- * - User is automatically redirected to /events
- * - New event appears in the list
- *
- * INSTRUCTOR QUOTE:
- * "So for example, here, if I add another event a never amazing event, now I'm
- * redirected. And that's how you can handle form submissions with help of
- * actions like this."
- *
- * ============================================================================
- * COMPLETE FLOW SUMMARY
- * ============================================================================
- *
- * 1. User visits /events/new
- * 2. NewEventPage renders with empty EventForm
- * 3. User fills in title, image, date, description
- * 4. User clicks "Save" (submit button)
- * 5. <Form method="post"> prevents browser default
- * 6. <Form> creates Request object with form data
- * 7. React Router calls action({ request, params })
- * 8. action() extracts data via request.formData()
- * 9. action() sends POST to http://localhost:8080/events
- * 10. If 422 validation error → return response → useActionData receives it
- * 11. If other error → throw json() → ErrorPage displays
- * 12. If success → return redirect('/events')
- * 13. User sees events list with new event included
- *
- * ============================================================================
- * LESSON 378: ACCESSING RETURNED ACTION DATA
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now what does returning a response in an action due though? Well, just as
- * we can return responses in loaders and then use the response data in our
- * components and pages, we can also use returned action data in our pages
- * and components."
- *
- * INSTRUCTOR QUOTE:
- * "It's just less common but it's very common for such validation error
- * responses where you don't wanna show an error page."
- *
- * HOW TO ACCESS RETURNED DATA:
- * ============================
- * In the EventForm component (or any component rendered by this route):
- *
- * import { useActionData } from 'react-router-dom';
- *
- * function EventForm() {
- *   const data = useActionData();  // Contains validation errors if any
- *   // data will be the parsed JSON from the 422 response
- * }
- *
- * INSTRUCTOR QUOTE:
- * "And if I return a response in an action this response is automatically
- * parsed by React router for me, just as it is the case for loaders."
+ * See EventForm.jsx for the current action implementation with full comments.
  *
  * ============================================================================
  */

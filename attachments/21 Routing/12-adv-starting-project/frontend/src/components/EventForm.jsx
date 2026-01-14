@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENT FORM COMPONENT (Lessons 358, 373, 375, 377, 378 - Form + Validation)
+ * EVENT FORM COMPONENT (Lessons 358, 373, 375, 377, 378, 379 - Form + Action)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -9,7 +9,8 @@
  * Lesson 373: Added defaultValue props for prepopulation in edit mode
  * Lesson 375: Replaced <form> with <Form> component for actions
  * Lesson 377: Added useNavigation for submission state feedback
- * Lesson 378: Added useActionData for validation error display (CURRENT)
+ * Lesson 378: Added useActionData for validation error display
+ * Lesson 379: Added shared action function for create AND edit (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -306,8 +307,93 @@
  * }
  *
  * ============================================================================
+ * LESSON 379: REUSABLE ACTION FUNCTION FOR CREATE AND EDIT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now before we're done with this module, I actually wanna reuse this action
+ * here that currently lives in new event for editing events as well."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's why I will now move this action function to the event form
+ * component so that we can use it both for creating and for editing events."
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll grab this code here where I define and export my action in NewEvent JS.
+ * And I'm adding it to EventForm JS."
+ *
+ * WHY MOVE THE ACTION TO EventForm? (Lesson 379):
+ * ===============================================
+ * INSTRUCTOR QUOTE:
+ * "Because EventForm is used both by the new event page and by the edit event
+ * page. And therefore, we can register the same action on both routes."
+ *
+ * DYNAMIC ACTION BEHAVIOR (Lesson 379):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "We can use post for creating new events and patch for editing an event."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And we can actually make this action dynamic so that it sends different
+ * requests depending on the request method it receives."
+ *
+ * HOW THE method PROP FLOWS (Lesson 379):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "In NewEvent, I could set method to post and in EditEvent, I could set it
+ * to patch. And in the Form here in EventForm, I'm forwarding the method."
+ *
+ * 1. NewEvent.jsx: <EventForm method="post" />
+ * 2. EditEvent.jsx: <EventForm method="patch" />
+ * 3. EventForm: <Form method={method}> - forwards the prop
+ * 4. Action receives request with that method
+ *
+ * CHECKING request.method (Lesson 379):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "I'm checking for patch, all lowercase here, but the request will include
+ * it in all caps. So I wasn't extracting my parameters... But if I check for
+ * PATCH all caps here, this will work."
+ *
+ * IMPORTANT: Always use UPPERCASE when checking request.method:
+ * - request.method === 'POST'  (not 'post')
+ * - request.method === 'PATCH' (not 'patch')
+ * - request.method === 'DELETE' (not 'delete')
+ *
+ * URL LOGIC (Lesson 379):
+ * =======================
+ * INSTRUCTOR QUOTE:
+ * "The URL should differ though, because for editing an event we must target
+ * events/eventId. And for creating, we just target events."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So we can check this in the action and if method is equal to patch, my URL
+ * is basically this URL plus eventId."
+ *
+ * | Method | URL                                  | Operation |
+ * |--------|--------------------------------------|-----------|
+ * | POST   | http://localhost:8080/events         | Create    |
+ * | PATCH  | http://localhost:8080/events/:id     | Edit      |
+ *
+ * EXTRACTING params IN ACTIONS (Lesson 379):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "For editing an event we must target events/eventId, and we can get access
+ * to that eventId in the action just as we could get access to it in the loader."
+ *
+ * Like loaders, actions receive { request, params } from React Router:
+ * - request: Contains form data and method
+ * - params: Contains route parameters (e.g., eventId)
+ *
+ * ============================================================================
  */
-import { useNavigate, useNavigation, Form, useActionData } from 'react-router-dom';
+import {
+  useNavigate,
+  useNavigation,
+  Form,
+  useActionData,
+  redirect,
+} from 'react-router-dom';
 
 import classes from './EventForm.module.css';
 
@@ -500,8 +586,28 @@ function EventForm({ method, event }) {
      * 4. React Router finds the action for this route
      * 5. Action receives the Request via { request } parameter
      * 6. Action extracts data via request.formData()
+     *
+     * ================================================================
+     * LESSON 379: DYNAMIC method PROP
+     * ================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "In NewEvent, I could set method to post and in EditEvent, I could
+     * set it to patch. And in the Form here in EventForm, I'm forwarding
+     * the method."
+     *
+     * HOW THE method FLOWS:
+     * ====================
+     * 1. Parent passes method prop: <EventForm method="post" />
+     * 2. EventForm receives method via destructuring: function EventForm({ method, event })
+     * 3. EventForm forwards to <Form>: <Form method={method}>
+     * 4. <Form> creates request with that HTTP method
+     * 5. Action receives request.method (in UPPERCASE: 'POST' or 'PATCH')
+     *
+     * INSTRUCTOR QUOTE:
+     * "We can use post for creating new events and patch for editing an event."
      */
-    <Form method="post" className={classes.form}>
+    <Form method={method} className={classes.form}>
       {/**
        * ================================================================
        * LESSON 378: VALIDATION ERROR DISPLAY
@@ -729,3 +835,225 @@ function EventForm({ method, event }) {
 }
 
 export default EventForm;
+
+/**
+ * ============================================================================
+ * LESSON 379: SHARED ACTION FUNCTION FOR CREATE AND EDIT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll grab this code here where I define and export my action in NewEvent JS.
+ * And I'm adding it to EventForm JS."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's why I will now move this action function to the event form
+ * component so that we can use it both for creating and for editing events."
+ *
+ * WHY THIS ACTION IS HERE (Lesson 379):
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "Because EventForm is used both by the new event page and by the edit event
+ * page. And therefore, we can register the same action on both routes."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We use the same action on different routes but this action is written such
+ * that it will do slightly different things depending on the method it gets."
+ *
+ * ============================================================================
+ * HOW THIS ACTION GETS REGISTERED (Lesson 379)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Import my action as manipulateEventAction... from components EventForm."
+ *
+ * In App.jsx:
+ * import { action as manipulateEventAction } from './components/EventForm';
+ *
+ * Then add to routes:
+ * { path: 'new', element: <NewEventPage />, action: manipulateEventAction },
+ * {
+ *   path: ':eventId',
+ *   children: [
+ *     { path: 'edit', element: <EditEventPage />, action: manipulateEventAction },
+ *   ]
+ * }
+ *
+ * ============================================================================
+ */
+export async function action({ request, params }) {
+  /**
+   * EXTRACTING FORM DATA (Same as before):
+   * ======================================
+   * This part is unchanged from NewEvent.jsx - we still extract
+   * the form data using request.formData().
+   */
+  const data = await request.formData();
+
+  /**
+   * BUILDING THE EVENT DATA OBJECT:
+   * ================================
+   * Same structure as before - matches what the backend expects.
+   */
+  const eventData = {
+    title: data.get('title'),
+    image: data.get('image'),
+    date: data.get('date'),
+    description: data.get('description'),
+  };
+
+  /**
+   * ============================================================================
+   * LESSON 379: DETERMINING THE HTTP METHOD
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And we can actually make this action dynamic so that it sends different
+   * requests depending on the request method it receives."
+   *
+   * INSTRUCTOR QUOTE:
+   * "I'm checking for patch, all lowercase here, but the request will include
+   * it in all caps. So I wasn't extracting my parameters... But if I check for
+   * PATCH all caps here, this will work."
+   *
+   * CRITICAL: request.method IS ALWAYS UPPERCASE!
+   * ==============================================
+   * Even though we write <Form method="patch"> (lowercase in JSX),
+   * the Request object converts it to uppercase internally.
+   *
+   * | JSX method prop | request.method value |
+   * |-----------------|---------------------|
+   * | method="post"   | 'POST'              |
+   * | method="patch"  | 'PATCH'             |
+   * | method="delete" | 'DELETE'            |
+   *
+   * This is standard HTTP behavior - method names are case-insensitive
+   * in the spec but conventionally uppercase.
+   */
+  const method = request.method;
+
+  /**
+   * ============================================================================
+   * LESSON 379: BUILDING THE DYNAMIC URL
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "The URL should differ though, because for editing an event we must target
+   * events/eventId. And for creating, we just target events."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So we can check this in the action and if method is equal to patch, my URL
+   * is basically this URL plus eventId."
+   *
+   * URL LOGIC:
+   * ==========
+   * | Method | URL                              | Backend Endpoint      |
+   * |--------|----------------------------------|-----------------------|
+   * | POST   | http://localhost:8080/events     | Create new event      |
+   * | PATCH  | http://localhost:8080/events/e1  | Update existing event |
+   *
+   * ACCESSING params.eventId (Lesson 379):
+   * =====================================
+   * INSTRUCTOR QUOTE:
+   * "For editing an event we must target events/eventId, and we can get access
+   * to that eventId in the action just as we could get access to it in the loader."
+   *
+   * The route definition has path: ':eventId', so params.eventId contains
+   * the dynamic segment from the URL (e.g., "e1" from /events/e1/edit).
+   */
+  let url = 'http://localhost:8080/events';
+
+  if (method === 'PATCH') {
+    /**
+     * APPENDING eventId FOR EDIT REQUESTS (Lesson 379):
+     * =================================================
+     * INSTRUCTOR QUOTE:
+     * "If method is equal to patch... my URL is basically this URL plus eventId."
+     *
+     * For PATCH requests, we append the eventId to target a specific event.
+     * params.eventId comes from the route parameter :eventId.
+     */
+    url = 'http://localhost:8080/events/' + params.eventId;
+  }
+
+  /**
+   * SENDING THE REQUEST (Lesson 379):
+   * =================================
+   * INSTRUCTOR QUOTE:
+   * "And we can actually make this action dynamic so that it sends different
+   * requests depending on the request method it receives."
+   *
+   * The fetch uses the dynamic method variable, so:
+   * - From NewEventPage: method='POST', url='http://localhost:8080/events'
+   * - From EditEventPage: method='PATCH', url='http://localhost:8080/events/{eventId}'
+   */
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(eventData),
+  });
+
+  /**
+   * VALIDATION ERROR HANDLING (From Lesson 378):
+   * ============================================
+   * Return (not throw) for 422 validation errors so the form
+   * stays on the page and can display error messages.
+   */
+  if (response.status === 422) {
+    return response;
+  }
+
+  /**
+   * OTHER ERROR HANDLING (From Lesson 375):
+   * ======================================
+   * Throw for other errors to display the ErrorPage.
+   */
+  if (!response.ok) {
+    throw Response.json({ message: 'Could not save event.' }, { status: 500 });
+  }
+
+  /**
+   * REDIRECT ON SUCCESS (From Lesson 375):
+   * =====================================
+   * After successful create or edit, redirect to the events list.
+   */
+  return redirect('/events');
+}
+
+/**
+ * ============================================================================
+ * LESSON 379: COMPLETE FLOW SUMMARY
+ * ============================================================================
+ *
+ * CREATING A NEW EVENT (POST):
+ * ============================
+ * 1. User visits /events/new
+ * 2. NewEventPage renders: <EventForm method="post" />
+ * 3. EventForm renders: <Form method="post">
+ * 4. User fills form and clicks Save
+ * 5. React Router calls action({ request, params })
+ * 6. request.method === 'POST'
+ * 7. URL = 'http://localhost:8080/events'
+ * 8. POST request creates new event
+ * 9. redirect('/events') shows events list with new event
+ *
+ * EDITING AN EXISTING EVENT (PATCH):
+ * ==================================
+ * 1. User visits /events/e1/edit
+ * 2. EditEventPage renders: <EventForm method="patch" event={data.event} />
+ * 3. EventForm renders: <Form method="patch"> (with prepopulated fields)
+ * 4. User edits form and clicks Save
+ * 5. React Router calls action({ request, params })
+ * 6. request.method === 'PATCH'
+ * 7. params.eventId === 'e1'
+ * 8. URL = 'http://localhost:8080/events/e1'
+ * 9. PATCH request updates existing event
+ * 10. redirect('/events') shows events list with updated event
+ *
+ * INSTRUCTOR QUOTE:
+ * "We use the same action on different routes but this action is written such
+ * that it will do slightly different things depending on the method it gets."
+ *
+ * ============================================================================
+ */

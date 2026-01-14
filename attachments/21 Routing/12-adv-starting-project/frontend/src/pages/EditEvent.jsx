@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * EDIT EVENT PAGE COMPONENT (Lessons 360, 373 - Task 1 + Shared Loader)
+ * EDIT EVENT PAGE COMPONENT (Lessons 360, 373, 379 - Shared Loader + Action)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 360: Basic page with placeholder content (Task 1 solution)
- * Lesson 373: Added EventForm with useRouteLoaderData for prepopulation (CURRENT)
+ * Lesson 373: Added EventForm with useRouteLoaderData for prepopulation
+ * Lesson 379: Added method="patch" prop for shared action (CURRENT)
  *
  * TASK 1 SOLUTION (Lesson 360):
  * =============================
@@ -135,19 +136,82 @@ function EditEventPage() {
   const data = useRouteLoaderData('event-detail');
 
   /**
-   * RENDERING EVENTFORM WITH EVENT DATA (Lesson 373):
-   * =================================================
-   * INSTRUCTOR QUOTE:
+   * RENDERING EVENTFORM WITH EVENT DATA (Lessons 373, 379):
+   * =======================================================
+   * INSTRUCTOR QUOTE (Lesson 373):
    * "And for that, we simply have to pass the event as props to event form."
    *
-   * INSTRUCTOR QUOTE:
+   * INSTRUCTOR QUOTE (Lesson 373):
    * "So in the Edit Event page, I wanna output my event form component."
    *
-   * The event prop allows EventForm to:
-   * - Prepopulate input fields with existing values
-   * - Know whether this is an edit operation (event exists) or create (event is undefined)
+   * ================================================================
+   * LESSON 379: PASSING method="patch" FOR EDIT
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "In NewEvent, I could set method to post and in EditEvent, I could set it
+   * to patch."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We can use post for creating new events and patch for editing an event."
+   *
+   * HOW method="patch" WORKS:
+   * =========================
+   * 1. EditEventPage passes method="patch" to EventForm
+   * 2. EventForm forwards it: <Form method="patch">
+   * 3. When submitted, React Router creates Request with method='PATCH'
+   * 4. Action checks request.method === 'PATCH'
+   * 5. Action builds URL with params.eventId: http://localhost:8080/events/{eventId}
+   * 6. PATCH request updates the existing event
+   *
+   * WHY PATCH NOT PUT? (HTTP Semantics):
+   * ====================================
+   * - PATCH: Partial update (only changes specified fields)
+   * - PUT: Full replacement (replaces entire resource)
+   *
+   * In this case, PATCH is appropriate because we're updating
+   * specific fields of an existing event.
+   *
+   * PROPS PASSED TO EventForm:
+   * ==========================
+   * | Prop   | Value          | Purpose                               |
+   * |--------|----------------|---------------------------------------|
+   * | method | "patch"        | Sets HTTP method to PATCH for updates |
+   * | event  | data.event     | Prepopulates form with existing data  |
    */
-  return <EventForm event={data.event} />;
+  return <EventForm method="patch" event={data.event} />;
 }
 
 export default EditEventPage;
+
+/**
+ * ============================================================================
+ * LESSON 379: HOW THIS PAGE USES THE SHARED ACTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We use the same action on different routes but this action is written such
+ * that it will do slightly different things depending on the method it gets."
+ *
+ * COMPLETE EDIT FLOW:
+ * ===================
+ * 1. User navigates to /events/e1/edit
+ * 2. Parent loader (on :eventId wrapper route) fetches event data
+ * 3. EditEventPage uses useRouteLoaderData('event-detail') to get data
+ * 4. Renders: <EventForm method="patch" event={data.event} />
+ * 5. EventForm displays: <Form method="patch"> with prepopulated fields
+ * 6. User edits fields and clicks Save
+ * 7. React Router calls the action registered on the edit route
+ * 8. Action (from EventForm.jsx) receives { request, params }
+ * 9. request.method === 'PATCH' (uppercase!)
+ * 10. params.eventId === 'e1' (from URL)
+ * 11. Action builds URL: http://localhost:8080/events/e1
+ * 12. PATCH request updates the event
+ * 13. redirect('/events') shows updated events list
+ *
+ * INSTRUCTOR QUOTE:
+ * "The URL should differ though, because for editing an event we must target
+ * events/eventId. And for creating, we just target events."
+ *
+ * ============================================================================
+ */

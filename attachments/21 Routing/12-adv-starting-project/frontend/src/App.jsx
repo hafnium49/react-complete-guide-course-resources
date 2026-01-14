@@ -303,36 +303,66 @@ import EventDetailPage, {
 } from './pages/EventDetail';
 /**
  * ============================================================================
- * LESSON 375: IMPORTING ACTION FROM COMPONENT FILE
+ * LESSONS 375, 379: IMPORTING ACTION FROM COMPONENT FILES
  * ============================================================================
  *
+ * LESSON 375 - ORIGINAL ACTION IN NewEvent.jsx:
+ * =============================================
  * INSTRUCTOR QUOTE:
  * "With that action defined, we can go back to app JS and there we can now
  * import this action from new event. Here, action as new event action."
  *
+ * LESSON 379 - ACTION MOVED TO EventForm.jsx:
+ * ===========================================
  * INSTRUCTOR QUOTE:
- * "We can import this and then use this new event action down here as a value
- * for this action property on this route definition."
+ * "Import my action as manipulateEventAction... from components EventForm."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's why I will now move this action function to the event form
+ * component so that we can use it both for creating and for editing events."
  *
  * SAME PATTERN AS LOADERS:
  * ========================
  * Just like we import loaders from component files and give them aliases,
  * we do the same with actions:
  *
- * | Import Type | From File     | Alias            | Used For              |
- * |-------------|---------------|------------------|-----------------------|
- * | loader      | Events.jsx    | eventsLoader     | GET events list       |
- * | loader      | EventDetail   | eventDetailLoader| GET single event      |
- * | action      | NewEvent.jsx  | newEventAction   | POST new event        |
+ * | Import Type | From File       | Alias                 | Used For           |
+ * |-------------|-----------------|----------------------|---------------------|
+ * | loader      | Events.jsx      | eventsLoader         | GET events list     |
+ * | loader      | EventDetail     | eventDetailLoader    | GET single event    |
+ * | action      | EventForm.jsx   | manipulateEventAction| POST/PATCH event    |
+ * | action      | EventDetail.jsx | deleteEventAction    | DELETE event        |
  *
- * WHY USE AN ALIAS (newEventAction)?
- * ==================================
+ * WHY USE AN ALIAS (manipulateEventAction)?
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "Import my action as manipulateEventAction... from components EventForm."
+ *
  * - Multiple files may export functions named 'action'
  * - Aliases prevent naming conflicts
- * - Makes it clear which action belongs to which route
+ * - 'manipulateEventAction' clearly indicates it handles both create AND edit
+ * - Distinguishes it from deleteEventAction which only deletes
  */
-import NewEventPage, { action as newEventAction } from './pages/NewEvent';
+import NewEventPage from './pages/NewEvent';
 import EditEventPage from './pages/EditEvent';
+/**
+ * ============================================================================
+ * LESSON 379: IMPORTING THE SHARED ACTION FROM EventForm
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Import my action as manipulateEventAction... from components EventForm."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We use the same action on different routes but this action is written such
+ * that it will do slightly different things depending on the method it gets."
+ *
+ * The action is now in EventForm.jsx instead of NewEvent.jsx because:
+ * - EventForm is used by both NewEventPage and EditEventPage
+ * - The same action can handle both POST (create) and PATCH (edit)
+ * - The action checks request.method to determine behavior
+ */
+import { action as manipulateEventAction } from './components/EventForm';
 
 /**
  * TASK 3 & BONUS - LAYOUT IMPORTS (Lesson 360):
@@ -633,8 +663,8 @@ const router = createBrowserRouter([
             loader: eventsLoader,
           },
           /**
-           * NEW EVENT ROUTE - ROUTE SPECIFICITY (Lesson 360):
-           * =================================================
+           * NEW EVENT ROUTE - ROUTE SPECIFICITY (Lessons 360, 375, 379):
+           * =============================================================
            * INSTRUCTOR QUOTE:
            * "Now the next path which I want to add is /events/new. So therefore
            * here, I add /events/new. And the element is NewEventPage."
@@ -653,17 +683,31 @@ const router = createBrowserRouter([
            * route here, /events/new, will win over this route."
            *
            * ================================================================
-           * LESSON 375: ADDING THE ACTION PROPERTY
+           * LESSONS 375, 379: ADDING THE ACTION PROPERTY
            * ================================================================
            *
+           * LESSON 375 - ORIGINAL:
+           * ======================
            * INSTRUCTOR QUOTE:
            * "So to add an action to this new route here we add the special
            * action property here. And just like loader, action wants a function
            * an arrow function, or a regular function that does not matter."
            *
+           * LESSON 379 - UPDATED TO USE SHARED ACTION:
+           * ==========================================
            * INSTRUCTOR QUOTE:
-           * "We can import this and then use this new event action down here
-           * as a value for this action property on this route definition."
+           * "Import my action as manipulateEventAction... from components EventForm."
+           *
+           * INSTRUCTOR QUOTE:
+           * "We use the same action on different routes but this action is written
+           * such that it will do slightly different things depending on the method
+           * it gets."
+           *
+           * WHY manipulateEventAction INSTEAD OF newEventAction:
+           * ====================================================
+           * - The action was moved from NewEvent.jsx to EventForm.jsx
+           * - Same action is now used for both new and edit routes
+           * - Action checks request.method to determine POST vs PATCH behavior
            *
            * LOADERS VS ACTIONS IN ROUTE DEFINITIONS:
            * ========================================
@@ -674,9 +718,9 @@ const router = createBrowserRouter([
            *
            * This route now has:
            * - element: The component to render (NewEventPage)
-           * - action: The function to call on form submission (newEventAction)
+           * - action: The shared function (manipulateEventAction) with POST behavior
            */
-          { path: 'new', element: <NewEventPage />, action: newEventAction },
+          { path: 'new', element: <NewEventPage />, action: manipulateEventAction },
           /**
            * ================================================================
            * LESSON 373: WRAPPER ROUTE FOR SHARING LOADER DATA
@@ -874,9 +918,9 @@ const router = createBrowserRouter([
                 element: <EventDetailPage />,
               },
               /**
-               * EDIT EVENT PAGE - CHILD ROUTE (Lesson 373):
-               * ===========================================
-               * INSTRUCTOR QUOTE:
+               * EDIT EVENT PAGE - CHILD ROUTE (Lessons 373, 379):
+               * =================================================
+               * INSTRUCTOR QUOTE (Lesson 373):
                * "And on the Edit Event page path should be edit relative
                * to the parent path."
                *
@@ -885,10 +929,45 @@ const router = createBrowserRouter([
                * Since this is a child of the wrapper route with the loader,
                * EditEventPage can access the event data via:
                * useRouteLoaderData('event-detail')
+               *
+               * ================================================================
+               * LESSON 379: ADDING ACTION FOR EDITING
+               * ================================================================
+               *
+               * INSTRUCTOR QUOTE:
+               * "We use the same action on different routes but this action is
+               * written such that it will do slightly different things depending
+               * on the method it gets."
+               *
+               * INSTRUCTOR QUOTE:
+               * "And we can actually make this action dynamic so that it sends
+               * different requests depending on the request method it receives."
+               *
+               * WHY THE SAME ACTION WORKS FOR BOTH:
+               * ==================================
+               * | Route       | Form method | request.method | URL                          |
+               * |-------------|-------------|----------------|------------------------------|
+               * | /events/new | "post"      | 'POST'         | http://localhost:8080/events |
+               * | /events/:id/edit | "patch" | 'PATCH'       | http://localhost:8080/events/:id |
+               *
+               * The action in EventForm.jsx checks request.method:
+               * - If 'POST': Creates new event at /events
+               * - If 'PATCH': Updates existing event at /events/{eventId}
+               *
+               * HOW params.eventId IS AVAILABLE:
+               * ================================
+               * This edit route is nested under the :eventId wrapper route,
+               * so params.eventId is available in the action.
+               *
+               * INSTRUCTOR QUOTE:
+               * "For editing an event we must target events/eventId, and we can
+               * get access to that eventId in the action just as we could get
+               * access to it in the loader."
                */
               {
                 path: 'edit',
                 element: <EditEventPage />,
+                action: manipulateEventAction,
               },
             ],
           },
