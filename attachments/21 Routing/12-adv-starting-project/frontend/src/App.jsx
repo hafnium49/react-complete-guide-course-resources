@@ -266,9 +266,11 @@ import HomePage from './pages/Home';
 import EventsPage, { loader as eventsLoader } from './pages/Events';
 /**
  * ============================================================================
- * LESSON 372: IMPORTING EVENT DETAIL LOADER
+ * LESSONS 372, 376: IMPORTING EVENT DETAIL LOADER AND ACTION
  * ============================================================================
  *
+ * LESSON 372 - LOADER IMPORT:
+ * ===========================
  * INSTRUCTOR QUOTE:
  * "We have to add the loader property to the event detail page route, and then
  * import the loader here from event detail."
@@ -277,11 +279,28 @@ import EventsPage, { loader as eventsLoader } from './pages/Events';
  * "And I will again give it an alias, so that we don't have any name clashes.
  * And here it's the 'eventDetailLoader,' like that."
  *
- * Following the same pattern as eventsLoader:
- * - Import the loader function from the component file
- * - Give it a unique alias to avoid naming conflicts
+ * LESSON 376 - ACTION IMPORT:
+ * ===========================
+ * INSTRUCTOR QUOTE:
+ * "Now we gotta register this action here in App JS. And in App JS, I'll
+ * import this action here from event detail."
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll give it an alias of delete event action."
+ *
+ * Following the same pattern as other imports:
+ * - Import both loader and action from the component file
+ * - Give unique aliases to avoid naming conflicts
+ *
+ * | Import    | Alias              | Purpose                    |
+ * |-----------|--------------------| ---------------------------|
+ * | loader    | eventDetailLoader  | GET single event data      |
+ * | action    | deleteEventAction  | DELETE event               |
  */
-import EventDetailPage, { loader as eventDetailLoader } from './pages/EventDetail';
+import EventDetailPage, {
+  loader as eventDetailLoader,
+  action as deleteEventAction,
+} from './pages/EventDetail';
 /**
  * ============================================================================
  * LESSON 375: IMPORTING ACTION FROM COMPONENT FILE
@@ -796,6 +815,45 @@ const router = createBrowserRouter([
              * this loader's data without triggering separate fetches.
              */
             loader: eventDetailLoader,
+            /**
+             * ================================================================
+             * LESSON 376: ACTION FOR DELETING EVENTS
+             * ================================================================
+             *
+             * INSTRUCTOR QUOTE:
+             * "And this must be added to this wrapper route because that's
+             * the route where we can get access to this event ID in params."
+             *
+             * WHY ON THE WRAPPER ROUTE:
+             * =========================
+             * INSTRUCTOR QUOTE:
+             * "Because this action will ultimately be registered on the event
+             * detail route, on that wrapper route where we also have the
+             * loader. So where we also need this event ID."
+             *
+             * The action needs params.eventId to know which event to delete.
+             * By placing it on the wrapper route (same as the loader):
+             * - params.eventId is available in the action
+             * - The action is accessible from any child route
+             * - EventItem can trigger it via useSubmit without specifying path
+             *
+             * HOW THE DELETE FLOW WORKS:
+             * ==========================
+             * 1. EventItem calls: submit(null, { method: 'delete' })
+             * 2. React Router looks for action on the current route
+             * 3. Current route is the index child of this wrapper
+             * 4. Action bubbles up to wrapper route (which has the action)
+             * 5. deleteEventAction is executed with { request, params }
+             * 6. Event is deleted and user is redirected to /events
+             *
+             * LOADERS VS ACTIONS ON THE SAME ROUTE:
+             * =====================================
+             * | Property | Triggered By            | Purpose              |
+             * |----------|-------------------------|----------------------|
+             * | loader   | Navigation/Page load    | GET event data       |
+             * | action   | Form/useSubmit          | DELETE event         |
+             */
+            action: deleteEventAction,
             children: [
               /**
                * EVENT DETAIL PAGE - INDEX ROUTE (Lesson 373):

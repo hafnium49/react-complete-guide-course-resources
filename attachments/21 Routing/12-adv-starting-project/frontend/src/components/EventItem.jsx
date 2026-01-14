@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * EVENT ITEM COMPONENT (Lessons 358, 373 - Pre-built + Link Update)
+ * EVENT ITEM COMPONENT (Lessons 358, 373, 376 - Pre-built + Link + Delete)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 358: Pre-built component with basic anchor tag for Edit
- * Lesson 373: Updated Edit anchor to Link component (CURRENT)
+ * Lesson 373: Updated Edit anchor to Link component
+ * Lesson 376: Added useSubmit for delete functionality (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -40,6 +41,30 @@
  * - Enables SPA navigation (no full page reload)
  * - Works with React Router's routing system
  * - Preserves application state during navigation
+ *
+ * ============================================================================
+ * LESSON 376: PROGRAMMATIC ACTION TRIGGERING WITH useSubmit
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Sometimes you don't wanna work with such a form though, but instead, you
+ * wanna trigger the action programmatically. For example, here for the Delete
+ * button on the Event Item component."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because we might not wanna send a delete request right away when this button
+ * is clicked. Instead, we wanna show a confirmation prompt first."
+ *
+ * WHY useSubmit INSTEAD OF <Form>:
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "In order to trigger that action here programmatically, we can import another
+ * special hook from React Router Dom, and that's the useSubmit hook."
+ *
+ * | Approach          | Use Case                                    |
+ * |-------------------|---------------------------------------------|
+ * | <Form>            | Simple form submission (auto-collects data) |
+ * | useSubmit         | Programmatic triggering (with conditions)   |
  *
  * ============================================================================
  * USAGE WITH DYNAMIC ROUTES
@@ -84,13 +109,8 @@
  * on which we're currently on."
  *
  * ============================================================================
- * DELETE FUNCTIONALITY (To be implemented later)
- * ============================================================================
- *
- * The delete button has a placeholder handler.
- * This will be implemented in later lessons about data mutation.
  */
-import { Link } from 'react-router-dom';
+import { Link, useSubmit } from 'react-router-dom';
 
 import classes from './EventItem.module.css';
 
@@ -111,15 +131,144 @@ import classes from './EventItem.module.css';
  */
 function EventItem({ event }) {
   /**
-   * DELETE HANDLER:
-   * ===============
-   * Placeholder for delete functionality.
-   * Will be implemented in later lessons about form actions
-   * and data mutation with React Router.
+   * ============================================================================
+   * LESSON 376: useSubmit HOOK FOR PROGRAMMATIC ACTION TRIGGERING
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "In order to trigger that action here programmatically, we can import
+   * another special hook from React Router Dom, and that's the useSubmit hook."
+   *
+   * INSTRUCTOR QUOTE:
+   * "You can also call useSubmit outside of the function where you need it,
+   * but, and that's important, it must be called in the component function,
+   * not inside any nested functions or event handlers."
+   *
+   * WHAT useSubmit RETURNS:
+   * ======================
+   * INSTRUCTOR QUOTE:
+   * "And that gives you a submit function which you can use whenever you want
+   * to submit a form or trigger an action programmatically."
+   *
+   * COMPARISON WITH <Form> COMPONENT:
+   * =================================
+   * | <Form>              | useSubmit                                 |
+   * |---------------------|-------------------------------------------|
+   * | Declarative         | Imperative/Programmatic                   |
+   * | Auto-collects data  | You provide data manually                 |
+   * | Submits on form     | Submits when you call submit()            |
+   * | submit event        |                                           |
+   */
+  const submit = useSubmit();
+
+  /**
+   * ============================================================================
+   * LESSON 376: DELETE HANDLER WITH CONFIRMATION
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Because we might not wanna send a delete request right away when this
+   * button is clicked. Instead, we wanna show a confirmation prompt first."
+   *
+   * INSTRUCTOR QUOTE:
+   * "For that we could use the built in window.confirm method, which returns
+   * true or false depending on which button was clicked by the user."
+   *
+   * WHY USE confirm() BEFORE DELETING:
+   * ==================================
+   * - Prevents accidental deletions
+   * - Gives user a chance to cancel
+   * - Standard UX pattern for destructive actions
    */
   function startDeleteHandler() {
-    // TODO: Implement delete functionality
-    // This will be covered in later lessons about actions
+    /**
+     * CONFIRMATION DIALOG (Lesson 376):
+     * =================================
+     * INSTRUCTOR QUOTE:
+     * "For that we could use the built in window.confirm method, which returns
+     * true or false depending on which button was clicked by the user."
+     *
+     * INSTRUCTOR QUOTE:
+     * "We could also use a modal, of course, but I'll use this simple built-in
+     * browser dialog."
+     *
+     * window.confirm():
+     * - Shows a native browser dialog with OK/Cancel buttons
+     * - Returns true if user clicks OK
+     * - Returns false if user clicks Cancel
+     */
+    const proceed = window.confirm('Are you sure you want to delete this event?');
+
+    /**
+     * CONDITIONAL SUBMISSION (Lesson 376):
+     * ====================================
+     * INSTRUCTOR QUOTE:
+     * "And if the user clicks OK, I wanna trigger the deletion, if the user
+     * cancels, I don't wanna do anything."
+     *
+     * Only proceed with deletion if user confirmed.
+     */
+    if (proceed) {
+      /**
+       * ======================================================================
+       * LESSON 376: submit() FUNCTION PARAMETERS
+       * ======================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "Now, to submit, you must pass two things. The first argument is the
+       * data you wanna submit. That can be null if you have no data."
+       *
+       * INSTRUCTOR QUOTE:
+       * "But then you also pass a second argument, which is an object where you
+       * can configure this submission."
+       *
+       * SUBMIT FUNCTION SIGNATURE:
+       * =========================
+       * submit(data, options)
+       *
+       * | Parameter | Type   | Description                               |
+       * |-----------|--------|-------------------------------------------|
+       * | data      | any    | Form data to submit (can be null)         |
+       * | options   | Object | Configuration: method, action, etc.       |
+       *
+       * ======================================================================
+       * OPTIONS OBJECT (Lesson 376):
+       * ======================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "For example, you can set the method that should be used for this
+       * request. And I'll set it to delete here."
+       *
+       * METHOD OPTION:
+       * ==============
+       * INSTRUCTOR QUOTE:
+       * "And I'll set it to delete here. And that's a method that's also
+       * supported by the Form component. It's just that here, I wanna trigger
+       * this programmatically, so I'm configuring it like this."
+       *
+       * AVAILABLE METHODS:
+       * ==================
+       * | Method   | HTTP Verb | Use Case                          |
+       * |----------|-----------|-----------------------------------|
+       * | 'post'   | POST      | Create new resource               |
+       * | 'put'    | PUT       | Update entire resource            |
+       * | 'patch'  | PATCH     | Partial update                    |
+       * | 'delete' | DELETE    | Remove resource                   |
+       *
+       * ACTION OPTION (Lesson 376):
+       * ===========================
+       * INSTRUCTOR QUOTE:
+       * "You can also set an action, though we could emit that if we wanna
+       * target the currently active route. And we don't need to target a
+       * different route here, so I will not set the action property."
+       *
+       * Since we're on /events/:eventId and the action is registered on that
+       * same route (via the wrapper route with id: 'event-detail'), we don't
+       * need to specify the action path. It will automatically target the
+       * current route's action.
+       */
+      submit(null, { method: 'delete' });
+    }
   }
 
   return (

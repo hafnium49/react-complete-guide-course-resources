@@ -146,8 +146,20 @@
  * "We then can use this ID in use route loader data to tell React router that
  * we wanna use the data from the loader that belongs to a route with this
  * specific ID."
+ *
+ * ============================================================================
+ * LESSON 376: ADDING redirect FOR ACTION FUNCTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now we should also redirect after successfully deleting. And that should
+ * be a redirect to slash events. So to the starting page which shows all
+ * events."
+ *
+ * The redirect function is used after successful deletion to navigate
+ * the user away from the deleted event's page.
  */
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData, redirect } from 'react-router-dom';
 
 import EventItem from '../components/EventItem';
 
@@ -434,6 +446,194 @@ export async function loader({ request, params }) {
  * 2. Cleaner component code (just uses data)
  * 3. Error handling via errorElement (no error state in component)
  * 4. Separation of concerns (fetching logic outside component)
+ *
+ * ============================================================================
+ */
+
+/**
+ * ============================================================================
+ * LESSON 376: ACTION FUNCTION FOR DELETING EVENTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, we now also need an action though. And that action should be triggered
+ * from inside the event item component when that delete button is clicked."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can add an action here in the event detail page. You can export an async
+ * function, which I'll name action."
+ *
+ * ============================================================================
+ * WHY ACTION IS IN THIS FILE (Lesson 376):
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because this action will ultimately be registered on the event detail
+ * route, on that wrapper route where we also have the loader. So where we
+ * also need this event ID."
+ *
+ * The action is placed here because:
+ * 1. It needs access to params.eventId (same as the loader)
+ * 2. It will be registered on the 'event-detail' wrapper route
+ * 3. Keeps loader and action for the same resource together
+ *
+ * ============================================================================
+ * ACCESSING THE HTTP METHOD (Lesson 376):
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, of course, you could also define the method in another way. For
+ * example, by getting the method that was set on the form. You can get
+ * this method from the request object by accessing request.method."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that can be helpful if you have one action that handles different
+ * kinds of requests. For example, put requests and delete requests on the
+ * same route."
+ *
+ * WHY USE request.method DYNAMICALLY:
+ * ===================================
+ * | Approach               | When to Use                                |
+ * |------------------------|--------------------------------------------|
+ * | Hardcoded method       | Action handles only one type of request    |
+ * | request.method         | Action handles multiple request types      |
+ *
+ * INSTRUCTOR QUOTE:
+ * "So I'll actually use request.method here to get the method dynamically
+ * from that submit function call or from a form."
+ *
+ * ============================================================================
+ */
+export async function action({ request, params }) {
+  /**
+   * GET EVENT ID FROM ROUTE PARAMETERS (Lesson 376):
+   * ================================================
+   * Same pattern as in the loader - extract the eventId from params.
+   * This tells the backend which event to delete.
+   */
+  const eventId = params.eventId;
+
+  /**
+   * ============================================================================
+   * SEND DELETE REQUEST TO BACKEND (Lesson 376):
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then down here, we send our request, we send a fetch request to
+   * HTTP localhost 8080 events, and then event ID which we get from params
+   * event ID."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And of course we configure this request by setting the method to delete."
+   *
+   * ============================================================================
+   * USING request.method DYNAMICALLY (Lesson 376):
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, of course, you could also define the method in another way. For
+   * example, by getting the method that was set on the form. You can get
+   * this method from the request object by accessing request.method."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So I'll actually use request.method here to get the method dynamically
+   * from that submit function call or from a form."
+   *
+   * HOW request.method WORKS:
+   * =========================
+   * When submit(null, { method: 'delete' }) is called in EventItem.jsx,
+   * React Router creates a Request object with that method.
+   * Here, request.method will be 'DELETE' (uppercase).
+   *
+   * This pattern is useful when:
+   * - One action handles multiple HTTP methods (PUT, DELETE, PATCH)
+   * - You want flexibility in how the action is triggered
+   * - You want the action to be reusable across different forms
+   */
+  const response = await fetch('http://localhost:8080/events/' + eventId, {
+    method: request.method,
+  });
+
+  /**
+   * ERROR HANDLING (Lesson 376):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "We should handle potential errors. So if not response okay, we can throw
+   * a new error response."
+   *
+   * Using Response.json() (native browser API) instead of json() helper
+   * due to React Router v7 changes.
+   */
+  if (!response.ok) {
+    throw Response.json(
+      { message: 'Could not delete event.' },
+      { status: 500 }
+    );
+  }
+
+  /**
+   * REDIRECT AFTER SUCCESSFUL DELETION (Lesson 376):
+   * ================================================
+   * INSTRUCTOR QUOTE:
+   * "Now we should also redirect after successfully deleting. And that should
+   * be a redirect to slash events. So to the starting page which shows all
+   * events."
+   *
+   * WHY REDIRECT TO /events:
+   * ========================
+   * - The current event no longer exists after deletion
+   * - User needs to be taken to a valid page
+   * - /events shows the updated list without the deleted event
+   *
+   * INSTRUCTOR QUOTE:
+   * "And therefore we don't need to return anything. Instead, we just return
+   * redirect to slash events."
+   */
+  return redirect('/events');
+}
+
+/**
+ * ============================================================================
+ * LESSON 376: REGISTERING THE ACTION IN App.jsx
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now we gotta register this action here in App JS. And in App JS, I'll
+ * import this action here from event detail."
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll give it an alias of delete event action. And this must be added to
+ * this wrapper route because that's the route where we can get access to
+ * this event ID in params."
+ *
+ * In App.jsx, the action is registered like this:
+ *
+ * import EventDetailPage, {
+ *   loader as eventDetailLoader,
+ *   action as deleteEventAction
+ * } from './pages/EventDetail';
+ *
+ * {
+ *   path: ':eventId',
+ *   id: 'event-detail',
+ *   loader: eventDetailLoader,
+ *   action: deleteEventAction,  // ← Added in Lesson 376
+ *   children: [...]
+ * }
+ *
+ * ============================================================================
+ * COMPLETE FLOW FOR DELETE OPERATION (Lesson 376):
+ * ============================================================================
+ *
+ * 1. User clicks "Delete" button in EventItem component
+ * 2. startDeleteHandler() is called
+ * 3. window.confirm() shows confirmation dialog
+ * 4. If user confirms, submit(null, { method: 'delete' }) is called
+ * 5. React Router finds the action on the current route (event-detail)
+ * 6. action() function is executed with request and params
+ * 7. DELETE request is sent to backend: DELETE /events/:eventId
+ * 8. If successful, redirect('/events') navigates user to events list
+ * 9. Events list reloads showing the event has been deleted
  *
  * ============================================================================
  */
