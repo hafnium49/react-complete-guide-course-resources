@@ -1,13 +1,14 @@
 /**
  * ============================================================================
- * EVENT FORM COMPONENT (Lessons 358, 373, 375 - Pre-built + Prepopulation + Form)
+ * EVENT FORM COMPONENT (Lessons 358, 373, 375, 377 - Form + Submission State)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 358: Pre-built component with basic form inputs
  * Lesson 373: Added defaultValue props for prepopulation in edit mode
- * Lesson 375: Replaced <form> with <Form> component for actions (CURRENT)
+ * Lesson 375: Replaced <form> with <Form> component for actions
+ * Lesson 377: Added useNavigation for submission state feedback (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -201,8 +202,54 @@
  * - data.get('description') → Gets value from textarea name="description"
  *
  * ============================================================================
+ * LESSON 377: SUBMISSION STATE FEEDBACK WITH useNavigation
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Instead, I wanna use a hook that sounds familiar to useNavigate, but works
+ * totally different, the useNavigation hook."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's a hook we already saw in action before. It's provided by React
+ * Router and gives us access to a navigation object."
+ *
+ * WHY WE NEED THIS (Lesson 377):
+ * ==============================
+ * INSTRUCTOR QUOTE:
+ * "And it would be nice to get some feedback and maybe also to disable the
+ * save button so that users don't try to submit the same form multiple times."
+ *
+ * WHAT useNavigation PROVIDES (Lesson 377):
+ * =========================================
+ * INSTRUCTOR QUOTE:
+ * "And we can extract various pieces of information from that object. For
+ * example, all the data that was submitted. But we can also find out what
+ * the current state of the currently active transition is."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And we have a transition from one route to another if we click a link.
+ * But we also have a transition if we submit a form. And therefore, we also
+ * get information about the current data submission process and whether it
+ * completed already."
+ *
+ * useNavigate vs useNavigation:
+ * =============================
+ * | Hook           | Purpose                                              |
+ * |----------------|------------------------------------------------------|
+ * | useNavigate    | Returns a FUNCTION to navigate programmatically      |
+ * | useNavigation  | Returns an OBJECT with current navigation STATE      |
+ *
+ * navigation.state VALUES (Lesson 377):
+ * =====================================
+ * | State       | Meaning                                               |
+ * |-------------|-------------------------------------------------------|
+ * | 'idle'      | No navigation or submission in progress               |
+ * | 'loading'   | A route is being loaded (loader is running)           |
+ * | 'submitting'| A form is being submitted (action is running)         |
+ *
+ * ============================================================================
  */
-import { useNavigate, Form } from 'react-router-dom';
+import { useNavigate, useNavigation, Form } from 'react-router-dom';
 
 import classes from './EventForm.module.css';
 
@@ -230,6 +277,71 @@ function EventForm({ method, event }) {
    * navigate() can be called from event handlers or effects.
    */
   const navigate = useNavigate();
+
+  /**
+   * ============================================================================
+   * LESSON 377: useNavigation HOOK FOR SUBMISSION STATE
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Instead, I wanna use a hook that sounds familiar to useNavigate, but works
+   * totally different, the useNavigation hook."
+   *
+   * INSTRUCTOR QUOTE:
+   * "It's provided by React Router and gives us access to a navigation object."
+   *
+   * WHAT THE NAVIGATION OBJECT CONTAINS:
+   * ====================================
+   * INSTRUCTOR QUOTE:
+   * "And we can extract various pieces of information from that object. For
+   * example, all the data that was submitted. But we can also find out what
+   * the current state of the currently active transition is."
+   *
+   * Properties of the navigation object:
+   * | Property   | Type   | Description                                    |
+   * |------------|--------|------------------------------------------------|
+   * | state      | string | 'idle', 'loading', or 'submitting'             |
+   * | formData   | Object | The submitted form data (if submitting)        |
+   * | formAction | string | The action URL being submitted to              |
+   * | formMethod | string | The HTTP method being used                     |
+   * | location   | Object | The location being navigated to                |
+   *
+   * TRANSITIONS EXPLAINED (Lesson 377):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "And we have a transition from one route to another if we click a link.
+   * But we also have a transition if we submit a form. And therefore, we also
+   * get information about the current data submission process and whether it
+   * completed already."
+   */
+  const navigation = useNavigation();
+
+  /**
+   * ============================================================================
+   * LESSON 377: isSubmitting HELPER CONSTANT
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "So here, we can add a helper constant called isSubmitting. And in there,
+   * I simply store the result of comparing navigation.state to submitting."
+   *
+   * INSTRUCTOR QUOTE:
+   * "If the current state is submitting, I know that we are currently submitting
+   * data so that the action that was triggered is currently still active."
+   *
+   * STATE CHECK EXPLANATION:
+   * ========================
+   * navigation.state === 'submitting' is true when:
+   * 1. User clicked the Save button
+   * 2. <Form> created a request and sent it to the action
+   * 3. The action is currently running (awaiting fetch, etc.)
+   * 4. The action has NOT yet returned or redirected
+   *
+   * Once the action completes (returns redirect() or data):
+   * - navigation.state changes to 'loading' (if loading new route)
+   * - Then changes to 'idle' (when fully settled)
+   */
+  const isSubmitting = navigation.state === 'submitting';
 
   /**
    * CANCEL HANDLER:
@@ -391,33 +503,72 @@ function EventForm({ method, event }) {
       </p>
       <div className={classes.actions}>
         {/**
-         * CANCEL BUTTON:
-         * ==============
+         * CANCEL BUTTON (Updated in Lesson 377):
+         * ======================================
          * type="button" prevents form submission.
          * onClick triggers programmatic navigation via useNavigate.
+         *
+         * INSTRUCTOR QUOTE (Lesson 377):
+         * "We can do the same for the Cancel button, if we want to."
+         *
+         * Disabled while submitting to prevent users from navigating
+         * away during an in-progress submission.
          */}
-        <button type="button" onClick={cancelHandler}>
+        <button type="button" onClick={cancelHandler} disabled={isSubmitting}>
           Cancel
         </button>
         {/**
-         * SAVE BUTTON (Lesson 375):
-         * =========================
+         * ================================================================
+         * SAVE BUTTON WITH SUBMISSION STATE (Lessons 375, 377)
+         * ================================================================
+         *
+         * LESSON 375 - BASIC BEHAVIOR:
+         * ============================
          * Default type is "submit" - triggers form submission.
          *
-         * With <Form> component (Lesson 375):
-         * ==================================
+         * With <Form> component:
          * When clicked, React Router:
          * 1. Prevents browser's default form submission
          * 2. Creates a Request object with all form data
          * 3. Calls the action function registered for this route
          * 4. Passes the Request to the action via { request } parameter
          *
-         * The action can then:
-         * - Extract data via request.formData()
-         * - Send HTTP request to backend
-         * - Return redirect() to navigate after success
+         * LESSON 377 - SUBMISSION STATE FEEDBACK:
+         * =======================================
+         * INSTRUCTOR QUOTE:
+         * "And we can use this isSubmitting field here to for example,
+         * disable this Save button."
+         *
+         * DISABLING THE BUTTON (Lesson 377):
+         * ==================================
+         * INSTRUCTOR QUOTE:
+         * "We can disable it by simply setting this to isSubmitting. So if
+         * we are submitting, this button is disabled."
+         *
+         * WHY DISABLE:
+         * ============
+         * INSTRUCTOR QUOTE:
+         * "And it would be nice to get some feedback and maybe also to
+         * disable the save button so that users don't try to submit the
+         * same form multiple times."
+         *
+         * CHANGING BUTTON TEXT (Lesson 377):
+         * ==================================
+         * INSTRUCTOR QUOTE:
+         * "We can also change the text of the button and check if we are
+         * submitting. In which case, I'll set the text to Submitting and
+         * only otherwise, I'll set it to Save."
+         *
+         * USER FEEDBACK (Lesson 377):
+         * ===========================
+         * INSTRUCTOR QUOTE:
+         * "And if I click Save, you see this changed to Submitting and I
+         * now get some feedback that something's going on here which is
+         * better than having no feedback at all."
          */}
-        <button>Save</button>
+        <button disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Save'}
+        </button>
       </div>
     </Form>
   );
