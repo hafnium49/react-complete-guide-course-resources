@@ -1,7 +1,12 @@
 /**
  * ============================================================================
- * EDIT EVENT PAGE COMPONENT (Lesson 360 - Task 1 Solution)
+ * EDIT EVENT PAGE COMPONENT (Lessons 360, 373 - Task 1 + Shared Loader)
  * ============================================================================
+ *
+ * EVOLUTION OF THIS FILE:
+ * =======================
+ * Lesson 360: Basic page with placeholder content (Task 1 solution)
+ * Lesson 373: Added EventForm with useRouteLoaderData for prepopulation (CURRENT)
  *
  * TASK 1 SOLUTION (Lesson 360):
  * =============================
@@ -13,80 +18,136 @@
  * replaced in all these places."
  *
  * ============================================================================
- * ADVANCED ROUTE PATH - STATIC AFTER DYNAMIC (Lesson 360)
+ * LESSON 373: SHARING LOADER DATA BETWEEN ROUTES
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So now the last route definition which I want to add is this definition
- * where we wanna load the EditEventPage if we are on /events, then,
- * some-id/edit."
+ * "So I need access to this loader here, not just in the event detail page,
+ * but also in the edit event page because the edit event page should also
+ * display the event data, but we got one loader which we wanna use for
+ * both pages."
  *
  * INSTRUCTOR QUOTE:
- * "The path therefore is /events. Then, again, my dynamic segment and then
- * edit. This is something we didn't do before, but it is absolutely a path
- * you can add to your route definitions."
+ * "So in the Edit Event page, I wanna output my event form component."
+ *
+ * ============================================================================
+ * ACCESSING PARENT LOADER DATA WITH useRouteLoaderData (Lesson 373)
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "You can have another hard-coded segment after a dynamic segment, that is
- * allowed and possible."
+ * "And with such an ID defined, we can use a special hook called use route
+ * loader data to get access to a higher level loader from a child route."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We then can use this ID in use route loader data to tell React router
+ * that we wanna use the data from the loader that belongs to a route with
+ * this specific ID."
  *
  * ============================================================================
- * PATH STRUCTURE EXPLAINED
- * ============================================================================
- *
- * Route path: ':eventId/edit'
- *
- * This path has:
- * 1. Dynamic segment: :eventId (matches any value)
- * 2. Static segment: edit (must be literally "edit")
- *
- * URL Examples:
- * - /events/e1/edit → eventId = "e1"
- * - /events/abc123/edit → eventId = "abc123"
- * - /events/e1 → Does NOT match (no /edit suffix)
- * - /events/edit → Does NOT match (edit would be treated as eventId,
- *                                  and there's no second segment)
- *
- * This pattern is common for edit pages in CRUD applications:
- * - /resources/:id → View resource
- * - /resources/:id/edit → Edit resource
- * - /resources/new → Create new resource
- *
- * ============================================================================
- * ROUTE CONFIGURATION
+ * ROUTE STRUCTURE (Lesson 373)
  * ============================================================================
  *
  * {
- *   path: 'events',
- *   element: <EventsRootLayout />,
+ *   path: ':eventId',
+ *   id: 'event-detail',           // ← The ID we use in useRouteLoaderData
+ *   loader: eventDetailLoader,    // ← The shared loader
  *   children: [
- *     { index: true, element: <EventsPage /> },
- *     { path: ':eventId', element: <EventDetailPage /> },
- *     { path: 'new', element: <NewEventPage /> },
- *     { path: ':eventId/edit', element: <EditEventPage /> },  // ← This page
+ *     { index: true, element: <EventDetailPage /> },
+ *     { path: 'edit', element: <EditEventPage /> },  // ← This page
  *   ]
  * }
  *
  * URL: http://localhost:3000/events/e1/edit
  *
  * ============================================================================
+ * PASSING EVENT DATA TO EVENTFORM (Lesson 373)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But now in the event form, we need to get access to the event data to
+ * prepopulate these input fields here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for that, we simply have to pass the event as props to event form."
+ *
+ * Usage: <EventForm event={data.event} />
+ *
+ * The event prop is used by EventForm to set defaultValue on inputs.
+ *
+ * ============================================================================
  */
+import { useRouteLoaderData } from 'react-router-dom';
+
+import EventForm from '../components/EventForm';
 
 /**
- * EDIT EVENT PAGE COMPONENT:
- * ==========================
+ * EDIT EVENT PAGE COMPONENT (Lesson 373):
+ * =======================================
  * Form page for editing an existing event.
  *
- * Currently displays placeholder content.
- * Will be enhanced with EventForm component in later lessons.
+ * INSTRUCTOR QUOTE:
+ * "So in the Edit Event page, I wanna output my event form component."
  *
- * Note: This page can access the eventId via useParams() to:
- * - Fetch the existing event data
- * - Pre-populate the form fields
- * - Send updates to the correct event
+ * This page:
+ * 1. Uses useRouteLoaderData to get event data from parent route's loader
+ * 2. Passes the event data to EventForm for prepopulation
+ * 3. No separate data fetching needed - shares loader with EventDetailPage
+ *
+ * BENEFITS OF SHARED LOADER (Lesson 373):
+ * =======================================
+ * INSTRUCTOR QUOTE:
+ * "So I need access to this loader here, not just in the event detail page,
+ * but also in the edit event page because the edit event page should also
+ * display the event data, but we got one loader which we wanna use for
+ * both pages."
+ *
+ * - Single source of truth for event data
+ * - No duplicate fetch requests
+ * - Data is already loaded when navigating from detail to edit
  */
 function EditEventPage() {
-  return <h1>EditEventPage</h1>;
+  /**
+   * useRouteLoaderData WITH ROUTE ID (Lesson 373):
+   * ==============================================
+   * INSTRUCTOR QUOTE:
+   * "And with such an ID defined, we can use a special hook called use route
+   * loader data to get access to a higher level loader from a child route."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We then can use this ID in use route loader data to tell React router
+   * that we wanna use the data from the loader that belongs to a route with
+   * this specific ID."
+   *
+   * The 'event-detail' ID matches the id property on the parent route.
+   * This returns the same data that EventDetailPage receives.
+   *
+   * Data structure from loader:
+   * {
+   *   event: {
+   *     id: "e1",
+   *     title: "Event Title",
+   *     image: "https://...",
+   *     date: "2024-01-01",
+   *     description: "..."
+   *   }
+   * }
+   */
+  const data = useRouteLoaderData('event-detail');
+
+  /**
+   * RENDERING EVENTFORM WITH EVENT DATA (Lesson 373):
+   * =================================================
+   * INSTRUCTOR QUOTE:
+   * "And for that, we simply have to pass the event as props to event form."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So in the Edit Event page, I wanna output my event form component."
+   *
+   * The event prop allows EventForm to:
+   * - Prepopulate input fields with existing values
+   * - Know whether this is an edit operation (event exists) or create (event is undefined)
+   */
+  return <EventForm event={data.event} />;
 }
 
 export default EditEventPage;

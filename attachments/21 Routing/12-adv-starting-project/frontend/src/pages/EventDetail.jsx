@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * EVENT DETAIL PAGE COMPONENT (Lessons 360, 372 - Dynamic Params + Loader)
+ * EVENT DETAIL PAGE COMPONENT (Lessons 360, 372, 373 - Dynamic Params + Loader)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 360: Basic page with useParams to display event ID
- * Lesson 372: Added loader to fetch event details using params argument (CURRENT)
+ * Lesson 372: Added loader to fetch event details using params argument
+ * Lesson 373: Changed to useRouteLoaderData with route ID (CURRENT)
  *
  * ============================================================================
  * LESSON 372: DYNAMIC ROUTE PARAMETERS IN LOADERS
@@ -119,7 +120,34 @@
  *
  * ============================================================================
  */
-import { useLoaderData, json } from 'react-router-dom';
+/**
+ * ============================================================================
+ * LESSON 373: useRouteLoaderData vs useLoaderData
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And with such an ID defined, we can use a special hook called use route
+ * loader data to get access to a higher level loader from a child route."
+ *
+ * CHANGE FROM Lesson 372:
+ * =======================
+ * Before: import { useLoaderData, json } from 'react-router-dom';
+ * After:  import { useRouteLoaderData, json } from 'react-router-dom';
+ *
+ * WHY THE CHANGE:
+ * ===============
+ * - useLoaderData: Gets data from the CURRENT route's loader
+ * - useRouteLoaderData: Gets data from a SPECIFIC route's loader (by ID)
+ *
+ * Since the loader is now on a parent wrapper route (with id: 'event-detail'),
+ * we need useRouteLoaderData to access it from child routes.
+ *
+ * INSTRUCTOR QUOTE:
+ * "We then can use this ID in use route loader data to tell React router that
+ * we wanna use the data from the loader that belongs to a route with this
+ * specific ID."
+ */
+import { useRouteLoaderData, json } from 'react-router-dom';
 
 import EventItem from '../components/EventItem';
 
@@ -138,17 +166,71 @@ import EventItem from '../components/EventItem';
  */
 function EventDetailPage() {
   /**
-   * useLoaderData HOOK (Lesson 372):
-   * ================================
-   * INSTRUCTOR QUOTE:
-   * "With that, the loader will now be called whenever we try to visit this
-   * event detail page, and therefore here, we can now use the use loader
-   * data hook to get hold of that data. So, of that event detail data."
+   * ============================================================================
+   * useRouteLoaderData HOOK (Lesson 373)
+   * ============================================================================
    *
-   * The loader returns the response from the backend API.
-   * React Router auto-parses the JSON, giving us the data object.
+   * INSTRUCTOR QUOTE:
+   * "And with such an ID defined, we can use a special hook called use route
+   * loader data to get access to a higher level loader from a child route."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We then can use this ID in use route loader data to tell React router
+   * that we wanna use the data from the loader that belongs to a route with
+   * this specific ID."
+   *
+   * ============================================================================
+   * CHANGE FROM LESSON 372:
+   * ============================================================================
+   *
+   * BEFORE (Lesson 372 - loader on same route):
+   * ===========================================
+   * const data = useLoaderData();
+   *
+   * AFTER (Lesson 373 - loader on parent route with ID):
+   * ====================================================
+   * const data = useRouteLoaderData('event-detail');
+   *
+   * ============================================================================
+   * WHY THIS CHANGE? (Lesson 373)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "So I need access to this loader here, not just in the event detail page,
+   * but also in the edit event page because the edit event page should also
+   * display the event data, but we got one loader which we wanna use for
+   * both pages."
+   *
+   * PROBLEM: Both EventDetailPage and EditEventPage need the same event data
+   * SOLUTION: Move loader to a parent route with an ID, then access via ID
+   *
+   * ROUTE STRUCTURE:
+   * ================
+   * {
+   *   path: ':eventId',
+   *   id: 'event-detail',         // ← The ID we pass to useRouteLoaderData
+   *   loader: eventDetailLoader,  // ← The shared loader
+   *   children: [
+   *     { index: true, element: <EventDetailPage /> },  // ← We are here
+   *     { path: 'edit', element: <EditEventPage /> },
+   *   ]
+   * }
+   *
+   * ============================================================================
+   * HOW useRouteLoaderData DIFFERS FROM useLoaderData (Lesson 373)
+   * ============================================================================
+   *
+   * | Hook              | Parameter | Gets data from                          |
+   * |-------------------|-----------|----------------------------------------|
+   * | useLoaderData     | None      | Current route's loader                  |
+   * | useRouteLoaderData| Route ID  | Any route's loader (identified by ID)  |
+   *
+   * useRouteLoaderData is more flexible because:
+   * - Can access parent route loaders
+   * - Can be used by multiple child routes to share data
+   * - Requires the route to have an 'id' property defined
    */
-  const data = useLoaderData();
+  const data = useRouteLoaderData('event-detail');
 
   /**
    * EXTRACTING EVENT DATA (Lesson 372):

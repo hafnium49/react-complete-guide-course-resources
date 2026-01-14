@@ -1,7 +1,12 @@
 /**
  * ============================================================================
- * EVENT FORM COMPONENT (Lesson 358 - Pre-built Component)
+ * EVENT FORM COMPONENT (Lessons 358, 373 - Pre-built + Prepopulation)
  * ============================================================================
+ *
+ * EVOLUTION OF THIS FILE:
+ * =======================
+ * Lesson 358: Pre-built component with basic form inputs
+ * Lesson 373: Added defaultValue props for prepopulation in edit mode (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -13,6 +18,45 @@
  *
  * This component provides a reusable form for both creating and editing events.
  * It demonstrates useNavigate for programmatic navigation.
+ *
+ * ============================================================================
+ * LESSON 373: PREPOPULATING FORM FIELDS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But now in the event form, we need to get access to the event data to
+ * prepopulate these input fields here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that of course is done with help of the default value property. We
+ * can add this to input elements in HTML and react to set the initial value
+ * for such an input."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this initial value now should be equal to event.title. Now event
+ * could be undefined though, so it might be a good idea to add a question
+ * mark to make sure that we only try to access this title property if
+ * event is not null or undefined."
+ *
+ * ============================================================================
+ * WHY defaultValue INSTEAD OF value? (Lesson 373)
+ * ============================================================================
+ *
+ * Using defaultValue vs value:
+ *
+ * | Attribute     | Behavior                                          |
+ * |---------------|---------------------------------------------------|
+ * | defaultValue  | Sets initial value, user can freely edit          |
+ * | value         | Controlled input, requires onChange + state       |
+ *
+ * INSTRUCTOR QUOTE:
+ * "Default value property. We can add this to input elements in HTML and
+ * react to set the initial value for such an input."
+ *
+ * defaultValue is the right choice because:
+ * - We want to show the existing value as starting point
+ * - User should be able to edit without needing onChange handlers
+ * - No state management needed for simple prepopulation
  *
  * ============================================================================
  * useNavigate HOOK (React Router Feature)
@@ -142,31 +186,99 @@ function EventForm({ method, event }) {
   return (
     <form className={classes.form}>
       {/**
-       * FORM INPUTS:
-       * ============
+       * ================================================================
+       * FORM INPUTS WITH PREPOPULATION (Lesson 373)
+       * ================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "And that of course is done with help of the default value property.
+       * We can add this to input elements in HTML and react to set the
+       * initial value for such an input."
+       *
        * Each input has:
        * - Accessible label with htmlFor/id pairing
        * - name attribute for form data extraction
        * - required attribute for basic validation
+       * - defaultValue for prepopulation in edit mode (Lesson 373)
        *
-       * TODO (later lessons):
-       * Add defaultValue={event?.title} etc. for edit mode
+       * OPTIONAL CHAINING (Lesson 373):
+       * ===============================
+       * INSTRUCTOR QUOTE:
+       * "Now event could be undefined though, so it might be a good idea
+       * to add a question mark to make sure that we only try to access
+       * this title property if event is not null or undefined."
+       *
+       * event?.title means:
+       * - If event is undefined → returns undefined (input shows empty)
+       * - If event exists → returns event.title (input shows value)
+       *
+       * This allows the same form to work for both:
+       * - NewEventPage (event is undefined, inputs are empty)
+       * - EditEventPage (event exists, inputs are prepopulated)
        */}
       <p>
         <label htmlFor="title">Title</label>
-        <input id="title" type="text" name="title" required />
+        {/**
+         * TITLE INPUT WITH defaultValue (Lesson 373):
+         * ===========================================
+         * INSTRUCTOR QUOTE:
+         * "And this initial value now should be equal to event.title."
+         */}
+        <input
+          id="title"
+          type="text"
+          name="title"
+          required
+          defaultValue={event ? event.title : ''}
+        />
       </p>
       <p>
         <label htmlFor="image">Image</label>
-        <input id="image" type="url" name="image" required />
+        {/**
+         * IMAGE INPUT WITH defaultValue (Lesson 373):
+         * ===========================================
+         * INSTRUCTOR QUOTE:
+         * "And for image, it's event image. For date, it's event date."
+         */}
+        <input
+          id="image"
+          type="url"
+          name="image"
+          required
+          defaultValue={event ? event.image : ''}
+        />
       </p>
       <p>
         <label htmlFor="date">Date</label>
-        <input id="date" type="date" name="date" required />
+        {/**
+         * DATE INPUT WITH defaultValue (Lesson 373):
+         * ==========================================
+         * INSTRUCTOR QUOTE:
+         * "And for image, it's event image. For date, it's event date."
+         */}
+        <input
+          id="date"
+          type="date"
+          name="date"
+          required
+          defaultValue={event ? event.date : ''}
+        />
       </p>
       <p>
         <label htmlFor="description">Description</label>
-        <textarea id="description" name="description" rows="5" required />
+        {/**
+         * DESCRIPTION TEXTAREA WITH defaultValue (Lesson 373):
+         * ====================================================
+         * INSTRUCTOR QUOTE:
+         * "And down here for description, it's also event description."
+         */}
+        <textarea
+          id="description"
+          name="description"
+          rows="5"
+          required
+          defaultValue={event ? event.description : ''}
+        />
       </p>
       <div className={classes.actions}>
         {/**

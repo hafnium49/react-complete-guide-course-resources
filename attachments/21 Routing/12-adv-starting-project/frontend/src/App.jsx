@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-369)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-373)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -584,54 +584,6 @@ const router = createBrowserRouter([
             loader: eventsLoader,
           },
           /**
-           * ================================================================
-           * DYNAMIC EVENT ROUTE (Lessons 360, 372)
-           * ================================================================
-           *
-           * LESSON 360 - DYNAMIC PATH SEGMENT:
-           * ==================================
-           * INSTRUCTOR QUOTE:
-           * "And then we wanna have a route that supports basically all kinds
-           * of IDs and should then load the EventDetailPage for these different
-           * IDs. So we need a route where the path contains a parameter, where
-           * we have a dynamic path segment."
-           *
-           * INSTRUCTOR QUOTE:
-           * "And you learned how that can be defined. We add a colon and then
-           * any identifier of our choice, like, for example, eventId."
-           *
-           * ================================================================
-           * LESSON 372 - REGISTERING THE LOADER
-           * ================================================================
-           *
-           * INSTRUCTOR QUOTE:
-           * "Now we must register the loader in our route definitions. And
-           * that's super easy to forget, but it's super important."
-           *
-           * INSTRUCTOR QUOTE:
-           * "Just adding a loader function to your component file like this
-           * won't do anything. React router will not look for loaders
-           * automatically. Instead, you have to register it here when
-           * defining your routes."
-           *
-           * INSTRUCTOR QUOTE:
-           * "We have to add the loader property to the event detail page
-           * route, and then import the loader here from event detail."
-           *
-           * INSTRUCTOR QUOTE:
-           * "And that is then set as a value for the loader property of
-           * this route definition."
-           *
-           * The loader receives { request, params } from React Router:
-           * - params.eventId contains the dynamic segment value
-           * - e.g., /events/e1 → params.eventId = "e1"
-           */
-          {
-            path: ':eventId',
-            element: <EventDetailPage />,
-            loader: eventDetailLoader,
-          },
-          /**
            * NEW EVENT ROUTE - ROUTE SPECIFICITY (Lesson 360):
            * =================================================
            * INSTRUCTOR QUOTE:
@@ -653,23 +605,181 @@ const router = createBrowserRouter([
            */
           { path: 'new', element: <NewEventPage /> }, // this router will be over :eventId automatically
           /**
-           * EDIT EVENT ROUTE - DYNAMIC + STATIC (Lesson 360):
-           * =================================================
-           * INSTRUCTOR QUOTE:
-           * "So now the last route definition which I want to add is this
-           * definition where we wanna load the EditEventPage if we are on
-           * /events, then, some-id/edit."
+           * ================================================================
+           * LESSON 373: WRAPPER ROUTE FOR SHARING LOADER DATA
+           * ================================================================
            *
            * INSTRUCTOR QUOTE:
-           * "The path therefore is /events. Then, again, my dynamic segment
-           * and then edit. This is something we didn't do before, but it is
-           * absolutely a path you can add to your route definitions."
+           * "And that's what the ID property here is for. With the ID
+           * property we can assign a string identifier, any identifier of
+           * our choice, for example event-detail, to this route definition."
            *
            * INSTRUCTOR QUOTE:
-           * "You can have another hard-coded segment after a dynamic segment,
-           * that is allowed and possible."
+           * "And with such an ID defined, we can use a special hook called
+           * use route loader data to get access to a higher level loader
+           * from a child route."
+           *
+           * ================================================================
+           * WHY WE NEED A WRAPPER ROUTE (Lesson 373):
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "So I need access to this loader here, not just in the event
+           * detail page, but also in the edit event page because the edit
+           * event page should also display the event data, but we got one
+           * loader which we wanna use for both pages."
+           *
+           * PROBLEM: Both EventDetail and EditEvent need the same event data
+           * SOLUTION: Create a wrapper route that holds the loader, with both
+           * pages as children
+           *
+           * ================================================================
+           * USING ROUTES WITHOUT element PROPERTY (Lesson 373):
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "Instead, here I'll again set up another wrapping route. You
+           * might remember that we can have such wrapping routes without
+           * an element. This wrapper route will then simply add some children
+           * routes inside of it, and the loader that's added to this wrapping
+           * route will be shared to all child routes."
+           *
+           * INSTRUCTOR QUOTE:
+           * "But this wrapper route, this parent route, doesn't necessarily
+           * need a element. Instead, if you add children but don't define
+           * an element, React Router will simply render the child element
+           * that matches the path without wrapping that around another
+           * component."
+           *
+           * INSTRUCTOR QUOTE:
+           * "So we can use this as a way of sharing loaders without having
+           * to add wrapper components that add layouts or anything like that."
+           *
+           * ================================================================
+           * ROUTE STRUCTURE BEFORE (Lessons 360-372):
+           * ================================================================
+           *
+           * children: [
+           *   { index: true, element: <EventsPage />, loader: eventsLoader },
+           *   { path: ':eventId', element: <EventDetailPage />, loader: eventDetailLoader },
+           *   { path: 'new', element: <NewEventPage /> },
+           *   { path: ':eventId/edit', element: <EditEventPage /> },
+           * ]
+           *
+           * ================================================================
+           * ROUTE STRUCTURE AFTER (Lesson 373):
+           * ================================================================
+           *
+           * children: [
+           *   { index: true, element: <EventsPage />, loader: eventsLoader },
+           *   { path: 'new', element: <NewEventPage /> },
+           *   {
+           *     path: ':eventId',
+           *     id: 'event-detail',           // ← Route ID for useRouteLoaderData
+           *     loader: eventDetailLoader,    // ← Shared loader
+           *     children: [
+           *       { index: true, element: <EventDetailPage /> },  // /events/:eventId
+           *       { path: 'edit', element: <EditEventPage /> },   // /events/:eventId/edit
+           *     ]
+           *   }
+           * ]
+           *
+           * ================================================================
+           * HOW THE id PROPERTY WORKS (Lesson 373):
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "And we then can use this ID in use route loader data to tell
+           * React router that we wanna use the data from the loader that
+           * belongs to a route with this specific ID."
+           *
+           * | Property | Value          | Purpose                               |
+           * |----------|----------------|---------------------------------------|
+           * | path     | ':eventId'     | Dynamic segment for event ID          |
+           * | id       | 'event-detail' | Identifier for useRouteLoaderData     |
+           * | loader   | eventDetailLoader | Fetches event data from backend   |
+           * | children | [...]          | Child routes that share the loader    |
+           *
+           * ================================================================
+           * CHILD ROUTE PATHS (Lesson 373):
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "And on the Edit Event page path should be edit relative to
+           * the parent path."
+           *
+           * Children paths are relative to parent:
+           * - Parent path: ':eventId'
+           * - Child index route: '' (matches /events/:eventId)
+           * - Child 'edit' route: 'edit' (matches /events/:eventId/edit)
+           *
+           * ================================================================
            */
-          { path: ':eventId/edit', element: <EditEventPage /> },
+          {
+            path: ':eventId',
+            /**
+             * ROUTE ID FOR useRouteLoaderData (Lesson 373):
+             * =============================================
+             * INSTRUCTOR QUOTE:
+             * "And that's what the ID property here is for. With the ID
+             * property we can assign a string identifier, any identifier
+             * of our choice, for example event-detail, to this route
+             * definition."
+             *
+             * This ID is used by:
+             * - EventDetailPage: useRouteLoaderData('event-detail')
+             * - EditEventPage: useRouteLoaderData('event-detail')
+             */
+            id: 'event-detail',
+            /**
+             * SHARED LOADER (Lesson 373):
+             * ===========================
+             * INSTRUCTOR QUOTE:
+             * "The loader that's added to this wrapping route will be
+             * shared to all child routes."
+             *
+             * Both EventDetailPage and EditEventPage can now access
+             * this loader's data without triggering separate fetches.
+             */
+            loader: eventDetailLoader,
+            children: [
+              /**
+               * EVENT DETAIL PAGE - INDEX ROUTE (Lesson 373):
+               * =============================================
+               * INSTRUCTOR QUOTE:
+               * "Because if you have multiple children here, one of them
+               * could be this event detail page. But then it should be
+               * loaded for this parent path."
+               *
+               * INSTRUCTOR QUOTE:
+               * "And if you wanna load a child component for a parent
+               * path, you need to use the index property."
+               *
+               * URL: /events/e1 → Renders EventDetailPage
+               */
+              {
+                index: true,
+                element: <EventDetailPage />,
+              },
+              /**
+               * EDIT EVENT PAGE - CHILD ROUTE (Lesson 373):
+               * ===========================================
+               * INSTRUCTOR QUOTE:
+               * "And on the Edit Event page path should be edit relative
+               * to the parent path."
+               *
+               * URL: /events/e1/edit → Renders EditEventPage
+               *
+               * Since this is a child of the wrapper route with the loader,
+               * EditEventPage can access the event data via:
+               * useRouteLoaderData('event-detail')
+               */
+              {
+                path: 'edit',
+                element: <EditEventPage />,
+              },
+            ],
+          },
         ],
       },
     ],
