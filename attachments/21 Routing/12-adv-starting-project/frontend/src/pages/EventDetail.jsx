@@ -1,52 +1,101 @@
 /**
  * ============================================================================
- * EVENT DETAIL PAGE COMPONENT (Lesson 360 - Tasks 1 & 7 Solution)
+ * EVENT DETAIL PAGE COMPONENT (Lessons 360, 372 - Dynamic Params + Loader)
  * ============================================================================
  *
- * TASK 1 SOLUTION (Lesson 360):
- * =============================
- * INSTRUCTOR QUOTE:
- * "And then also my EventsPage, EventDetailPage, NewEventPage, and EditEventPage."
- *
- * INSTRUCTOR QUOTE:
- * "And then here, I got the EditEventPage... And then repeat the same for all
- * the other page files. So here we got EventDetail."
+ * EVOLUTION OF THIS FILE:
+ * =======================
+ * Lesson 360: Basic page with useParams to display event ID
+ * Lesson 372: Added loader to fetch event details using params argument (CURRENT)
  *
  * ============================================================================
- * TASK 7 SOLUTION - DISPLAYING EVENT ID (Lesson 360)
+ * LESSON 372: DYNAMIC ROUTE PARAMETERS IN LOADERS
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And in task number seven, we now wanna output the ID of the selected event
- * on the EventDetailPage."
- *
- * useParams HOOK (Lesson 360):
- * ============================
- * INSTRUCTOR QUOTE:
- * "And that of course is also something we learned about before. We can use
- * another feature from react-router-dom and that other feature is a special
- * hook, the useParams hook."
+ * "Okay, let's proceed with this demo website here. We got our list of events.
+ * Now if we click on an event, we might wanna load the data for that event,
+ * and we wanna make sure that we go to a valid page to begin with."
  *
  * INSTRUCTOR QUOTE:
- * "This hook when called in a component function gives us access to the
- * currently active route parameters, so to the values that are encoded in
- * the URL for our dynamic path segments."
+ * "On this event detail page here, I want to output the event item here.
+ * A component which I predefined for you, and for which I already added some
+ * styling."
+ *
+ * ============================================================================
+ * WHY NOT USE useEffect? (Lesson 372)
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So for the value that's used here, for eventId, in this case."
+ * "Now, we could do this here in the component by using the params and using
+ * useEffect to send the HTTP request, but I won't do this here. Instead, I
+ * will add another loader function here and export it."
  *
- * ACCESSING THE PARAMETER (Lesson 360):
+ * Using loaders instead of useEffect:
+ * - Data is fetched BEFORE component renders
+ * - No loading state needed in component
+ * - Cleaner separation of concerns
+ * - Error handling via errorElement
+ *
+ * ============================================================================
+ * ACCESSING ROUTE PARAMETERS IN LOADERS (Lesson 372)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In the event detail page, we could use the use params hook, but we can't
+ * use this in the loader. As mentioned before, hooks can't be accessed there."
+ *
+ * INSTRUCTOR QUOTE:
+ * "But you still can get access to the route parameters that you need because
+ * react router, which calls this loader function for you, actually passes an
+ * object to this loader function when executing it for you."
+ *
+ * THE LOADER ARGUMENT OBJECT (Lesson 372):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "And that object contains two important pieces of data: A request property,
+ * which contains a request object, and a params property, which contains an
+ * object with all your route parameters."
+ *
+ * loader({ request, params }) receives:
+ * =====================================
+ * | Property | Type    | Contains                                            |
+ * |----------|---------|-----------------------------------------------------|
+ * | request  | Request | Request object (URL, query params, etc.)            |
+ * | params   | Object  | All route parameters (e.g., { eventId: 'e1' })      |
+ *
+ * REQUEST OBJECT USE CASES (Lesson 372):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Now the request object here in a loader could be used to access the URL
+ * to, for example, extract query parameters or anything like that."
+ *
+ * Examples of request usage:
+ * - new URL(request.url).searchParams.get('sort')
+ * - request.url to get the full URL
+ *
+ * PARAMS OBJECT USE CASES (Lesson 372):
  * =====================================
  * INSTRUCTOR QUOTE:
- * "We can use this to output this eventId value on this page just as we did
- * it before by adding a paragraph where I say Event ID and then I output
- * params.eventId."
+ * "Instead it's the params object, which is interesting for us here. Because
+ * with that, we can get access to all the route parameter values as we could
+ * do it with help of use params."
+ *
+ * ============================================================================
+ * IMPORTANT: REGISTERING THE LOADER (Lesson 372)
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And it's .eventId here in my case because I used eventId as an identifier
- * after the colon. If you used another value here like ID or event or
- * whatever, you would have to use that other identifier for getting hold of
- * the value with that params object."
+ * "Now we must register the loader in our route definitions. And that's super
+ * easy to forget, but it's super important."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Just adding a loader function to your component file like this won't do
+ * anything. React router will not look for loaders automatically. Instead,
+ * you have to register it here when defining your routes."
+ *
+ * See App.jsx for the loader registration:
+ * { path: ':eventId', element: <EventDetailPage />, loader: eventDetailLoader }
  *
  * ============================================================================
  * ROUTE CONFIGURATION
@@ -58,67 +107,251 @@
  *   path: 'events',
  *   element: <EventsRootLayout />,
  *   children: [
- *     { index: true, element: <EventsPage /> },
- *     { path: ':eventId', element: <EventDetailPage /> },  // ← This page
+ *     { index: true, element: <EventsPage />, loader: eventsLoader },
+ *     { path: ':eventId', element: <EventDetailPage />, loader: eventDetailLoader },
  *     ...
  *   ]
  * }
  *
  * URL Examples:
- * - http://localhost:3000/events/e1 → eventId = "e1"
- * - http://localhost:3000/events/e2 → eventId = "e2"
- * - http://localhost:3000/events/abc123 → eventId = "abc123"
+ * - http://localhost:3000/events/e1 → params.eventId = "e1"
+ * - http://localhost:3000/events/e2 → params.eventId = "e2"
  *
  * ============================================================================
  */
-import { useParams } from 'react-router-dom';
+import { useLoaderData, json } from 'react-router-dom';
+
+import EventItem from '../components/EventItem';
 
 /**
- * EVENT DETAIL PAGE COMPONENT:
- * ============================
- * Displays details for a specific event based on URL parameter.
+ * EVENT DETAIL PAGE COMPONENT (Lesson 372):
+ * =========================================
+ * Displays details for a specific event using data from the loader.
  *
- * KEY CONCEPTS DEMONSTRATED:
- * - useParams hook for accessing URL parameters
- * - Dynamic routes with :paramName syntax
- * - The parameter name matches what's defined in route config
+ * INSTRUCTOR QUOTE:
+ * "So in event detail, instead of showing this dummy content here, we want
+ * to output the event item component."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And here we must set the event prop and pass the event data for the event
+ * for which we wanna view the details to this event prop."
  */
 function EventDetailPage() {
   /**
-   * useParams HOOK (Lesson 360):
-   * ============================
-   * Returns an object containing all URL parameters.
+   * useLoaderData HOOK (Lesson 372):
+   * ================================
+   * INSTRUCTOR QUOTE:
+   * "With that, the loader will now be called whenever we try to visit this
+   * event detail page, and therefore here, we can now use the use loader
+   * data hook to get hold of that data. So, of that event detail data."
    *
-   * For route path: ':eventId'
-   * And URL: /events/e1
-   *
-   * params will be: { eventId: 'e1' }
-   *
-   * IMPORTANT: The property name (eventId) must match
-   * the parameter name in your route definition.
-   *
-   * Route: { path: ':eventId', element: <EventDetailPage /> }
-   *                  ↑
-   *                  This name determines params.eventId
+   * The loader returns the response from the backend API.
+   * React Router auto-parses the JSON, giving us the data object.
    */
-  const params = useParams();
+  const data = useLoaderData();
 
-  return (
-    <>
-      <h1>EventDetailPage</h1>
-      {/**
-       * DISPLAYING THE EVENT ID (Lesson 360):
-       * =====================================
-       * INSTRUCTOR QUOTE:
-       * "With that, we can see that I see the Event ID e1 or e2, depending
-       * on which event I click on."
-       *
-       * The params object gives us access to all dynamic segments
-       * defined in the route path.
-       */}
-      <p>Event ID: {params.eventId}</p>
-    </>
-  );
+  /**
+   * EXTRACTING EVENT DATA (Lesson 372):
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "And with that, we can then use this data object to access the event
+   * property, because I know that my backend API will include the actual
+   * event data for the loaded event in an event property on that overall
+   * response data object."
+   *
+   * Backend response structure:
+   * {
+   *   event: {
+   *     id: "e1",
+   *     title: "Event Title",
+   *     image: "...",
+   *     date: "2024-01-01",
+   *     description: "..."
+   *   }
+   * }
+   *
+   * INSTRUCTOR QUOTE:
+   * "So with data dot event, I access that event data, and I pass that as
+   * a value to the event prop on event item."
+   */
+  return <EventItem event={data.event} />;
 }
 
 export default EventDetailPage;
+
+/**
+ * ============================================================================
+ * LESSON 372: LOADER FUNCTION FOR EVENT DETAILS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Instead, I will add another loader function here and export it. Now this
+ * time, a loader function for my event details."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So I export this, I will convert it to an async function because I want
+ * to use the await keyword in here."
+ *
+ * ============================================================================
+ * THE LOADER ARGUMENT OBJECT
+ * ============================================================================
+ *
+ * React Router passes an object with { request, params } to every loader:
+ *
+ * INSTRUCTOR QUOTE:
+ * "But you still can get access to the route parameters that you need because
+ * react router, which calls this loader function for you, actually passes an
+ * object to this loader function when executing it for you."
+ *
+ * DESTRUCTURING THE PARAMS (Lesson 372):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "So here, we have the event ID route parameter. We have this dynamic segment.
+ * Then from here, we can access params dot event ID."
+ *
+ * For route path: ':eventId'
+ * And URL: /events/e1
+ *
+ * { params } will contain: { eventId: 'e1' }
+ *
+ * ============================================================================
+ */
+export async function loader({ request, params }) {
+  /**
+   * ACCESSING ROUTE PARAMETERS (Lesson 372):
+   * ========================================
+   * INSTRUCTOR QUOTE:
+   * "So here, we have the event ID route parameter. We have this dynamic
+   * segment. Then from here, we can access params dot event ID."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that gives us this ID, which we wanna add here at the end of this
+   * URL. To send a request to local host 8080 slash events slash the ID of
+   * the event for which we wanna fetch the details."
+   *
+   * The params object mirrors the dynamic segments in the route path:
+   * - Route: { path: ':eventId', ... }
+   * - params: { eventId: 'e1' }
+   *
+   * IMPORTANT: The property name must match the route parameter name!
+   */
+  const id = params.eventId;
+
+  /**
+   * FETCH EVENT DETAILS (Lesson 372):
+   * =================================
+   * INSTRUCTOR QUOTE:
+   * "And now to fetch the data for a single event, we can use the built in
+   * fetch function and send a request to our dummy backend API server, which
+   * we can reach under HTTP, local host 8080, and then slash events. And then
+   * the ID of the event for which we wanna load data."
+   *
+   * API endpoint: GET /events/:id
+   * Returns: { event: { id, title, image, date, description } }
+   */
+  const response = await fetch('http://localhost:8080/events/' + id);
+
+  /**
+   * ERROR HANDLING (Lesson 372):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "Here, however, I will, first of all, await this because I still want
+   * to check if not response okay. So if we have a 400-ish or 500-ish error
+   * code. And only if that's not the case, so if we have a successful response,
+   * only in that case I wanna return the response."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Otherwise, just as before, I wanna throw an error by using the builtin
+   * JSON function, which is provided by react router."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, you could have more granular error handling, but that's good enough
+   * for this demo."
+   */
+  if (!response.ok) {
+    /**
+     * THROW ERROR RESPONSE (Lesson 372):
+     * ==================================
+     * INSTRUCTOR QUOTE:
+     * "And I will throw an error response where I say, 'Could not fetch
+     * details for selected event.' And I will add this metadata object
+     * here and set the status to 500 again."
+     *
+     * Using json() helper from Lesson 371:
+     * - Automatically stringifies the data
+     * - Automatically parses when reading in ErrorPage
+     * - Status code enables differentiated error handling
+     */
+    throw json(
+      { message: 'Could not fetch details for selected event.' },
+      { status: 500 }
+    );
+  }
+
+  /**
+   * RETURN RESPONSE (Lesson 372):
+   * =============================
+   * INSTRUCTOR QUOTE:
+   * "We then get a response by awaiting this fetch call here. And now we
+   * could again return this response here as we learned before. We can
+   * return such a response object in our loader."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And if that's all we want to do, we could, therefore, even return it
+   * like this. And, as mentioned, react router would automatically wait
+   * for the promise and give us access to the data to which it resolves."
+   *
+   * React Router will:
+   * 1. Detect this is a Response object
+   * 2. Automatically call .json() to extract data
+   * 3. Provide that data via useLoaderData()
+   */
+  return response;
+}
+
+/**
+ * ============================================================================
+ * SUMMARY: LOADER vs useEffect + useParams (Lesson 372)
+ * ============================================================================
+ *
+ * Traditional approach (useEffect + useParams):
+ * ============================================
+ * function EventDetailPage() {
+ *   const { eventId } = useParams();
+ *   const [event, setEvent] = useState(null);
+ *   const [loading, setLoading] = useState(true);
+ *
+ *   useEffect(() => {
+ *     fetch(`http://localhost:8080/events/${eventId}`)
+ *       .then(res => res.json())
+ *       .then(data => {
+ *         setEvent(data.event);
+ *         setLoading(false);
+ *       });
+ *   }, [eventId]);
+ *
+ *   if (loading) return <p>Loading...</p>;
+ *   return <EventItem event={event} />;
+ * }
+ *
+ * Loader approach (React Router):
+ * ===============================
+ * function EventDetailPage() {
+ *   const data = useLoaderData();
+ *   return <EventItem event={data.event} />;
+ * }
+ *
+ * export async function loader({ params }) {
+ *   const response = await fetch(`http://localhost:8080/events/${params.eventId}`);
+ *   return response;
+ * }
+ *
+ * BENEFITS OF LOADER APPROACH:
+ * ============================
+ * 1. Data fetched BEFORE render (no loading state in component)
+ * 2. Cleaner component code (just uses data)
+ * 3. Error handling via errorElement (no error state in component)
+ * 4. Separation of concerns (fetching logic outside component)
+ *
+ * ============================================================================
+ */

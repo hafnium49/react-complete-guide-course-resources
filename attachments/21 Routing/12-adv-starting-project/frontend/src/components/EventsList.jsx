@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS LIST COMPONENT (Lessons 358, 363 - Pre-built + Loader Data Access)
+ * EVENTS LIST COMPONENT (Lessons 358, 363, 372 - Pre-built + Loader Data + Links)
  * ============================================================================
  *
  * PRE-BUILT COMPONENT (Lesson 358):
@@ -132,8 +132,31 @@ function EventsList({ events }) {
         {events.map((event) => (
           <li key={event.id} className={classes.item}>
             {/**
-             * DYNAMIC LINK TO EVENT DETAIL:
-             * =============================
+             * ================================================================
+             * DYNAMIC LINK TO EVENT DETAIL (Lesson 372)
+             * ================================================================
+             *
+             * INSTRUCTOR QUOTE:
+             * "Now, we wanna navigate to this event detail page. For that,
+             * I'll start by going to events list, and there we first of all
+             * wanna convert this anchor element to a link."
+             *
+             * INSTRUCTOR QUOTE:
+             * "And import link from react-router-dom, of course, and also
+             * convert the closing tag to a link."
+             *
+             * HOW RELATIVE PATHS WORK (Lesson 372):
+             * ====================================
+             * INSTRUCTOR QUOTE:
+             * "So here I have a relative path relative to the path of the
+             * currently active route."
+             *
+             * INSTRUCTOR QUOTE:
+             * "And that means if we take a look at App.js again, that if we
+             * are on the events page, and we append the event ID at the end,
+             * we go to this event detail page, because that route is a child
+             * route of this events route."
+             *
              * Using template literal to build the path:
              * `/events/${event.id}` produces:
              * - For event.id = "e1" → "/events/e1"
@@ -141,8 +164,13 @@ function EventsList({ events }) {
              *
              * These paths match the dynamic route:
              * { path: ':eventId', element: <EventDetailPage /> }
+             *
+             * INSTRUCTOR QUOTE:
+             * "So we will go to the event detail page if we set up our links
+             * like this and we append the event ID to the currently active
+             * path when this events list is being rendered."
              */}
-            <Link to={`/events/${event.id}`}>
+            <Link to={event.id}>
               <img src={event.image} alt={event.title} />
               <div className={classes.content}>
                 <h2>{event.title}</h2>

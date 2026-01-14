@@ -264,7 +264,24 @@ import HomePage from './pages/Home';
  * - `eventsLoader` is the alias we use here to avoid conflicts
  */
 import EventsPage, { loader as eventsLoader } from './pages/Events';
-import EventDetailPage from './pages/EventDetail';
+/**
+ * ============================================================================
+ * LESSON 372: IMPORTING EVENT DETAIL LOADER
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We have to add the loader property to the event detail page route, and then
+ * import the loader here from event detail."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I will again give it an alias, so that we don't have any name clashes.
+ * And here it's the 'eventDetailLoader,' like that."
+ *
+ * Following the same pattern as eventsLoader:
+ * - Import the loader function from the component file
+ * - Give it a unique alias to avoid naming conflicts
+ */
+import EventDetailPage, { loader as eventDetailLoader } from './pages/EventDetail';
 import NewEventPage from './pages/NewEvent';
 import EditEventPage from './pages/EditEvent';
 
@@ -567,8 +584,12 @@ const router = createBrowserRouter([
             loader: eventsLoader,
           },
           /**
-           * DYNAMIC EVENT ROUTE (Lesson 360):
-           * =================================
+           * ================================================================
+           * DYNAMIC EVENT ROUTE (Lessons 360, 372)
+           * ================================================================
+           *
+           * LESSON 360 - DYNAMIC PATH SEGMENT:
+           * ==================================
            * INSTRUCTOR QUOTE:
            * "And then we wanna have a route that supports basically all kinds
            * of IDs and should then load the EventDetailPage for these different
@@ -578,8 +599,38 @@ const router = createBrowserRouter([
            * INSTRUCTOR QUOTE:
            * "And you learned how that can be defined. We add a colon and then
            * any identifier of our choice, like, for example, eventId."
+           *
+           * ================================================================
+           * LESSON 372 - REGISTERING THE LOADER
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now we must register the loader in our route definitions. And
+           * that's super easy to forget, but it's super important."
+           *
+           * INSTRUCTOR QUOTE:
+           * "Just adding a loader function to your component file like this
+           * won't do anything. React router will not look for loaders
+           * automatically. Instead, you have to register it here when
+           * defining your routes."
+           *
+           * INSTRUCTOR QUOTE:
+           * "We have to add the loader property to the event detail page
+           * route, and then import the loader here from event detail."
+           *
+           * INSTRUCTOR QUOTE:
+           * "And that is then set as a value for the loader property of
+           * this route definition."
+           *
+           * The loader receives { request, params } from React Router:
+           * - params.eventId contains the dynamic segment value
+           * - e.g., /events/e1 → params.eventId = "e1"
            */
-          { path: ':eventId', element: <EventDetailPage /> },
+          {
+            path: ':eventId',
+            element: <EventDetailPage />,
+            loader: eventDetailLoader,
+          },
           /**
            * NEW EVENT ROUTE - ROUTE SPECIFICITY (Lesson 360):
            * =================================================
