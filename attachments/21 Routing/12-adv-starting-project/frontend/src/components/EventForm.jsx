@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENT FORM COMPONENT (Lessons 358, 373, 375, 377 - Form + Submission State)
+ * EVENT FORM COMPONENT (Lessons 358, 373, 375, 377, 378 - Form + Validation)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -8,7 +8,8 @@
  * Lesson 358: Pre-built component with basic form inputs
  * Lesson 373: Added defaultValue props for prepopulation in edit mode
  * Lesson 375: Replaced <form> with <Form> component for actions
- * Lesson 377: Added useNavigation for submission state feedback (CURRENT)
+ * Lesson 377: Added useNavigation for submission state feedback
+ * Lesson 378: Added useActionData for validation error display (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -248,8 +249,65 @@
  * | 'submitting'| A form is being submitted (action is running)         |
  *
  * ============================================================================
+ * LESSON 378: DISPLAYING VALIDATION ERRORS WITH useActionData
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can go to the event form component, which is in the end rendered by the
+ * new event page component here. And in that event form component I can use
+ * another provided by a react-router-dom."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's the use action data hook, which almost sounds like use loader
+ * data, which is no coincidence because it does basically the same thing."
+ *
+ * useLoaderData vs useActionData:
+ * ===============================
+ * | Hook           | Gets data from                                      |
+ * |----------------|-----------------------------------------------------|
+ * | useLoaderData  | The closest route's LOADER function                 |
+ * | useActionData  | The closest route's ACTION function                 |
+ *
+ * INSTRUCTOR QUOTE:
+ * "It gives us access to the data returned by our action, in this case, not
+ * by the loader, but by the action and it gives us access to the closest
+ * action."
+ *
+ * WHY THIS WORKS IN A CHILD COMPONENT (Lesson 378):
+ * =================================================
+ * INSTRUCTOR QUOTE:
+ * "So I can use this in this component here even though it's not the page
+ * component because it's rendered by the page component for which this action
+ * was defined where I return that response."
+ *
+ * AUTOMATIC RESPONSE PARSING (Lesson 378):
+ * ========================================
+ * INSTRUCTOR QUOTE:
+ * "And if I return a response in an action this response is automatically
+ * parsed by React router for me, just as it is the case for loaders."
+ *
+ * BACKEND VALIDATION ERROR FORMAT:
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "And therefore here, this data is the data I return on my back-end in case
+ * of validation errors. And that would be an object with a general message
+ * and a nested errors object, which has different keys for the different
+ * inputs with more detailed error messages."
+ *
+ * Expected data structure from backend when validation fails:
+ * {
+ *   message: "General error message",
+ *   errors: {
+ *     title: "Title is required",
+ *     image: "Invalid image URL",
+ *     date: "Date is required",
+ *     description: "Description is required"
+ *   }
+ * }
+ *
+ * ============================================================================
  */
-import { useNavigate, useNavigation, Form } from 'react-router-dom';
+import { useNavigate, useNavigation, Form, useActionData } from 'react-router-dom';
 
 import classes from './EventForm.module.css';
 
@@ -344,6 +402,44 @@ function EventForm({ method, event }) {
   const isSubmitting = navigation.state === 'submitting';
 
   /**
+   * ============================================================================
+   * LESSON 378: useActionData HOOK FOR VALIDATION ERRORS
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "We can go to the event form component, which is in the end rendered by the
+   * new event page component here. And in that event form component I can use
+   * another provided by a react-router-dom. And that's the use action data hook."
+   *
+   * INSTRUCTOR QUOTE:
+   * "It gives us access to the data returned by our action, in this case, not
+   * by the loader, but by the action and it gives us access to the closest
+   * action."
+   *
+   * WHAT DATA CONTAINS:
+   * ===================
+   * - undefined: If form hasn't been submitted yet, or action didn't return data
+   * - Response data: If action returned a response (e.g., validation errors)
+   *
+   * INSTRUCTOR QUOTE:
+   * "So with that, in event form, I get this data object here and if I return
+   * a response in an action this response is automatically parsed by React
+   * router for me, just as it is the case for loaders."
+   *
+   * WHY THIS WORKS HERE (Lesson 378):
+   * =================================
+   * INSTRUCTOR QUOTE:
+   * "So I can use this in this component here even though it's not the page
+   * component because it's rendered by the page component for which this action
+   * was defined where I return that response."
+   *
+   * Component hierarchy:
+   * - NewEventPage (has action registered) → renders EventForm
+   * - EventForm can access the action's returned data via useActionData
+   */
+  const data = useActionData();
+
+  /**
    * CANCEL HANDLER:
    * ===============
    * Navigates back one level using relative path '..'.
@@ -406,6 +502,64 @@ function EventForm({ method, event }) {
      * 6. Action extracts data via request.formData()
      */
     <Form method="post" className={classes.form}>
+      {/**
+       * ================================================================
+       * LESSON 378: VALIDATION ERROR DISPLAY
+       * ================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "So therefore, here in event form inside of my form, for example,
+       * I could check if data is set because it will not be set if we
+       * haven't submitted the form yet, for example because that data is
+       * coming from an action, you must not forget this."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So I check if I have data, if I submitted the form and the action
+       * returns some data. And then I check if I have this errors object,
+       * this nested errors object on my data."
+       *
+       * CONDITIONAL RENDERING EXPLAINED:
+       * ================================
+       * data && data.errors - Two checks:
+       * 1. data must exist (form was submitted and action returned something)
+       * 2. data.errors must exist (backend returned validation errors)
+       *
+       * If both are true, we display the error list.
+       */}
+      {data && data.errors && (
+        /**
+         * DISPLAYING ERROR MESSAGES (Lesson 378):
+         * =======================================
+         * INSTRUCTOR QUOTE:
+         * "In which case I want to return or output an unordered list where
+         * I then use Object.values, a function built into JavaScript to
+         * basically loop through all my keys in this errors object and map
+         * my data here, the data that's stored for these different keys
+         * to list items."
+         *
+         * Object.values(data.errors) converts:
+         * {
+         *   title: "Title is required",
+         *   image: "Invalid URL",
+         *   date: "Date is required"
+         * }
+         *
+         * Into an array:
+         * ["Title is required", "Invalid URL", "Date is required"]
+         *
+         * Then .map() converts each string into a <li> element.
+         *
+         * INSTRUCTOR QUOTE:
+         * "Every list item receives the special key prop which is expected
+         * by React, and I set it equal to the error message I'm having here,
+         * and I output the error message."
+         */
+        <ul>
+          {Object.values(data.errors).map((err) => (
+            <li key={err}>{err}</li>
+          ))}
+        </ul>
+      )}
       {/**
        * ================================================================
        * FORM INPUTS WITH PREPOPULATION (Lesson 373)

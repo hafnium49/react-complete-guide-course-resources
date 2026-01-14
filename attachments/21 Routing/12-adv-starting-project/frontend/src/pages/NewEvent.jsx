@@ -1,13 +1,14 @@
 /**
  * ============================================================================
- * NEW EVENT PAGE COMPONENT (Lessons 360, 374, 375 - Task 1 + EventForm + Action)
+ * NEW EVENT PAGE COMPONENT (Lessons 360, 374, 375, 378 - Action + Validation)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 360: Basic page with placeholder content (Task 1 solution)
  * Lesson 374: Added EventForm and introduced action concept
- * Lesson 375: Implemented action function with redirect (CURRENT)
+ * Lesson 375: Implemented action function with redirect
+ * Lesson 378: Added validation error handling (return instead of throw) (CURRENT)
  *
  * ============================================================================
  * LESSON 375: IMPLEMENTING THE ACTION FUNCTION
@@ -367,8 +368,81 @@ export async function action({ request, params }) {
   });
 
   /**
-   * ERROR HANDLING (Lesson 375):
-   * ============================
+   * ============================================================================
+   * LESSON 378: HANDLING VALIDATION ERRORS (STATUS 422)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "I wanna leverage the fact that on the back-end I'm sending back an error
+   * response with status code 422 if I found some validation errors there."
+   *
+   * INSTRUCTOR QUOTE:
+   * "On the front-end, in the new event page component file here, for example,
+   * in this action where I do submit to the data, I wanna react to such
+   * potential back-end validation errors."
+   *
+   * WHY RETURN INSTEAD OF THROW? (Lesson 378):
+   * ==========================================
+   * INSTRUCTOR QUOTE:
+   * "And I wanna react by not showing my default error page so I don't want to
+   * throw an error response, but instead I wanna show such validation errors
+   * here right above this form because that makes more sense than showing an
+   * error page because that would discard all the values entered by the user
+   * and not really offer a good user experience."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Therefore, I wanna stay on this page, but I wanna output some data. And
+   * you can easily do this in actions by returning the data you wanna output
+   * above the forum or anywhere in your routes."
+   *
+   * | Action Response  | Behavior                                          |
+   * |------------------|---------------------------------------------------|
+   * | throw response   | Shows ErrorPage, discards user input              |
+   * | return response  | Stays on page, data available via useActionData   |
+   *
+   * BACKEND VALIDATION STRUCTURE:
+   * =============================
+   * When validation fails, the backend returns status 422 with:
+   * {
+   *   message: "General validation error message",
+   *   errors: {
+   *     title: "Title validation error message",
+   *     image: "Image validation error message",
+   *     date: "Date validation error message",
+   *     description: "Description validation error message"
+   *   }
+   * }
+   */
+  if (response.status === 422) {
+    /**
+     * RETURN RESPONSE FOR VALIDATION ERRORS (Lesson 378):
+     * ===================================================
+     * INSTRUCTOR QUOTE:
+     * "For that, I will simply check if my response status code is equal to 422,
+     * which is that validation status code I'm setting on the back-end in case
+     * of validation errors. And if I have that status code, then I want to
+     * return my response."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So I'm not returning and redirecting, and I'm not throwing an error
+     * response, but I'm returning the response I got back from the back-end
+     * if I have this 422 status code on the response."
+     *
+     * KEY DIFFERENCE:
+     * ===============
+     * - throw → Shows ErrorPage (bad UX for validation errors)
+     * - return → Stays on form page, data accessible via useActionData
+     *
+     * Just like loaders can return responses that are automatically parsed
+     * and made available via useLoaderData, actions can return responses
+     * that are available via useActionData.
+     */
+    return response;
+  }
+
+  /**
+   * ERROR HANDLING FOR OTHER ERRORS (Lesson 375):
+   * =============================================
    * INSTRUCTOR QUOTE:
    * "We can, for example, again, check if it's maybe not okay and in that case
    * throw an error response with that built-in JSON function which we can get
@@ -382,10 +456,9 @@ export async function action({ request, params }) {
    * "So here we could then have a message where we say could not save event
    * and set the status code maybe to 500 again."
    *
-   * This error handling pattern is identical to loaders:
-   * - Check response.ok
-   * - Throw json() with error message and status
-   * - errorElement on the route will display the error
+   * For non-422 errors (500, network errors, etc.), we still throw
+   * to show the ErrorPage because these are unexpected server errors,
+   * not user input validation errors.
    */
   if (!response.ok) {
     throw Response.json({ message: 'Could not save event.' }, { status: 500 });
@@ -477,9 +550,39 @@ export async function action({ request, params }) {
  * 7. React Router calls action({ request, params })
  * 8. action() extracts data via request.formData()
  * 9. action() sends POST to http://localhost:8080/events
- * 10. If error → throw json() → ErrorPage displays
- * 11. If success → return redirect('/events')
- * 12. User sees events list with new event included
+ * 10. If 422 validation error → return response → useActionData receives it
+ * 11. If other error → throw json() → ErrorPage displays
+ * 12. If success → return redirect('/events')
+ * 13. User sees events list with new event included
+ *
+ * ============================================================================
+ * LESSON 378: ACCESSING RETURNED ACTION DATA
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now what does returning a response in an action due though? Well, just as
+ * we can return responses in loaders and then use the response data in our
+ * components and pages, we can also use returned action data in our pages
+ * and components."
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's just less common but it's very common for such validation error
+ * responses where you don't wanna show an error page."
+ *
+ * HOW TO ACCESS RETURNED DATA:
+ * ============================
+ * In the EventForm component (or any component rendered by this route):
+ *
+ * import { useActionData } from 'react-router-dom';
+ *
+ * function EventForm() {
+ *   const data = useActionData();  // Contains validation errors if any
+ *   // data will be the parsed JSON from the 422 response
+ * }
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if I return a response in an action this response is automatically
+ * parsed by React router for me, just as it is the case for loaders."
  *
  * ============================================================================
  */
