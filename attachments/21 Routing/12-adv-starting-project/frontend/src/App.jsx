@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-373)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-375)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -282,7 +282,37 @@ import EventsPage, { loader as eventsLoader } from './pages/Events';
  * - Give it a unique alias to avoid naming conflicts
  */
 import EventDetailPage, { loader as eventDetailLoader } from './pages/EventDetail';
-import NewEventPage from './pages/NewEvent';
+/**
+ * ============================================================================
+ * LESSON 375: IMPORTING ACTION FROM COMPONENT FILE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that action defined, we can go back to app JS and there we can now
+ * import this action from new event. Here, action as new event action."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can import this and then use this new event action down here as a value
+ * for this action property on this route definition."
+ *
+ * SAME PATTERN AS LOADERS:
+ * ========================
+ * Just like we import loaders from component files and give them aliases,
+ * we do the same with actions:
+ *
+ * | Import Type | From File     | Alias            | Used For              |
+ * |-------------|---------------|------------------|-----------------------|
+ * | loader      | Events.jsx    | eventsLoader     | GET events list       |
+ * | loader      | EventDetail   | eventDetailLoader| GET single event      |
+ * | action      | NewEvent.jsx  | newEventAction   | POST new event        |
+ *
+ * WHY USE AN ALIAS (newEventAction)?
+ * ==================================
+ * - Multiple files may export functions named 'action'
+ * - Aliases prevent naming conflicts
+ * - Makes it clear which action belongs to which route
+ */
+import NewEventPage, { action as newEventAction } from './pages/NewEvent';
 import EditEventPage from './pages/EditEvent';
 
 /**
@@ -602,8 +632,32 @@ const router = createBrowserRouter([
            * worry about accidentally overriding this route definition and that
            * you don't need to worry about the order of route definitions. This
            * route here, /events/new, will win over this route."
+           *
+           * ================================================================
+           * LESSON 375: ADDING THE ACTION PROPERTY
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "So to add an action to this new route here we add the special
+           * action property here. And just like loader, action wants a function
+           * an arrow function, or a regular function that does not matter."
+           *
+           * INSTRUCTOR QUOTE:
+           * "We can import this and then use this new event action down here
+           * as a value for this action property on this route definition."
+           *
+           * LOADERS VS ACTIONS IN ROUTE DEFINITIONS:
+           * ========================================
+           * | Property | Purpose         | Triggered by               |
+           * |----------|-----------------|----------------------------|
+           * | loader   | Fetch data      | Navigation to route        |
+           * | action   | Submit data     | <Form> submission on route |
+           *
+           * This route now has:
+           * - element: The component to render (NewEventPage)
+           * - action: The function to call on form submission (newEventAction)
            */
-          { path: 'new', element: <NewEventPage /> }, // this router will be over :eventId automatically
+          { path: 'new', element: <NewEventPage />, action: newEventAction },
           /**
            * ================================================================
            * LESSON 373: WRAPPER ROUTE FOR SHARING LOADER DATA

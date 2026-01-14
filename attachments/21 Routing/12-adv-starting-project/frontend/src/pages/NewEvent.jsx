@@ -1,255 +1,203 @@
 /**
  * ============================================================================
- * NEW EVENT PAGE COMPONENT (Lessons 360, 374 - Task 1 + EventForm + Actions Intro)
+ * NEW EVENT PAGE COMPONENT (Lessons 360, 374, 375 - Task 1 + EventForm + Action)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 360: Basic page with placeholder content (Task 1 solution)
- * Lesson 374: Added EventForm and introduced action concept (CURRENT)
- *
- * TASK 1 SOLUTION (Lesson 360):
- * =============================
- * INSTRUCTOR QUOTE:
- * "And then also my EventsPage, EventDetailPage, NewEventPage, and EditEventPage."
- *
- * INSTRUCTOR QUOTE:
- * "And the same will be done for NewEvent. It's the NewEventPage, like this."
+ * Lesson 374: Added EventForm and introduced action concept
+ * Lesson 375: Implemented action function with redirect (CURRENT)
  *
  * ============================================================================
- * LESSON 374: SENDING DATA TO THE BACKEND - INTRODUCTION TO ACTIONS
+ * LESSON 375: IMPLEMENTING THE ACTION FUNCTION
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Okay. Finally, now that we loaded a lot of data in a lot of different ways,
- * and that we now hopefully get the hang of how loading data works with React
- * Router, it's time to also send data to the backend."
+ * "So to add an action to this new route here we add the special action
+ * property here. And just like loader, action wants a function an arrow
+ * function, or a regular function that does not matter."
  *
  * INSTRUCTOR QUOTE:
- * "Because we, for example, get this edit form here, but we could also be
- * adding a new event. And for that, of course, we wanna display a form here,
- * as well, and then ultimately send the data from that form to this dummy
- * backend which we have here."
+ * "Now just as with loaders, we typically don't wanna add our action functions
+ * here in our route definitions file but instead we want to keep that code
+ * close to the components to which it belongs."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here in this case, we might want to add the action function in the new
+ * event JS file."
  *
  * ============================================================================
- * ADDING THE EVENTFORM (Lesson 374)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now, I'll start by displaying the form. For that I'll use that same event
- * form component, here in my new event JS file."
- *
- * INSTRUCTOR QUOTE:
- * "Here we just return event form and include that import to that component,
- * of course."
- *
- * INSTRUCTOR QUOTE:
- * "Now, if we visit new event, we see that same form as we saw before when we
- * clicked edit, but, of course, without any pre-filled data, because this is
- * a new event which we add here."
- *
- * DIFFERENCE BETWEEN NewEvent AND EditEvent:
- * ==========================================
- * | Page         | EventForm props         | Form state              |
- * |--------------|-------------------------|-------------------------|
- * | NewEventPage | No event prop           | Empty fields            |
- * | EditEventPage| event={data.event}      | Pre-filled with data    |
- *
- * ============================================================================
- * THE GOAL: SEND FORM DATA TO BACKEND (Lesson 374)
+ * ACTION FUNCTION BASICS (Lesson 375)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now, we wanna make sure that whenever we click that save button, and we
- * enter in some data here, that data is sent to the backend API."
+ * "So here we can export a function called action. The name is up to you again,
+ * we can add the async keyword here if we want to use async await in here."
  *
  * INSTRUCTOR QUOTE:
- * "How can we do that? Well, there are different approaches."
+ * "And now in this action function we can send requests to the backend."
  *
  * ============================================================================
- * THE TRADITIONAL APPROACH (NOT RECOMMENDED WITH REACT ROUTER) - Lesson 374
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "We could add a function here in our new event page component, and give
- * the function a name like Submit Handler, accept an event here, and that
- * event would be the submit event of our form, and we could call prevent
- * default to make sure that the browser does not automatically send a
- * request to the backend."
- *
- * INSTRUCTOR QUOTE:
- * "And then we could extract data from the form with help of two-way binding,
- * or refs, for example."
- *
- * INSTRUCTOR QUOTE:
- * "And, we could then manually send our HTTP request here, maybe manage some
- * loading and error state, and ultimately navigate away from this page, once
- * we're done."
- *
- * INSTRUCTOR QUOTE:
- * "We could navigate away with imperative, and navigation, with help of that
- * use Navigate Hook I mentioned earlier in this section."
- *
- * ============================================================================
- * TRADITIONAL APPROACH CODE EXAMPLE (What we WON'T do):
- * ============================================================================
- *
- * import { useNavigate } from 'react-router-dom';
- * import { useState } from 'react';
- *
- * function NewEventPage() {
- *   const navigate = useNavigate();
- *   const [isSubmitting, setIsSubmitting] = useState(false);
- *   const [error, setError] = useState(null);
- *
- *   async function submitHandler(event) {
- *     event.preventDefault();  // Prevent browser's default form submission
- *
- *     // Extract data using FormData, refs, or state (two-way binding)
- *     const formData = new FormData(event.target);
- *     const eventData = {
- *       title: formData.get('title'),
- *       image: formData.get('image'),
- *       date: formData.get('date'),
- *       description: formData.get('description'),
- *     };
- *
- *     setIsSubmitting(true);
- *     setError(null);
- *
- *     try {
- *       const response = await fetch('http://localhost:8080/events', {
- *         method: 'POST',
- *         headers: { 'Content-Type': 'application/json' },
- *         body: JSON.stringify(eventData),
- *       });
- *
- *       if (!response.ok) {
- *         throw new Error('Failed to create event');
- *       }
- *
- *       // Navigate away after success
- *       navigate('/events');
- *     } catch (err) {
- *       setError(err.message);
- *     } finally {
- *       setIsSubmitting(false);
- *     }
- *   }
- *
- *   return (
- *     <>
- *       {error && <p>{error}</p>}
- *       <EventForm onSubmit={submitHandler} />
- *       {isSubmitting && <p>Submitting...</p>}
- *     </>
- *   );
- * }
- *
- * PROBLEMS WITH TRADITIONAL APPROACH:
- * ===================================
- * 1. Lots of boilerplate code
- * 2. Manual state management (isSubmitting, error)
- * 3. Manual HTTP request handling
- * 4. Manual navigation with useNavigate
- * 5. Manual form data extraction
- *
- * ============================================================================
- * THE BETTER APPROACH: REACT ROUTER ACTIONS (Lesson 374)
+ * IMPORTANT: ACTIONS RUN ON THE CLIENT (Lesson 375)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "We could do all of that, but as you can probably already tell by the fact
- * that I'm saying could, there is a better approach when using React Router."
+ * "Now what's again important to understand and keep in mind is that we're
+ * still on the client side here. Just as with the loader, this is code that
+ * executes in the browser, this is not backend code."
  *
  * INSTRUCTOR QUOTE:
- * "Just as we can add loaders to load data, we can also add actions to send
- * data, and that is what we should do here."
+ * "You can access any browser API here like for example, local storage."
  *
- * LOADERS VS ACTIONS - PARALLEL CONCEPTS:
- * =======================================
+ * This is the same concept as loaders:
+ * - Runs in the browser (client-side)
+ * - NOT server-side/backend code
+ * - Can use browser APIs (localStorage, fetch, etc.)
+ *
+ * ============================================================================
+ * THE ACTION RECEIVES { request, params } (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And to get hold of that request that is captured by react-router and
+ * forwarded to that action we have to use the data that's passed to this
+ * action function because just as a loader function the action function is
+ * executed by react-router and it receives an object that includes a couple
+ * of helpful properties."
+ *
+ * INSTRUCTOR QUOTE:
+ * "To be precise again, the request and params properties."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now this time, we're not interested in the params because I have no params
+ * here when creating a new event but I am interested in the request object
+ * because that request object contains the form data."
+ *
+ * | Property | Purpose in Actions                                      |
+ * |----------|--------------------------------------------------------|
+ * | request  | Contains form data from <Form> submission               |
+ * | params   | Route parameters (e.g., :eventId) - not used here      |
+ *
+ * ============================================================================
+ * EXTRACTING FORM DATA (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "To get hold of that forum data, we have to call the special forum data
+ * method on the request object and awaited. That will give us a data object
+ * that includes this form data."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And on this data object we can call the get method to get access to the
+ * different input field values that were submitted."
+ *
+ * INSTRUCTOR QUOTE:
+ * "To get we pass a string with the different identifiers of our input fields.
+ * So that would be the values we chose as names for the input fields like
+ * title or image in my case."
+ *
+ * CODE EXAMPLE:
+ * =============
+ * const data = await request.formData();
+ * const title = data.get('title');      // Gets input name="title"
+ * const image = data.get('image');      // Gets input name="image"
+ *
+ * ============================================================================
+ * SENDING DATA TO BACKEND (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But very often, you might wanna send a request with the good old fetch
+ * function again. And here indeed, I wanna send a request to local host 8080.
+ * So to my dummy backend API which listens on port 8080 and their slash events."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I actually wanna send a post request which we can do like that, and add
+ * some data to the request."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And here the data I wanna send is that data that was submitted with the form."
+ *
+ * ============================================================================
+ * ERROR HANDLING IN ACTIONS (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can, for example, again, check if it's maybe not okay and in that case
+ * throw an error response with that built-in JSON function which we can get
+ * from react-router-dom."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that would then display our error page if we throw an error response
+ * like this. So this works for actions just as it worked for loaders."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here we could then have a message where we say could not save event
+ * and set the status code maybe to 500 again."
+ *
+ * ============================================================================
+ * REDIRECTING AFTER SUCCESS (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And typically when submitting a forum what you want to happen is that you
+ * navigate the user away to a different page after successfully submitting
+ * the form."
+ *
+ * INSTRUCTOR QUOTE:
+ * "To do that, we can go back to our action in new event JS and then return
+ * the result of calling Redirect."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Redirect, like JSON is a special function you can import from react-router-dom
+ * and like JSON, Redirect creates a response object. However, it's a special
+ * response object that simply redirects the user to a different page."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, the heavy lifting is handled behind the scenes by react-router. Here
+ * you just specify the path to which you wanna redirect the user and react-router
+ * will take care about the rest."
+ *
+ * ============================================================================
+ * LOADERS VS ACTIONS COMPARISON
+ * ============================================================================
+ *
  * | Feature  | Purpose         | When triggered           | Data flow        |
  * |----------|-----------------|--------------------------|------------------|
  * | loader   | Load/GET data   | Before route renders     | Backend → Client |
- * | action   | Send/POST data  | On form submission       | Client → Backend |
+ * | action   | Send/POST data  | On <Form> submission     | Client → Backend |
  *
- * BENEFITS OF USING ACTIONS:
- * ==========================
- * 1. Less boilerplate code
- * 2. React Router handles form data extraction
- * 3. Automatic handling of submission state (useNavigation)
- * 4. Automatic error handling with errorElement
- * 5. Cleaner component code (similar to how loaders cleaned up data fetching)
- * 6. Works with React Router's Form component
+ * SIMILARITIES:
+ * =============
+ * - Both are functions exported from component files
+ * - Both are registered in route definitions
+ * - Both receive { request, params } from React Router
+ * - Both can throw json() for error handling
+ * - Both run on the client (browser), not server
  *
- * ============================================================================
- * ROUTE SPECIFICITY - IMPORTANT NOTE (Lesson 360)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now one small side note here. If you watch closely, you might actually see
- * and think that if we have a path of /events/new and we have a path of
- * /events something, this route here might actually never get activated
- * because new could also be treated or seen as a value for the eventId here."
- *
- * INSTRUCTOR QUOTE:
- * "So whenever we enter /events/new in the URL bar, React Router could
- * actually load this route instead of this route because it treats new as
- * a value for eventId."
- *
- * REACT ROUTER'S SMART MATCHING (Lesson 360):
- * ===========================================
- * INSTRUCTOR QUOTE:
- * "And therefore, this route would never get activated. This could happen in
- * theory, but actually React Router is smart and understands that this route
- * path is more specific than this route path."
- *
- * INSTRUCTOR QUOTE:
- * "So indeed, if you would visit /events/new, it would prefer this route
- * definition over this route definition."
- *
- * INSTRUCTOR QUOTE:
- * "And that's just something to be aware of that you don't need to worry
- * about accidentally overriding this route definition and that you don't
- * need to worry about the order of route definitions. This route here,
- * /events/new, will win over this route."
+ * DIFFERENCES:
+ * ============
+ * - Loaders run BEFORE render, actions run ON form submit
+ * - Loaders GET data, actions POST/PATCH/DELETE data
+ * - Actions use request.formData(), loaders typically don't
+ * - Actions typically redirect(), loaders return data
  *
  * ============================================================================
- * WHY /events/new WINS OVER /events/:eventId
- * ============================================================================
- *
- * Route definitions:
- *   { path: ':eventId', element: <EventDetailPage /> }
- *   { path: 'new', element: <NewEventPage /> }
- *
- * When visiting /events/new:
- *   - :eventId is DYNAMIC (matches anything)
- *   - 'new' is STATIC (exact match)
- *
- * React Router prefers STATIC over DYNAMIC matches.
- * This is called "route specificity" or "route ranking".
- *
- * So order doesn't matter - 'new' will always win over ':eventId'
- * when the URL segment is literally "new".
- *
- * ============================================================================
- * ROUTE CONFIGURATION
+ * ROUTE CONFIGURATION WITH ACTION (Lesson 375)
  * ============================================================================
  *
  * {
  *   path: 'events',
  *   element: <EventsRootLayout />,
  *   children: [
- *     { index: true, element: <EventsPage /> },
- *     { path: 'new', element: <NewEventPage /> },
+ *     { index: true, element: <EventsPage />, loader: eventsLoader },
+ *     { path: 'new', element: <NewEventPage />, action: newEventAction },  // ← Action added here
  *     {
  *       path: ':eventId',
  *       id: 'event-detail',
  *       loader: eventDetailLoader,
- *       children: [
- *         { index: true, element: <EventDetailPage /> },
- *         { path: 'edit', element: <EditEventPage /> },
- *       ]
+ *       children: [...]
  *     }
  *   ]
  * }
@@ -257,65 +205,281 @@
  * URL: http://localhost:3000/events/new
  *
  * ============================================================================
- * NEXT STEPS (Future Lessons):
- * ============================================================================
- *
- * In the following lessons, we will:
- * 1. Learn about React Router's <Form> component
- * 2. Create an action function to handle form submission
- * 3. Register the action in route definitions (like we did with loaders)
- * 4. Use useNavigation to show submission state
- * 5. Handle action errors
- *
- * ============================================================================
  */
+import { json, redirect } from 'react-router-dom';
+
 import EventForm from '../components/EventForm';
 
 /**
- * NEW EVENT PAGE COMPONENT (Lesson 374):
- * ======================================
+ * NEW EVENT PAGE COMPONENT (Lessons 374-375):
+ * ===========================================
  * Form page for creating a new event.
  *
  * INSTRUCTOR QUOTE:
  * "Now, I'll start by displaying the form. For that I'll use that same event
  * form component, here in my new event JS file."
  *
- * INSTRUCTOR QUOTE:
- * "Here we just return event form and include that import to that component,
- * of course."
- *
  * This page:
  * 1. Renders the EventForm component (same form used in EditEventPage)
  * 2. No event prop passed → form fields are empty (not pre-populated)
- * 3. Will use React Router actions to send data (upcoming lessons)
+ * 3. When form is submitted, action function handles the request
  *
  * DIFFERENCE FROM EditEventPage:
  * ==============================
  * - EditEventPage: <EventForm event={data.event} /> (pre-populated)
  * - NewEventPage: <EventForm /> (empty fields)
- *
- * INSTRUCTOR QUOTE:
- * "Now, if we visit new event, we see that same form as we saw before when
- * we clicked edit, but, of course, without any pre-filled data, because
- * this is a new event which we add here."
  */
 function NewEventPage() {
-  /**
-   * RETURNING THE EVENT FORM (Lesson 374):
-   * ======================================
-   * INSTRUCTOR QUOTE:
-   * "Here we just return event form and include that import to that component,
-   * of course."
-   *
-   * No props passed because:
-   * - This is a NEW event (no existing data to display)
-   * - EventForm handles undefined event with empty defaultValue
-   *   (see EventForm.jsx: defaultValue={event ? event.title : ''})
-   *
-   * UPCOMING: In future lessons, we'll add an action function to this file
-   * to handle form submission, similar to how we added loaders for data fetching.
-   */
   return <EventForm />;
 }
 
 export default NewEventPage;
+
+/**
+ * ============================================================================
+ * LESSON 375: ACTION FUNCTION FOR NEW EVENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here we can export a function called action. The name is up to you again,
+ * we can add the async keyword here if we want to use async await in here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And now in this action function we can send requests to the backend."
+ *
+ * ============================================================================
+ * HOW THIS ACTION GETS TRIGGERED
+ * ============================================================================
+ *
+ * 1. User fills out the form on NewEventPage
+ * 2. User clicks "Save" button (submit)
+ * 3. <Form method="post"> intercepts the submission
+ * 4. React Router creates a Request object with form data
+ * 5. React Router calls this action function
+ * 6. This function receives { request, params }
+ * 7. We extract data, send to backend, and redirect
+ *
+ * ============================================================================
+ * REGISTERING THE ACTION (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that action defined, we can go back to app JS and there we can now
+ * import this action from new event. Here, action as new event action."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can import this and then use this new event action down here as a value
+ * for this action property on this route definition."
+ *
+ * In App.jsx:
+ * import NewEventPage, { action as newEventAction } from './pages/NewEvent';
+ * ...
+ * { path: 'new', element: <NewEventPage />, action: newEventAction }
+ *
+ * ============================================================================
+ */
+export async function action({ request, params }) {
+  /**
+   * EXTRACTING FORM DATA (Lesson 375):
+   * ==================================
+   * INSTRUCTOR QUOTE:
+   * "To get hold of that forum data, we have to call the special forum data
+   * method on the request object and awaited. That will give us a data object
+   * that includes this form data."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And on this data object we can call the get method to get access to the
+   * different input field values that were submitted."
+   *
+   * The request object comes from React Router's <Form> component.
+   * request.formData() returns a FormData object with all form values.
+   */
+  const data = await request.formData();
+
+  /**
+   * BUILDING THE EVENT DATA OBJECT (Lesson 375):
+   * ============================================
+   * INSTRUCTOR QUOTE:
+   * "So we could, for example, get the title like this the entered title could
+   * be extracted like this. And of course that can be repeated for all the fields."
+   *
+   * INSTRUCTOR QUOTE:
+   * "I will simply create an event data object here where I have my title which
+   * is set equal to the extracted title like this where I then have my image
+   * like this, where I then also have the date that was picked and submitted
+   * like this and where I get my description like this."
+   *
+   * INSTRUCTOR QUOTE:
+   * "To get we pass a string with the different identifiers of our input fields.
+   * So that would be the values we chose as names for the input fields like
+   * title or image in my case."
+   *
+   * The .get() method takes the 'name' attribute of the input field:
+   * - <input name="title" />    → data.get('title')
+   * - <input name="image" />    → data.get('image')
+   * - <input name="date" />     → data.get('date')
+   * - <textarea name="description" /> → data.get('description')
+   */
+  const eventData = {
+    title: data.get('title'),
+    image: data.get('image'),
+    date: data.get('date'),
+    description: data.get('description'),
+  };
+
+  /**
+   * SENDING DATA TO THE BACKEND (Lesson 375):
+   * =========================================
+   * INSTRUCTOR QUOTE:
+   * "But very often, you might wanna send a request with the good old fetch
+   * function again. And here indeed, I wanna send a request to local host 8080.
+   * So to my dummy backend API which listens on port 8080 and their slash events."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I actually wanna send a post request which we can do like that, and
+   * add some data to the request."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And here the data I wanna send is that data that was submitted with the form."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now with that, it's this event data that should be sent to the backend,
+   * and we have to convert it to JSON here by wrapping it with JSON stringify."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I'll also add some extra headers where I set the content type to
+   * application JSON so that the data is handled and extracted correctly on
+   * the backend."
+   *
+   * REMEMBER: This is client-side code!
+   * ===================================
+   * INSTRUCTOR QUOTE:
+   * "Now what's again important to understand and keep in mind is that we're
+   * still on the client side here. Just as with the loader, this is code that
+   * executes in the browser, this is not backend code."
+   */
+  const response = await fetch('http://localhost:8080/events', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(eventData),
+  });
+
+  /**
+   * ERROR HANDLING (Lesson 375):
+   * ============================
+   * INSTRUCTOR QUOTE:
+   * "We can, for example, again, check if it's maybe not okay and in that case
+   * throw an error response with that built-in JSON function which we can get
+   * from react-router-dom."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that would then display our error page if we throw an error response
+   * like this. So this works for actions just as it worked for loaders."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So here we could then have a message where we say could not save event
+   * and set the status code maybe to 500 again."
+   *
+   * This error handling pattern is identical to loaders:
+   * - Check response.ok
+   * - Throw json() with error message and status
+   * - errorElement on the route will display the error
+   */
+  if (!response.ok) {
+    throw json({ message: 'Could not save event.' }, { status: 500 });
+  }
+
+  /**
+   * REDIRECTING AFTER SUCCESS (Lesson 375):
+   * ======================================
+   * INSTRUCTOR QUOTE:
+   * "And typically when submitting a forum what you want to happen is that you
+   * navigate the user away to a different page after successfully submitting
+   * the form."
+   *
+   * INSTRUCTOR QUOTE:
+   * "To do that, we can go back to our action in new event JS and then return
+   * the result of calling Redirect."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Redirect, like JSON is a special function you can import from react-router-dom
+   * and like JSON, Redirect creates a response object. However, it's a special
+   * response object that simply redirects the user to a different page."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, the heavy lifting is handled behind the scenes by react-router. Here
+   * you just specify the path to which you wanna redirect the user and react-router
+   * will take care about the rest."
+   *
+   * WHY NOT useNavigate()?
+   * ======================
+   * - We're in an action function, not a component
+   * - Hooks can only be used in components
+   * - redirect() is the action equivalent of useNavigate()
+   *
+   * | Context      | Navigation method    |
+   * |--------------|---------------------|
+   * | Component    | useNavigate()       |
+   * | Action       | redirect()          |
+   * | Loader       | redirect()          |
+   */
+  return redirect('/events');
+}
+
+/**
+ * ============================================================================
+ * TESTING THE ACTION (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, if we save everything we should be able to create a new event here.
+ * For that I'm also picking some image here and enter this image address then
+ * pick a date and add a description."
+ *
+ * INSTRUCTOR QUOTE:
+ * "If you now click save, it looks like nothing happened. But actually, if you
+ * click on events you should see that your event was added."
+ *
+ * BEFORE ADDING redirect():
+ * ========================
+ * - Form submits successfully
+ * - Event is created in backend
+ * - But user stays on the same page (confusing UX)
+ *
+ * INSTRUCTOR QUOTE:
+ * "But why did nothing happen after clicking save? Well, because we didn't
+ * specify what should happen thereafter."
+ *
+ * AFTER ADDING redirect():
+ * ========================
+ * - Form submits successfully
+ * - Event is created in backend
+ * - User is automatically redirected to /events
+ * - New event appears in the list
+ *
+ * INSTRUCTOR QUOTE:
+ * "So for example, here, if I add another event a never amazing event, now I'm
+ * redirected. And that's how you can handle form submissions with help of
+ * actions like this."
+ *
+ * ============================================================================
+ * COMPLETE FLOW SUMMARY
+ * ============================================================================
+ *
+ * 1. User visits /events/new
+ * 2. NewEventPage renders with empty EventForm
+ * 3. User fills in title, image, date, description
+ * 4. User clicks "Save" (submit button)
+ * 5. <Form method="post"> prevents browser default
+ * 6. <Form> creates Request object with form data
+ * 7. React Router calls action({ request, params })
+ * 8. action() extracts data via request.formData()
+ * 9. action() sends POST to http://localhost:8080/events
+ * 10. If error → throw json() → ErrorPage displays
+ * 11. If success → return redirect('/events')
+ * 12. User sees events list with new event included
+ *
+ * ============================================================================
+ */

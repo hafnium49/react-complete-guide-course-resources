@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * EVENT FORM COMPONENT (Lessons 358, 373 - Pre-built + Prepopulation)
+ * EVENT FORM COMPONENT (Lessons 358, 373, 375 - Pre-built + Prepopulation + Form)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 358: Pre-built component with basic form inputs
- * Lesson 373: Added defaultValue props for prepopulation in edit mode (CURRENT)
+ * Lesson 373: Added defaultValue props for prepopulation in edit mode
+ * Lesson 375: Replaced <form> with <Form> component for actions (CURRENT)
  *
  * PRE-BUILT COMPONENT (Lesson 358):
  * =================================
@@ -130,16 +131,78 @@
  * - React Router form actions (later lessons)
  *
  * ============================================================================
- * TODO: Form Submission (Later Lessons)
+ * LESSON 375: REACT ROUTER'S <Form> COMPONENT
  * ============================================================================
  *
- * Currently, the Save button doesn't do anything.
- * In later lessons, you'll learn:
- * - React Router's Form component
- * - Action functions for handling submissions
- * - Sending data to the backend API
+ * INSTRUCTOR QUOTE:
+ * "Next, you should replace the form element with the special form component
+ * which is provided by react-router-dom."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So you should import form from react-router-dom and then replace the
+ * opening and the closing form tag with that form tag. It's the same tag,
+ * but with a capital F at the beginning."
+ *
+ * WHY USE <Form> INSTEAD OF <form>? (Lesson 375):
+ * ===============================================
+ * INSTRUCTOR QUOTE:
+ * "Now this form tag will make sure that the browser default of sending a
+ * request to the backend will be omitted but it will take that request that
+ * would've been sent and give it to your action."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's pretty useful because that request will contain all the data
+ * that was submitted as part of the form."
+ *
+ * COMPARISON:
+ * ===========
+ * | Element  | Behavior                                              |
+ * |----------|-------------------------------------------------------|
+ * | <form>   | Browser sends request to backend (full page reload)   |
+ * | <Form>   | React Router intercepts, passes to action function    |
+ *
+ * ============================================================================
+ * THE method PROPERTY (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, what you should do here is you should add the method property
+ * and set this to post for example, though, this form component also supports
+ * other HTTP methods like delete or patch, but here I'll choose post."
+ *
+ * INSTRUCTOR QUOTE:
+ * "But this request and that's important, will not be sent to the backend
+ * automatically, but instead to your action. And it will include all the
+ * form data if you use this special form component."
+ *
+ * SUPPORTED METHODS:
+ * ==================
+ * - method="post"   → For creating new resources
+ * - method="patch"  → For updating existing resources
+ * - method="delete" → For deleting resources
+ * - method="put"    → For replacing resources
+ *
+ * ============================================================================
+ * IMPORTANCE OF name ATTRIBUTES (Lesson 375)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "For that, you should go to that form and make sure that all your inputs
+ * have the name attribute because those names will later be used for
+ * extracting the data."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So these names here must be set on all your inputs and text areas."
+ *
+ * The name attribute values are used when extracting data:
+ * - data.get('title')       → Gets value from input name="title"
+ * - data.get('image')       → Gets value from input name="image"
+ * - data.get('date')        → Gets value from input name="date"
+ * - data.get('description') → Gets value from textarea name="description"
+ *
+ * ============================================================================
  */
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Form } from 'react-router-dom';
 
 import classes from './EventForm.module.css';
 
@@ -184,7 +247,53 @@ function EventForm({ method, event }) {
   }
 
   return (
-    <form className={classes.form}>
+    /**
+     * ================================================================
+     * REACT ROUTER'S <Form> COMPONENT (Lesson 375)
+     * ================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Next, you should replace the form element with the special form
+     * component which is provided by react-router-dom."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So you should import form from react-router-dom and then replace
+     * the opening and the closing form tag with that form tag. It's the
+     * same tag, but with a capital F at the beginning."
+     *
+     * KEY BEHAVIOR (Lesson 375):
+     * ==========================
+     * INSTRUCTOR QUOTE:
+     * "Now this form tag will make sure that the browser default of sending
+     * a request to the backend will be omitted but it will take that request
+     * that would've been sent and give it to your action."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that's pretty useful because that request will contain all the
+     * data that was submitted as part of the form."
+     *
+     * THE method PROP (Lesson 375):
+     * ============================
+     * INSTRUCTOR QUOTE:
+     * "Therefore, what you should do here is you should add the method
+     * property and set this to post for example, though, this form component
+     * also supports other HTTP methods like delete or patch."
+     *
+     * INSTRUCTOR QUOTE:
+     * "But this request and that's important, will not be sent to the backend
+     * automatically, but instead to your action. And it will include all the
+     * form data if you use this special form component."
+     *
+     * HOW IT WORKS:
+     * =============
+     * 1. User fills form and clicks Save (submit)
+     * 2. <Form> prevents browser's default submission
+     * 3. <Form> creates a Request object with form data
+     * 4. React Router finds the action for this route
+     * 5. Action receives the Request via { request } parameter
+     * 6. Action extracts data via request.formData()
+     */
+    <Form method="post" className={classes.form}>
       {/**
        * ================================================================
        * FORM INPUTS WITH PREPOPULATION (Lesson 373)
@@ -291,15 +400,26 @@ function EventForm({ method, event }) {
           Cancel
         </button>
         {/**
-         * SAVE BUTTON:
-         * ============
+         * SAVE BUTTON (Lesson 375):
+         * =========================
          * Default type is "submit" - triggers form submission.
-         * Currently does nothing (form has no onSubmit or action).
-         * Will be connected to form actions in later lessons.
+         *
+         * With <Form> component (Lesson 375):
+         * ==================================
+         * When clicked, React Router:
+         * 1. Prevents browser's default form submission
+         * 2. Creates a Request object with all form data
+         * 3. Calls the action function registered for this route
+         * 4. Passes the Request to the action via { request } parameter
+         *
+         * The action can then:
+         * - Extract data via request.formData()
+         * - Send HTTP request to backend
+         * - Return redirect() to navigate after success
          */}
         <button>Save</button>
       </div>
-    </form>
+    </Form>
   );
 }
 
