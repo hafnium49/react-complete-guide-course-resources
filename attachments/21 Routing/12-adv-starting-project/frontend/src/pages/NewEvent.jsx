@@ -206,7 +206,7 @@
  *
  * ============================================================================
  */
-import { json, redirect } from 'react-router-dom';
+import { redirect } from 'react-router-dom';
 
 import EventForm from '../components/EventForm';
 
@@ -388,7 +388,7 @@ export async function action({ request, params }) {
    * - errorElement on the route will display the error
    */
   if (!response.ok) {
-    throw json({ message: 'Could not save event.' }, { status: 500 });
+    throw Response.json({ message: 'Could not save event.' }, { status: 500 });
   }
 
   /**

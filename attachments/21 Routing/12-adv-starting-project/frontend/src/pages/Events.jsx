@@ -176,7 +176,7 @@
  * - Automatically parses JSON when reading (no JSON.parse needed)
  * - Cleaner, more readable code
  */
-import { useLoaderData, json } from 'react-router-dom';
+import { useLoaderData } from 'react-router-dom';
 
 import EventsList from '../components/EventsList';
 
@@ -799,7 +799,7 @@ export async function loader() {
      * | Code verbosity    | More verbose             | Concise              |
      * | Error prone       | Easy to forget stringify | Less error prone     |
      */
-    throw json(
+    throw Response.json(
       { message: 'Could not fetch events.' },
       { status: 500 }
     );

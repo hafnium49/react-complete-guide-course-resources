@@ -147,7 +147,7 @@
  * we wanna use the data from the loader that belongs to a route with this
  * specific ID."
  */
-import { useRouteLoaderData, json } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import EventItem from '../components/EventItem';
 
@@ -364,7 +364,7 @@ export async function loader({ request, params }) {
      * - Automatically parses when reading in ErrorPage
      * - Status code enables differentiated error handling
      */
-    throw json(
+    throw Response.json(
       { message: 'Could not fetch details for selected event.' },
       { status: 500 }
     );
