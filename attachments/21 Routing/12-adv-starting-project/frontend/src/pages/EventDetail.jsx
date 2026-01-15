@@ -1,13 +1,14 @@
 /**
  * ============================================================================
- * EVENT DETAIL PAGE COMPONENT (Lessons 360, 372, 373 - Dynamic Params + Loader)
+ * EVENT DETAIL PAGE COMPONENT (Lessons 360, 372, 373, 383 - Params + Deferred)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
  * =======================
  * Lesson 360: Basic page with useParams to display event ID
  * Lesson 372: Added loader to fetch event details using params argument
- * Lesson 373: Changed to useRouteLoaderData with route ID (CURRENT)
+ * Lesson 373: Changed to useRouteLoaderData with route ID
+ * Lesson 383: Added defer with multiple requests of different speeds (CURRENT)
  *
  * ============================================================================
  * LESSON 372: DYNAMIC ROUTE PARAMETERS IN LOADERS
@@ -158,157 +159,340 @@
  *
  * The redirect function is used after successful deletion to navigate
  * the user away from the deleted event's page.
+ *
+ * ============================================================================
+ * LESSON 383: IMPORTS FOR DEFERRED LOADING WITH MULTIPLE REQUESTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now we also need suspense, and every await block must be wrapped with its
+ * own suspense component. Otherwise, suspense will wait for both awaits to
+ * complete before showing anything, which is not what we want."
+ *
+ * NEW IMPORTS FOR LESSON 383:
+ * ===========================
+ * - Await: Component to wait for deferred promises
+ * - Suspense: Component to show fallback while waiting (from React)
+ *
+ * NOTE: In React Router v6, you would also import defer:
+ * import { defer } from 'react-router-dom';
+ *
+ * But in React Router v7, defer is no longer needed - just return
+ * an object with promises directly (see Lesson 382).
  */
-import { useRouteLoaderData, redirect } from 'react-router-dom';
+import { useRouteLoaderData, redirect, Await } from 'react-router-dom';
+import { Suspense } from 'react';
 
 import EventItem from '../components/EventItem';
+/**
+ * ============================================================================
+ * LESSON 383: IMPORTING EventsList FOR DEFERRED LOADING DEMO
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Besides the event item, I also wanna output my events list here. So
+ * therefore, we of course must fetch the events on this page here as well."
+ *
+ * We import EventsList to demonstrate:
+ * - Loading multiple data sources with different speeds
+ * - Event details (fast) + All events list (slow with 2s backend timeout)
+ * - Progressive loading with separate Suspense boundaries
+ */
+import EventsList from '../components/EventsList';
 
 /**
- * EVENT DETAIL PAGE COMPONENT (Lesson 372):
- * =========================================
- * Displays details for a specific event using data from the loader.
+ * ============================================================================
+ * EVENT DETAIL PAGE COMPONENT (Lessons 372, 373, 383)
+ * ============================================================================
+ *
+ * LESSON 383 UPDATE - DEFERRED LOADING WITH MULTIPLE REQUESTS:
+ * ============================================================
+ * INSTRUCTOR QUOTE:
+ * "So, how does this defer feature shine if you have multiple requests with
+ * different speeds? Well, for that, let's go to the event detail page."
  *
  * INSTRUCTOR QUOTE:
- * "So in event detail, instead of showing this dummy content here, we want
- * to output the event item component."
+ * "Besides the event item, I also wanna output my events list here. So
+ * therefore, we of course must fetch the events on this page here as well."
  *
- * INSTRUCTOR QUOTE:
- * "And here we must set the event prop and pass the event data for the event
- * for which we wanna view the details to this event prop."
+ * The component now displays:
+ * 1. EventItem - Single event details (fast to load)
+ * 2. EventsList - All events list (slow due to 2s backend timeout)
+ *
+ * Each has its own Suspense/Await block for independent loading.
  */
 function EventDetailPage() {
   /**
    * ============================================================================
-   * useRouteLoaderData HOOK (Lesson 373)
+   * useRouteLoaderData WITH DEFERRED DATA (Lesson 383)
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "And with such an ID defined, we can use a special hook called use route
-   * loader data to get access to a higher level loader from a child route."
+   * "Now with that done, we're using useRouteLoaderData here, but that works
+   * with defer just as useLoaderData did."
    *
    * INSTRUCTOR QUOTE:
-   * "We then can use this ID in use route loader data to tell React router
-   * that we wanna use the data from the loader that belongs to a route with
-   * this specific ID."
+   * "And we know that here we'll get an object that has an event and an
+   * events key. These are these two deferred requests so to say."
    *
-   * ============================================================================
-   * CHANGE FROM LESSON 372:
-   * ============================================================================
-   *
-   * BEFORE (Lesson 372 - loader on same route):
-   * ===========================================
-   * const data = useLoaderData();
-   *
-   * AFTER (Lesson 373 - loader on parent route with ID):
-   * ====================================================
-   * const data = useRouteLoaderData('event-detail');
-   *
-   * ============================================================================
-   * WHY THIS CHANGE? (Lesson 373)
-   * ============================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "So I need access to this loader here, not just in the event detail page,
-   * but also in the edit event page because the edit event page should also
-   * display the event data, but we got one loader which we wanna use for
-   * both pages."
-   *
-   * PROBLEM: Both EventDetailPage and EditEventPage need the same event data
-   * SOLUTION: Move loader to a parent route with an ID, then access via ID
-   *
-   * ROUTE STRUCTURE:
-   * ================
-   * {
-   *   path: ':eventId',
-   *   id: 'event-detail',         // ← The ID we pass to useRouteLoaderData
-   *   loader: eventDetailLoader,  // ← The shared loader
-   *   children: [
-   *     { index: true, element: <EventDetailPage /> },  // ← We are here
-   *     { path: 'edit', element: <EditEventPage /> },
-   *   ]
-   * }
-   *
-   * ============================================================================
-   * HOW useRouteLoaderData DIFFERS FROM useLoaderData (Lesson 373)
-   * ============================================================================
-   *
-   * | Hook              | Parameter | Gets data from                          |
-   * |-------------------|-----------|----------------------------------------|
-   * | useLoaderData     | None      | Current route's loader                  |
-   * | useRouteLoaderData| Route ID  | Any route's loader (identified by ID)  |
-   *
-   * useRouteLoaderData is more flexible because:
-   * - Can access parent route loaders
-   * - Can be used by multiple child routes to share data
-   * - Requires the route to have an 'id' property defined
+   * The data object now contains:
+   * - event: Promise for single event details (awaited - blocks navigation)
+   * - events: Promise for all events (deferred - loads after navigation)
    */
-  const data = useRouteLoaderData('event-detail');
+  const { event, events } = useRouteLoaderData('event-detail');
 
   /**
-   * EXTRACTING EVENT DATA (Lesson 372):
-   * ===================================
-   * INSTRUCTOR QUOTE:
-   * "And with that, we can then use this data object to access the event
-   * property, because I know that my backend API will include the actual
-   * event data for the loaded event in an event property on that overall
-   * response data object."
-   *
-   * Backend response structure:
-   * {
-   *   event: {
-   *     id: "e1",
-   *     title: "Event Title",
-   *     image: "...",
-   *     date: "2024-01-01",
-   *     description: "..."
-   *   }
-   * }
+   * ============================================================================
+   * LESSON 383: TWO SEPARATE SUSPENSE BOUNDARIES
+   * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "So with data dot event, I access that event data, and I pass that as
-   * a value to the event prop on event item."
+   * "Now we also need suspense, and every await block must be wrapped with its
+   * own suspense component. Otherwise, suspense will wait for both awaits to
+   * complete before showing anything, which is not what we want."
+   *
+   * WHY SEPARATE SUSPENSE BLOCKS ARE CRITICAL:
+   * ==========================================
+   * If we wrapped BOTH Await components in ONE Suspense:
+   * - Suspense would wait for BOTH promises to resolve
+   * - Nothing would show until the slow request (events) completes
+   * - We'd lose the benefit of deferred loading!
+   *
+   * With SEPARATE Suspense blocks:
+   * - Each Await can resolve independently
+   * - Fast data (event) shows immediately
+   * - Slow data (events) shows "Loading..." until ready
+   *
+   * VISUAL COMPARISON:
+   * ==================
+   * ONE Suspense (BAD):      TWO Suspenses (GOOD):
+   * ─────────────────────    ─────────────────────
+   * [        Loading...  ]   [Event Details Here ]
+   * [                    ]   [      Loading...   ]
+   * (waits 2s for both)      (shows event, waits for list)
    */
-  return <EventItem event={data.event} />;
+  return (
+    <>
+      {/**
+       * FIRST SUSPENSE BLOCK - EVENT DETAILS (Lesson 383):
+       * ==================================================
+       * INSTRUCTOR QUOTE:
+       * "So here I pass event to the resolve prop... where I then wanna output
+       * the event item once that data is there."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So here I pass loadedEvent to the event prop, like this."
+       *
+       * WHY EVENT DETAILS LOAD INSTANTLY:
+       * =================================
+       * In the loader, we use `await loadEvent(id)` which means:
+       * - Navigation waits until event details are loaded
+       * - By the time this component renders, event data is ready
+       * - User never sees "Loading..." for event details
+       *
+       * INSTRUCTOR QUOTE:
+       * "If you have an async loader with the async function, you can simply
+       * add the await keyword here, and that will make sure that defer waits
+       * for this data to be loaded before loading this page component at all."
+       */}
+      <Suspense fallback={<p style={{ textAlign: 'center' }}>Loading...</p>}>
+        <Await resolve={event}>
+          {(loadedEvent) => <EventItem event={loadedEvent} />}
+        </Await>
+      </Suspense>
+      {/**
+       * SECOND SUSPENSE BLOCK - ALL EVENTS LIST (Lesson 383):
+       * =====================================================
+       * INSTRUCTOR QUOTE:
+       * "Then I pass events plural to the resolve prop."
+       *
+       * INSTRUCTOR QUOTE:
+       * "Then here, for the second await block, I got my loaded events, and I
+       * will output those here."
+       *
+       * WHY EVENTS LIST SHOWS "LOADING..." INITIALLY:
+       * =============================================
+       * In the loader, we DON'T await loadEvents():
+       * - Navigation happens before events list is loaded
+       * - Promise is still pending when component renders
+       * - Suspense shows fallback until promise resolves
+       * - After 2 seconds (backend delay), list appears
+       *
+       * INSTRUCTOR QUOTE:
+       * "If I go to my events, and I click on a single event, the details are
+       * there immediately, and the other list of events is still loading."
+       */}
+      <Suspense fallback={<p style={{ textAlign: 'center' }}>Loading...</p>}>
+        <Await resolve={events}>
+          {(loadedEvents) => <EventsList events={loadedEvents} />}
+        </Await>
+      </Suspense>
+    </>
+  );
 }
 
 export default EventDetailPage;
 
 /**
  * ============================================================================
- * LESSON 372: LOADER FUNCTION FOR EVENT DETAILS
+ * LESSON 383: HELPER FUNCTION TO LOAD ALL EVENTS (COPIED FROM Events.jsx)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Instead, I will add another loader function here and export it. Now this
- * time, a loader function for my event details."
+ * "To do that, I'll quickly copy that load events function from events.js."
  *
  * INSTRUCTOR QUOTE:
- * "So I export this, I will convert it to an async function because I want
- * to use the await keyword in here."
+ * "We could also store it in another shared file, and export it, but here
+ * I'll quickly copy it, and paste it here above my loader in the
+ * EventDetail.js file."
  *
- * ============================================================================
- * THE LOADER ARGUMENT OBJECT
- * ============================================================================
+ * WHY COPY INSTEAD OF IMPORT:
+ * ===========================
+ * The instructor acknowledges this could be refactored:
+ * - Option 1: Copy the function (what we're doing for simplicity)
+ * - Option 2: Move to a shared utility file and export/import
  *
- * React Router passes an object with { request, params } to every loader:
+ * For a production app, Option 2 (shared file) would be better to avoid
+ * code duplication. But for learning purposes, copying is clearer.
+ *
+ * THIS FUNCTION DEMONSTRATES:
+ * ===========================
+ * - The "slow" request (has 2s delay on backend)
+ * - Will be DEFERRED (not awaited) in the loader
+ * - Shows "Loading..." in UI while fetching
+ */
+async function loadEvents() {
+  const response = await fetch('http://localhost:8080/events');
+
+  if (!response.ok) {
+    throw Response.json(
+      { message: 'Could not fetch events.' },
+      { status: 500 }
+    );
+  }
+
+  const resData = await response.json();
+  return resData.events;
+}
+
+/**
+ * ============================================================================
+ * LESSON 383: HELPER FUNCTION TO LOAD SINGLE EVENT
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "But you still can get access to the route parameters that you need because
- * react router, which calls this loader function for you, actually passes an
- * object to this loader function when executing it for you."
+ * "I will also add another function in this EventDetail.js file, which I'll
+ * name loadEvent, where I expect to get the ID of an event, and I'll put that
+ * code here, which is responsible for loading a single event into this
+ * loadEvent helper function here."
  *
- * DESTRUCTURING THE PARAMS (Lesson 372):
- * ======================================
  * INSTRUCTOR QUOTE:
- * "So here, we have the event ID route parameter. We have this dynamic segment.
- * Then from here, we can access params dot event ID."
+ * "Now, just as before, I will also change this return value here of loadEvent
+ * to manually extract the data. So just as in load events, I'll use the JSON
+ * method, and await it, and then return resData.event here in the end."
  *
- * For route path: ':eventId'
- * And URL: /events/e1
+ * WHY A SEPARATE FUNCTION:
+ * ========================
+ * Just like loadEvents in Events.jsx, we need a function that RETURNS A PROMISE
+ * so we can control whether to await it or defer it in the loader.
  *
- * { params } will contain: { eventId: 'e1' }
+ * THIS FUNCTION DEMONSTRATES:
+ * ===========================
+ * - The "fast" request (no artificial delay on backend)
+ * - Will be AWAITED in the loader (blocks navigation until loaded)
+ * - User never sees "Loading..." for event details
+ *
+ * @param {string} id - The event ID to load
+ */
+async function loadEvent(id) {
+  const response = await fetch('http://localhost:8080/events/' + id);
+
+  if (!response.ok) {
+    throw Response.json(
+      { message: 'Could not fetch details for selected event.' },
+      { status: 500 }
+    );
+  }
+
+  /**
+   * MANUAL DATA EXTRACTION (Lesson 383):
+   * ====================================
+   * INSTRUCTOR QUOTE:
+   * "Now, just as before, I will also change this return value here of loadEvent
+   * to manually extract the data. So just as in load events, I'll use the JSON
+   * method, and await it, and then return resData.event here in the end."
+   *
+   * WHY NOT RETURN response DIRECTLY:
+   * =================================
+   * When using defer, we need to return the actual data (not a Response).
+   * The Await component expects resolved data, not a Response object.
+   *
+   * Returns: { id, title, image, date, description }
+   */
+  const resData = await response.json();
+  return resData.event;
+}
+
+/**
+ * ============================================================================
+ * LESSON 383: LOADER WITH DEFERRED AND AWAITED DATA
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I will defer here because we know that load events will take a while
+ * because we have this two second timeout on the backend, whereas load event
+ * should be rather fast."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I wanna show you how defer can help you load some data whilst still
+ * waiting for other data."
  *
  * ============================================================================
+ * KEY CONCEPT: CONTROLLING WHAT TO AWAIT vs DEFER
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So await is your lever, your switch for controlling which data should be
+ * awaited before moving to this page, and which data should be deferred, so
+ * where you wanna load the data after moving to the page."
+ *
+ * | Data Type    | Await? | Behavior                                     |
+ * |--------------|--------|----------------------------------------------|
+ * | event        | YES    | Navigation waits, data ready on render       |
+ * | events       | NO     | Navigation proceeds, shows loading fallback  |
+ *
+ * INSTRUCTOR QUOTE:
+ * "And with this setup here, we would wait for the event details to be loaded
+ * before loading this page component at all, but we would load the list of
+ * events after rendering this page."
+ *
+ * ============================================================================
+ * REACT ROUTER v6 vs v7 SYNTAX
+ * ============================================================================
+ *
+ * v6 (what instructor shows):
+ * ---------------------------
+ * import { defer } from 'react-router-dom';
+ *
+ * export async function loader({ params }) {
+ *   const id = params.eventId;
+ *   return defer({
+ *     event: await loadEvent(id),  // Awaited - blocks navigation
+ *     events: loadEvents(),        // Not awaited - deferred
+ *   });
+ * }
+ *
+ * v7 (what we use - defer() not needed):
+ * --------------------------------------
+ * export async function loader({ params }) {
+ *   const id = params.eventId;
+ *   return {
+ *     event: await loadEvent(id),  // Awaited - blocks navigation
+ *     events: loadEvents(),        // Not awaited - deferred
+ *   };
+ * }
+ *
+ * The behavior is IDENTICAL - v7 just simplified the syntax.
  */
 export async function loader({ request, params }) {
   /**
@@ -317,90 +501,54 @@ export async function loader({ request, params }) {
    * INSTRUCTOR QUOTE:
    * "So here, we have the event ID route parameter. We have this dynamic
    * segment. Then from here, we can access params dot event ID."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And that gives us this ID, which we wanna add here at the end of this
-   * URL. To send a request to local host 8080 slash events slash the ID of
-   * the event for which we wanna fetch the details."
-   *
-   * The params object mirrors the dynamic segments in the route path:
-   * - Route: { path: ':eventId', ... }
-   * - params: { eventId: 'e1' }
-   *
-   * IMPORTANT: The property name must match the route parameter name!
    */
   const id = params.eventId;
 
   /**
-   * FETCH EVENT DETAILS (Lesson 372):
-   * =================================
-   * INSTRUCTOR QUOTE:
-   * "And now to fetch the data for a single event, we can use the built in
-   * fetch function and send a request to our dummy backend API server, which
-   * we can reach under HTTP, local host 8080, and then slash events. And then
-   * the ID of the event for which we wanna load data."
-   *
-   * API endpoint: GET /events/:id
-   * Returns: { event: { id, title, image, date, description } }
-   */
-  const response = await fetch('http://localhost:8080/events/' + id);
-
-  /**
-   * ERROR HANDLING (Lesson 372):
-   * ============================
-   * INSTRUCTOR QUOTE:
-   * "Here, however, I will, first of all, await this because I still want
-   * to check if not response okay. So if we have a 400-ish or 500-ish error
-   * code. And only if that's not the case, so if we have a successful response,
-   * only in that case I wanna return the response."
+   * ============================================================================
+   * LESSON 383: RETURNING DEFERRED DATA WITH MIXED AWAIT/NO-AWAIT
+   * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "Otherwise, just as before, I wanna throw an error by using the builtin
-   * JSON function, which is provided by react router."
+   * "So here, when calling defer, I pass an object to it, and I have my single
+   * event where I will call loadEvent and pass this ID, which I'm extracting
+   * from my params, to load event, and I have events where I call loadEvents,
+   * like that."
    *
    * INSTRUCTOR QUOTE:
-   * "Now, you could have more granular error handling, but that's good enough
-   * for this demo."
-   */
-  if (!response.ok) {
-    /**
-     * THROW ERROR RESPONSE (Lesson 372):
-     * ==================================
-     * INSTRUCTOR QUOTE:
-     * "And I will throw an error response where I say, 'Could not fetch
-     * details for selected event.' And I will add this metadata object
-     * here and set the status to 500 again."
-     *
-     * Using json() helper from Lesson 371:
-     * - Automatically stringifies the data
-     * - Automatically parses when reading in ErrorPage
-     * - Status code enables differentiated error handling
-     */
-    throw Response.json(
-      { message: 'Could not fetch details for selected event.' },
-      { status: 500 }
-    );
-  }
-
-  /**
-   * RETURN RESPONSE (Lesson 372):
+   * "So now this is looking similar to what we had before in the events.js
+   * file, but we have two requests that are bundled in this defer object."
+   *
+   * THE CRITICAL DIFFERENCE - await vs no-await:
+   * =============================================
+   * - event: await loadEvent(id)  → AWAITED (navigation waits for this)
+   * - events: loadEvents()        → NOT awaited (loads after navigation)
+   *
+   * INSTRUCTOR QUOTE:
+   * "If you have an async loader with the async function, you can simply add
+   * the await keyword here, and that will make sure that defer waits for this
+   * data to be loaded before loading this page component at all, so before
+   * moving and navigating to this page component, but will load this data,
+   * the loadEvents data, after the page was loaded."
+   *
+   * WHY THIS PATTERN IS POWERFUL:
    * =============================
-   * INSTRUCTOR QUOTE:
-   * "We then get a response by awaiting this fetch call here. And now we
-   * could again return this response here as we learned before. We can
-   * return such a response object in our loader."
+   * - Critical data (event details) blocks navigation = always visible
+   * - Non-critical data (events list) is deferred = faster navigation
+   * - User sees page immediately with main content
+   * - Secondary content loads progressively
    *
    * INSTRUCTOR QUOTE:
-   * "And if that's all we want to do, we could, therefore, even return it
-   * like this. And, as mentioned, react router would automatically wait
-   * for the promise and give us access to the data to which it resolves."
+   * "Here, you won't see a big difference, but it will actually ensure that
+   * we never see a loading text here for the event details."
    *
-   * React Router will:
-   * 1. Detect this is a Response object
-   * 2. Automatically call .json() to extract data
-   * 3. Provide that data via useLoaderData()
+   * INSTRUCTOR QUOTE:
+   * "And that's how you can use defer to control when which data is loaded."
    */
-  return response;
+  return {
+    event: await loadEvent(id),
+    events: loadEvents(),
+  };
 }
 
 /**

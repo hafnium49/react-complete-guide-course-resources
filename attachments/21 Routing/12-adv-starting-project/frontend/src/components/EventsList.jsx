@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS LIST COMPONENT (Lessons 358, 363, 372 - Pre-built + Loader Data + Links)
+ * EVENTS LIST COMPONENT (Lessons 358, 363, 372, 383 - Pre-built + Links Fix)
  * ============================================================================
  *
  * PRE-BUILT COMPONENT (Lesson 358):
@@ -133,44 +133,53 @@ function EventsList({ events }) {
           <li key={event.id} className={classes.item}>
             {/**
              * ================================================================
-             * DYNAMIC LINK TO EVENT DETAIL (Lesson 372)
+             * DYNAMIC LINK TO EVENT DETAIL (Lessons 372, 383)
              * ================================================================
              *
-             * INSTRUCTOR QUOTE:
+             * INSTRUCTOR QUOTE (Lesson 372):
              * "Now, we wanna navigate to this event detail page. For that,
              * I'll start by going to events list, and there we first of all
              * wanna convert this anchor element to a link."
              *
-             * INSTRUCTOR QUOTE:
-             * "And import link from react-router-dom, of course, and also
-             * convert the closing tag to a link."
-             *
-             * HOW RELATIVE PATHS WORK (Lesson 372):
-             * ====================================
-             * INSTRUCTOR QUOTE:
-             * "So here I have a relative path relative to the path of the
-             * currently active route."
+             * ================================================================
+             * LESSON 383: FIXING LINKS TO BE ABSOLUTE
+             * ================================================================
              *
              * INSTRUCTOR QUOTE:
-             * "And that means if we take a look at App.js again, that if we
-             * are on the events page, and we append the event ID at the end,
-             * we go to this event detail page, because that route is a child
-             * route of this events route."
+             * "By the way, those links in this nested list would now be broken.
+             * To fix that, we would have to go to EventsList.js, and then
+             * convert these links to absolute links here, since we can now
+             * end up in situations where this component is rendered on a page
+             * where adding this to the currently active path would lead to an
+             * overall incorrect path."
              *
-             * Using template literal to build the path:
-             * `/events/${event.id}` produces:
-             * - For event.id = "e1" → "/events/e1"
-             * - For event.id = "e2" → "/events/e2"
+             * WHY ABSOLUTE PATHS ARE NOW NEEDED:
+             * ==================================
+             * BEFORE (component only rendered on /events):
+             * - Relative path: event.id (e.g., "e1")
+             * - Becomes: /events + e1 = /events/e1 ✓
              *
-             * These paths match the dynamic route:
-             * { path: ':eventId', element: <EventDetailPage /> }
+             * AFTER (component also rendered on /events/:eventId):
+             * - Relative path: event.id (e.g., "e1")
+             * - Becomes: /events/some-event + e1 = /events/some-event/e1 ✗
+             *
+             * WITH ABSOLUTE PATH:
+             * - Absolute path: /events/e1
+             * - Always navigates to: /events/e1 ✓ (works everywhere!)
              *
              * INSTRUCTOR QUOTE:
-             * "So we will go to the event detail page if we set up our links
-             * like this and we append the event ID to the currently active
-             * path when this events list is being rendered."
+             * "But that's just a tiny side note not related to deferring
+             * data loading."
+             *
+             * THE FIX:
+             * ========
+             * Changed from: <Link to={event.id}>
+             * Changed to:   <Link to={`/events/${event.id}`}>
+             *
+             * This ensures the link works correctly regardless of which
+             * page this EventsList component is rendered on.
              */}
-            <Link to={event.id}>
+            <Link to={`/events/${event.id}`}>
               <img src={event.image} alt={event.title} />
               <div className={classes.content}>
                 <h2>{event.title}</h2>
