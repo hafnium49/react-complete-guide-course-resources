@@ -368,6 +368,9 @@ function NewsletterSignup() {
      */
     <fetcher.Form method="post" action="/newsletter" className={classes.newsletter}>
       {/**
+       * the sumbmit is without transitioning to /newsletter page
+       */}
+      {/**
        * EMAIL INPUT:
        * ============
        * The name="email" attribute is important because the action
