@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-371 - Loaders, useLoaderData, Error Handling)
+ * EVENTS PAGE COMPONENT (Lessons 361-371, 381 - Loaders + Deferred Loading)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -15,7 +15,8 @@
  * Lesson 368: What you CAN and CANNOT do in loaders
  * Lesson 369: Error handling with loaders - throwing Error objects
  * Lesson 370: Throwing Response objects for better error handling
- * Lesson 371: The json() utility function for simpler responses (CURRENT)
+ * Lesson 371: The json() utility function for simpler responses
+ * Lesson 381: Deferred loading with defer, Await, and Suspense (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -151,7 +152,7 @@
  */
 /**
  * ============================================================================
- * IMPORTS (Lessons 362, 371)
+ * IMPORTS (Lessons 362, 371, 381)
  * ============================================================================
  *
  * useLoaderData (Lesson 362):
@@ -175,77 +176,218 @@
  * - Automatically converts objects to JSON (no JSON.stringify needed)
  * - Automatically parses JSON when reading (no JSON.parse needed)
  * - Cleaner, more readable code
+ *
+ * ============================================================================
+ * LESSON 381: DEFERRED LOADING IMPORTS
+ * ============================================================================
+ *
+ * defer (Lesson 381):
+ * ===================
+ * INSTRUCTOR QUOTE:
+ * "And that's where we can defer loading and tell React router that we
+ * actually wanna render a component already even though the data is not
+ * fully there yet."
+ *
+ * INSTRUCTOR QUOTE:
+ * "In the loader I now don't want to await this promise here. Instead here
+ * I can actually get rid of this async keyword and use a special function
+ * in this loader function. The defer function which should be imported
+ * from react-router-dom."
+ *
+ * Await (Lesson 381):
+ * ===================
+ * INSTRUCTOR QUOTE:
+ * "Instead what we do in here is we return another component provided by
+ * react-router-dom and that's the await component."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And await has a special resolve prop which wants one of our deferred
+ * values as a value."
  */
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData, defer, Await } from 'react-router-dom';
+/**
+ * Suspense (Lesson 381):
+ * ======================
+ * INSTRUCTOR QUOTE:
+ * "As a last step, we have to add another component that must be wrapped
+ * around the await component. And that's the suspense component which is
+ * imported from React. So not from React router but from React."
+ *
+ * INSTRUCTOR QUOTE:
+ * "The suspense component is a component which can be used in certain
+ * situations to show a fallback whilst we're waiting for other data to arrive."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We'll see it again later in the course in a totally different scenario
+ * not related to Routing but here it is a component that's supported and
+ * used by React router and by the await component to show a fallback whilst
+ * we're waiting for these events to be fetched."
+ */
+import { Suspense } from 'react';
 
 import EventsList from '../components/EventsList';
 
 /**
- * EVENTS PAGE COMPONENT (Lesson 362):
- * ====================================
+ * EVENTS PAGE COMPONENT (Lessons 362, 381):
+ * =========================================
  * Dramatically simplified compared to the traditional approach!
  *
- * NO MORE:
- * - useState for loading, error, data
- * - useEffect for triggering fetch
- * - Conditional rendering for different states
+ * LESSON 381 UPDATE - DEFERRED LOADING:
+ * =====================================
+ * INSTRUCTOR QUOTE:
+ * "But sometimes you wanna load this page before the data is there and show
+ * parts of the page already until all the data is there."
  *
- * JUST:
- * - Call useLoaderData() to get the data
- * - Pass it to the child component
+ * INSTRUCTOR QUOTE:
+ * "For example, here it would make sense to show these buttons already, the
+ * all events and new event buttons, even if the list of events hasn't been
+ * loaded yet. But at the moment we don't see anything until the events are
+ * there."
  *
- * The loader in App.jsx handles all the data fetching.
+ * INSTRUCTOR QUOTE:
+ * "And that's where we can defer loading and tell React router that we
+ * actually wanna render a component already even though the data is not
+ * fully there yet."
+ *
+ * The component now uses:
+ * - Suspense: Shows a fallback while waiting for data
+ * - Await: Waits for the deferred promise to resolve
+ * - A render function inside Await that receives the loaded data
  */
 function EventsPage() {
   /**
-   * useLoaderData HOOK (Lessons 362, 367):
-   * ======================================
-   * This hook returns whatever was returned by the loader function
-   * defined for this route in App.jsx.
-   *
-   * INSTRUCTOR QUOTE (Lesson 362):
-   * "This is a special hook which we can execute to get access to the
-   * closest loader data."
-   *
-   * RESPONSE OBJECT SUPPORT (Lesson 367):
-   * =====================================
+   * useLoaderData WITH DEFERRED DATA (Lesson 381):
+   * ==============================================
    * INSTRUCTOR QUOTE:
-   * "Whenever you return such a response in your loaders, the React Router
-   * package will automatically extract the data from your response when
-   * using useLoaderData."
+   * "We still use useLoaderData here. We still do that. But this data will
+   * now actually be an object that gives us access to these deferred value
+   * keys here."
    *
-   * Since we now return the response directly from the loader (Lesson 367),
-   * useLoaderData automatically extracts the JSON data from it.
-   * The extracted data is an object with an `events` key: { events: [...] }
+   * When using defer, useLoaderData returns an object with keys matching
+   * what we passed to defer(). In our case: { events: Promise }
    *
    * INSTRUCTOR QUOTE:
-   * "I just have to make sure that I do extract my events from that data
-   * object which I get here because that is actually an object with an
-   * events key."
-   *
-   * PROMISE HANDLING (Lesson 362):
-   * ==============================
-   * INSTRUCTOR QUOTE:
-   * "But React Router will actually check if a promise is returned and
-   * automatically get the resolved data from that promise for you."
+   * "So this data object here will have the keys we set in this object that
+   * we pass to defer. And that events key will, in the end, hold a promise
+   * as a value."
    */
-  const data = useLoaderData();
+  const { events } = useLoaderData();
 
   /**
-   * EXTRACTING EVENTS FROM DATA (Lesson 367):
-   * =========================================
-   * Since we now return the full Response object from our loader,
-   * useLoaderData gives us the parsed JSON: { events: [...] }
-   *
-   * We extract the events array to pass to EventsList.
+   * ============================================================================
+   * LESSON 381: SUSPENSE + AWAIT PATTERN FOR DEFERRED DATA
+   * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "I just have to make sure that I do extract my events from that data
-   * object which I get here because that is actually an object with an
-   * events key, just as I extracted events from the response data in my
-   * loader a couple of seconds ago."
+   * "Now this is not everything we have to do though. Instead now, as our next
+   * step, we have to go to the component where we want to use the deferred
+   * data."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And here in this component we now don't directly render the component or
+   * the JSX code that needs our data. Instead what we do in here is we return
+   * another component provided by react-router-dom and that's the await
+   * component."
+   *
+   * STRUCTURE:
+   * ==========
+   * <Suspense fallback={<LoadingUI />}>
+   *   <Await resolve={promiseFromDefer}>
+   *     {(resolvedData) => <ComponentThatNeedsData data={resolvedData} />}
+   *   </Await>
+   * </Suspense>
+   *
+   * HOW IT WORKS:
+   * =============
+   * 1. Component renders immediately (before data arrives)
+   * 2. Suspense shows fallback ("Loading...") while Await waits
+   * 3. Await's resolve prop receives the promise from defer
+   * 4. Once promise resolves, Await calls the render function
+   * 5. Render function receives the actual data
+   * 6. EventsList renders with the loaded events
+   *
+   * ============================================================================
    */
-  return <EventsList events={data.events} />;
+  return (
+    /**
+     * SUSPENSE COMPONENT (Lesson 381):
+     * ================================
+     * INSTRUCTOR QUOTE:
+     * "As a last step, we have to add another component that must be wrapped
+     * around the await component. And that's the suspense component which is
+     * imported from React."
+     *
+     * INSTRUCTOR QUOTE:
+     * "The suspense component is a component which can be used in certain
+     * situations to show a fallback whilst we're waiting for other data to arrive."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Here it is a component that's supported and used by React router and
+     * by the await component to show a fallback whilst we're waiting for these
+     * events to be fetched."
+     *
+     * THE FALLBACK PROP (Lesson 381):
+     * ===============================
+     * INSTRUCTOR QUOTE:
+     * "So here the fallback which I do wanna show is actually a paragraph where
+     * I say loading. And I will add some inline style here, quick and thoroughly,
+     * to set the text alignment to center."
+     */
+    <Suspense fallback={<p style={{ textAlign: 'center' }}>Loading...</p>}>
+      {/**
+       * AWAIT COMPONENT (Lesson 381):
+       * =============================
+       * INSTRUCTOR QUOTE:
+       * "Instead what we do in here is we return another component provided by
+       * react-router-dom and that's the await component."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And await has a special resolve prop which wants one of our deferred
+       * values as a value."
+       *
+       * THE resolve PROP (Lesson 381):
+       * ==============================
+       * INSTRUCTOR QUOTE:
+       * "So here on this data object we know that we have an events key because
+       * that's what we set here. So this data object here will have the keys we
+       * set in this object that we pass to defer."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And that events key will, in the end, hold a promise as a value. So
+       * it's kind of that promise which we wanna pass to this resolve value
+       * of the await component."
+       */}
+      <Await resolve={events}>
+        {/**
+         * RENDER FUNCTION PATTERN (Lesson 381):
+         * =====================================
+         * INSTRUCTOR QUOTE:
+         * "Now that await component will wait for that data to be there. And
+         * then between the opening and closing tags, we output a dynamic value
+         * which must be a function that will be executed by a React router once
+         * that data is there."
+         *
+         * INSTRUCTOR QUOTE:
+         * "So once that promise resolved. Once we have that data. So here we,
+         * therefore, get our events in the end. Our loaded events if we want
+         * to call it like this."
+         *
+         * INSTRUCTOR QUOTE:
+         * "Again, this function will be called by React router once the data
+         * is there. And it's therefore now here where we wanna output our
+         * events list and pass these loaded events as a value for the events
+         * prop."
+         *
+         * WHAT loadedEvents CONTAINS:
+         * ===========================
+         * The loadedEvents parameter is the RESOLVED value of the promise.
+         * Since loadEvents() returns resData.events (an array of events),
+         * loadedEvents will be that array directly.
+         */}
+        {(loadedEvents) => <EventsList events={loadedEvents} />}
+      </Await>
+    </Suspense>
+  );
 }
 
 export default EventsPage;
@@ -612,193 +754,60 @@ export default EventsPage;
  */
 
 /**
- * EXPORTED LOADER FUNCTION (Lessons 364, 367, 368):
- * ============================================
- * This is the loader function that was previously defined inline in App.jsx.
+ * ============================================================================
+ * LESSON 381: HELPER FUNCTION FOR DEFERRED LOADING
+ * ============================================================================
  *
- * INSTRUCTOR QUOTE (Lesson 364):
- * "In this case, that's the events.js file in the pages folder. And here we
- * can simply export a function which we could name loader for example."
+ * INSTRUCTOR QUOTE:
+ * "In order to defer loading that, what we need to do here is we need to grab
+ * that code here and outsource it into a separate function, an async function,
+ * which I'll name load events."
  *
- * This function:
- * 1. Is executed by React Router BEFORE EventsPage renders
- * 2. Fetches events data from the backend API
- * 3. Returns the Response object directly (Lesson 367)
+ * INSTRUCTOR QUOTE:
+ * "And then I put my code in there. So it's almost the same code as before.
+ * Just wrapped into a separate function."
  *
- * BENEFITS OF THIS PATTERN:
- * =========================
- * 1. Keeps data fetching logic close to the component that uses it
- * 2. Makes App.jsx cleaner (just imports and route definitions)
- * 3. Easier to find and maintain loader code
- * 4. Each page can manage its own data requirements
- * 5. Less code by returning Response directly (Lesson 367)
+ * WHY A SEPARATE FUNCTION? (Lesson 381):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "I'm doing this because in the loader I now don't want to await this promise
+ * here."
+ *
+ * The defer() function needs a PROMISE (not resolved data) to work with.
+ * By putting the fetch logic in a separate async function:
+ * - The function returns a Promise when called
+ * - We can pass that Promise to defer() WITHOUT awaiting it
+ * - React Router will handle the promise resolution via Await component
+ *
+ * WHY IT MUST RETURN A PROMISE (Lesson 381):
+ * ==========================================
+ * INSTRUCTOR QUOTE:
+ * "Now we must have a promise here. If we wouldn't have a promise there would
+ * be nothing to defer because the idea behind defer is that we have a value
+ * that will eventually resolve to another value, which is the definition of
+ * a promise."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that we wanna load a component and render a component even though that
+ * future value isn't there yet."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So load events returns a promise. It must return a promise and it does."
  */
-export async function loader() {
+async function loadEvents() {
   /**
    * FETCH EVENTS FROM BACKEND:
    * ==========================
-   * The fetch() function returns a Promise that resolves to a Response object.
-   *
-   * INSTRUCTOR QUOTE (Lesson 367):
-   * "It's quite common that in this loader function, you reach out to some
-   * backend with the browser's built-in fetch function. And this fetch function
-   * actually returns a promise that resolves to a response."
+   * Same fetch logic as before, but now inside a helper function.
    */
   const response = await fetch('http://localhost:8080/events');
 
   /**
-   * ============================================================================
-   * ERROR HANDLING IN LOADERS (Lesson 369)
-   * ============================================================================
-   *
-   * TWO APPROACHES TO ERROR HANDLING (Lesson 369):
-   * ==============================================
-   *
-   * APPROACH 1: Return error data (NOT USED HERE):
-   * -----------------------------------------------
-   * INSTRUCTOR QUOTE:
-   * "What we can do in that case is we can return a different response, for
-   * example, or just return an object. Doesn't have to be a response, as you
-   * learned. Where we could add is error key and a message like 'could not
-   * fetch events'."
-   *
-   * Example (commented out - not the approach we use):
-   * if (!response.ok) {
-   *   return { isError: true, message: 'Could not fetch events.' };
-   * }
-   *
-   * Then in component:
-   * if (data.isError) {
-   *   return <p>{data.message}</p>;
-   * }
-   *
-   * INSTRUCTOR QUOTE:
-   * "With that we still have a pretty lean component. We only added this code
-   * here and we have the error generation and handling code in our loader
-   * where it belongs, arguably."
-   *
-   * APPROACH 2: Throw an error (USED HERE):
-   * ---------------------------------------
-   * INSTRUCTOR QUOTE:
-   * "As an alternative to returning this data here to the component, we could
-   * throw an error. For this we can construct a new error object with the
-   * built in error constructor, or we throw any other kind of object as an
-   * error."
-   *
-   * WHAT HAPPENS WHEN YOU THROW (Lesson 369):
-   * =========================================
-   * INSTRUCTOR QUOTE:
-   * "Now, when an error gets thrown in a loader something special happens.
-   * React router will simply render the closest error element."
-   *
-   * ERROR BUBBLING (Lesson 369):
-   * ============================
-   * INSTRUCTOR QUOTE:
-   * "Even though I'm throwing an error here in the loader of the events page.
-   * So in this route here, which is a deeply nested route, errors will bubble
-   * up."
-   *
-   * INSTRUCTOR QUOTE:
-   * "We could add error element to this route as well. And in that case, this
-   * error element would be rendered if this loader threw an error. But we can
-   * also just have this Root level error element and the error would bubble
-   * up until it reaches that route."
+   * ERROR HANDLING:
+   * ===============
+   * Still throw errors for non-OK responses.
    */
   if (!response.ok) {
-    /**
-     * ============================================================================
-     * THROWING A RESPONSE WITH json() HELPER (Lessons 370-371)
-     * ============================================================================
-     *
-     * WHY THROW A RESPONSE INSTEAD OF AN ERROR? (Lesson 370):
-     * =======================================================
-     * INSTRUCTOR QUOTE:
-     * "So to differentiate between errors what we can do is instead of throwing
-     * a object, we can throw a response by again creating a new response."
-     *
-     * INSTRUCTOR QUOTE:
-     * "But that's why you might wanna throw responses instead of regular objects
-     * because it does allow you to include this extra status property, this extra
-     * status field, which helps with building a generic error handling component."
-     *
-     * ============================================================================
-     * THE json() UTILITY FUNCTION (Lesson 371)
-     * ============================================================================
-     *
-     * WHY USE json() INSTEAD OF new Response()? (Lesson 371):
-     * =======================================================
-     * INSTRUCTOR QUOTE:
-     * "Now when using React router, you will from time to time construct responses
-     * as we're doing it here, especially when it comes to throwing errors. For all
-     * the reasons mentioned in the previous lectures. Now, constructing responses
-     * manually like this is possible, but a bit annoying."
-     *
-     * INSTRUCTOR QUOTE:
-     * "That's why React router gives you a little helper, utility."
-     *
-     * HOW json() WORKS (Lesson 371):
-     * ==============================
-     * INSTRUCTOR QUOTE:
-     * "Instead of creating your response like this and returning it like this,
-     * you can return the result of calling json, written like this."
-     *
-     * INSTRUCTOR QUOTE:
-     * "Now json is a function that creates a response object that includes data
-     * in the json format."
-     *
-     * ARGUMENTS (Lesson 371):
-     * =======================
-     * INSTRUCTOR QUOTE:
-     * "To this json function, you simply pass your data that should be included
-     * in the response, in my case, my object, and you don't need to convert it
-     * to json manually. Instead, that will be done for you."
-     *
-     * INSTRUCTOR QUOTE:
-     * "And you can pass a second argument where you can set that extra response
-     * metadata like this status. And here I set this status to 500 again."
-     *
-     * BENEFITS OF json() (Lesson 371):
-     * ================================
-     * INSTRUCTOR QUOTE:
-     * "Now with this json function, you don't just have to type less code here,
-     * but in the place where you use that response data you also don't have to
-     * parse the json format manually. Instead, you can simplify the code to this
-     * because the parsing will now be done by React router for you."
-     *
-     * INSTRUCTOR QUOTE:
-     * "And that of course is a great simplification and hence it is quite common
-     * to use this json function for building responses with less effort."
-     *
-     * CODE COMPARISON (Lessons 370 vs 371):
-     * =====================================
-     *
-     * LESSON 370 (manual Response):
-     * -----------------------------
-     * throw new Response(
-     *   JSON.stringify({ message: 'Could not fetch events.' }),
-     *   { status: 500 }
-     * );
-     * - Must use JSON.stringify() when creating
-     * - Must use JSON.parse() when reading in ErrorPage
-     * - More verbose
-     *
-     * LESSON 371 (json() helper):
-     * ---------------------------
-     * throw json(
-     *   { message: 'Could not fetch events.' },
-     *   { status: 500 }
-     * );
-     * - No JSON.stringify() needed (automatic)
-     * - No JSON.parse() needed in ErrorPage (automatic)
-     * - Cleaner, less code
-     *
-     * | Aspect            | new Response()           | json()               |
-     * |-------------------|--------------------------|----------------------|
-     * | Stringify data    | Manual (JSON.stringify)  | Automatic            |
-     * | Parse data        | Manual (JSON.parse)      | Automatic            |
-     * | Code verbosity    | More verbose             | Concise              |
-     * | Error prone       | Easy to forget stringify | Less error prone     |
-     */
     throw Response.json(
       { message: 'Could not fetch events.' },
       { status: 500 }
@@ -806,24 +815,136 @@ export async function loader() {
   }
 
   /**
-   * RETURN RESPONSE DIRECTLY (Lesson 367):
-   * ======================================
-   * INSTRUCTOR QUOTE:
-   * "Instead, you can return your response like this... and useLoaderData
-   * will then automatically give us the data that's part of the response."
+   * ============================================================================
+   * IMPORTANT CHANGE FOR DEFER (Lesson 381):
+   * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "But with that, we can reduce our loader code and leverage this built-in
-   * support for response objects."
+   * "Now I'm getting this error because in my load events helper function I'm
+   * still returning the response. And whilst this did work before, where this
+   * was the value that was received directly by use loader data, this does not
+   * work anymore if we have this, the first step, in between."
    *
-   * React Router will:
-   * 1. Detect that we returned a Response object
-   * 2. Automatically call .json() to extract the data
-   * 3. Provide that data via useLoaderData()
+   * INSTRUCTOR QUOTE:
+   * "What I have to do instead is I have to manually parse that here. So here
+   * I got my response data by awaiting for response dot JSON and then here I
+   * return resdata dot events in this load events helper function."
    *
-   * The component will receive: { events: [...] }
+   * INSTRUCTOR QUOTE:
+   * "That's required because we have just the first step between our loader
+   * and use loader data."
+   *
+   * WHY THIS CHANGE IS NEEDED:
+   * ==========================
+   * BEFORE (without defer):
+   * - Loader returned response directly
+   * - React Router auto-parsed the response
+   * - useLoaderData received: { events: [...] }
+   *
+   * AFTER (with defer):
+   * - defer() wraps the promise, not the response
+   * - The parsing needs to happen INSIDE the promise
+   * - loadEvents must return the actual events array
+   * - Await component receives the resolved events array
    */
-  return response;
+  const resData = await response.json();
+  return resData.events;
+}
+
+/**
+ * ============================================================================
+ * EXPORTED LOADER FUNCTION WITH defer (Lessons 364, 367, 368, 381):
+ * ============================================================================
+ *
+ * LESSON 381 UPDATE - USING defer:
+ * ================================
+ * INSTRUCTOR QUOTE:
+ * "In the loader I now don't want to await this promise here. Instead here I
+ * can actually get rid of this async keyword and use a special function in
+ * this loader function. The defer function which should be imported from
+ * react-router-dom."
+ *
+ * NOTICE: NO async KEYWORD (Lesson 381):
+ * ======================================
+ * INSTRUCTOR QUOTE:
+ * "Instead here I can actually get rid of this async keyword."
+ *
+ * The loader is no longer async because we're NOT awaiting the data.
+ * We're just passing a promise to defer() and returning immediately.
+ */
+export function loader() {
+  /**
+   * ============================================================================
+   * LESSON 381: THE defer() FUNCTION
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "This defer function. Now defer is a function that must be executed and
+   * Q defer we pass an object."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now in this object, we in the end, bundle all the different HTTP requests
+   * we might have going on on this page. In this case it's only one request
+   * though. The request for all my events."
+   *
+   * THE OBJECT STRUCTURE (Lesson 381):
+   * ==================================
+   * INSTRUCTOR QUOTE:
+   * "I'll give that request a key of events. For example, though that key is
+   * up to you."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then here I'll point at load events. I'll actually not just point at
+   * it instead I will execute it. So I add parentheses here."
+   *
+   * IMPORTANT - EXECUTE THE FUNCTION (Lesson 381):
+   * ==============================================
+   * INSTRUCTOR QUOTE:
+   * "So I execute the load events function and I stored a value returned by
+   * load events which is a promise, since this is a async function, in this
+   * object under the events key."
+   *
+   * WHY WE CALL loadEvents() NOT JUST REFERENCE IT:
+   * ================================================
+   * - loadEvents is an async function
+   * - Calling loadEvents() STARTS the async operation
+   * - It IMMEDIATELY returns a Promise (before the fetch completes)
+   * - That Promise is stored under the 'events' key
+   * - React Router will use Await to wait for the Promise to resolve
+   *
+   * HOW defer() WORKS:
+   * ==================
+   * defer({
+   *   events: loadEvents(),  // Promise that will resolve to events array
+   *   // You can add more keys for multiple requests:
+   *   // users: loadUsers(),
+   *   // settings: loadSettings(),
+   * })
+   *
+   * INSTRUCTOR QUOTE:
+   * "And it's now this value returned by defer which we return in our loader."
+   *
+   * BENEFITS OF defer (Lesson 381):
+   * ===============================
+   * INSTRUCTOR QUOTE:
+   * "And that's this defer feature in action. And this defer feature can speed
+   * up your pages and make sure that you're already showing some content whilst
+   * you're waiting for other content."
+   *
+   * INSTRUCTOR QUOTE:
+   * "It especially shines if you have pages with multiple HTTP requests with
+   * different speeds, though."
+   *
+   * PERFECT USE CASES FOR defer:
+   * ============================
+   * - Pages with multiple data requirements
+   * - Fast navigation with slow data fetching
+   * - Show UI skeleton while loading
+   * - Progressive data loading (critical data first)
+   */
+  return defer({
+    events: loadEvents(),
+  });
 }
 
 /**
