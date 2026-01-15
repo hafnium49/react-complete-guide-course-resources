@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EVENTS PAGE COMPONENT (Lessons 361-371, 381 - Loaders + Deferred Loading)
+ * EVENTS PAGE COMPONENT (Lessons 361-371, 381-382 - Loaders + Deferred Loading)
  * ============================================================================
  *
  * EVOLUTION OF THIS FILE:
@@ -16,7 +16,8 @@
  * Lesson 369: Error handling with loaders - throwing Error objects
  * Lesson 370: Throwing Response objects for better error handling
  * Lesson 371: The json() utility function for simpler responses
- * Lesson 381: Deferred loading with defer, Await, and Suspense (CURRENT)
+ * Lesson 381: Deferred loading with defer, Await, and Suspense
+ * Lesson 382: React Router v7 updates - defer() and json() no longer needed (CURRENT)
  *
  * ============================================================================
  * LESSON 362: ACCESSING LOADER DATA WITH useLoaderData
@@ -152,47 +153,93 @@
  */
 /**
  * ============================================================================
- * IMPORTS (Lessons 362, 371, 381)
+ * IMPORTS (Lessons 362, 371, 381, 382)
  * ============================================================================
  *
  * useLoaderData (Lesson 362):
  * ===========================
  * Hook to access data returned by the route's loader function.
  *
- * json (Lesson 371):
- * ==================
- * INSTRUCTOR QUOTE:
+ * json (Lesson 371) - NO LONGER NEEDED IN REACT ROUTER v7:
+ * ========================================================
+ * INSTRUCTOR QUOTE (Lesson 371):
  * "Now, constructing responses manually like this is possible, but a bit
  * annoying. That's why React router gives you a little helper, utility."
  *
- * INSTRUCTOR QUOTE:
- * "And json is a function that can be imported from react-router-dom."
+ * ============================================================================
+ * LESSON 382: json() NO LONGER SUPPORTED IN REACT ROUTER v7
+ * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "Now json is a function that creates a response object that includes
- * data in the json format."
+ * "Both methods are no longer supported / needed when using React Router v7
+ * (check your package.json file)."
  *
- * The json() function simplifies creating Response objects:
- * - Automatically converts objects to JSON (no JSON.stringify needed)
- * - Automatically parses JSON when reading (no JSON.parse needed)
- * - Cleaner, more readable code
+ * "Instead of using json(), you should construct a Response manually."
+ *
+ * BEFORE (React Router v6 - using json() helper):
+ * -----------------------------------------------
+ * import { json } from 'react-router-dom';
+ * throw json({ message: 'Error' }, { status: 500 });
+ *
+ * AFTER (React Router v7 - using Response.json()):
+ * ------------------------------------------------
+ * throw Response.json({ message: 'Error' }, { status: 500 });
+ *
+ * OR using new Response() constructor:
+ * ------------------------------------
+ * throw new Response(
+ *   JSON.stringify({ message: 'Could not fetch events.' }),
+ *   { status: 500 }
+ * );
+ *
+ * NOTE: We already use Response.json() in this file, so no changes needed!
  *
  * ============================================================================
  * LESSON 381: DEFERRED LOADING IMPORTS
  * ============================================================================
  *
- * defer (Lesson 381):
- * ===================
- * INSTRUCTOR QUOTE:
+ * defer (Lesson 381) - NO LONGER NEEDED IN REACT ROUTER v7:
+ * =========================================================
+ * INSTRUCTOR QUOTE (Lesson 381):
  * "And that's where we can defer loading and tell React router that we
  * actually wanna render a component already even though the data is not
  * fully there yet."
  *
- * INSTRUCTOR QUOTE:
- * "In the loader I now don't want to await this promise here. Instead here
- * I can actually get rid of this async keyword and use a special function
- * in this loader function. The defer function which should be imported
- * from react-router-dom."
+ * ============================================================================
+ * LESSON 382: defer() NO LONGER SUPPORTED IN REACT ROUTER v7
+ * ============================================================================
+ *
+ * "Instead of using defer(), you can directly return an object that contains
+ * unresolved promises."
+ *
+ * BEFORE (React Router v6 - using defer()):
+ * -----------------------------------------
+ * import { defer } from 'react-router-dom';
+ *
+ * export function loader() {
+ *   return defer({
+ *     events: loadEvents(),
+ *   });
+ * }
+ *
+ * AFTER (React Router v7 - return object directly):
+ * -------------------------------------------------
+ * export function loader() {
+ *   return {
+ *     events: loadEvents(),
+ *   };
+ * }
+ *
+ * "Also make sure to remove the defer import at the top of the file."
+ *
+ * "That's all! No further changes are needed, you still use the <Await>
+ * component as shown in this section. And all the other code also stays
+ * & works the way you learned it."
+ *
+ * WHY THIS WORKS IN v7:
+ * =====================
+ * React Router v7 automatically detects when you return an object with
+ * promises as values. It treats this the same way defer() worked in v6.
+ * This is a simplification that removes the need for explicit defer() calls.
  *
  * Await (Lesson 381):
  * ===================
@@ -200,11 +247,10 @@
  * "Instead what we do in here is we return another component provided by
  * react-router-dom and that's the await component."
  *
- * INSTRUCTOR QUOTE:
- * "And await has a special resolve prop which wants one of our deferred
- * values as a value."
+ * NOTE: The <Await> component is STILL NEEDED and works the same way!
+ * Only defer() was removed, not <Await>.
  */
-import { useLoaderData, defer, Await } from 'react-router-dom';
+import { useLoaderData, Await } from 'react-router-dom';
 /**
  * Suspense (Lesson 381):
  * ======================
@@ -853,16 +899,13 @@ async function loadEvents() {
 
 /**
  * ============================================================================
- * EXPORTED LOADER FUNCTION WITH defer (Lessons 364, 367, 368, 381):
+ * EXPORTED LOADER FUNCTION (Lessons 364, 367, 368, 381, 382):
  * ============================================================================
  *
- * LESSON 381 UPDATE - USING defer:
- * ================================
+ * LESSON 381 UPDATE - DEFERRED LOADING:
+ * =====================================
  * INSTRUCTOR QUOTE:
- * "In the loader I now don't want to await this promise here. Instead here I
- * can actually get rid of this async keyword and use a special function in
- * this loader function. The defer function which should be imported from
- * react-router-dom."
+ * "In the loader I now don't want to await this promise here."
  *
  * NOTICE: NO async KEYWORD (Lesson 381):
  * ======================================
@@ -870,39 +913,69 @@ async function loadEvents() {
  * "Instead here I can actually get rid of this async keyword."
  *
  * The loader is no longer async because we're NOT awaiting the data.
- * We're just passing a promise to defer() and returning immediately.
+ * We're returning an object with a promise that will resolve later.
+ *
+ * ============================================================================
+ * LESSON 382: REACT ROUTER v7 - defer() NO LONGER NEEDED
+ * ============================================================================
+ *
+ * "Instead of using defer(), you can directly return an object that contains
+ * unresolved promises."
+ *
+ * BEFORE (React Router v6):
+ * -------------------------
+ * import { defer } from 'react-router-dom';
+ *
+ * export function loader() {
+ *   return defer({
+ *     events: loadEvents(),
+ *   });
+ * }
+ *
+ * AFTER (React Router v7 - CURRENT):
+ * ----------------------------------
+ * export function loader() {
+ *   return {
+ *     events: loadEvents(),
+ *   };
+ * }
+ *
+ * "Also make sure to remove the defer import at the top of the file."
+ *
+ * "That's all! No further changes are needed, you still use the <Await>
+ * component as shown in this section."
+ *
+ * WHY THIS SIMPLER SYNTAX WORKS:
+ * ==============================
+ * React Router v7 automatically detects when a loader returns an object
+ * containing promises. It handles deferred loading automatically without
+ * needing the explicit defer() wrapper.
+ *
+ * WHAT STAYS THE SAME:
+ * ====================
+ * - The <Await> component works exactly as before
+ * - The <Suspense> component works exactly as before
+ * - useLoaderData still returns the object with promise keys
+ * - The render function pattern inside <Await> stays the same
  */
 export function loader() {
   /**
    * ============================================================================
-   * LESSON 381: THE defer() FUNCTION
+   * LESSON 382: RETURNING OBJECT WITH PROMISES DIRECTLY
    * ============================================================================
    *
-   * INSTRUCTOR QUOTE:
-   * "This defer function. Now defer is a function that must be executed and
-   * Q defer we pass an object."
+   * "Instead of using defer(), you can directly return an object that contains
+   * unresolved promises."
    *
-   * INSTRUCTOR QUOTE:
-   * "Now in this object, we in the end, bundle all the different HTTP requests
-   * we might have going on on this page. In this case it's only one request
-   * though. The request for all my events."
-   *
-   * THE OBJECT STRUCTURE (Lesson 381):
-   * ==================================
-   * INSTRUCTOR QUOTE:
+   * THE OBJECT STRUCTURE (Lessons 381, 382):
+   * ========================================
+   * INSTRUCTOR QUOTE (Lesson 381):
    * "I'll give that request a key of events. For example, though that key is
    * up to you."
    *
-   * INSTRUCTOR QUOTE:
+   * INSTRUCTOR QUOTE (Lesson 381):
    * "And then here I'll point at load events. I'll actually not just point at
    * it instead I will execute it. So I add parentheses here."
-   *
-   * IMPORTANT - EXECUTE THE FUNCTION (Lesson 381):
-   * ==============================================
-   * INSTRUCTOR QUOTE:
-   * "So I execute the load events function and I stored a value returned by
-   * load events which is a promise, since this is a async function, in this
-   * object under the events key."
    *
    * WHY WE CALL loadEvents() NOT JUST REFERENCE IT:
    * ================================================
@@ -912,39 +985,48 @@ export function loader() {
    * - That Promise is stored under the 'events' key
    * - React Router will use Await to wait for the Promise to resolve
    *
-   * HOW defer() WORKS:
-   * ==================
-   * defer({
-   *   events: loadEvents(),  // Promise that will resolve to events array
-   *   // You can add more keys for multiple requests:
-   *   // users: loadUsers(),
-   *   // settings: loadSettings(),
-   * })
+   * MULTIPLE PROMISES EXAMPLE:
+   * ==========================
+   * return {
+   *   events: loadEvents(),      // Promise 1
+   *   users: loadUsers(),        // Promise 2
+   *   settings: loadSettings(),  // Promise 3
+   * };
    *
-   * INSTRUCTOR QUOTE:
-   * "And it's now this value returned by defer which we return in our loader."
+   * Each promise can be handled by its own <Await> component with
+   * its own <Suspense> fallback for progressive loading.
    *
-   * BENEFITS OF defer (Lesson 381):
-   * ===============================
-   * INSTRUCTOR QUOTE:
+   * BENEFITS OF DEFERRED LOADING:
+   * =============================
+   * INSTRUCTOR QUOTE (Lesson 381):
    * "And that's this defer feature in action. And this defer feature can speed
    * up your pages and make sure that you're already showing some content whilst
    * you're waiting for other content."
    *
-   * INSTRUCTOR QUOTE:
+   * INSTRUCTOR QUOTE (Lesson 381):
    * "It especially shines if you have pages with multiple HTTP requests with
    * different speeds, though."
    *
-   * PERFECT USE CASES FOR defer:
-   * ============================
+   * PERFECT USE CASES:
+   * ==================
    * - Pages with multiple data requirements
    * - Fast navigation with slow data fetching
    * - Show UI skeleton while loading
    * - Progressive data loading (critical data first)
+   *
+   * REACT ROUTER v6 vs v7 COMPARISON:
+   * =================================
+   * | Aspect           | v6                    | v7                    |
+   * |------------------|----------------------|------------------------|
+   * | Import needed    | Yes (defer)          | No                     |
+   * | Wrapper function | defer({...})         | Just {...}             |
+   * | <Await> usage    | Same                 | Same                   |
+   * | <Suspense>       | Same                 | Same                   |
+   * | Functionality    | Same                 | Same                   |
    */
-  return defer({
+  return {
     events: loadEvents(),
-  });
+  };
 }
 
 /**
