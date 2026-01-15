@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-375)
+ * ADVANCED ROUTING PROJECT - APP COMPONENT (Lessons 358-380)
  * ============================================================================
  *
  * PROJECT OVERVIEW (Lesson 358):
@@ -391,6 +391,31 @@ import EventsRootLayout from './pages/EventsRoot';
  * 3. Any route-related error occurs
  */
 import ErrorPage from './pages/Error';
+/**
+ * ============================================================================
+ * LESSON 380: NEWSLETTER PAGE AND ACTION IMPORT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In app js, I also added a new route and therefore you'll find the updated
+ * app js file attached. I added this newsletter route on the same level as
+ * my homepage route essentially."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this route renders the newsletter page component which I just showed
+ * you and has the newsletter action attached to it."
+ *
+ * WHY THIS ROUTE EXISTS:
+ * ======================
+ * - Provides a dedicated page for newsletter signup
+ * - The action is the target for useFetcher in NewsletterSignup component
+ * - Even though the form is in the navigation, it needs THIS action
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, I did add these components and this route because there is a new
+ * feature I wanna show you, as mentioned."
+ */
+import NewsletterPage, { action as newsletterAction } from './pages/Newsletter';
 
 /**
  * ============================================================================
@@ -972,6 +997,51 @@ const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      /**
+       * ================================================================
+       * LESSON 380: NEWSLETTER ROUTE
+       * ================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "In app js, I also added a new route and therefore you'll find
+       * the updated app js file attached. I added this newsletter route
+       * on the same level as my homepage route essentially."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And this route renders the newsletter page component which I
+       * just showed you and has the newsletter action attached to it."
+       *
+       * ROUTE STRUCTURE:
+       * ================
+       * This route is a sibling of:
+       * - { index: true, element: <HomePage /> }
+       * - { path: 'events', ... }
+       *
+       * URL: http://localhost:3000/newsletter
+       *
+       * WHY THIS ACTION IS IMPORTANT FOR useFetcher (Lesson 380):
+       * =========================================================
+       * INSTRUCTOR QUOTE:
+       * "The problem with that is that of course we wanna trigger this
+       * action, this newsletterAction, whenever this newsletter form
+       * is submitted."
+       *
+       * The NewsletterSignup component uses useFetcher with:
+       * <fetcher.Form action="/newsletter">
+       *
+       * This targets THIS route's action WITHOUT navigating here.
+       *
+       * INSTRUCTOR QUOTE:
+       * "On this form here we can add the action attribute and for example,
+       * point at /newsletter because I know that I wanna trigger the action
+       * of that newsletter route but I wanna make sure that I don't load
+       * that route's component."
+       */
+      {
+        path: 'newsletter',
+        element: <NewsletterPage />,
+        action: newsletterAction,
       },
     ],
   },
