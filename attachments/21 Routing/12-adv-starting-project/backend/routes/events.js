@@ -123,6 +123,9 @@ router.get('/', async (req, res, next) => {
      *
      * Then restart the backend server to see the loading behavior.
      */
+    setTimeout(() => {
+      res.json({ events: events });
+    }, 2000);
     res.json({ events: events });
   } catch (error) {
     next(error);
