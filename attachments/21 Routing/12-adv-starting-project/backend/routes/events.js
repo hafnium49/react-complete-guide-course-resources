@@ -126,7 +126,6 @@ router.get('/', async (req, res, next) => {
     setTimeout(() => {
       res.json({ events: events });
     }, 2000);
-    res.json({ events: events });
   } catch (error) {
     next(error);
   }
