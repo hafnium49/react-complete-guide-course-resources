@@ -1,71 +1,85 @@
 /**
  * ============================================================================
- * MAIN NAVIGATION COMPONENT (Updated in Lesson 395)
+ * MAIN NAVIGATION COMPONENT (Updated in Lesson 396)
  * ============================================================================
  *
  * This component provides the main navigation header for the application.
  * It uses NavLink for route-aware navigation with active state styling.
  *
  * ============================================================================
- * ADDING AUTHENTICATION LINK (Lesson 389)
+ * CONDITIONAL RENDERING BASED ON AUTH STATE (Lesson 396)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Of course, it would also be nice to have an entry here in the main
- * navigation, and therefore I'll go to my MainNavigation component here
- * and in there I'll simply copy that newsletter list item here and add
- * a new nav link to /auth which also should get this Active class if it
- * is active."
+ * "So now to update the UI based on the existence of the token, I wanna make
+ * the token easily available in my entire application on all my routes
+ * basically, and I also wanna make sure that the information, whether the
+ * token exists or not, is automatically updated so that if the token would
+ * be removed because we log out, the UI automatically updates."
  *
- * ============================================================================
- * UPDATED TO USE QUERY PARAMETER (Lesson 390)
- * ============================================================================
+ * WHY NOT JUST CALL getAuthToken DIRECTLY?
  *
  * INSTRUCTOR QUOTE:
- * "We can also update our main navigation now if we want to, and for example,
- * link to that auth page with mode being set to log in."
+ * "I don't just wanna call getAuthToken, my helper function here in main
+ * navigation, for example to get the token because that function is only
+ * called when this component is reevaluated, but it will not lead to the
+ * component being reevaluated if the token is deleted in the future."
  *
- * ============================================================================
- * LOGOUT BUTTON ADDED (Lesson 395)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Instead, we wanna add a log out route, and that means that in
- * MainNavigation.js in our navigation component we wanna add a new list
- * item to our navigation bar that in the end shows a log out button."
- *
- * WHY UPDATE THE UI BASED ON AUTH STATUS?
+ * THE SOLUTION: useRouteLoaderData
  *
  * INSTRUCTOR QUOTE:
- * "If we have a token, for example, we might not want to show this
- * authentication navigation item because it makes no sense to show that
- * if we are logged in already. On the other hand, it makes no sense to
- * show the edit and delete buttons or this new event button if we are
- * not logged in, because allowing users to go there if we're not logged
- * in makes also no sense."
+ * "And now in MainNavigation.js we can use this useRouteLoaderData hook about
+ * which we learned in the routing section already to get our token here by
+ * targeting the root route."
  *
- * UPCOMING (Next Lessons):
- * - Conditionally show/hide Authentication link based on token
- * - Conditionally show/hide Logout button based on token
- * - Hide edit/delete/new buttons when not authenticated
+ * WHAT WE CONDITIONALLY SHOW/HIDE:
+ * - Authentication link: Show ONLY when NOT logged in (!token)
+ * - Logout button: Show ONLY when logged in (token)
  *
  * ============================================================================
  */
 
 /**
- * IMPORT CHANGES (Lesson 395):
- * - ADDED: Form (for logout button submission)
+ * IMPORT CHANGES:
+ * - Lesson 395: ADDED Form (for logout button submission)
+ * - Lesson 396: ADDED useRouteLoaderData (for reactive token access)
  *
- * INSTRUCTOR QUOTE:
- * "I'll wrap my button here with this form that's provided by react-router-dom.
- * So I import Form here."
+ * INSTRUCTOR QUOTE (Lesson 396):
+ * "And now in MainNavigation.js we can use this useRouteLoaderData hook."
  */
-import { Form, NavLink } from 'react-router-dom';
+import { Form, NavLink, useRouteLoaderData } from 'react-router-dom';
 
 import classes from './MainNavigation.module.css';
 import NewsletterSignup from './NewsletterSignup';
 
 function MainNavigation() {
+  /**
+   * ============================================================================
+   * GETTING TOKEN FROM ROOT ROUTE LOADER (Lesson 396)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And now in MainNavigation.js we can use this useRouteLoaderData hook about
+   * which we learned in the routing section already to get our token here by
+   * targeting the root route."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And we know that what will get here is the token because that is what the
+   * that root routes loader does return. The tokenLoader here does return the
+   * token."
+   *
+   * HOW IT WORKS:
+   * - useRouteLoaderData('root') gets data from the root route's loader
+   * - The root route's loader (tokenLoader) returns getAuthToken()
+   * - So 'token' is either: string (logged in) or null (not logged in)
+   *
+   * INSTRUCTOR QUOTE:
+   * "So therefore, in MainNavigation, we now get hold of that token and we now
+   * know that if that token exists we're logged in, and if it does not exist,
+   * if this is undefined, we're not logged in."
+   */
+  const token = useRouteLoaderData('root');
+
   return (
     <header className={classes.header}>
       <nav>
@@ -93,31 +107,35 @@ function MainNavigation() {
           </li>
           {/*
            * ================================================================
-           * AUTHENTICATION LINK (Updated in Lesson 390)
+           * AUTHENTICATION LINK - CONDITIONAL (Updated in Lesson 396)
            * ================================================================
            *
-           * This link takes users to the /auth page where they can:
-           * - Log in with existing credentials
-           * - Sign up for a new account
+           * INSTRUCTOR QUOTE:
+           * "Therefore we can conditionally show that authentication link here
+           * by checking if token exists and only rendering this list item if
+           * it does exist. Though that would show it if we are logged in and
+           * we want the opposite, hence I'll add an exclamation mark here."
            *
-           * WHY ?mode=login?
-           * - Users clicking "Authentication" likely want to log in
-           * - New users can still click "Create new user" to switch to signup
+           * INSTRUCTOR QUOTE:
+           * "Now that authentication link is only shown if we're not logged in,
+           * if we don't have a token."
            *
-           * TODO (Upcoming Lessons):
-           * - Conditionally show this ONLY when NOT logged in
-           * - Hide when user has a valid token
+           * LOGIC: !token means "show when NOT logged in"
+           * - token exists (truthy) → !token = false → DON'T show
+           * - token is null (falsy) → !token = true → DO show
            */}
-          <li>
-            <NavLink
-              to="/auth?mode=login"
-              className={({ isActive }) =>
-                isActive ? classes.active : undefined
-              }
-            >
-              Authentication
-            </NavLink>
-          </li>
+          {!token && (
+            <li>
+              <NavLink
+                to="/auth?mode=login"
+                className={({ isActive }) =>
+                  isActive ? classes.active : undefined
+                }
+              >
+                Authentication
+              </NavLink>
+            </li>
+          )}
           <li>
             <NavLink
               to="/newsletter"
@@ -130,46 +148,34 @@ function MainNavigation() {
           </li>
           {/*
            * ================================================================
-           * LOGOUT BUTTON (Added in Lesson 395)
+           * LOGOUT BUTTON - CONDITIONAL (Updated in Lesson 396)
            * ================================================================
            *
            * INSTRUCTOR QUOTE:
-           * "This button should then trigger an action or whatever that deletes
-           * the token. And there are different ways of handling this."
+           * "On the other hand, that logout button should only be shown if we
+           * are logged in. So here I'll have the opposite logic. I'll check
+           * if we have a token, and then I'll render this list item."
            *
-           * WHY USE A FORM INSTEAD OF onClick?
-           *
-           * INSTRUCTOR QUOTE:
-           * "We could simply add an onClick listener and trigger a function that
-           * reaches out to local storage and deletes the token. But here I'll
-           * use the more official React Routing Embracing approach."
-           *
-           * INSTRUCTOR QUOTE:
-           * "I'll wrap my button here with this form that's provided by
-           * react-router-dom."
+           * LOGIC: token means "show when logged in"
+           * - token exists (truthy) → DO show
+           * - token is null (falsy) → DON'T show
            *
            * HOW IT WORKS:
            * 1. Button is wrapped in <Form> component
            * 2. Form has action="/logout" pointing to our action-only route
            * 3. method="post" triggers the route's action function
            * 4. Action removes token from localStorage and redirects
-           *
-           * INSTRUCTOR QUOTE:
-           * "And then I'll add an action of /logout and a method of post though
-           * that doesn't matter here."
-           *
-           * NOTE: The method="post" is conventional for actions that modify
-           * state (like logging out), even though GET would technically work.
-           *
-           * TODO (Upcoming Lessons):
-           * - Conditionally show this ONLY when logged in (has token)
-           * - Hide when user is not authenticated
+           * 5. After redirect, tokenLoader re-runs and returns null
+           * 6. This component re-renders, token is now null
+           * 7. Logout button disappears, Authentication link appears
            */}
-          <li>
-            <Form action="/logout" method="post">
-              <button>Logout</button>
-            </Form>
-          </li>
+          {token && (
+            <li>
+              <Form action="/logout" method="post">
+                <button>Logout</button>
+              </Form>
+            </li>
+          )}
         </ul>
       </nav>
       <NewsletterSignup />

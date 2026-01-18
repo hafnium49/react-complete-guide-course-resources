@@ -128,6 +128,20 @@ import AuthenticationPage, {
 import { action as logoutAction } from './pages/Logout';
 
 /**
+ * ============================================================================
+ * IMPORTING tokenLoader FOR REACTIVE AUTH STATE (Lesson 396)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now back in App.js, I will import this loader as the tokenLoader from
+ * /util/auth and use that here on that root route."
+ *
+ * This loader will be registered on the root route to make the token
+ * available throughout the entire application via useRouteLoaderData.
+ */
+import { tokenLoader } from './util/auth';
+
+/**
  * Router Configuration
  *
  * ROUTES (Updated in Lesson 389):
@@ -146,9 +160,45 @@ import { action as logoutAction } from './pages/Logout';
  */
 const router = createBrowserRouter([
   {
+    /**
+     * ========================================================================
+     * ROOT ROUTE WITH tokenLoader (Lesson 396)
+     * ========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "And we could, for example, go to our root route which in the end wraps
+     * all other routes as you can see. And there we could add a loader, which
+     * simply takes a look at local storage and extracts the token."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that token would then be available through the loader data of that
+     * root route in all other routes."
+     *
+     * WHY ADD AN ID?
+     *
+     * INSTRUCTOR QUOTE:
+     * "In order to use data from that loader and easily get access to it,
+     * I'll assign an ID to that route. Root sounds like a fitting id."
+     *
+     * HOW CHILD ROUTES ACCESS THE TOKEN:
+     * - Any child route can call useRouteLoaderData('root')
+     * - Returns the token (string if logged in, null if not)
+     * - Automatically updates when navigation occurs (e.g., after logout)
+     *
+     * WHY THIS IS "REACTIVE":
+     * React Router re-runs loaders on navigation. So when user logs out:
+     * 1. Logout action removes token from localStorage
+     * 2. Logout action redirects to '/'
+     * 3. React Router re-runs tokenLoader
+     * 4. tokenLoader returns null (no token)
+     * 5. All components using useRouteLoaderData('root') re-render
+     * 6. UI updates to show logged-out state
+     */
     path: '/',
+    id: 'root',
     element: <RootLayout />,
     errorElement: <ErrorPage />,
+    loader: tokenLoader,
     children: [
       { index: true, element: <HomePage /> },
       {
