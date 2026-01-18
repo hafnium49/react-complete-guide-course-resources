@@ -8,19 +8,50 @@
  * entire application bundle.
  *
  * ============================================================================
+ * LESSON 406 - WHY THIS CODE NEEDS TRANSFORMATION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "This is the code which we use during development. It's very readable and it
+ * sometimes even uses features which aren't supported like that in the browser.
+ * Like this JSX code that's not supported in browsers."
+ *
+ * EXAMPLE - JSX IS NOT VALID JAVASCRIPT:
+ *
+ * What we write (JSX - NOT valid in browsers):
+ * ```javascript
+ * root.render(<App />);
+ * ```
+ *
+ * What the browser actually receives (after transformation):
+ * ```javascript
+ * root.render(React.createElement(App, null));
+ * ```
+ *
+ * INSTRUCTOR QUOTE:
+ * "It must be transformed before we can upload this on a server that serves
+ * it to end users."
+ *
+ * ============================================================================
  * HOW THIS RELATES TO DEPLOYMENT
  * ============================================================================
  *
  * DEVELOPMENT MODE (npm start):
- * - This file is loaded directly
+ *
+ * INSTRUCTOR QUOTE:
+ * "By the way, here during development when we preview this page we also get
+ * a transformed version of that code. This development server, which we
+ * started with NPM start is transforming the code as we're writing it."
+ *
+ * - This file is transformed on-the-fly
  * - Hot Module Replacement (HMR) enables live updates
  * - Source maps help with debugging
  * - Code is NOT minified (easier to read in DevTools)
  *
  * PRODUCTION BUILD (npm run build):
  * - This file is bundled with all other JS files
+ * - JSX is transformed to React.createElement calls
  * - Code is minified and optimized
- * - Source maps may be separate or omitted
  * - Output goes to /build folder
  *
  * ============================================================================

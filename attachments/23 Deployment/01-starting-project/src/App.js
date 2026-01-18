@@ -7,6 +7,186 @@
  * from development to production and deploying it to a real server.
  *
  * ============================================================================
+ * LESSON 406 - BUILDING THE APP FOR PRODUCTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now that we learned about lazy loading and we optimized our code. Therefore
+ * we can move forward towards deploying this and we can start building our app
+ * for production."
+ *
+ * ============================================================================
+ * WHY WE NEED A BUILD STEP
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "This build step here is required because the application we're building is
+ * not the application we're going to upload at least not like this. This is
+ * not the code we're going to upload."
+ *
+ * INSTRUCTOR QUOTE:
+ * "This is the code which we use during development. It's very readable and it
+ * sometimes even uses features which aren't supported like that in the browser.
+ * Like this JSX code that's not supported in browsers. It must be transformed
+ * before we can upload this on a server that serves it to end users."
+ *
+ * DEVELOPMENT CODE (what we write):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • JSX syntax (<div>, <Component />)     → NOT valid browser JS!       │
+ * │  • Modern JS features (optional chaining, nullish coalescing)          │
+ * │  • Import statements                     → Need bundling               │
+ * │  • Readable variable names               → Can be minified             │
+ * │  • Comments and whitespace               → Unnecessary in production   │
+ * │  • Multiple files                        → Should be bundled           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * DEVELOPMENT SERVER VS PRODUCTION BUILD
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "By the way, here during development when we preview this page we also get a
+ * transformed version of that code. This development server, which we started
+ * with NPM start is transforming the code as we're writing it. So it's a live
+ * transformation process, so to say."
+ *
+ * DEVELOPMENT (npm start):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • Live transformation as you code                                      │
+ * │  • Hot Module Replacement (HMR) - instant updates                       │
+ * │  • Source maps for debugging                                            │
+ * │  • NOT optimized for size                                               │
+ * │  • Includes development warnings and checks                             │
+ * │  • Fast rebuilds (focused on developer experience)                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * PRODUCTION (npm run build):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • One-time transformation                                              │
+ * │  • Fully optimized for size and performance                             │
+ * │  • Minified code (smaller file sizes)                                   │
+ * │  • Tree shaking (removes unused code)                                   │
+ * │  • No development warnings                                              │
+ * │  • Ready for deployment                                                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * RUNNING THE BUILD COMMAND
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, for uploading the code, we also wanna optimize it and we do this by
+ * quitting the development server and executing a different script."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Here in this default project which we get from create React app, it's this
+ * build script. When we run NPM run build, we execute that script."
+ *
+ * Command: npm run build
+ *
+ * This runs the "build" script from package.json:
+ * "scripts": {
+ *   "build": "react-scripts build"
+ * }
+ *
+ * INSTRUCTOR QUOTE:
+ * "And under the hood, this will produce a code bundle with highly optimized
+ * and transformed code which is ready to be uploaded."
+ *
+ * ============================================================================
+ * THE BUILD OUTPUT (/build folder)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "As you see, this now creates an optimized production build. And once it
+ * finished, it created that build folder here. And it's the content of that
+ * build folder that should be deployed to a server."
+ *
+ * BUILD FOLDER STRUCTURE:
+ *
+ * /build
+ *   ├── index.html                     ← Main HTML file (entry point)
+ *   ├── asset-manifest.json            ← Maps files to their hashed names
+ *   ├── favicon.ico                    ← Site icon
+ *   ├── manifest.json                  ← PWA manifest
+ *   ├── robots.txt                     ← Search engine instructions
+ *   └── static/
+ *       ├── css/
+ *       │   ├── main.[hash].css        ← Main styles (minified)
+ *       │   ├── 345.[hash].chunk.css   ← Lazy-loaded Blog styles
+ *       │   └── 793.[hash].chunk.css   ← Lazy-loaded Post styles
+ *       └── js/
+ *           ├── main.[hash].js         ← Main bundle (App + React + Router)
+ *           ├── 345.[hash].chunk.js    ← Lazy-loaded Blog chunk
+ *           └── 793.[hash].chunk.js    ← Lazy-loaded Post chunk
+ *
+ * INSTRUCTOR QUOTE:
+ * "In there in that static folder you have your optimized JavaScript file with
+ * those different dynamically loaded chunks for the lazy loading, but also with
+ * that main chunk that's downloaded initially."
+ *
+ * ============================================================================
+ * WHAT'S IN THE MAIN BUNDLE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that file contains all the code you wrote plus all the third party
+ * package code you're using including the React library itself."
+ *
+ * main.[hash].js contains:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • React library code                                                   │
+ * │  • React DOM                                                            │
+ * │  • React Router                                                         │
+ * │  • Your App.js code                                                     │
+ * │  • HomePage component (not lazy loaded)                                 │
+ * │  • RootLayout component (not lazy loaded)                               │
+ * │  • MainNavigation component                                             │
+ * │  • All eagerly-loaded dependencies                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's of course not very readable but it's a valid code that can be executed."
+ *
+ * ============================================================================
+ * LAZY-LOADED CHUNKS
+ * ============================================================================
+ *
+ * These chunks are created because of our React.lazy() implementations:
+ *
+ * 345.[hash].chunk.js (Blog chunk):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • BlogPage component                                                   │
+ * │  • PostList component                                                   │
+ * │  • Blog loader function                                                 │
+ * │  • Related CSS module                                                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * 793.[hash].chunk.js (Post chunk):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • PostPage component                                                   │
+ * │  • PostItem component                                                   │
+ * │  • Post loader function                                                 │
+ * │  • Related CSS module                                                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * NEXT STEP: DEPLOYMENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So it's the content of the build folder that now must be uploaded. And that
+ * is indeed the next step because in the next step we will now upload that code
+ * and deploy it as website."
+ *
+ * The /build folder is what you upload to:
+ * • Firebase Hosting
+ * • Netlify
+ * • Vercel
+ * • AWS S3
+ * • Any static file hosting service
+ *
+ * ============================================================================
  * LESSON 405 - IMPLEMENTING LAZY LOADING
  * ============================================================================
  *
