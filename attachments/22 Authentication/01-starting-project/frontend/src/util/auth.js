@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * AUTHENTICATION UTILITY FUNCTIONS (Updated in Lesson 397)
+ * AUTHENTICATION UTILITY FUNCTIONS (Updated in Lesson 400)
  * ============================================================================
  *
  * This file contains helper functions for managing authentication tokens.
@@ -81,36 +81,185 @@
 import { redirect } from 'react-router-dom';
 
 /**
- * getAuthToken - Retrieves the stored JWT token from localStorage
+ * ============================================================================
+ * getTokenDuration - Calculate Remaining Token Lifetime (Lesson 400)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "For that, I'll actually add a new function here, which I'll name
+ * getTokenDuration. And here I want to get back the remaining lifetime of the
+ * token, in milliseconds."
+ *
+ * PURPOSE:
+ * This function calculates how much time remains before the token expires.
+ * It returns the duration in milliseconds, which can be:
+ * - POSITIVE: Token is still valid, this is the remaining time
+ * - NEGATIVE: Token has expired, the absolute value is how long ago
+ *
+ * INSTRUCTOR QUOTE:
+ * "If the expiration is still in the future. So if the token is still valid,
+ * therefore, then this will be a positive value. If now is later than the
+ * token expiration, so if the token did expire, this will be a negative value."
+ *
+ * @returns {number} Duration in milliseconds (positive if valid, negative if expired)
+ */
+export function getTokenDuration() {
+  /**
+   * STEP 1: GET STORED EXPIRATION DATE
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I'll get that information, by getting my expiration date. By accessing
+   * localStorage.getItem expiration, so by using that key we just used for
+   * storing the expiration date."
+   */
+  const storedExpirationDate = localStorage.getItem('expiration');
+
+  /**
+   * STEP 2: CONVERT STRING TO DATE OBJECT
+   *
+   * INSTRUCTOR QUOTE:
+   * "And actually that's my storedExpirationDate. Which I now must transform to
+   * a date object, by simply passing that storedExpirationDate, which is a
+   * string, to the date constructor."
+   *
+   * Remember: localStorage stores everything as strings. When we stored the
+   * expiration, we used toISOString(). Now we parse it back to a Date object.
+   */
+  const expirationDate = new Date(storedExpirationDate);
+
+  /**
+   * STEP 3: GET CURRENT DATE/TIME
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then I also need to get the current date. So the current timestamp,
+   * so to say."
+   */
+  const now = new Date();
+
+  /**
+   * STEP 4: CALCULATE THE DIFFERENCE
+   *
+   * INSTRUCTOR QUOTE:
+   * "And the difference between the two dates of course, is the remaining
+   * duration. So the duration in milliseconds, can now be calculated by using
+   * that expiration date, and calling getTime on it, which gives me the time
+   * value in milliseconds. And deducting. Now.getTime from it."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So I deduct the current timestamp, from the expiration timestamp."
+   *
+   * getTime() converts a Date to milliseconds since January 1, 1970 (Unix epoch)
+   *
+   * CALCULATION:
+   * duration = expirationTime - currentTime
+   *
+   * EXAMPLE:
+   * - expiration = 3:00 PM → getTime() = 1705330800000
+   * - now = 2:30 PM → getTime() = 1705329000000
+   * - duration = 1705330800000 - 1705329000000 = 1,800,000 ms (30 minutes)
+   *
+   * IF EXPIRED:
+   * - expiration = 2:00 PM → getTime() = 1705327200000
+   * - now = 2:30 PM → getTime() = 1705329000000
+   * - duration = 1705327200000 - 1705329000000 = -1,800,000 ms (expired 30 min ago)
+   */
+  const duration = expirationDate.getTime() - now.getTime();
+
+  /**
+   * INSTRUCTOR QUOTE:
+   * "And here, I simply return the duration."
+   */
+  return duration;
+}
+
+/**
+ * ============================================================================
+ * getAuthToken - Retrieves the stored JWT token from localStorage (Updated Lesson 400)
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
  * "In this file, I'll simply export a function which I'll call getAuthToken.
  * And this function should give me the currently stored token. So I'll return
  * the result of calling localStorage.getItem, and then getting the token."
  *
+ * ============================================================================
+ * LESSON 400 UPDATE - CHECK TOKEN EXPIRATION
+ * ============================================================================
+ *
  * INSTRUCTOR QUOTE:
- * "So retrieving the token that was stored under the token key, that's of
- * course what we stored it under, and that's of course what we should
- * therefore retrieve it with."
+ * "Now we can update this getAuthToken utility function, to also take a look
+ * at that expiration date, and find out if the token did maybe expire."
  *
- * HOW IT WORKS:
- * - localStorage.getItem('key') returns the value stored under that key
- * - If no value exists, it returns null (not undefined)
- * - The token was stored in Authentication.js action after successful login/signup
+ * INSTRUCTOR QUOTE:
+ * "But I can now use that duration, from getTokenDuration, here in getAuthToken.
+ * By calling getTokenDuration here. To check if tokenDuration is smaller than
+ * zero. Which means the token expired."
  *
- * USAGE:
- * - Import this function in any action that needs to send authenticated requests
- * - Call getAuthToken() to get the current token
- * - Attach the token to the Authorization header
- *
- * RETURN VALUE:
- * - string: The JWT token if user is logged in
+ * RETURN VALUE (Updated):
+ * - string 'EXPIRED': If token exists but has expired
+ * - string (JWT): The valid JWT token if user is logged in and token is valid
  * - null: If no token exists (user not logged in)
  *
- * @returns {string|null} The stored JWT token or null if not found
+ * @returns {string|null} 'EXPIRED' if expired, JWT token string if valid, null if no token
  */
 export function getAuthToken() {
   const token = localStorage.getItem('token');
+
+  /**
+   * CHECK IF TOKEN EXISTS FIRST
+   *
+   * INSTRUCTOR QUOTE:
+   * "With those changes made, I just also must make sure that in getAuthToken,
+   * I not always return expired, but I also check if we have a token at all.
+   * If we don't even find a token, then I want to just return. So I return
+   * undefined in the end. I don't even need to check the duration."
+   *
+   * INSTRUCTOR QUOTE:
+   * "If I don't do that, the UI would not be updated correctly, because I would
+   * basically always return expired."
+   *
+   * INSTRUCTOR QUOTE:
+   * "But now with that, I'm not returning anything if we have no token. But if
+   * we do have a token, I'm also checking the expiration."
+   *
+   * WHY THIS CHECK IS IMPORTANT:
+   * - If no token exists, we shouldn't even check expiration
+   * - Without this check, we'd always get an expiration duration (possibly NaN)
+   * - Returning early (undefined/null) lets the UI correctly show "not logged in"
+   */
+  if (!token) {
+    return null;
+  }
+
+  /**
+   * CHECK IF TOKEN HAS EXPIRED
+   *
+   * INSTRUCTOR QUOTE:
+   * "But I can now use that duration, from getTokenDuration, here in getAuthToken.
+   * By calling getTokenDuration here."
+   */
+  const tokenDuration = getTokenDuration();
+
+  /**
+   * INSTRUCTOR QUOTE:
+   * "To check if tokenDuration is smaller than zero. Which means the token
+   * expired. Because we have no remaining time, it already expired."
+   *
+   * INSTRUCTOR QUOTE:
+   * "In that case, I will actually return a string expired here. So this special
+   * string. Which I can then use in other parts of my application, to trigger
+   * this logout action."
+   *
+   * WHY RETURN 'EXPIRED' STRING INSTEAD OF null?
+   * - null means "no token at all" (never logged in, or logged out)
+   * - 'EXPIRED' means "had a token, but it's no longer valid"
+   * - This distinction lets us handle the expired case specially (trigger logout)
+   * - The UI can respond to 'EXPIRED' by automatically logging the user out
+   */
+  if (tokenDuration < 0) {
+    return 'EXPIRED';
+  }
+
   return token;
 }
 

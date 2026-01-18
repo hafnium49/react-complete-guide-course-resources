@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * LOGOUT ACTION (Created in Lesson 395)
+ * LOGOUT ACTION (Updated in Lesson 400)
  * ============================================================================
  *
  * This file is UNUSUAL - it contains NO component, only an action function.
@@ -77,9 +77,27 @@ export function action() {
    * This effectively "logs out" the user by:
    * - Removing their authentication token
    * - Future requests won't have a token to attach
-   * - UI will update to show logged-out state (in upcoming lessons)
+   * - UI will update to show logged-out state
    */
   localStorage.removeItem('token');
+
+  /**
+   * ============================================================================
+   * REMOVE EXPIRATION DATE (Lesson 400)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now with that implemented, the last thing I want to do, is here in my
+   * Logout action, I also want to remove the expiration key from local storage,
+   * because that's now also not needed anymore and should be cleared."
+   *
+   * WHY REMOVE EXPIRATION?
+   * - We stored 'expiration' alongside 'token' when logging in (Lesson 400)
+   * - When logging out, we should clean up ALL authentication data
+   * - Leaving stale expiration data could cause issues on next login
+   * - Keeps localStorage clean and consistent
+   */
+  localStorage.removeItem('expiration');
 
   /**
    * INSTRUCTOR QUOTE:
@@ -87,7 +105,7 @@ export function action() {
    * react-router-dom, and redirect the user to the starting page; let's say
    * if a user logs out."
    *
-   * After clearing the token, send user back to home page.
+   * After clearing the token and expiration, send user back to home page.
    * They can then choose to log in again if needed.
    */
   return redirect('/');

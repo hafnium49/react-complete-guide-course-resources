@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ROOT LAYOUT COMPONENT (Updated in Lesson 399)
+ * ROOT LAYOUT COMPONENT (Updated in Lesson 400)
  * ============================================================================
  *
  * This is the root layout component that wraps ALL routes in the application.
@@ -25,34 +25,31 @@
  * - After 1 hour, automatically trigger logout
  * - Clear the token and update UI
  *
- * INSTRUCTOR QUOTE:
- * "Therefore, I also wanna log the user out after one hour because the token
- * is invalid thereafter. And I don't just wanna log the user out, I also
- * wanna clear the token and I wanna remove it from local storage."
- *
- * WHY USE ROOT LAYOUT FOR THIS?
- *
- * INSTRUCTOR QUOTE:
- * "One option would be to go to the root layout. So to this Root.js file.
- * And in that file we could use the good old useEffect hook."
- *
- * INSTRUCTOR QUOTE:
- * "This is the one root component which definitely includes all other route
- * components."
- *
- * NOTE: This approach works because ALL routes are children of this layout.
- * If you had multiple sibling root layouts, this wouldn't work.
- *
  * ============================================================================
- * IMPORTANT: THIS SOLUTION HAS A FLAW (Will be fixed in Lesson 400)
+ * LESSON 400 - FIXING THE TIMER FLAW
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "But this solution still isn't perfect yet. It still has a flaw."
+ * "Now which flaw does this solution have? Well, at the moment, we always
+ * expired a token after 1 hour. The problem is that we of course, might have
+ * logged in. Then we were away for 10 minutes. Then we reloaded this
+ * application. And then therefore, this effect was triggered again."
  *
- * The flaw is that if the user refreshes the page 30 minutes after logging in,
- * the timer restarts from 1 hour instead of using the remaining time.
- * This will be addressed in the next lesson.
+ * INSTRUCTOR QUOTE:
+ * "We found a token in the local storage, because we did log in 10 minutes
+ * ago, but now we reset that timer to 1 hour. That's not realistic, because
+ * the token is already 10 minutes old, so it will actually expire in 50
+ * minutes, and the backend won't accept it anymore thereafter."
+ *
+ * THE FIX:
+ * - Store the actual expiration time when logging in (in Authentication.js)
+ * - Calculate the REMAINING duration using getTokenDuration()
+ * - Set timer to remaining duration, NOT always 1 hour
+ * - Handle 'EXPIRED' token by triggering immediate logout
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, it's not enough to always set this to 1 hour. Instead we need
+ * to manage and register, the actual token expiration."
  *
  * ============================================================================
  */
@@ -61,6 +58,21 @@ import { useEffect } from 'react';
 import { Outlet, useLoaderData, useSubmit } from 'react-router-dom';
 
 import MainNavigation from '../components/MainNavigation';
+/**
+ * ============================================================================
+ * IMPORTING getTokenDuration (Lesson 400)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But now I nonetheless want to set a duration here, that takes the remaining
+ * lifetime of the token into account. So here, I will get the token duration,
+ * by calling getTokenDuration, so that helper function we just added in the
+ * util/auth file."
+ *
+ * We import this utility function to calculate the remaining time until
+ * the token expires, instead of always using a fixed 1-hour timer.
+ */
+import { getTokenDuration } from '../util/auth';
 
 function RootLayout() {
   /**
@@ -139,11 +151,6 @@ function RootLayout() {
      * "And here I simply wanna check if we maybe don't have a token. If that's
      * the case, I just wanna return because there's nothing to do then."
      *
-     * INSTRUCTOR QUOTE:
-     * "If we don't have a token anymore, if this effect function was executed
-     * because the token was removed, for example, then we don't have anything
-     * to do."
-     *
      * SCENARIOS WHERE token IS FALSY:
      * - User just logged out
      * - User hasn't logged in yet
@@ -154,42 +161,93 @@ function RootLayout() {
     }
 
     /**
-     * SET LOGOUT TIMER FOR 1 HOUR
+     * ========================================================================
+     * CHECK IF TOKEN IS EXPIRED (Lesson 400)
+     * ========================================================================
      *
      * INSTRUCTOR QUOTE:
-     * "But if we do have a token, I wanna set a timer. I wanna set a timer
-     * that expires after one hour and that then triggers that logout action."
+     * "For example, if I now go back to the Root layout. Here, I'm checking if
+     * I don't have a token. Well, I actually also want to check, if token is
+     * equal to expired. So to this special string I'm returning here, if the
+     * token did expire."
      *
      * INSTRUCTOR QUOTE:
-     * "Once that timer expired, I will call submit. I won't pass any data
-     * because there is no data to submit. But I will target this /logout
-     * action, this logout route, the action that belongs to that route,
-     * set the method to post."
+     * "In which case, I also want to trigger this logout action. And thereafter
+     * we can return, because we don't need to set any timer thereafter."
      *
-     * HOW THE TIMER WORKS:
-     * 1. setTimeout schedules a function to run after 1 hour
-     * 2. When timer fires, submit() is called
-     * 3. submit() sends POST request to /logout route
-     * 4. Logout action clears token and redirects to home
-     * 5. UI updates to show logged-out state
-     *
-     * CALCULATING 1 HOUR IN MILLISECONDS:
+     * WHY CHECK FOR 'EXPIRED'?
+     * - getAuthToken() now returns 'EXPIRED' string if token has expired
+     * - This happens when user returns to the app after being away
+     * - We should immediately log them out instead of waiting for a timer
+     * - No point setting a timer for an already-expired token
+     */
+    if (token === 'EXPIRED') {
+      submit(null, { action: '/logout', method: 'post' });
+      return;
+    }
+
+    /**
+     * ========================================================================
+     * GET REMAINING TOKEN DURATION (Lesson 400)
+     * ========================================================================
      *
      * INSTRUCTOR QUOTE:
-     * "Here I will set the timeout to one hour by multiplying one with 60,
-     * so 60 minutes, then 60 seconds and then 1000 milliseconds because
-     * setTimeout expects to get the duration in milliseconds here."
+     * "If we make it past this check, we know that we have a valid token. But
+     * now I nonetheless want to set a duration here, that takes the remaining
+     * lifetime of the token into account."
      *
-     * 1 * 60 * 60 * 1000 = 3,600,000 milliseconds = 1 hour
-     *   ^    ^    ^    ^
-     *   |    |    |    └── ms per second
-     *   |    |    └─────── seconds per minute
-     *   |    └──────────── minutes per hour
-     *   └───────────────── 1 hour
+     * INSTRUCTOR QUOTE:
+     * "So here, I will get the token duration, by calling getTokenDuration, so
+     * that helper function we just added in the util/auth file."
+     *
+     * This calculates the ACTUAL remaining time until the token expires,
+     * not just a fixed 1 hour. If user logged in 10 minutes ago and refreshes,
+     * this will return ~50 minutes (3,000,000 ms), not 1 hour.
+     */
+    const tokenDuration = getTokenDuration();
+
+    /**
+     * DEBUG: LOG TOKEN DURATION
+     *
+     * INSTRUCTOR QUOTE:
+     * "And I'll also console.log it here, so that we can see if everything
+     * looks good while it's developing this."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And you now see that here, that is the token expiration. If I reload
+     * this page, this is already a smaller amount."
+     *
+     * This helps verify the timer is working correctly during development.
+     * You can remove this in production if desired.
+     */
+    console.log(tokenDuration);
+
+    /**
+     * SET LOGOUT TIMER WITH REMAINING DURATION (Updated Lesson 400)
+     *
+     * INSTRUCTOR QUOTE:
+     * "But I'll then replace this timeout time here, with that token duration.
+     * That's now the updated useEffect code."
+     *
+     * BEFORE (Lesson 399): Always 1 * 60 * 60 * 1000 (1 hour fixed)
+     * AFTER (Lesson 400): Uses tokenDuration (actual remaining time)
+     *
+     * HOW THE TIMER NOW WORKS:
+     * 1. User logs in → expiration stored as 1 hour from now
+     * 2. User refreshes after 10 min → tokenDuration = ~50 min remaining
+     * 3. setTimeout uses 50 min, NOT 1 hour
+     * 4. Timer fires at correct expiration time
+     * 5. User is logged out when token ACTUALLY expires
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now as I navigate around it's not being locked, because the root layout
+     * isn't re-rendered, and the effect isn't running again. But eventually
+     * this is ticking down, and will lead to us being locked out after some
+     * time."
      */
     setTimeout(() => {
       submit(null, { action: '/logout', method: 'post' });
-    }, 1 * 60 * 60 * 1000);
+    }, tokenDuration);
 
   }, [token, submit]);
 

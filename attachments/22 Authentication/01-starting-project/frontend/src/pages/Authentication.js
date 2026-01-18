@@ -361,6 +361,77 @@ export async function action({ request }) {
 
   /**
    * ============================================================================
+   * STORING TOKEN EXPIRATION DATE (Lesson 400)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And to do that, we should go to our action that's triggered, when we
+   * authenticate where we do store that token. And here we should also store
+   * the expiration time. Because that's the code that executes when we first
+   * get a token."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Therefore here, we know for sure that the token will expire in 1 hour."
+   *
+   * WHY STORE THE EXPIRATION TIME?
+   * - The backend creates tokens that expire after 1 hour
+   * - If user refreshes the page after 10 minutes, the timer shouldn't reset
+   * - By storing when the token expires, we can calculate the REMAINING time
+   * - This prevents the flaw from Lesson 399 where timer always reset to 1 hour
+   *
+   * INSTRUCTOR QUOTE:
+   * "Therefore, we should calculate an expiration date, by creating a new date
+   * object. And then we can call the setHours method on that object."
+   */
+  const expiration = new Date();
+
+  /**
+   * CALCULATING EXPIRATION: 1 HOUR FROM NOW
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that's a built-in object and a built-in method, provided by JavaScript
+   * itself, but a browser to be precise. And then here we pass
+   * expiration.getHours plus 1. So this basically creates a date, that is
+   * 1 hour in the future."
+   *
+   * HOW setHours WORKS:
+   * - expiration.getHours() returns the current hour (0-23)
+   * - Adding 1 gives us the hour value for 1 hour from now
+   * - setHours() updates the Date object to that hour
+   *
+   * EXAMPLE:
+   * If current time is 2:30 PM:
+   * - getHours() returns 14
+   * - 14 + 1 = 15
+   * - setHours(15) sets the time to 3:30 PM (same minutes preserved)
+   *
+   * NOTE: JavaScript handles hour overflow correctly:
+   * If it's 11 PM (23), setHours(24) will roll over to midnight next day.
+   */
+  expiration.setHours(expiration.getHours() + 1);
+
+  /**
+   * STORING EXPIRATION AS ISO STRING
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then we want to store that date, in local storage as well. We can name
+   * it expiration. That's the key in local storage. And the value is
+   * expiration.toISOString, to convert this data to a standardized string."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So now we're also storing the expiration date in local storage. And this
+   * ensures, that we do respect that expiration date."
+   *
+   * WHY toISOString()?
+   * - localStorage can only store strings, not Date objects
+   * - toISOString() produces a standardized format: "2024-01-15T14:30:00.000Z"
+   * - This format can be easily parsed back into a Date object later
+   * - It's unambiguous and timezone-aware (always UTC)
+   */
+  localStorage.setItem('expiration', expiration.toISOString());
+
+  /**
+   * ============================================================================
    * REDIRECT AFTER STORING TOKEN (Lesson 394)
    * ============================================================================
    *
