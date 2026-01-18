@@ -1,1 +1,32 @@
-{"events":[],"users":[{"email":"test@test.com","password":"$2a$12$7VfTKdrcS4eMttGSxFgOBe/oc2ZY.626v/4htzHXIJVSeIbZuUmDa","id":"97162cac-e517-4d79-bfde-057fa64a0816"}]}
+{
+  "events": [
+    {
+      "id": "e1",
+      "title": "React Conference 2024",
+      "image": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
+      "date": "2024-06-15",
+      "description": "Join us for an exciting conference featuring the latest React developments, best practices, and networking opportunities with developers from around the world."
+    },
+    {
+      "id": "e2",
+      "title": "JavaScript Workshop",
+      "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800",
+      "date": "2024-07-20",
+      "description": "A hands-on workshop covering advanced JavaScript concepts including closures, async/await, and modern ES6+ features. Perfect for intermediate developers."
+    },
+    {
+      "id": "e3",
+      "title": "Web Development Meetup",
+      "image": "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800",
+      "date": "2024-08-10",
+      "description": "Monthly meetup for web developers to share knowledge, discuss new technologies, and connect with the local tech community. All skill levels welcome!"
+    }
+  ],
+  "users": [
+    {
+      "email": "test@test.com",
+      "password": "$2a$12$7VfTKdrcS4eMttGSxFgOBe/oc2ZY.626v/4htzHXIJVSeIbZuUmDa",
+      "id": "97162cac-e517-4d79-bfde-057fa64a0816"
+    }
+  ]
+}
