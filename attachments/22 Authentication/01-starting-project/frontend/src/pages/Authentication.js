@@ -296,23 +296,79 @@ export async function action({ request }) {
 
   /**
    * ============================================================================
-   * STEP 7: HANDLE SUCCESS - REDIRECT (Lesson 391)
+   * STEP 7: EXTRACT AND STORE THE TOKEN (Updated in Lesson 394)
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "If we make it past all these steps here, the user creation or signup did
-   * succeed. So soon, we will have to manage that token here, which we get
-   * back from the backend. But for the moment we'll not do that yet. And
-   * instead just redirect the user."
+   * "So for managing that token, we can start by going to the authentication
+   * page, and there we got the action that sends the authentication request to
+   * the backend. And it would be in that action, where we can extract the token
+   * from the response, and where we then can store it."
    *
    * INSTRUCTOR QUOTE:
-   * "I call redirect here, to redirect a user to the starting page, for
-   * example. So once we are logged in, we're redirected to the starting page."
+   * "For that, we can convert that response to a JavaScript object, by awaiting
+   * response.json, to parse the response body. This gives me a resData object
+   * that can be used."
    *
-   * TODO (Next Lessons):
-   * - Extract the token from the response
-   * - Store the token (localStorage)
-   * - Use token for protected requests
+   * The backend response contains:
+   * {
+   *   message: "User created successfully." (or "Login successful."),
+   *   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  // JWT token
+   * }
+   */
+  const resData = await response.json();
+
+  /**
+   * INSTRUCTOR QUOTE:
+   * "And on this response data object, I have a token property and that token
+   * should now be stored locally."
+   *
+   * Extract the token from the response object
+   */
+  const token = resData.token;
+
+  /**
+   * ============================================================================
+   * STORING THE TOKEN IN localStorage (Lesson 394)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And now the question just is, where should we store it? Well, we can store
+   * it in localStorage, which is a built-in storage mechanism provided by the
+   * browser, where we can store simple key-value pairs."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So here I could call localStorage.setItem. And this set item method takes
+   * a key of your choice, so here maybe token. And the value you wanna store
+   * under that key, and that's the token value."
+   *
+   * WHY localStorage?
+   * - Built-in browser API (no extra dependencies)
+   * - Persists across page refreshes and browser sessions
+   * - Simple key-value storage
+   * - Data survives until explicitly cleared
+   *
+   * SECURITY NOTE:
+   * Storing tokens in localStorage is convenient but has security implications.
+   * It's vulnerable to XSS attacks. For production apps, consider:
+   * - HttpOnly cookies (more secure but requires backend cooperation)
+   * - Session storage (cleared when browser closes)
+   * - In-memory storage with refresh tokens
+   *
+   * For this course demo, localStorage is sufficient.
+   */
+  localStorage.setItem('token', token);
+
+  /**
+   * ============================================================================
+   * REDIRECT AFTER STORING TOKEN (Lesson 394)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then thereafter, I can redirect."
+   *
+   * Now that the token is stored, redirect to the home page.
+   * The token will be available for future requests to protected resources.
    */
   return redirect('/');
 }
