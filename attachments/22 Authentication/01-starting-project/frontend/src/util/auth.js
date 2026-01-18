@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * AUTHENTICATION UTILITY FUNCTIONS (Updated in Lesson 396)
+ * AUTHENTICATION UTILITY FUNCTIONS (Updated in Lesson 397)
  * ============================================================================
  *
  * This file contains helper functions for managing authentication tokens.
@@ -43,7 +43,42 @@
  * - UI automatically updates when auth state changes
  *
  * ============================================================================
+ * LESSON 397 - IMPORTANT: LOADERS MUST RETURN A VALUE
+ * ============================================================================
+ *
+ * CRITICAL RULE FOR REACT ROUTER LOADERS:
+ * Route loaders MUST always return a value - either:
+ * - A Response object (including redirect())
+ * - null
+ * - Any other value (data, objects, arrays, etc.)
+ *
+ * COMMON MISTAKE (causes errors):
+ * ```javascript
+ * export function someLoader() {
+ *   if (condition) {
+ *     return redirect('/somewhere');
+ *   }
+ *   // PROBLEM: Nothing returned here! This causes errors.
+ * }
+ * ```
+ *
+ * CORRECT APPROACH:
+ * ```javascript
+ * export function someLoader() {
+ *   if (condition) {
+ *     return redirect('/somewhere');
+ *   }
+ *   return null;  // Always return something!
+ * }
+ * ```
+ *
+ * This is especially important for the checkAuthLoader function below,
+ * which redirects if no token exists but must return null otherwise.
+ *
+ * ============================================================================
  */
+
+import { redirect } from 'react-router-dom';
 
 /**
  * getAuthToken - Retrieves the stored JWT token from localStorage
@@ -131,4 +166,108 @@ export function getAuthToken() {
  */
 export function tokenLoader() {
   return getAuthToken();
+}
+
+/**
+ * ============================================================================
+ * checkAuthLoader - Route Protection Loader (Lesson 397 / Prepared for 398)
+ * ============================================================================
+ *
+ * This loader function is used to PROTECT routes that require authentication.
+ * It checks if a token exists and redirects to the auth page if not.
+ *
+ * ============================================================================
+ * PURPOSE: ROUTE PROTECTION
+ * ============================================================================
+ *
+ * Some routes should only be accessible to logged-in users:
+ * - /events/new (creating events)
+ * - /events/:id/edit (editing events)
+ *
+ * If a user manually types these URLs without being logged in, we should
+ * redirect them to the authentication page instead of showing an error.
+ *
+ * ============================================================================
+ * HOW IT WORKS
+ * ============================================================================
+ *
+ * 1. Get the current token from localStorage
+ * 2. If NO token exists (!token is true):
+ *    - User is NOT logged in
+ *    - Redirect them to /auth to log in
+ * 3. If token EXISTS:
+ *    - User IS logged in
+ *    - Return null to allow access to the route
+ *
+ * ============================================================================
+ * CRITICAL: MUST RETURN A VALUE (Lesson 397)
+ * ============================================================================
+ *
+ * IMPORTANT: This function demonstrates the rule from Lesson 397:
+ * Loaders MUST always return a value!
+ *
+ * The `return null` at the end is ESSENTIAL. Without it, the loader would
+ * return `undefined` when the token exists, which causes React Router errors.
+ *
+ * WRONG (causes errors):
+ * ```javascript
+ * export function checkAuthLoader() {
+ *   const token = getAuthToken();
+ *   if (!token) {
+ *     return redirect('/auth');
+ *   }
+ *   // Missing return! This causes "loader returned undefined" errors
+ * }
+ * ```
+ *
+ * CORRECT (what we do):
+ * ```javascript
+ * export function checkAuthLoader() {
+ *   const token = getAuthToken();
+ *   if (!token) {
+ *     return redirect('/auth');
+ *   }
+ *   return null;  // MUST return something when token exists!
+ * }
+ * ```
+ *
+ * ============================================================================
+ * USAGE (in App.js route configuration)
+ * ============================================================================
+ *
+ * This loader will be registered on protected routes:
+ * ```javascript
+ * {
+ *   path: 'new',
+ *   element: <NewEventPage />,
+ *   action: manipulateEventAction,
+ *   loader: checkAuthLoader,  // Protects this route
+ * }
+ * ```
+ *
+ * @returns {Response|null} Redirect response if not authenticated, null if authenticated
+ */
+export function checkAuthLoader() {
+  const token = getAuthToken();
+
+  if (!token) {
+    /**
+     * User is NOT logged in - redirect to auth page
+     * The redirect() function returns a Response object that React Router
+     * uses to navigate the user to the specified path.
+     */
+    return redirect('/auth');
+  }
+
+  /**
+   * CRITICAL: Return null when token exists!
+   *
+   * This line is MISSING in the Lesson 398 video but MUST be added.
+   * Without this return statement, the function returns undefined,
+   * which causes React Router to throw an error.
+   *
+   * "return null" tells React Router:
+   * "The loader ran successfully, no redirect needed, proceed with the route"
+   */
+  return null;
 }
