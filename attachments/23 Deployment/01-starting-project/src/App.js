@@ -191,7 +191,7 @@
  * │ {                                                                        │
  * │   "hosting": {                                                           │
  * │     "public": "build",           ← Directory to deploy                  │
- * │     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],         │
+ * │     "ignore": ["firebase.json", "**\/.*", "**\/node_modules/**"],       │
  * │     "rewrites": [                                                        │
  * │       {                                                                  │
  * │         "source": "**",          ← All routes                           │
