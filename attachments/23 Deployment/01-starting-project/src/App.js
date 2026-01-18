@@ -7,6 +7,146 @@
  * from development to production and deploying it to a real server.
  *
  * ============================================================================
+ * LESSON 404 - UNDERSTANDING LAZY LOADING (Conceptual Introduction)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now for this course section I prepared a brand new example application...
+ * where we fetch a list of dummy blog posts, and can view the details of
+ * such a dummy blog post."
+ *
+ * This is a simple blog application with:
+ * - Home page (/)
+ * - Blog posts list (/posts)
+ * - Individual post view (/posts/:id)
+ *
+ * INSTRUCTOR QUOTE:
+ * "Let's assume that we thoroughly tested that code, so we're happy with the
+ * code, we don't wanna change it. The next step then is to optimize that code
+ * before we then finally build that app for production."
+ *
+ * ============================================================================
+ * THE PROBLEM: ALL CODE LOADS UPFRONT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's important to understand that we have all these import statements in
+ * our various files where we import code from other files into the file where
+ * the import statement was added."
+ *
+ * HOW IMPORTS WORK:
+ *
+ *   App.js
+ *      ├── imports BlogPage      → Blog.js
+ *      │       └── imports PostList   → PostList.js
+ *      │               └── imports PostItem → PostItem.js
+ *      ├── imports HomePage      → Home.js
+ *      ├── imports PostPage      → Post.js
+ *      │       └── imports PostItem   → PostItem.js
+ *      └── imports RootLayout    → Root.js
+ *              └── imports MainNavigation → MainNavigation.js
+ *
+ * INSTRUCTOR QUOTE:
+ * "When this component file is evaluated by the browser, this code for this
+ * hook will be imported because this code is needed in order to handle this
+ * component correctly."
+ *
+ * INSTRUCTOR QUOTE:
+ * "All these imports in the end connect these different files. And when this
+ * application is served to end users, all these imports must be resolved
+ * before something's shown on the screen."
+ *
+ * ============================================================================
+ * THE BUNDLING PROCESS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "When we later build this application... then all these imported files will
+ * actually be merged together into one big file."
+ *
+ * WITHOUT LAZY LOADING:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                         SINGLE BUNDLE (main.js)                         │
+ * │                                                                         │
+ * │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
+ * │  │  App.js  │ │ Home.js  │ │ Blog.js  │ │ Post.js  │ │  Root.js │ ... │
+ * │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
+ * │                                                                         │
+ * │  + All components + All styles + All utilities                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *                                    │
+ *                                    ↓
+ *                    User MUST download ALL of this
+ *                    before seeing ANYTHING on screen
+ *
+ * ============================================================================
+ * WHY THIS IS A PROBLEM FOR LARGE APPS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "The theoretical problem with that is, that of course, this means all code
+ * files must be loaded before anything's shown on the screen."
+ *
+ * INSTRUCTOR QUOTE:
+ * "For this simple application, that's no problem. It is a really simple
+ * application with only a few code files so it's not a problem that we have
+ * to load them all."
+ *
+ * INSTRUCTOR QUOTE:
+ * "But of course, in more complex applications in bigger apps with dozens or
+ * even hundreds of routes and components, that could be a problem. Having to
+ * load all the code initially will slow down that initial page load."
+ *
+ * IMPACT ON USER EXPERIENCE:
+ *
+ * Simple App (this one):
+ * ┌────────────────────────────────────────────┐
+ * │  Bundle: ~50KB → Loads fast → ✅ No issue  │
+ * └────────────────────────────────────────────┘
+ *
+ * Complex App (dozens/hundreds of routes):
+ * ┌────────────────────────────────────────────┐
+ * │  Bundle: ~5MB → Slow load → ❌ Bad UX      │
+ * │                                            │
+ * │  User visits "/" but must download code    │
+ * │  for /settings, /admin, /reports, etc.     │
+ * │  even if they NEVER visit those pages!     │
+ * └────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * THE SOLUTION: LAZY LOADING
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's exactly where lazy loading comes into play. The idea behind
+ * lazy loading is that we load certain components in the end only when
+ * they're needed instead of ahead of time."
+ *
+ * WITH LAZY LOADING (will implement in next lesson):
+ *
+ * Initial Load (user visits "/"):
+ * ┌───────────────────────────────────┐
+ * │  Main Bundle: App + Home + Root   │  ← Only essential code
+ * └───────────────────────────────────┘
+ *
+ * User navigates to "/posts":
+ * ┌───────────────────────────────────┐
+ * │  Chunk: Blog + PostList           │  ← Loaded on demand
+ * └───────────────────────────────────┘
+ *
+ * User navigates to "/posts/1":
+ * ┌───────────────────────────────────┐
+ * │  Chunk: Post + PostItem           │  ← Loaded on demand
+ * └───────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "Even though it's not needed for this basic application here as it is
+ * rather simple, we're now going to add lazy loading to it so that you learn
+ * how it works and so that you could apply that lazy loading technique to
+ * more complex sites as well."
+ *
+ * ============================================================================
  * LESSON 403 - DEPLOYMENT OVERVIEW & STEPS
  * ============================================================================
  *
