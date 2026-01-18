@@ -87,21 +87,32 @@
  */
 
 /**
- * IMPORT CHANGES (Lesson 390):
+ * IMPORT CHANGES:
+ *
+ * Lesson 390:
  * - REMOVED: useState (no longer needed - mode comes from URL)
  * - ADDED: Link (for mode switching navigation)
  * - ADDED: useSearchParams (to read query parameters)
  *
- * INSTRUCTOR QUOTE:
- * "I will get rid of this switch off handler function and the useState call
- * here, and we can get rid of the useState import."
+ * Lesson 392:
+ * - ADDED: useActionData (to get data returned by the action function)
+ * - ADDED: useNavigation (to track form submission state)
+ *
+ * INSTRUCTOR QUOTE (Lesson 392):
+ * "We can get that data with help of the useActionData hook, as you learned."
  */
-import { Form, Link, useSearchParams } from 'react-router-dom';
+import {
+  Form,
+  Link,
+  useActionData,
+  useNavigation,
+  useSearchParams,
+} from 'react-router-dom';
 
 import classes from './AuthForm.module.css';
 
 /**
- * AuthForm Component (Updated in Lesson 390)
+ * AuthForm Component (Updated in Lesson 392)
  *
  * Dual-purpose form that handles both login and signup.
  * Uses React Router's <Form> component for declarative form handling.
@@ -111,13 +122,86 @@ import classes from './AuthForm.module.css';
  * - Now uses useSearchParams to read mode from URL
  * - Mode toggle is now a Link instead of a button
  *
- * The form's action function (to be implemented) will:
- * 1. Read form data (email, password)
- * 2. Determine if login or signup based on URL query parameter
- * 3. Send request to appropriate backend endpoint
- * 4. Handle the token response
+ * LESSON 392 CHANGES:
+ * - Added useActionData to display validation errors from the action
+ * - Added useNavigation to show submission state on the button
+ * - Errors are displayed above the form when authentication fails
+ *
+ * The form's action function:
+ * 1. Reads form data (email, password)
+ * 2. Determines if login or signup based on URL query parameter
+ * 3. Sends request to appropriate backend endpoint
+ * 4. Returns error data (422, 401) or redirects on success
  */
 function AuthForm() {
+  /**
+   * ============================================================================
+   * GETTING ACTION DATA WITH useActionData (Lesson 392)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "In that file, I simply wanna get my action data. So, the data returned by
+   * that action function that was submitted by that form. We can get that data
+   * with help of the useActionData hook, as you learned."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We only get that data if our action returns something, if it returns
+   * something else then a redirect. So in this case, if it returns here, if we
+   * got a status code of 422 or 401."
+   *
+   * WHEN DATA IS AVAILABLE:
+   * - After form submission with validation errors (422)
+   * - After form submission with auth failure (401)
+   *
+   * WHEN DATA IS UNDEFINED:
+   * - Before any form submission
+   * - After successful submission (action returns redirect, not data)
+   *
+   * DATA STRUCTURE (from backend):
+   * {
+   *   message: "User signup failed due to validation errors.",
+   *   errors: {
+   *     email: "Email exists already.",
+   *     password: "Invalid password. Must be at least 6 characters long."
+   *   }
+   * }
+   */
+  const data = useActionData();
+
+  /**
+   * ============================================================================
+   * TRACKING SUBMISSION STATE WITH useNavigation (Lesson 392)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "The last thing which I want to add to this form here is a little indicator
+   * that the form was submitted and that we're waiting for the response. So, I
+   * wanna find out if we're currently submitting data."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We can use another hook for that. The useNavigation hook which gives us a
+   * navigation object, and that navigation object has a state property which
+   * holds the current submission state."
+   *
+   * navigation.state VALUES:
+   * - 'idle'       → No pending navigation or form submission
+   * - 'submitting' → Form is being submitted, waiting for action to complete
+   * - 'loading'    → Action completed, loading new page/data
+   */
+  const navigation = useNavigation();
+
+  /**
+   * INSTRUCTOR QUOTE:
+   * "So here, I'll then add a helper constant called isSubmitting, where I check
+   * if navigation.state is equal to submitting. In that case, I know that we're
+   * currently submitting data."
+   *
+   * This boolean is used to:
+   * 1. Disable the submit button during submission
+   * 2. Change button text to show loading feedback
+   */
+  const isSubmitting = navigation.state === 'submitting';
+
   /**
    * ============================================================================
    * READING QUERY PARAMETERS WITH useSearchParams (Lesson 390)
@@ -165,6 +249,58 @@ function AuthForm() {
         {/* Dynamic heading based on current mode (from URL) */}
         <h1>{isLogin ? 'Log in' : 'Create a new user'}</h1>
 
+        {/*
+         * ================================================================
+         * ERROR DISPLAY SECTION (Lesson 392)
+         * ================================================================
+         *
+         * INSTRUCTOR QUOTE:
+         * "So here, to output that information to the user, I'll output it
+         * below this h1 element and check if the data is generally set, if
+         * it's available, if we do have data, because we won't always have
+         * data. Only if we did submit the form in the past."
+         *
+         * CONDITIONAL RENDERING:
+         * 1. First check if 'data' exists (undefined before submission)
+         * 2. Then check if 'data.errors' exists (validation errors object)
+         * 3. If both true, display the errors as a list
+         *
+         * INSTRUCTOR QUOTE:
+         * "Then I check if an errors object is present on that data. It will
+         * be present if we have validation errors."
+         */}
+        {data && data.errors && (
+          <ul>
+            {/*
+             * INSTRUCTOR QUOTE:
+             * "Now, since errors will be an object, I will use a built-in
+             * function provided by JavaScript, Object.values, to go through
+             * all the values in this errors object."
+             *
+             * Object.values() converts an object's values into an array:
+             * { email: "Error1", password: "Error2" } → ["Error1", "Error2"]
+             *
+             * This allows us to use .map() to render each error message.
+             */}
+            {Object.values(data.errors).map((err) => (
+              <li key={err}>{err}</li>
+            ))}
+          </ul>
+        )}
+
+        {/*
+         * INSTRUCTOR QUOTE:
+         * "I will also add another check down there and check if my data has
+         * a message, if I have the message property on this data object, and
+         * if the data object exists. And in that case, I'll also output
+         * data.message here."
+         *
+         * This displays general authentication messages like:
+         * - "Authentication failed." (401 from login)
+         * - "User signup failed due to validation errors." (422)
+         */}
+        {data && data.message && <p>{data.message}</p>}
+
         {/* Email input - used for both login and signup */}
         <p>
           <label htmlFor="email">Email</label>
@@ -209,8 +345,28 @@ function AuthForm() {
             {isLogin ? 'Create new user' : 'Login'}
           </Link>
 
-          {/* Submit button - triggers form action */}
-          <button>Save</button>
+          {/*
+           * ================================================================
+           * SUBMIT BUTTON WITH SUBMISSION STATE (Lesson 392)
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "Here, I wanna disable that button if we are submitting, and I
+           * wanna output a different text based on whether we are submitting
+           * or not. If we are submitting, I wanna output 'Submitting...'.
+           * Otherwise, I'll output 'Save'."
+           *
+           * disabled={isSubmitting}:
+           * - Prevents double-submission while request is in progress
+           * - Provides visual feedback that action is being processed
+           *
+           * Conditional text:
+           * - "Submitting..." when form is being submitted
+           * - "Save" when form is idle and ready for submission
+           */}
+          <button disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Save'}
+          </button>
         </div>
       </Form>
     </>
