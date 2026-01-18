@@ -7,6 +7,222 @@
  * from development to production and deploying it to a real server.
  *
  * ============================================================================
+ * LESSON 407 - DEPLOYMENT EXAMPLE (Firebase Hosting)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So let's now deploy this app and let's therefore have a look at this entire
+ * deployment process from a high level to understand the steps that are involved
+ * and let's then see this in action for a concrete hosting provider."
+ *
+ * ============================================================================
+ * WHAT KIND OF HOST DO WE NEED?
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "What we deploy here is in the end just some static content. It's some HTML
+ * files and JavaScript files and CSS files. That's all we need to upload."
+ *
+ * A React SPA is NOT a server-side rendered application.
+ * We're uploading static files that run entirely in the browser.
+ *
+ * WHAT WE NEED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  STATIC SITE HOST                                                       │
+ * │  ✓ Serves HTML, CSS, JavaScript files                                   │
+ * │  ✓ No server-side code execution needed                                 │
+ * │  ✓ No database on the host (our app uses external APIs)                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "We don't need any server side code execution. Our React code that runs
+ * in the browser might reach out to some remote backend API but that backend
+ * API is running on a separate server and therefore for the React app all
+ * we need is such a static website host."
+ *
+ * WHAT WE DON'T NEED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✗ Node.js server runtime                                               │
+ * │  ✗ PHP, Python, or other server languages                               │
+ * │  ✗ Database hosting                                                     │
+ * │  ✗ Server-side rendering capabilities                                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * POPULAR STATIC HOSTING OPTIONS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And there are various static website hosts out there... There is Firebase
+ * Hosting which I'm going to use here because it has a generous free plan..."
+ *
+ * Free Static Hosting Services:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • Firebase Hosting      - Used in this lesson                          │
+ * │  • Netlify               - Great free tier, Git integration             │
+ * │  • Vercel                - Great for Next.js, works for React too       │
+ * │  • GitHub Pages          - Free with GitHub repository                  │
+ * │  • AWS Amplify           - AWS ecosystem                                │
+ * │  • Cloudflare Pages      - Fast CDN, generous free tier                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * FIREBASE HOSTING SETUP (Step-by-Step)
+ * ============================================================================
+ *
+ * STEP 1: INSTALL FIREBASE CLI
+ * ─────────────────────────────
+ *
+ * INSTRUCTOR QUOTE:
+ * "For this we can use the Firebase CLI, the Firebase Command Line Interface
+ * which we can install globally with npm."
+ *
+ * IMPORTANT: This requires MANUAL installation in your terminal:
+ *
+ *   npm install -g firebase-tools
+ *
+ * The -g flag installs it globally (available everywhere on your system).
+ *
+ * ─────────────────────────────
+ * STEP 2: LOGIN TO FIREBASE
+ * ─────────────────────────────
+ *
+ * INSTRUCTOR QUOTE:
+ * "You now need to log in with your Firebase account... You can do this
+ * simply by running Firebase login in the terminal."
+ *
+ *   firebase login
+ *
+ * This opens a browser window to authenticate with your Google account.
+ *
+ * ─────────────────────────────
+ * STEP 3: INITIALIZE FIREBASE IN YOUR PROJECT
+ * ─────────────────────────────
+ *
+ * INSTRUCTOR QUOTE:
+ * "And now in this project folder, in a terminal navigation to that folder,
+ * we wanna execute Firebase init."
+ *
+ *   firebase init
+ *
+ * This starts an interactive setup process:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ FIREBASE INIT WIZARD                                                    │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │ 1. "Which Firebase features?" → Select HOSTING                          │
+ * │    Use arrow keys and space to select                                   │
+ * │                                                                          │
+ * │ 2. "Use an existing project or create a new project?"                   │
+ * │    → Select existing or create new                                       │
+ * │                                                                          │
+ * │ 3. "What do you want to use as your public directory?"                  │
+ * │    → Type: build                                                         │
+ * │    (This is where CRA outputs the production build)                     │
+ * │                                                                          │
+ * │ 4. "Configure as a single-page app (rewrite all URLs to /index.html)?"  │
+ * │    → Type: yes   ← CRITICAL for React Router!                           │
+ * │                                                                          │
+ * │ 5. "Set up automatic builds with GitHub?"                               │
+ * │    → Your choice (no for manual deploys)                                │
+ * │                                                                          │
+ * │ 6. "Overwrite build/index.html?"                                        │
+ * │    → Type: no   ← Keep your build output!                               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * CRITICAL: SINGLE PAGE APP CONFIGURATION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "You should enter yes here because as you might recall all the routing
+ * and all the logic for displaying different pages is done on the client
+ * side, in the browser, by JavaScript. And in order to make this work, we
+ * need to make sure that in the end always just one HTML file is loaded,
+ * the index HTML file."
+ *
+ * WHY THIS MATTERS:
+ *
+ * WITHOUT SPA Rewrite (BROKEN):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ User visits: yoursite.com/posts                                         │
+ * │ Server looks for: /build/posts/index.html                               │
+ * │ Result: 404 NOT FOUND ❌                                                 │
+ * │ (Because there IS no posts folder - it's a React Router path!)          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WITH SPA Rewrite (WORKING):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ User visits: yoursite.com/posts                                         │
+ * │ Server rewrites to: /build/index.html                                   │
+ * │ React loads, React Router sees /posts, renders BlogPage ✅              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And React router, our client side router then takes over and based on
+ * the URL that was entered renders the appropriate component."
+ *
+ * ─────────────────────────────
+ * STEP 4: DEPLOY
+ * ─────────────────────────────
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now to deploy you would run firebase deploy."
+ *
+ *   firebase deploy
+ *
+ * This uploads the /build folder contents to Firebase Hosting.
+ *
+ * OUTPUT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ ✔ Deploy complete!                                                      │
+ * │ Project Console: https://console.firebase.google.com/...                │
+ * │ Hosting URL: https://your-project-id.web.app                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * FILES CREATED BY FIREBASE INIT
+ * ============================================================================
+ *
+ * After running `firebase init`, these files are created in your project:
+ *
+ * firebase.json:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ {                                                                        │
+ * │   "hosting": {                                                           │
+ * │     "public": "build",           ← Directory to deploy                  │
+ * │     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],         │
+ * │     "rewrites": [                                                        │
+ * │       {                                                                  │
+ * │         "source": "**",          ← All routes                           │
+ * │         "destination": "/index.html"  ← Go to index.html (SPA!)        │
+ * │       }                                                                  │
+ * │     ]                                                                    │
+ * │   }                                                                      │
+ * │ }                                                                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * .firebaserc:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ {                                                                        │
+ * │   "projects": {                                                          │
+ * │     "default": "your-project-id"                                         │
+ * │   }                                                                      │
+ * │ }                                                                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * RE-DEPLOYING AFTER CHANGES
+ * ============================================================================
+ *
+ * Whenever you make changes:
+ *
+ * 1. npm run build          ← Create new production build
+ * 2. firebase deploy        ← Upload the new build
+ *
+ * The previous deployment is automatically replaced.
+ *
+ * ============================================================================
  * LESSON 406 - BUILDING THE APP FOR PRODUCTION
  * ============================================================================
  *

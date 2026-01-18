@@ -76,6 +76,40 @@
  * - Old versions remain cached (great for unchanged files)
  *
  * ============================================================================
+ * LESSON 407 - DEPLOYING TO FIREBASE HOSTING
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "What we deploy here is in the end just some static content. It's some HTML
+ * files and JavaScript files and CSS files. That's all we need to upload."
+ *
+ * A React SPA needs only a STATIC SITE HOST because:
+ * - No server-side code execution required
+ * - All logic runs in the browser (JavaScript)
+ * - Backend APIs run on separate servers
+ *
+ * FIREBASE HOSTING COMMANDS (requires manual installation):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ npm install -g firebase-tools   ← Install CLI globally (one-time)      │
+ * │ firebase login                  ← Authenticate with Google account     │
+ * │ firebase init                   ← Configure project (select Hosting)   │
+ * │ npm run build                   ← Create production build              │
+ * │ firebase deploy                 ← Upload /build folder to Firebase     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * CRITICAL: During `firebase init`, when asked:
+ * "Configure as a single-page app (rewrite all URLs to /index.html)?"
+ * → Answer: YES
+ *
+ * INSTRUCTOR QUOTE:
+ * "You should enter yes here because as you might recall all the routing
+ * and all the logic for displaying different pages is done on the client
+ * side, in the browser, by JavaScript."
+ *
+ * Without this setting, visiting yoursite.com/posts would return 404
+ * because there's no /posts/index.html file - it's a React Router path!
+ *
+ * ============================================================================
  */
 
 import React from 'react';
