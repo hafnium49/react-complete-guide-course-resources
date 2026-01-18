@@ -129,17 +129,23 @@ import { action as logoutAction } from './pages/Logout';
 
 /**
  * ============================================================================
- * IMPORTING tokenLoader FOR REACTIVE AUTH STATE (Lesson 396)
+ * IMPORTING AUTH UTILITIES (Updated in Lesson 398)
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 396):
  * "Now back in App.js, I will import this loader as the tokenLoader from
  * /util/auth and use that here on that root route."
  *
- * This loader will be registered on the root route to make the token
- * available throughout the entire application via useRouteLoaderData.
+ * INSTRUCTOR QUOTE (Lesson 398):
+ * "Now, back in app js, we can add that loader to all the routes that need
+ * protection and that would be the checkAuthLoader which the offer of course
+ * also must be imported from the util/auth file."
+ *
+ * TWO LOADERS FOR DIFFERENT PURPOSES:
+ * 1. tokenLoader - Makes token available to ALL routes (on root route)
+ * 2. checkAuthLoader - PROTECTS specific routes from unauthenticated access
  */
-import { tokenLoader } from './util/auth';
+import { tokenLoader, checkAuthLoader } from './util/auth';
 
 /**
  * Router Configuration
@@ -224,18 +230,85 @@ const router = createBrowserRouter([
                 action: deleteEventAction,
               },
               {
-                // Edit event - NEEDS AUTH (PATCH requires token)
+                /**
+                 * ============================================================
+                 * EDIT EVENT ROUTE - PROTECTED (Lesson 398)
+                 * ============================================================
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "To be precise, it's the edit route here, and this new route
+                 * here which should not always be accessible. Because we
+                 * shouldn't be able to reach these routes if we're not logged
+                 * in because we won't be able to use them correctly anyways."
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "And that checkAuthLoader is added to the edit route here
+                 * and to the new event page route."
+                 *
+                 * WHY PROTECT THIS ROUTE?
+                 * - Editing events requires authentication (PATCH is protected)
+                 * - Without protection, users could manually type the URL
+                 * - Even though the API call would fail, better UX to redirect
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "Of course, submitting the form would fail because we actually
+                 * wouldn't be able to attach a token to the outgoing request.
+                 * So we still have that protection but it would be even better
+                 * if we wouldn't be able to reach that form at all if we're
+                 * not logged in."
+                 *
+                 * HOW IT WORKS:
+                 * 1. User tries to navigate to /events/:id/edit
+                 * 2. React Router runs checkAuthLoader BEFORE rendering
+                 * 3. If no token → redirect to /auth
+                 * 4. If token exists → return null, allow access
+                 */
                 path: 'edit',
                 element: <EditEventPage />,
                 action: manipulateEventAction,
+                loader: checkAuthLoader,
               },
             ],
           },
           {
-            // New event - NEEDS AUTH (POST requires token)
+            /**
+             * ==============================================================
+             * NEW EVENT ROUTE - PROTECTED (Lesson 398)
+             * ==============================================================
+             *
+             * INSTRUCTOR QUOTE:
+             * "To be precise, it's the edit route here, and this new route
+             * here which should not always be accessible."
+             *
+             * INSTRUCTOR QUOTE:
+             * "So what we need is some route protection. Certain routes here
+             * should not always be accessible."
+             *
+             * WHY PROTECT THIS ROUTE?
+             * - Creating events requires authentication (POST is protected)
+             * - Users could bypass the hidden "New Event" button by typing URL
+             * - checkAuthLoader prevents access before the page even renders
+             *
+             * INSTRUCTOR QUOTE:
+             * "Well, we could utilize a loader. A loader that simply checks if
+             * we have a token. And if we don't have a token, redirects us away."
+             *
+             * INSTRUCTOR QUOTE:
+             * "If we now save all files and I try to visit /events/new whilst
+             * not being logged in you see I'm redirected to /auth."
+             *
+             * ALTERNATIVE APPROACH (mentioned but not used):
+             * "Alternatively, we could also throw an error and show the error
+             * page that is totally up to you."
+             *
+             * TWO LAYERS OF PROTECTION:
+             * 1. UI Layer: "New Event" button hidden when not logged in
+             * 2. Route Layer: checkAuthLoader redirects if URL accessed directly
+             */
             path: 'new',
             element: <NewEventPage />,
             action: manipulateEventAction,
+            loader: checkAuthLoader,
           },
         ],
       },
