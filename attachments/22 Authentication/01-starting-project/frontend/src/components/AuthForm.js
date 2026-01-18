@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * AUTHENTICATION FORM COMPONENT (Lesson 388)
+ * AUTHENTICATION FORM COMPONENT (Updated in Lesson 390)
  * ============================================================================
  *
  * This component provides the UI for user login and signup.
@@ -49,37 +49,110 @@
  * 3. Use to update UI (show logout, hide login link)
  *
  * ============================================================================
+ * USING URL QUERY PARAMETERS FOR MODE (Lesson 390)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Wouldn't it be nice if we could switch between the two modes, log in and
+ * sign up, with help of the URL? So that we could, for example, use some
+ * query parameters to indicate whether we are in sign up or log in mode."
+ *
+ * INSTRUCTOR QUOTE:
+ * "With query parameters you could share the current state of a page with
+ * other people or bookmark it because that state would then be encoded in
+ * the URL."
+ *
+ * WHY USE URL PARAMETERS INSTEAD OF STATE?
+ * - Shareable URLs: /auth?mode=signup can be bookmarked or shared
+ * - Browser history: Back/forward buttons work naturally
+ * - Deep linking: External links can go directly to signup mode
+ * - No state management needed for this toggle
+ *
+ * ============================================================================
+ * useSearchParams HOOK (Lesson 390)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can use a special hook provided by React Router to read currently
+ * active query parameters. The hook is called useSearchParams."
+ *
+ * useSearchParams returns an array with:
+ * [0] - searchParams: Object with methods like get('key') to read params
+ * [1] - setSearchParams: Function to update params (we don't use this)
+ *
+ * Example URL: /auth?mode=login
+ * - searchParams.get('mode') returns 'login'
+ *
+ * ============================================================================
  */
 
-import { useState } from 'react';
-import { Form } from 'react-router-dom';
+/**
+ * IMPORT CHANGES (Lesson 390):
+ * - REMOVED: useState (no longer needed - mode comes from URL)
+ * - ADDED: Link (for mode switching navigation)
+ * - ADDED: useSearchParams (to read query parameters)
+ *
+ * INSTRUCTOR QUOTE:
+ * "I will get rid of this switch off handler function and the useState call
+ * here, and we can get rid of the useState import."
+ */
+import { Form, Link, useSearchParams } from 'react-router-dom';
 
 import classes from './AuthForm.module.css';
 
 /**
- * AuthForm Component
+ * AuthForm Component (Updated in Lesson 390)
  *
  * Dual-purpose form that handles both login and signup.
  * Uses React Router's <Form> component for declarative form handling.
  *
+ * LESSON 390 CHANGES:
+ * - Removed useState for mode switching
+ * - Now uses useSearchParams to read mode from URL
+ * - Mode toggle is now a Link instead of a button
+ *
  * The form's action function (to be implemented) will:
  * 1. Read form data (email, password)
- * 2. Determine if login or signup based on URL or form data
+ * 2. Determine if login or signup based on URL query parameter
  * 3. Send request to appropriate backend endpoint
  * 4. Handle the token response
  */
 function AuthForm() {
-  // State to toggle between login and signup modes
-  // true = login mode, false = signup mode
-  const [isLogin, setIsLogin] = useState(true);
+  /**
+   * ============================================================================
+   * READING QUERY PARAMETERS WITH useSearchParams (Lesson 390)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "I wanna use that useSearchParams hook from React Router, and it gives me
+   * an array with two elements. The first element, search params will be an
+   * object that gives me access to the currently set query parameters."
+   *
+   * We only destructure the first element (searchParams) because we don't
+   * need to programmatically set params - we use Link for navigation instead.
+   */
+  const [searchParams] = useSearchParams();
 
   /**
-   * Toggles between login and signup mode.
-   * Uses functional update to safely toggle based on previous state.
+   * ============================================================================
+   * DETERMINING LOGIN VS SIGNUP MODE (Lesson 390)
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "I can use the searchParams object here and call the get method on it
+   * to get access to a specific query parameter with a specific key, for
+   * example, mode, and I'll check if this is equal to login."
+   *
+   * URL Examples:
+   * - /auth?mode=login  → isLogin = true  (show login form)
+   * - /auth?mode=signup → isLogin = false (show signup form)
+   * - /auth             → isLogin = false (no mode param, defaults to signup)
+   *
+   * NOTE: If mode param is missing or anything other than 'login',
+   * isLogin will be false (signup mode). This is intentional - new users
+   * are more likely to need signup than existing users to login.
    */
-  function switchAuthHandler() {
-    setIsLogin((isCurrentlyLogin) => !isCurrentlyLogin);
-  }
+  const isLogin = searchParams.get('mode') === 'login';
 
   return (
     <>
@@ -89,7 +162,7 @@ function AuthForm() {
         (action function to be implemented in later lessons)
       */}
       <Form method="post" className={classes.form}>
-        {/* Dynamic heading based on current mode */}
+        {/* Dynamic heading based on current mode (from URL) */}
         <h1>{isLogin ? 'Log in' : 'Create a new user'}</h1>
 
         {/* Email input - used for both login and signup */}
@@ -106,12 +179,35 @@ function AuthForm() {
 
         <div className={classes.actions}>
           {/*
-            Mode toggle button (type="button" prevents form submission)
-            Allows user to switch between login and signup
-          */}
-          <button onClick={switchAuthHandler} type="button">
+           * ================================================================
+           * MODE TOGGLE LINK (Lesson 390)
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "I want to replace my button down there which I use for toggling
+           * with a link, because we're gonna use a link to switch between modes."
+           *
+           * WHY LINK INSTEAD OF BUTTON?
+           * - Links change the URL, which triggers re-render with new params
+           * - Browser history works correctly (back/forward)
+           * - No need for onClick handler or state management
+           * - URL becomes the "source of truth" for the mode
+           *
+           * INSTRUCTOR QUOTE:
+           * "Of course that link should point at the current page still, but with
+           * a different query parameter. So if we are in login mode, we should
+           * switch to sign up mode and vice versa."
+           *
+           * DYNAMIC TO PROP:
+           * - If isLogin (currently on login), link to ?mode=signup
+           * - If !isLogin (currently on signup), link to ?mode=login
+           *
+           * NOTE: Using just "?mode=..." is a relative URL that keeps the
+           * current path (/auth) and only changes the query string.
+           */}
+          <Link to={`?mode=${isLogin ? 'signup' : 'login'}`}>
             {isLogin ? 'Create new user' : 'Login'}
-          </button>
+          </Link>
 
           {/* Submit button - triggers form action */}
           <button>Save</button>
