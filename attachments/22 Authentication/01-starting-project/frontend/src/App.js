@@ -107,7 +107,9 @@ import NewsletterPage, { action as newsletterAction } from './pages/Newsletter';
  * "As a first step, I want to make sure that we have a way of going to that
  * authentication page maybe for a '/auth' route."
  */
-import AuthenticationPage from './pages/Authentication';
+import AuthenticationPage, {
+  action as authAction,
+} from './pages/Authentication';
 
 /**
  * Router Configuration
@@ -173,16 +175,16 @@ const router = createBrowserRouter([
       },
       /**
        * ============================================================================
-       * AUTHENTICATION ROUTE - /auth (Lesson 389)
+       * AUTHENTICATION ROUTE - /auth (Updated in Lesson 391)
        * ============================================================================
        *
-       * INSTRUCTOR QUOTE:
+       * INSTRUCTOR QUOTE (Lesson 389):
        * "The auth route should still be part of my route layout. I still want to
        * have that navigation on top of it and so on. So therefore, it will be a
        * sibling route to this homepage and to this entire route stack of my
        * events routes."
        *
-       * INSTRUCTOR QUOTE:
+       * INSTRUCTOR QUOTE (Lesson 389):
        * "We could add it here, maybe in front of the newsletter though the exact
        * position doesn't matter. The path will be 'auth'. You could also add
        * '/auth' as this doesn't clash with the parent path, but a relative path
@@ -192,11 +194,30 @@ const router = createBrowserRouter([
        * - Keeps the RootLayout (with MainNavigation) visible
        * - User can navigate away using the header navigation
        * - Consistent layout across the entire app
+       *
+       * ============================================================================
+       * REGISTERING THE ACTION (Lesson 391)
+       * ============================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "The last thing we have to do though, which is easy to forget, is that we
+       * add this action to our route definition. We must register it there,
+       * otherwise it won't be picked up by React router."
+       *
+       * INSTRUCTOR QUOTE:
+       * "So here I'm importing this action as my authAction. And this authAction
+       * is now set up as an action here on this route."
+       *
+       * HOW IT WORKS:
+       * 1. AuthForm uses <Form method="post"> to submit
+       * 2. React Router sees the POST request on this route
+       * 3. React Router calls the registered action function
+       * 4. Action sends request to backend and handles response
        */
       {
         path: 'auth',
         element: <AuthenticationPage />,
-        // TODO: Add action function in upcoming lessons to handle form submission
+        action: authAction,
       },
       {
         path: 'newsletter',
