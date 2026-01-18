@@ -92,12 +92,29 @@ import NewEventPage from './pages/NewEvent';
 import RootLayout from './pages/Root';
 import { action as manipulateEventAction } from './components/EventForm';
 import NewsletterPage, { action as newsletterAction } from './pages/Newsletter';
+/**
+ * ============================================================================
+ * ADDING THE AUTHENTICATION ROUTE (Lesson 389)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I added a new AuthForm component and its styling here which we'll use
+ * in this section and a new authentication page. Though I haven't added any
+ * route configuration to lead to that page yet. We're going to do that together
+ * instead."
+ *
+ * INSTRUCTOR QUOTE:
+ * "As a first step, I want to make sure that we have a way of going to that
+ * authentication page maybe for a '/auth' route."
+ */
+import AuthenticationPage from './pages/Authentication';
 
 /**
  * Router Configuration
  *
- * CURRENT ROUTES:
+ * ROUTES (Updated in Lesson 389):
  * - /              → HomePage (public)
+ * - /auth          → AuthenticationPage (login/signup) ← NEW!
  * - /events        → EventsPage with list (public - GET doesn't require auth)
  * - /events/:id    → EventDetailPage (public - GET doesn't require auth)
  * - /events/:id/edit → EditEventPage (NEEDS AUTH - PATCH requires token)
@@ -105,9 +122,9 @@ import NewsletterPage, { action as newsletterAction } from './pages/Newsletter';
  * - /newsletter    → NewsletterPage
  *
  * TODO (This Section):
- * - Add /auth route for Authentication page
  * - Protect routes that modify data (new, edit, delete)
  * - Add logout functionality
+ * - Store and manage JWT token
  */
 const router = createBrowserRouter([
   {
@@ -154,17 +171,38 @@ const router = createBrowserRouter([
           },
         ],
       },
+      /**
+       * ============================================================================
+       * AUTHENTICATION ROUTE - /auth (Lesson 389)
+       * ============================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "The auth route should still be part of my route layout. I still want to
+       * have that navigation on top of it and so on. So therefore, it will be a
+       * sibling route to this homepage and to this entire route stack of my
+       * events routes."
+       *
+       * INSTRUCTOR QUOTE:
+       * "We could add it here, maybe in front of the newsletter though the exact
+       * position doesn't matter. The path will be 'auth'. You could also add
+       * '/auth' as this doesn't clash with the parent path, but a relative path
+       * will do."
+       *
+       * WHY AS A SIBLING ROUTE?
+       * - Keeps the RootLayout (with MainNavigation) visible
+       * - User can navigate away using the header navigation
+       * - Consistent layout across the entire app
+       */
+      {
+        path: 'auth',
+        element: <AuthenticationPage />,
+        // TODO: Add action function in upcoming lessons to handle form submission
+      },
       {
         path: 'newsletter',
         element: <NewsletterPage />,
         action: newsletterAction,
       },
-      // TODO: Add authentication route here
-      // {
-      //   path: 'auth',
-      //   element: <AuthenticationPage />,
-      //   action: authAction,
-      // },
     ],
   },
 ]);
