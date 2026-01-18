@@ -7,27 +7,154 @@
  * from development to production and deploying it to a real server.
  *
  * ============================================================================
+ * LESSON 405 - IMPLEMENTING LAZY LOADING
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So, how do we now add lazy loading? Well, let's say we wanna load that blog
+ * page lazily. So, only when we need it."
+ *
+ * INSTRUCTOR QUOTE:
+ * "The code for the blog page, and all the code referenced by that blog page,
+ * so for example, the code for the post list component should only be loaded
+ * when we need it."
+ *
+ * ============================================================================
+ * STEP 1: REMOVE EAGER IMPORTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In order to load this blog page lazily we first of all have to remove this
+ * import. Otherwise, it's always loaded. It's loaded eagerly, as it's called.
+ * So, we must get rid of that."
+ *
+ * BEFORE (Eager Loading - loads immediately):
+ * ```javascript
+ * import BlogPage, { loader as postsLoader } from './pages/Blog';
+ * import PostPage, { loader as postLoader } from './pages/Post';
+ * ```
+ *
+ * AFTER (these imports are REMOVED - we'll load dynamically instead)
+ *
+ * ============================================================================
+ * STEP 2: USE React.lazy() FOR COMPONENTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "To solve this problem React gives us a special function which we have to
+ * wrap around this function and that's the lazy function which is imported
+ * from React."
+ *
+ * WHY WE NEED React.lazy():
+ *
+ * INSTRUCTOR QUOTE:
+ * "This function here however, returns a promise because as I mentioned before,
+ * import actually yields a promise. And that's not a valid React component
+ * function."
+ *
+ * Dynamic import() returns a Promise, not JSX.
+ * React.lazy() converts that Promise into a usable React component.
+ *
+ * SYNTAX:
+ * ```javascript
+ * const BlogPage = lazy(() => import('./pages/Blog'));
+ * ```
+ *
+ * ============================================================================
+ * STEP 3: USE DYNAMIC import() FOR LOADERS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's actually worth noting that with this import we're not just importing
+ * the blog page but also the loader. So we're actually importing two things
+ * which we should now load lazily."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now this import keyword, is a keyword we of course saw plenty of times
+ * already. We use it to import files, but it turns out that you can actually
+ * also call import as a function and in that case it will import something
+ * dynamically, only when it's needed."
+ *
+ * DYNAMIC IMPORT SYNTAX:
+ * ```javascript
+ * loader: () => import('./pages/Blog').then(module => module.loader())
+ * ```
+ *
+ * HOW IT WORKS:
+ * 1. import() is called as a FUNCTION (not a statement)
+ * 2. It returns a PROMISE (async operation - must download the file)
+ * 3. When resolved, you get the MODULE (the file's exports)
+ * 4. Access the loader function from the module and execute it
+ *
+ * INSTRUCTOR QUOTE:
+ * "So import gives you a promise. Because this is an asynchronous process,
+ * which can take a bit longer because it must download the code after all.
+ * And, downloading that code can take a short while."
+ *
+ * ============================================================================
+ * STEP 4: WRAP WITH <Suspense> FOR LOADING STATE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "It will still take some time to load the code for this component because
+ * that code has to be downloaded after all, and the effort you must wrap this
+ * with another component provided by React, the suspense component."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Suspense is basically a component provided by React that can be used by
+ * other things, other components, to wait for content to be loaded before
+ * actually rendering the content."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And here suspense is used to wrap it around this lazily loaded component
+ * so that we can show a fallback which is specified with help of the fallback
+ * prop on suspense until that component code is there."
+ *
+ * ============================================================================
+ * STEP 5: FORWARD ROUTE PARAMETERS TO LAZY LOADERS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "However, now we're getting an error here and we're getting this error
+ * because this params object is now missing in that loader."
+ *
+ * INSTRUCTOR QUOTE:
+ * "We simply take that overall meta object which we get from React router
+ * which contains this params key and we forward this meta object here to
+ * this loader."
+ *
+ * For loaders that need params (like PostPage's loader needs the :id):
+ * ```javascript
+ * loader: (meta) => import('./pages/Post').then(m => m.loader(meta))
+ * ```
+ *
+ * ============================================================================
+ * VERIFYING LAZY LOADING IN DEVTOOLS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "You can see how lazy loading works by opening your developer tools and
+ * there go to the network tab. Make sure you clear the tab so that you have
+ * no requests in there, and then if you click on blog, you will see that
+ * actually here it's downloaded this JavaScript file here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "This JavaScript file was downloaded dynamically. That was downloaded
+ * dynamically because we added lazy loading."
+ *
+ * HOW TO TEST:
+ * 1. Open DevTools → Network tab
+ * 2. Clear all requests
+ * 3. Navigate to /posts
+ * 4. See the NEW .js file downloaded (the Blog chunk)
+ * 5. Navigate to /posts/1
+ * 6. See ANOTHER .js file downloaded (the Post chunk)
+ *
+ * ============================================================================
  * LESSON 404 - UNDERSTANDING LAZY LOADING (Conceptual Introduction)
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "Now for this course section I prepared a brand new example application...
- * where we fetch a list of dummy blog posts, and can view the details of
- * such a dummy blog post."
- *
- * This is a simple blog application with:
- * - Home page (/)
- * - Blog posts list (/posts)
- * - Individual post view (/posts/:id)
- *
- * INSTRUCTOR QUOTE:
- * "Let's assume that we thoroughly tested that code, so we're happy with the
- * code, we don't wanna change it. The next step then is to optimize that code
- * before we then finally build that app for production."
- *
- * ============================================================================
  * THE PROBLEM: ALL CODE LOADS UPFRONT
- * ============================================================================
  *
  * INSTRUCTOR QUOTE:
  * "It's important to understand that we have all these import statements in
@@ -46,84 +173,14 @@
  *      └── imports RootLayout    → Root.js
  *              └── imports MainNavigation → MainNavigation.js
  *
- * INSTRUCTOR QUOTE:
- * "When this component file is evaluated by the browser, this code for this
- * hook will be imported because this code is needed in order to handle this
- * component correctly."
- *
- * INSTRUCTOR QUOTE:
- * "All these imports in the end connect these different files. And when this
- * application is served to end users, all these imports must be resolved
- * before something's shown on the screen."
- *
- * ============================================================================
- * THE BUNDLING PROCESS
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "When we later build this application... then all these imported files will
- * actually be merged together into one big file."
- *
  * WITHOUT LAZY LOADING:
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │                         SINGLE BUNDLE (main.js)                         │
- * │                                                                         │
- * │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
- * │  │  App.js  │ │ Home.js  │ │ Blog.js  │ │ Post.js  │ │  Root.js │ ... │
- * │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘     │
- * │                                                                         │
- * │  + All components + All styles + All utilities                          │
+ * │  All code downloaded before ANYTHING shows on screen                    │
  * └─────────────────────────────────────────────────────────────────────────┘
- *                                    │
- *                                    ↓
- *                    User MUST download ALL of this
- *                    before seeing ANYTHING on screen
  *
- * ============================================================================
- * WHY THIS IS A PROBLEM FOR LARGE APPS
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "The theoretical problem with that is, that of course, this means all code
- * files must be loaded before anything's shown on the screen."
- *
- * INSTRUCTOR QUOTE:
- * "For this simple application, that's no problem. It is a really simple
- * application with only a few code files so it's not a problem that we have
- * to load them all."
- *
- * INSTRUCTOR QUOTE:
- * "But of course, in more complex applications in bigger apps with dozens or
- * even hundreds of routes and components, that could be a problem. Having to
- * load all the code initially will slow down that initial page load."
- *
- * IMPACT ON USER EXPERIENCE:
- *
- * Simple App (this one):
- * ┌────────────────────────────────────────────┐
- * │  Bundle: ~50KB → Loads fast → ✅ No issue  │
- * └────────────────────────────────────────────┘
- *
- * Complex App (dozens/hundreds of routes):
- * ┌────────────────────────────────────────────┐
- * │  Bundle: ~5MB → Slow load → ❌ Bad UX      │
- * │                                            │
- * │  User visits "/" but must download code    │
- * │  for /settings, /admin, /reports, etc.     │
- * │  even if they NEVER visit those pages!     │
- * └────────────────────────────────────────────┘
- *
- * ============================================================================
- * THE SOLUTION: LAZY LOADING
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And that's exactly where lazy loading comes into play. The idea behind
- * lazy loading is that we load certain components in the end only when
- * they're needed instead of ahead of time."
- *
- * WITH LAZY LOADING (will implement in next lesson):
+ * WITH LAZY LOADING (implemented below):
  *
  * Initial Load (user visits "/"):
  * ┌───────────────────────────────────┐
@@ -132,202 +189,101 @@
  *
  * User navigates to "/posts":
  * ┌───────────────────────────────────┐
- * │  Chunk: Blog + PostList           │  ← Loaded on demand
+ * │  Chunk: Blog + PostList           │  ← Downloaded on demand!
  * └───────────────────────────────────┘
  *
  * User navigates to "/posts/1":
  * ┌───────────────────────────────────┐
- * │  Chunk: Post + PostItem           │  ← Loaded on demand
+ * │  Chunk: Post + PostItem           │  ← Downloaded on demand!
  * └───────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
- * "Even though it's not needed for this basic application here as it is
- * rather simple, we're now going to add lazy loading to it so that you learn
- * how it works and so that you could apply that lazy loading technique to
- * more complex sites as well."
- *
- * ============================================================================
- * LESSON 403 - DEPLOYMENT OVERVIEW & STEPS
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "So how do you deploy our React application? How do you push it onto a real
- * server? There are a couple of steps involved, which you can go through
- * whenever you deploy or redeploy your application."
- *
- * ============================================================================
- * THE DEPLOYMENT WORKFLOW (5 Steps)
- * ============================================================================
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STEP 1: WRITE YOUR CODE                                                │
- * │  ───────────────────────                                                │
- * │  This is the development phase - building features, components, etc.    │
- * └─────────────────────────────────────────────────────────────────────────┘
- *                                    ↓
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STEP 2: TEST YOUR CODE                                                 │
- * │  ──────────────────────                                                 │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "You wanna thoroughly test your application before you deploy it.      │
- * │  You wanna play around with it, test different things, see if you       │
- * │  handle errors correctly. Things like that. You wanna make sure that    │
- * │  you are shipping an application which is ready to be used."            │
- * │                                                                         │
- * │  Testing includes:                                                      │
- * │  • Manual testing (clicking through the app)                            │
- * │  • Unit tests (testing individual components)                           │
- * │  • Integration tests (testing how parts work together)                  │
- * │  • Error handling verification                                          │
- * │  • Edge case testing                                                    │
- * │                                                                         │
- * │  Command: npm test                                                      │
- * └─────────────────────────────────────────────────────────────────────────┘
- *                                    ↓
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STEP 3: OPTIMIZE YOUR CODE                                             │
- * │  ─────────────────────────                                              │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "You might wanna explore optimization opportunities. There are certain │
- * │  things in your code which you can optimize. Most importantly, you      │
- * │  might wanna look into a concept called lazy loading."                  │
- * │                                                                         │
- * │  Optimization techniques:                                               │
- * │  • LAZY LOADING - Load code only when needed (covered in later lessons) │
- * │  • Code splitting - Break bundle into smaller chunks                    │
- * │  • Memoization - Prevent unnecessary re-renders                         │
- * │  • Image optimization                                                   │
- * └─────────────────────────────────────────────────────────────────────────┘
- *                                    ↓
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STEP 4: BUILD FOR PRODUCTION                                           │
- * │  ────────────────────────────                                           │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "Once you're happy with your code, it's optimized and it's working,    │
- * │  then it's time to build your app for production. And with build, I     │
- * │  don't mean that you need to write more code, but instead, we will      │
- * │  execute a script which was written for us already."                    │
- * │                                                                         │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "A script which will then output a production ready bundle of our      │
- * │  code which is unified and automatically optimized to be as small as    │
- * │  possible."                                                             │
- * │                                                                         │
- * │  Command: npm run build                                                 │
- * │                                                                         │
- * │  What the build process does:                                           │
- * │  • Minifies JavaScript (removes whitespace, shortens variable names)    │
- * │  • Bundles all files together                                           │
- * │  • Optimizes assets (images, CSS)                                       │
- * │  • Creates a /build folder with deployment-ready files                  │
- * │                                                                         │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "Shipping less code will load the app faster, and therefore is better, │
- * │  and we'll be able to automatically generate such an optimized,         │
- * │  minified code bundle with a certain script."                           │
- * └─────────────────────────────────────────────────────────────────────────┘
- *                                    ↓
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STEP 5: DEPLOY TO A SERVER                                             │
- * │  ─────────────────────────                                              │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "Once we get this optimized code package, which is ready for           │
- * │  deployment, we need to deploy that package, and therefore the next     │
- * │  step is that we take that code, which is produced for us, which is     │
- * │  based on the code we wrote, of course, and upload it to a server."     │
- * │                                                                         │
- * │  Popular hosting options:                                               │
- * │  • Firebase Hosting (Google)                                            │
- * │  • Netlify                                                              │
- * │  • Vercel                                                               │
- * │  • AWS S3 + CloudFront                                                  │
- * │  • GitHub Pages                                                         │
- * │  • Heroku                                                               │
- * │                                                                         │
- * │  INSTRUCTOR QUOTE:                                                      │
- * │  "You will definitely need to configure your server or your hosting     │
- * │  provider's offering."                                                  │
- * │                                                                         │
- * │  Key configuration considerations:                                      │
- * │  • SPA routing (all routes should serve index.html)                     │
- * │  • HTTPS/SSL certificates                                               │
- * │  • Caching headers                                                      │
- * │  • Environment variables                                                │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * WHY OPTIMIZATION MATTERS
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "We wanna ship as little code as possible to our users because they will
- * only be able to interact with our website once it's fully loaded. So
- * shipping less code will load the app faster, and therefore is better."
- *
- * PERFORMANCE IMPACT:
- *
- * Unoptimized App:
- * ┌────────────────────────────────────────────────┐
- * │ main.js (2.5 MB)  →  Slow load  →  Poor UX    │
- * └────────────────────────────────────────────────┘
- *
- * Optimized App:
- * ┌────────────────────────────────────────────────┐
- * │ main.js (250 KB)  →  Fast load  →  Great UX   │
- * └────────────────────────────────────────────────┘
- *
- * The build process achieves this through:
- * 1. MINIFICATION - Removes comments, whitespace, shortens names
- *    Before: function calculateTotalPrice(items) { return items.reduce(...) }
- *    After:  function a(b){return b.reduce(...)}
- *
- * 2. TREE SHAKING - Removes unused code
- *    If you import { useState } from 'react', only useState is included,
- *    not the entire React library.
- *
- * 3. BUNDLING - Combines multiple files into fewer files
- *    100 source files → 1-3 optimized bundles
- *
- * ============================================================================
- * UPCOMING LESSONS IN THIS SECTION
- * ============================================================================
- *
- * • Lazy Loading - Load route components only when visited
- * • Building the App - Running npm run build
- * • Deploying - Uploading to a hosting provider
- * • Server Configuration - SPA routing configuration
+ * "Again, for this simple app, it's not really required but it is a technique
+ * you should be aware of because it can be very useful when you're building
+ * more complex applications."
  *
  * ============================================================================
  */
 
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import BlogPage, { loader as postsLoader } from './pages/Blog';
+/**
+ * ============================================================================
+ * EAGER IMPORTS (Always loaded immediately)
+ * ============================================================================
+ *
+ * These components are NOT lazy loaded because:
+ * - HomePage: It's the landing page, users will almost always see it
+ * - RootLayout: It's needed for ALL routes (contains navigation)
+ *
+ * Only lazy load components that:
+ * - Are not needed on initial page load
+ * - Have significant code size
+ * - Are accessed less frequently
+ */
 import HomePage from './pages/Home';
-import PostPage, { loader as postLoader } from './pages/Post';
 import RootLayout from './pages/Root';
 
 /**
  * ============================================================================
- * ROUTER CONFIGURATION
+ * LAZY LOADED COMPONENTS (Lesson 405)
  * ============================================================================
  *
- * This is a standard React Router setup with:
- * - RootLayout as the parent layout component
- * - HomePage as the index route
- * - Blog routes with data loaders
+ * INSTRUCTOR QUOTE:
+ * "In order to load this blog page lazily we first of all have to remove this
+ * import. Otherwise, it's always loaded."
  *
- * NOTE: This current setup loads ALL route components upfront, even if the
- * user never visits them. In the next lesson, we'll optimize this with
- * LAZY LOADING to load components only when needed.
+ * BEFORE (Eager - always downloaded):
+ * import BlogPage, { loader as postsLoader } from './pages/Blog';
+ * import PostPage, { loader as postLoader } from './pages/Post';
  *
- * CURRENT BEHAVIOR:
- * User visits "/" → HomePage, BlogPage, PostPage ALL loaded immediately
+ * AFTER (Lazy - downloaded only when needed):
+ */
+
+/**
+ * LAZY LOADING BlogPage COMPONENT
  *
- * AFTER LAZY LOADING (Lesson 404):
- * User visits "/" → Only HomePage loaded
- * User visits "/posts" → BlogPage loaded on demand
- * User visits "/posts/1" → PostPage loaded on demand
+ * INSTRUCTOR QUOTE:
+ * "Lazy is executed and takes this function with the dynamic import as an
+ * argument. And now blog page can indeed be used as a component."
+ *
+ * React.lazy() takes a function that:
+ * 1. Calls import() dynamically
+ * 2. Returns a Promise that resolves to a module
+ * 3. The module must have a default export (the component)
+ *
+ * The arrow function is important - it defers the import until the
+ * component is actually needed (when user navigates to /posts).
+ */
+const BlogPage = lazy(() => import('./pages/Blog'));
+
+/**
+ * LAZY LOADING PostPage COMPONENT
+ *
+ * Same pattern as BlogPage - this component and its dependencies
+ * (PostItem, PostItem.module.css) will only be downloaded when
+ * the user navigates to /posts/:id.
+ */
+const PostPage = lazy(() => import('./pages/Post'));
+
+/**
+ * ============================================================================
+ * ROUTER CONFIGURATION WITH LAZY LOADING (Lesson 405)
+ * ============================================================================
+ *
+ * Key changes from eager loading:
+ *
+ * 1. LAZY COMPONENTS wrapped in <Suspense>:
+ *    <Suspense fallback={<p>Loading...</p>}>
+ *      <BlogPage />
+ *    </Suspense>
+ *
+ * 2. LAZY LOADERS use dynamic import():
+ *    loader: () => import('./pages/Blog').then(module => module.loader())
+ *
+ * 3. LOADERS WITH PARAMS forward the meta object:
+ *    loader: (meta) => import('./pages/Post').then(m => m.loader(meta))
  */
 const router = createBrowserRouter([
   {
@@ -335,14 +291,109 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
+        /**
+         * HomePage - NOT lazy loaded
+         * As the most common landing page, it should be in the main bundle.
+         */
         index: true,
         element: <HomePage />,
       },
       {
         path: 'posts',
         children: [
-          { index: true, element: <BlogPage />, loader: postsLoader },
-          { path: ':id', element: <PostPage />, loader: postLoader },
+          {
+            /**
+             * BlogPage - LAZY LOADED (Lesson 405)
+             *
+             * INSTRUCTOR QUOTE:
+             * "So here we could say loading. With that, we're now loading this
+             * blog page component only when it's needed. And we show a fallback
+             * until the code is there."
+             *
+             * SUSPENSE WRAPPER:
+             * Required because lazy-loaded components take time to download.
+             * The fallback is shown while the code is being fetched.
+             *
+             * INSTRUCTOR QUOTE:
+             * "It will still take some time to load the code for this component
+             * because that code has to be downloaded after all."
+             */
+            index: true,
+            element: (
+              <Suspense fallback={<p>Loading...</p>}>
+                <BlogPage />
+              </Suspense>
+            ),
+            /**
+             * LAZY LOADER FOR BlogPage
+             *
+             * INSTRUCTOR QUOTE:
+             * "Here to load it lazily, we can pass a function to the loader here.
+             * So replace the loader from before with a different loader function."
+             *
+             * INSTRUCTOR QUOTE:
+             * "And then import gives you a promise... And we can use the then
+             * keyword here... And then what we get here is the loaded module so
+             * the loaded file in the end. And on that module I now wanna return
+             * the loader function. And of course that loader function should be
+             * executed."
+             *
+             * HOW THIS WORKS:
+             * 1. User navigates to /posts
+             * 2. This loader function is called
+             * 3. import('./pages/Blog') downloads the Blog.js file
+             * 4. .then(module => ...) receives the module (Blog.js exports)
+             * 5. module.loader() calls and executes the loader function
+             * 6. The loader returns data (fetched posts)
+             *
+             * INSTRUCTOR QUOTE:
+             * "So now this import function here will only be executed once the
+             * loader here, for the blog page is executed. So only once we try to
+             * visit the blog page."
+             */
+            loader: () =>
+              import('./pages/Blog').then((module) => module.loader()),
+          },
+          {
+            /**
+             * PostPage - LAZY LOADED (Lesson 405)
+             *
+             * INSTRUCTOR QUOTE:
+             * "We should also wrap suspense around the post page here as we did
+             * it for the blog page. So that we can await the code for the
+             * component itself without issues."
+             */
+            path: ':id',
+            element: (
+              <Suspense fallback={<p>Loading...</p>}>
+                <PostPage />
+              </Suspense>
+            ),
+            /**
+             * LAZY LOADER FOR PostPage (with params)
+             *
+             * INSTRUCTOR QUOTE:
+             * "Of course, we get params by React router in this loader function,
+             * and here we should simply forward that under a params key to this
+             * loader. Or we simply take that overall meta object which we get
+             * from React router which contains this params key and we forward
+             * this meta object here to this loader."
+             *
+             * The PostPage loader needs the `params` object to get the post ID.
+             * React Router passes a "meta" object containing { params, request }.
+             * We forward this entire meta object to the lazy-loaded loader.
+             *
+             * WITHOUT forwarding meta:
+             * loader: () => import('./pages/Post').then(m => m.loader())
+             * ❌ ERROR: params is undefined in the loader
+             *
+             * WITH forwarding meta:
+             * loader: (meta) => import('./pages/Post').then(m => m.loader(meta))
+             * ✅ Works: params.id is available in the loader
+             */
+            loader: (meta) =>
+              import('./pages/Post').then((module) => module.loader(meta)),
+          },
         ],
       },
     ],
