@@ -112,6 +112,22 @@ import AuthenticationPage, {
 } from './pages/Authentication';
 
 /**
+ * ============================================================================
+ * IMPORTING LOGOUT ACTION (Lesson 395)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, I'll import that action here and import action as logoutAction
+ * from ./pages/Logout."
+ *
+ * NOTE: We only import the action, NOT a component, because the Logout.js
+ * file doesn't export a component - just an action function.
+ *
+ * This is an "action-only" route - no element/component to render.
+ */
+import { action as logoutAction } from './pages/Logout';
+
+/**
  * Router Configuration
  *
  * ROUTES (Updated in Lesson 389):
@@ -223,6 +239,40 @@ const router = createBrowserRouter([
         path: 'newsletter',
         element: <NewsletterPage />,
         action: newsletterAction,
+      },
+      /**
+       * ========================================================================
+       * LOGOUT ROUTE - ACTION ONLY, NO COMPONENT (Lesson 395)
+       * ========================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "And now I can register a new route that only has that action and no
+       * component. And we learned about such routes before in the Routing
+       * section already, so that shouldn't be too surprising or new."
+       *
+       * INSTRUCTOR QUOTE:
+       * "I'll add a new route here where the path is simply logout and where
+       * the action is that logout action I just created."
+       *
+       * WHAT'S SPECIAL ABOUT THIS ROUTE:
+       * - Has an ACTION but NO ELEMENT
+       * - Users never "visit" this page visually
+       * - Only triggered via form submission (POST request)
+       * - Immediately redirects after action completes
+       *
+       * HOW IT WORKS:
+       * 1. User clicks logout button (which is inside a <Form>)
+       * 2. Form submits POST request to /logout
+       * 3. React Router calls this action
+       * 4. Action removes token and redirects to '/'
+       *
+       * WHY NO ELEMENT?
+       * There's nothing to display - logout is just an action.
+       * The user sees the redirect destination, not a "logout page".
+       */
+      {
+        path: 'logout',
+        action: logoutAction,
       },
     ],
   },
