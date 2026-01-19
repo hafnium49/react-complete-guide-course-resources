@@ -27,8 +27,12 @@
  * React app. So it helps you with connecting your React frontend to a backend."
  *
  * ============================================================================
- * WHY USE TANSTACK QUERY INSTEAD OF useEffect + fetch?
+ * LESSON 411 - WHY USE TANSTACK QUERY INSTEAD OF useEffect + fetch?
  * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (Lesson 411):
+ * "Tanstack Query is a library that helps you with sending HTTP requests and
+ * keeping your frontend user interface in sync with your backend data."
  *
  * We already know how to fetch data with useEffect:
  *
@@ -45,12 +49,16 @@
  * }, []);
  * ```
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 411):
  * "Of course, in this course, you already learned how to do that, for example,
  * with useEffect and using the built-in fetch function that's provided by the
  * browser, but in this section here, you will learn what exactly Tanstack Query
  * is, and most importantly, why you would use it instead of using useEffect
  * and fetch."
+ *
+ * INSTRUCTOR QUOTE (Lesson 411):
+ * "It's quite a lot of code that we have to write here... in every component
+ * that wants to send HTTP requests."
  *
  * PROBLEMS WITH useEffect + fetch:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -58,14 +66,15 @@
  * │     - Must create useState for: data, isLoading, error                  │
  * │     - Must manually update these states                                 │
  * │                                                                          │
- * │  2. NO CACHING                                                           │
+ * │  2. NO CACHING (Lesson 411)                                              │
  * │     - Every component mount = new request                                │
  * │     - Same data fetched multiple times                                   │
- * │     - Wastes bandwidth and slows the app                                │
+ * │     - "It will not cache data in memory so that it can be reused"       │
  * │                                                                          │
- * │  3. NO BACKGROUND REFETCHING                                            │
+ * │  3. NO BACKGROUND REFETCHING (Lesson 411)                               │
  * │     - Data can become stale                                              │
- * │     - No automatic updates when user returns to tab                     │
+ * │     - "The data will not automatically be fetched again if you          │
+ * │       leave this tab and then come back to it"                          │
  * │                                                                          │
  * │  4. NO REQUEST DEDUPLICATION                                            │
  * │     - Multiple components fetching same data = multiple requests        │
@@ -78,6 +87,16 @@
  * │     - UI waits for server response before updating                      │
  * │     - Feels slow to users                                               │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE (Lesson 411):
+ * "We could simplify this code... by building a custom hook... But even if
+ * we would build such a custom hook this code would still have some problems."
+ *
+ * Even a custom useFetch hook wouldn't provide caching or background refetching!
+ *
+ * INSTRUCTOR QUOTE (Lesson 411):
+ * "These are subtle features... but they can make a big difference in how
+ * your application feels to users and how efficient it is."
  *
  * TANSTACK QUERY SOLVES ALL OF THIS with minimal code!
  *
