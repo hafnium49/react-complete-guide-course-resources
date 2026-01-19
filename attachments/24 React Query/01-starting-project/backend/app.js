@@ -1,3 +1,63 @@
+/**
+ * ============================================================================
+ * BACKEND API SERVER (Node.js + Express)
+ * ============================================================================
+ *
+ * LESSON 410 - PROJECT SETUP
+ *
+ * This file provides a REST API for the Events application.
+ * It's written in Node.js with Express.js framework.
+ *
+ * INSTRUCTOR QUOTE:
+ * "This backend folder contains a separate non-React project that will
+ * provide us a dummy backend to talk to. This is written with Node and
+ * ExpressJS, and it's all in one file basically, in this app.js file."
+ *
+ * INSTRUCTOR QUOTE:
+ * "You don't need to know NodeJS and ExpressJS, because that's why I am
+ * providing this starting project to you so that you don't have to write
+ * all this code on your own."
+ *
+ * ============================================================================
+ * API ENDPOINTS OVERVIEW
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  METHOD   PATH              DESCRIPTION                                 │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │  GET      /events           List all events (supports ?max= and ?search=)│
+ * │  GET      /events/:id       Get single event by ID                      │
+ * │  POST     /events           Create a new event                          │
+ * │  PUT      /events/:id       Update an existing event                    │
+ * │  DELETE   /events/:id       Delete an event                             │
+ * │  GET      /events/images    Get list of available images                │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * HOW TANSTACK QUERY WILL USE THESE ENDPOINTS
+ * ============================================================================
+ *
+ * FETCHING (useQuery):
+ * - GET /events        → useQuery to fetch events list
+ * - GET /events/:id    → useQuery to fetch single event details
+ * - GET /events/images → useQuery to fetch available images
+ *
+ * MUTATING (useMutation):
+ * - POST /events       → useMutation to create new event
+ * - PUT /events/:id    → useMutation to update event
+ * - DELETE /events/:id → useMutation to delete event
+ *
+ * ============================================================================
+ * TO START THIS SERVER
+ * ============================================================================
+ *
+ * cd backend && npm start
+ *
+ * The server will run on http://localhost:3000
+ *
+ * ============================================================================
+ */
+
 import fs from 'node:fs/promises';
 
 import bodyParser from 'body-parser';
