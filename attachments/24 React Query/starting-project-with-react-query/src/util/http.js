@@ -1,12 +1,28 @@
 /**
  * ============================================================================
- * HTTP UTILITY FUNCTIONS - Lessons 412-418
+ * HTTP UTILITY FUNCTIONS - Lessons 412-419
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
  * "I'll start by selecting this code here, this async fetch events function
  * and I'll cut it here, and add it in a new file in my source folder
  * in a sub folder named util for utility."
+ *
+ * ============================================================================
+ * LESSON 419: WHY queryClient IS EXPORTED FROM THIS FILE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore we should cut this from this file and remove this import and
+ * instead add it to some other file from which we can then import it into
+ * multiple files. In my case here, I'll just add it to this HTTP JS file.
+ * There at the very top I'll export this Query client."
+ *
+ * WHY MOVE queryClient HERE?
+ * - We need access to queryClient in multiple files (App.jsx, NewEvent.jsx)
+ * - To call invalidateQueries() after mutations, we need the same queryClient
+ *   instance that's used by QueryClientProvider
+ * - Centralizing it here makes it importable anywhere
  *
  * ============================================================================
  * WHY OUTSOURCE FETCH FUNCTIONS TO A SEPARATE FILE?
@@ -60,6 +76,28 @@
  *
  * ============================================================================
  */
+
+import { QueryClient } from '@tanstack/react-query';
+
+/**
+ * ============================================================================
+ * LESSON 419: SHARED QueryClient INSTANCE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And of course for that we have to import this QueryClient class that's
+ * being instantiated here."
+ *
+ * This queryClient instance is used by:
+ * 1. App.jsx - Passed to QueryClientProvider
+ * 2. NewEvent.jsx - To call invalidateQueries() after creating an event
+ * 3. Any other component that needs to manually interact with the cache
+ *
+ * IMPORTANT: This must be the SAME instance used by QueryClientProvider!
+ * If you create a different instance, invalidateQueries() won't work because
+ * it would be operating on a different cache.
+ */
+export const queryClient = new QueryClient();
 
 /**
  * ============================================================================

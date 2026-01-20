@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * NewEvent Component - LESSON 417: Changing Data with Mutations
+ * NewEvent Component - LESSONS 417 & 419: Mutations & Invalidating Queries
  * ============================================================================
  *
- * This component demonstrates how to use useMutation for sending data
- * (POST requests) with Tanstack Query.
+ * This component demonstrates:
+ * - LESSON 417: Using useMutation for sending data (POST requests)
+ * - LESSON 419: Using onSuccess callback and invalidateQueries after mutations
  *
  * ============================================================================
  * WHY useMutation INSTEAD OF useQuery?
@@ -13,12 +14,6 @@
  * INSTRUCTOR QUOTE:
  * "To send data, to send a post request as we plan to do it here, you would
  * instead use useMutation."
- *
- * INSTRUCTOR QUOTE:
- * "Just to be clear, you could also send post requests with useQuery because
- * after all, you're writing the logic for sending the requests on your own
- * anyways. But this useMutation hook is optimized for such data changing
- * queries."
  *
  * KEY DIFFERENCE - When requests are sent:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -32,13 +27,6 @@
  * │    - Good for creating/updating/deleting data                           │
  * │    - Response typically not cached                                      │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * INSTRUCTOR QUOTE:
- * "This useMutation hook is optimized for such data changing queries, for
- * example, simply by making sure that those requests are not sent instantly
- * when this component renders as it by default is the case with useQuery.
- * But that instead requests are only sent when you want to send them, for
- * example, from inside this handleSubmit function."
  *
  * ============================================================================
  */
@@ -60,14 +48,17 @@ import EventForm from './EventForm.jsx';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 /**
- * IMPORTING THE MUTATION FUNCTION
+ * IMPORTING THE MUTATION FUNCTION AND queryClient
+ *
+ * LESSON 419: We now also import queryClient to call invalidateQueries()
  *
  * INSTRUCTOR QUOTE:
- * "So here we should import createNewEvent from and then going up and going
- * up util http.js and then set createNewEvent as a value for this mutation
- * function here."
+ * "But now we can use that same queryClient in the new event JSX file here
+ * in onSuccess because there, before navigating away, I now want to use this
+ * queryClient. So we should import queryClient from going up two levels and
+ * then UTIL and then HTTP JS."
  */
-import { createNewEvent } from '../../util/http.js';
+import { createNewEvent, queryClient } from '../../util/http.js';
 
 export default function NewEvent() {
   const navigate = useNavigate();
@@ -77,24 +68,13 @@ export default function NewEvent() {
    * THE useMutation HOOK - FOR SENDING/CHANGING DATA
    * ============================================================================
    *
-   * INSTRUCTOR QUOTE:
-   * "So useMutation it is, and we should therefore call it in this new event
-   * component function. And just like useQuery, useMutation takes a
-   * configuration object."
-   *
    * CONFIGURATION OPTIONS:
    *
    * mutationFn (required):
-   *   INSTRUCTOR QUOTE:
-   *   "Now here we must set a mutation function now, just as we had to set a
-   *   Query function for the useQuery."
+   *   The function that performs the mutation (sends the request)
    *
-   * mutationKey (optional):
-   *   INSTRUCTOR QUOTE:
-   *   "We can also set a mutation key here. But you don't necessarily need to
-   *   do this because the idea with mutations typically isn't to cache their
-   *   response data because they are primarily about changing something on
-   *   your backend, not about getting and storing data in your frontend."
+   * onSuccess (Lesson 419):
+   *   Callback that runs ONLY when the mutation succeeds
    *
    * WHAT useMutation RETURNS:
    * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -106,38 +86,125 @@ export default function NewEvent() {
    * │  reset     - Function to reset mutation state                          │
    * └─────────────────────────────────────────────────────────────────────────┘
    *
-   * INSTRUCTOR QUOTE:
-   * "Just as before with useQuery, useMutation will return an object and we
-   * can destructure this object to get access to some useful properties."
-   *
-   * INSTRUCTOR QUOTE (about mutate):
-   * "This object also has a mutate property, which is extremely important
-   * because this is now a function which you can call anywhere in this
-   * component to actually send this request."
-   *
-   * INSTRUCTOR QUOTE:
-   * "useMutation, unlike useQuery does not automatically send this request
-   * when this component here is rendered but instead only when you tell it
-   * to send that request, which you do with help of that mutate function."
-   *
-   * WHY NO WRAPPER FUNCTION NEEDED:
-   * INSTRUCTOR QUOTE:
-   * "And even though this createNewEvent function needs some input data, we
-   * don't have to wrap it with an anonymous function because I'll show you
-   * how you can pass data to that function in just a second."
-   *
    * The data passed to mutate() is automatically forwarded to mutationFn!
    */
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: createNewEvent,
+
+    /**
+     * =========================================================================
+     * LESSON 419: onSuccess CALLBACK - WHAT TO DO AFTER MUTATION SUCCEEDS
+     * =========================================================================
+     *
+     * WHY USE onSuccess INSTEAD OF NAVIGATING IN handleSubmit?
+     *
+     * INSTRUCTOR QUOTE:
+     * "We could navigate away programmatically, for example, with help of the
+     * useNavigate hook provided by React Router. Here in handleSubmit, we could
+     * call navigate and go back to /events for example. We could do that here,
+     * but we also might want to wait for this mutation to be finished until we
+     * do that so that we don't close this screen whilst the request is still
+     * on its way."
+     *
+     * INSTRUCTOR QUOTE:
+     * "This also makes sure that this code will only execute if the mutation
+     * did succeed. If we instead would navigate away here in handleSubmit we
+     * would always do that no matter if the mutation succeeds or fails."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So if it fails and an error message should be displayed, we would never
+     * see that because we instantly navigate away. If we instead do that in
+     * onSuccess, we'll stay on this screen until the mutation did really succeed.
+     * So any errors would be shown to us."
+     *
+     * Comparison:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  Navigate in handleSubmit:                                          │
+     * │    - Navigates IMMEDIATELY (doesn't wait for response)              │
+     * │    - User never sees error messages                                 │
+     * │    - BAD user experience                                            │
+     * │                                                                      │
+     * │  Navigate in onSuccess:                                             │
+     * │    - Navigates ONLY after mutation succeeds                         │
+     * │    - Error messages are shown if mutation fails                     │
+     * │    - GOOD user experience                                           │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * =========================================================================
+     * invalidateQueries - TELLING REACT QUERY TO REFETCH DATA
+     * =========================================================================
+     *
+     * THE PROBLEM:
+     * INSTRUCTOR QUOTE:
+     * "If you would go back here and you would submit such a new event here by
+     * clicking Create, you would see that it is submitted but it's not showing
+     * up here under my recently added events... It's not showing up here until
+     * I, for example, switch to a different page and come back because as you
+     * learned, this triggers React Query to refetch data behind the scenes."
+     *
+     * THE SOLUTION:
+     * INSTRUCTOR QUOTE:
+     * "But of course, if I know that the data just changed because I added a
+     * new event, for example, I want React Query to immediately refetch data.
+     * I wanted to immediately update my data here."
+     *
+     * WHAT invalidateQueries DOES:
+     * INSTRUCTOR QUOTE:
+     * "And we can achieve this by calling a method that's provided by React
+     * Query that allows us to invalidate one or more queries. So that allows
+     * us to tell React Query that the data that's connected to some queries
+     * is outdated and that it should be refetched."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Invalidate queries which does what its name implies. It in the end tells
+     * React Query that the data fetched by certain queries is outdated now,
+     * that it should be marked as stale and that an immediate refetch should
+     * be triggered if the Query belongs to a component that's currently visible
+     * on the screen."
+     *
+     * HOW queryKey MATCHING WORKS:
+     * INSTRUCTOR QUOTE:
+     * "And this will then invalidate all queries that include this key. It does
+     * not have to be exactly the same key. So for example, in FindEventsSection
+     * I have a Query key that includes events and then also this object, this
+     * Query here with this key will also be invalidated because it includes
+     * events and I'm invalidating any Query key that does include events."
+     *
+     * Example of which queries get invalidated:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  invalidateQueries({ queryKey: ['events'] }) invalidates:           │
+     * │                                                                      │
+     * │  ✅ ['events']                     - NewEventsSection               │
+     * │  ✅ ['events', { search: 'city' }] - FindEventSection               │
+     * │  ✅ ['events', eventId]            - EventDetails (if it existed)  │
+     * │  ❌ ['events-images']              - NOT invalidated (different key)│
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * ABOUT THE exact OPTION:
+     * INSTRUCTOR QUOTE:
+     * "We could work around that by also setting the exact property on this
+     * object that we're passing to invalidateQueries to true and now only
+     * queries with exactly that key would be invalidated."
+     *
+     * WHY WE DON'T USE exact: true:
+     * INSTRUCTOR QUOTE:
+     * "But since you should build your Query keys such that they kind of
+     * describe the data you are fetching, it makes sense to invalidate all
+     * queries that include events because all those queries would otherwise
+     * be dealing with old data. For example, here in FindEventsSection where
+     * I'm looking for events based on a search term entered by the user, I
+     * of course don't want to ignore new events that have been added."
+     */
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      navigate('/events');
+    },
   });
 
   /**
    * FORM SUBMIT HANDLER - TRIGGERING THE MUTATION
    *
-   * INSTRUCTOR QUOTE:
-   * "And it's of course here in handleSubmit where I wanna send that request.
-   * Here I can call mutate and then in this case, pass my form data to mutate."
+   * Note: We only call mutate() here. Navigation happens in onSuccess!
    *
    * How data flows from form to backend:
    * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -147,18 +214,8 @@ export default function NewEvent() {
    * │  4. We call mutate({ event: formData })                                │
    * │  5. useMutation calls createNewEvent({ event: formData })              │
    * │  6. createNewEvent sends POST request to backend                       │
+   * │  7. On success: onSuccess runs → invalidateQueries → navigate          │
    * └─────────────────────────────────────────────────────────────────────────┘
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now I actually have to change the form data a little bit to have the
-   * right format for the backend, here in this demo app I'll wrap it in an
-   * object where I have an event property which holds my form data as a value."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And of course, the exact shape of data you want to send here depends on
-   * the shape of data you are getting in your application and the shape of
-   * data your backend wants. Here this will make sure that I'm sending the
-   * data exactly as required to my backend."
    */
   function handleSubmit(formData) {
     mutate({ event: formData });
@@ -171,23 +228,6 @@ export default function NewEvent() {
          * ===================================================================
          * CONDITIONAL RENDERING BASED ON MUTATION STATE
          * ===================================================================
-         *
-         * INSTRUCTOR QUOTE:
-         * "We can get more information out of this object returned by
-         * useMutation. For example, there also is an isPending property,
-         * which will be true if the request is currently on its way and
-         * false otherwise."
-         *
-         * INSTRUCTOR QUOTE:
-         * "And for that, I'll start by going to that event form. And in
-         * there I first of all wanna check if we are in this pending state,
-         * in which case I simply wanna output the text submitting here as
-         * a little loading indicator."
-         *
-         * INSTRUCTOR QUOTE:
-         * "I only wanna show these buttons on the other hand if we are not
-         * waiting for a response. So if not isPending, I wanna show these
-         * buttons."
          */}
         {isPending && 'Submitting...'}
         {!isPending && (
@@ -207,21 +247,11 @@ export default function NewEvent() {
        * ERROR HANDLING FOR MUTATIONS
        * =====================================================================
        *
-       * INSTRUCTOR QUOTE:
-       * "There also is an isError property just as you know it from useQuery
-       * and an error property which would contain error details. And we can
-       * now use that information to output different content down there,
-       * render different JSX code if we are waiting for a response or if we
-       * have an error."
-       *
-       * INSTRUCTOR QUOTE:
-       * "I also want to show an error message if we got an error, maybe here
-       * below the event form but still in the modal."
-       *
-       * INSTRUCTOR QUOTE:
-       * "And with that, we save that, and I now try to send an invalid
-       * request again, for example, by entering nothing at all, you see I
-       * get this error message here."
+       * INSTRUCTOR QUOTE (about why onSuccess is better):
+       * "So if it fails and an error message should be displayed, we would
+       * never see that because we instantly navigate away. If we instead do
+       * that in onSuccess, we'll stay on this screen until the mutation did
+       * really succeed. So any errors would be shown to us."
        */}
       {isError && (
         <ErrorBlock

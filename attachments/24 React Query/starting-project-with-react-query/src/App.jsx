@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * APP COMPONENT - Lessons 412-413: QueryClientProvider & Caching
+ * APP COMPONENT - Lessons 412-413, 419: QueryClientProvider & Caching
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
@@ -85,11 +85,13 @@ import {
  * and I'll import the QueryClientProvider and also the QueryClient.
  * These two things must be imported here."
  *
- * - QueryClient: Configuration object that manages the cache and settings
+ * NOTE (Lesson 419): We no longer import QueryClient here because we now
+ * import the queryClient INSTANCE from http.js instead.
+ *
  * - QueryClientProvider: React Context provider that makes QueryClient
  *   available to all child components
  */
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import Events from './components/Events/Events.jsx';
 import EventDetails from './components/Events/EventDetails.jsx';
@@ -98,26 +100,37 @@ import EditEvent from './components/Events/EditEvent.jsx';
 
 /**
  * ============================================================================
- * CREATING THE QUERY CLIENT (Lessons 412-413)
+ * LESSON 419: IMPORTING SHARED QueryClient FROM http.js
  * ============================================================================
  *
- * INSTRUCTOR QUOTE (Lesson 412):
- * "Because with that we can now go down here and as a first step,
- * create a Query client by simply instantiating QueryClient like this.
- * This is a general configuration object, you could say, that will be
- * required by Tanstack Query."
+ * INSTRUCTOR QUOTE:
+ * "Now with that exported here in HTTP JS we should go back to App JSX and
+ * import this QueryClient from this HTTP JS file, which we find in the UTIL
+ * folder. Because we still need that QueryClient object here to pass it to
+ * the QueryClientProvider."
+ *
+ * WHY WE MOVED queryClient TO http.js:
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore we should cut this from this file and remove this import and
+ * instead add it to some other file from which we can then import it into
+ * multiple files."
+ *
+ * Benefits of sharing queryClient:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. App.jsx uses it for QueryClientProvider                            │
+ * │  2. NewEvent.jsx uses it for invalidateQueries() after mutations       │
+ * │  3. Any component can import it to manually interact with the cache    │
+ * │  4. Same instance ensures cache operations work correctly              │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * LESSON 413: GLOBAL CACHE CONFIGURATION
+ * LESSON 413: GLOBAL CACHE CONFIGURATION (Reference)
  * ============================================================================
  *
  * The QueryClient can be configured with DEFAULT options that apply to
  * ALL queries in your application. This is useful when you want consistent
  * caching behavior everywhere.
- *
- * INSTRUCTOR QUOTE (Lesson 413):
- * "This is one of the main features of React Query. Being able to control
- * how long data is kept around and when new requests will be sent."
  *
  * GLOBAL CONFIGURATION EXAMPLE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -133,26 +146,9 @@ import EditEvent from './components/Events/EditEvent.jsx';
  * │  });                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * KEY CACHE SETTINGS (from Lesson 413):
- *
- * staleTime (default: 0):
- *   INSTRUCTOR QUOTE:
- *   "This controls after which time React Query will send such a Behind
- *   the Scenes request to get updated data if it found data in your cache."
- *
- * gcTime (default: 5 minutes / 300000ms):
- *   INSTRUCTOR QUOTE:
- *   "The Garbage Collection Time. This controls how long the data and the
- *   cache will be kept around."
- *
- * refetchOnWindowFocus (default: true):
- *   INSTRUCTOR QUOTE (Lesson 412):
- *   "Tanstack Query which for example reacts to us going away from this
- *   screen and coming back to it."
- *
  * For now, we use defaults. Individual queries can override these settings.
  */
-const queryClient = new QueryClient();
+import { queryClient } from './util/http.js';
 
 const router = createBrowserRouter([
   {
