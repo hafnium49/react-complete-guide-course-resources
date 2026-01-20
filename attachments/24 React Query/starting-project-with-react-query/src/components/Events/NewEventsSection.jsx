@@ -1,13 +1,55 @@
 /**
  * ============================================================================
- * NewEventsSection - USING TANSTACK QUERY (Lesson 412)
+ * NewEventsSection - USING TANSTACK QUERY (Lessons 412-413)
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
+ * LESSON 413 - Understanding & Configuring Query Behavior (Caching)
  *
  * This component demonstrates the NEW Tanstack Query approach using useQuery.
  * Compare this with the traditional useEffect + fetch pattern to see how
  * much simpler the code becomes!
+ *
+ * ============================================================================
+ * LESSON 413 - CACHING: A KEY FEATURE OF TANSTACK QUERY
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "React Query caches response data. And as a result, if we're on our website,
+ * we can, for example, go to a different page by clicking View Details.
+ * And if we then go back by clicking View All Events, the events here are
+ * available instantly."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, this might seem obvious, but it is not, because before, when we used
+ * useEffect and our own fetching logic, this was not the case. There, if we
+ * went to a different page and came back, a brand new request was sent and
+ * all the data was fetched again."
+ *
+ * HOW CACHING WORKS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Component renders → useQuery checks cache for queryKey ['events']   │
+ * │  2. If cached data exists → Return it INSTANTLY (no loading spinner!)   │
+ * │  3. Simultaneously → Send background request for updated data           │
+ * │  4. When response arrives → Silently update the cached data             │
+ * │  5. Component re-renders with fresh data (if changed)                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "React Query caches the response data you are getting back from your
+ * requests and it will reuse that data whenever it encounters a new useQuery
+ * execution with the same Query Key."
+ *
+ * INSTRUCTOR QUOTE:
+ * "It will then instantly yield that data, but at the same time, also send
+ * this request again Behind the Scenes to see if updated data is available.
+ * And then it will kind of silently replace that data with the updated data
+ * so that after a couple of seconds or however long it takes to fetch that
+ * data, we do have the updated data on the screen."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that we get the best of both worlds. Instant results, but still
+ * updated data, once this Behind the Scenes request is done."
  *
  * ============================================================================
  * WHAT useQuery DOES FOR US
@@ -143,6 +185,78 @@ export default function NewEventsSection() {
      * - ['events', 'search', searchTerm]  → Search results
      */
     queryKey: ['events'],
+
+    /**
+     * =========================================================================
+     * LESSON 413: staleTime - CONTROL BACKGROUND REFETCHING
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "As a developer, when using React Query, you can of course, control if
+     * this is the behavior you want. For example, by setting a staleTime on
+     * your queries."
+     *
+     * INSTRUCTOR QUOTE:
+     * "This controls after which time React Query will send such a Behind the
+     * Scenes request to get updated data if it found data in your cache.
+     * And the default is zero, which means it will use data from the cache,
+     * but it will then always also send such a Behind the Scenes request to
+     * get updated data."
+     *
+     * INSTRUCTOR QUOTE:
+     * "If you set this to 5,000, for example, it will wait for 5,000
+     * milliseconds before sending another request. So if this component was
+     * rendered and therefore this request was sent, and within five seconds
+     * this component is rendered again, and the same request would need to be
+     * sent, React Query would not send it if the staleTime is set to 5,000."
+     *
+     * staleTime values explained:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  staleTime: 0        → Default. Always refetch in background        │
+     * │  staleTime: 5000     → Data is "fresh" for 5 seconds               │
+     * │  staleTime: 60000    → Data is "fresh" for 1 minute                │
+     * │  staleTime: Infinity → Never automatically refetch                  │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * Try changing this value and observing the Network tab to see the effect!
+     */
+    staleTime: 5000, // 5 seconds - prevents unnecessary requests
+
+    /**
+     * =========================================================================
+     * LESSON 413: gcTime - GARBAGE COLLECTION TIME (Cache Duration)
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Another value you can set here is the gcTime, the Garbage Collection
+     * Time. This controls how long the data and the cache will be kept around.
+     * And the default here are five minutes."
+     *
+     * INSTRUCTOR QUOTE:
+     * "This would mean that the cached data would only be kept around for
+     * half a minute and thereafter, it would be discarded. So thereafter,
+     * if this component needs to render again, there would be no cached data,
+     * and therefore, React Query would always need to send a new request to
+     * get some data before it can show anything."
+     *
+     * IMPORTANT DIFFERENCE between staleTime and gcTime:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  staleTime: How long before a BACKGROUND refetch is triggered       │
+     * │             (data is still shown instantly from cache)              │
+     * │                                                                      │
+     * │  gcTime:    How long before cached data is DELETED entirely         │
+     * │             (after deletion, must wait for fresh request)           │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * INSTRUCTOR QUOTE:
+     * "I'm exploring these topics in great depth here, because this is one
+     * of the main features of React Query. Being able to control how long
+     * data is kept around and when new requests will be sent."
+     *
+     * Default gcTime is 5 minutes (300000ms) - usually fine for most apps.
+     * Uncomment below to experiment:
+     * gcTime: 30000, // 30 seconds - cache expires after 30 seconds
+     */
   });
 
   /**

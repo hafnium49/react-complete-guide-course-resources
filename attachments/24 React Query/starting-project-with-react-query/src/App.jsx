@@ -1,9 +1,10 @@
 /**
  * ============================================================================
- * APP COMPONENT - Lesson 412: Setting Up QueryClientProvider
+ * APP COMPONENT - Lessons 412-413: QueryClientProvider & Caching
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
+ * LESSON 413 - Understanding & Configuring Query Behavior (Caching)
  *
  * This file demonstrates how to set up the QueryClientProvider,
  * which is REQUIRED for using Tanstack Query in your application.
@@ -96,28 +97,60 @@ import NewEvent from './components/Events/NewEvent.jsx';
 import EditEvent from './components/Events/EditEvent.jsx';
 
 /**
- * CREATING THE QUERY CLIENT
+ * ============================================================================
+ * CREATING THE QUERY CLIENT (Lessons 412-413)
+ * ============================================================================
  *
- * INSTRUCTOR QUOTE:
+ * INSTRUCTOR QUOTE (Lesson 412):
  * "Because with that we can now go down here and as a first step,
  * create a Query client by simply instantiating QueryClient like this.
  * This is a general configuration object, you could say, that will be
  * required by Tanstack Query."
  *
- * The QueryClient can be configured with default options:
+ * ============================================================================
+ * LESSON 413: GLOBAL CACHE CONFIGURATION
+ * ============================================================================
  *
- * const queryClient = new QueryClient({
- *   defaultOptions: {
- *     queries: {
- *       staleTime: 5 * 60 * 1000,  // Data is fresh for 5 minutes
- *       cacheTime: 10 * 60 * 1000, // Cache persists for 10 minutes
- *       refetchOnWindowFocus: true, // Refetch when tab regains focus
- *       retry: 3,                   // Retry failed requests 3 times
- *     },
- *   },
- * });
+ * The QueryClient can be configured with DEFAULT options that apply to
+ * ALL queries in your application. This is useful when you want consistent
+ * caching behavior everywhere.
  *
- * For now, we use defaults (which includes refetchOnWindowFocus: true)
+ * INSTRUCTOR QUOTE (Lesson 413):
+ * "This is one of the main features of React Query. Being able to control
+ * how long data is kept around and when new requests will be sent."
+ *
+ * GLOBAL CONFIGURATION EXAMPLE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  const queryClient = new QueryClient({                                  │
+ * │    defaultOptions: {                                                    │
+ * │      queries: {                                                         │
+ * │        staleTime: 5 * 60 * 1000,    // 5 minutes before refetch        │
+ * │        gcTime: 10 * 60 * 1000,      // 10 minutes cache retention      │
+ * │        refetchOnWindowFocus: true,  // Refetch when tab regains focus  │
+ * │        retry: 3,                    // Retry failed requests 3 times   │
+ * │      },                                                                 │
+ * │    },                                                                   │
+ * │  });                                                                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * KEY CACHE SETTINGS (from Lesson 413):
+ *
+ * staleTime (default: 0):
+ *   INSTRUCTOR QUOTE:
+ *   "This controls after which time React Query will send such a Behind
+ *   the Scenes request to get updated data if it found data in your cache."
+ *
+ * gcTime (default: 5 minutes / 300000ms):
+ *   INSTRUCTOR QUOTE:
+ *   "The Garbage Collection Time. This controls how long the data and the
+ *   cache will be kept around."
+ *
+ * refetchOnWindowFocus (default: true):
+ *   INSTRUCTOR QUOTE (Lesson 412):
+ *   "Tanstack Query which for example reacts to us going away from this
+ *   screen and coming back to it."
+ *
+ * For now, we use defaults. Individual queries can override these settings.
  */
 const queryClient = new QueryClient();
 
