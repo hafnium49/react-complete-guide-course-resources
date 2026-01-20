@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * FindEventSection - LESSON 414: Dynamic Queries & Query Keys
+ * FindEventSection - LESSONS 414-415: Dynamic Queries & Query Keys
  * ============================================================================
  *
  * This component demonstrates:
@@ -8,6 +8,7 @@
  * 2. Using dynamic queryKeys that change based on user input
  * 3. Why different queries need different queryKeys
  * 4. Combining useState with useQuery for reactive searches
+ * 5. (Lesson 415) Forwarding React Query's signal to enable request abortion
  *
  * ============================================================================
  * WHY DIFFERENT QUERIES NEED DIFFERENT KEYS
@@ -65,19 +66,41 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * NOTE: BUG IN THIS LESSON (Fixed in Lesson 415)
+ * LESSON 415: BUG FIX - FORWARDING THE SIGNAL
  * ============================================================================
  *
+ * THE BUG (from Lesson 414):
  * INSTRUCTOR QUOTE:
  * "If you go back and you reload you'll see that here in the find your next
  * event section. We got some events, but we also see that they now
  * disappeared here in recently added events."
  *
- * The bug: NewEventsSection also calls fetchEvents, but useQuery passes
- * an object to queryFn, not the searchTerm directly. This causes
- * "object-object" to be sent as the search parameter.
+ * THE FIX:
+ * INSTRUCTOR QUOTE:
+ * "Now to also forward that signal here, we can simply accept this object
+ * here in this anonymous function because that's now the function that will
+ * actually be called by React Query and therefore we'll get the signal here."
  *
- * This will be fixed in Lesson 415!
+ * INSTRUCTOR QUOTE:
+ * "We can then simply set it as a key value pair in this object here as well.
+ * And therefore now we have the highest degree of flexibility we can have."
+ *
+ * TWO WAYS TO USE queryFn (Lesson 415):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. DIRECT ASSIGNMENT (when no custom data needed):                     │
+ * │     queryFn: fetchEvents                                                │
+ * │     → React Query passes { signal, queryKey } directly to fetchEvents  │
+ * │                                                                          │
+ * │  2. WRAPPER FUNCTION (when custom data needed):                         │
+ * │     queryFn: ({ signal }) => fetchEvents({ signal, searchTerm })       │
+ * │     → We receive React Query's object, extract what we need,            │
+ * │       and pass our own object to fetchEvents                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can wrap fetchEvents with an anonymous function to pass any data we
+ * want via that object to fetchEvents and still get that data that's provided
+ * to us by React Query."
  *
  * ============================================================================
  */
@@ -163,24 +186,26 @@ export default function FindEventSection() {
     queryKey: ['events', { search: searchTerm }],
 
     /**
-     * QUERY FUNCTION WITH WRAPPER
+     * QUERY FUNCTION WITH WRAPPER (Lessons 414-415)
      *
-     * INSTRUCTOR QUOTE:
+     * INSTRUCTOR QUOTE (Lesson 414):
      * "The query function is now again fetchEvents but we now actually must
      * control how this will be called to make sure that this search term
      * that was entered in this input is forwarded to fetchEvents."
      *
-     * INSTRUCTOR QUOTE:
-     * "And to do that, we can actually wrap this in a function, an anonymous
-     * arrow function here in my case, and then pass the value that was
-     * entered into this input to fetchEvents."
+     * INSTRUCTOR QUOTE (Lesson 415):
+     * "Now to also forward that signal here, we can simply accept this object
+     * here in this anonymous function because that's now the function that
+     * will actually be called by React Query and therefore we'll get the
+     * signal here."
      *
-     * Why wrap in an arrow function?
-     * - useQuery calls queryFn with an object containing query info
-     * - We need to pass our searchTerm to fetchEvents
-     * - The wrapper lets us control exactly what fetchEvents receives
+     * How this works:
+     * 1. React Query calls our arrow function with { signal, queryKey, meta }
+     * 2. We destructure to extract just the signal
+     * 3. We pass { signal, searchTerm } to fetchEvents
+     * 4. fetchEvents uses signal for abort capability and searchTerm for URL
      */
-    queryFn: () => fetchEvents(searchTerm),
+    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
   });
 
   /**

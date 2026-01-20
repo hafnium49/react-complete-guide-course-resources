@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * NewEventsSection - USING TANSTACK QUERY (Lessons 412-413)
+ * NewEventsSection - USING TANSTACK QUERY (Lessons 412-415)
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
  * LESSON 413 - Understanding & Configuring Query Behavior (Caching)
+ * LESSON 415 - React Query's Default Object & Abort Signal
  *
  * This component demonstrates the NEW Tanstack Query approach using useQuery.
  * Compare this with the traditional useEffect + fetch pattern to see how
@@ -131,20 +132,37 @@ export default function NewEventsSection() {
    */
   const { data, isPending, isError, error } = useQuery({
     /**
-     * queryFn - THE FUNCTION THAT FETCHES DATA
+     * queryFn - THE FUNCTION THAT FETCHES DATA (Lessons 412 & 415)
      *
-     * INSTRUCTOR QUOTE:
+     * INSTRUCTOR QUOTE (Lesson 412):
      * "With this function, you define the actual code that will be executed
      * that will send the actual request and that's really important."
      *
-     * INSTRUCTOR QUOTE:
-     * "It's now this fetchEvents function at which I wanna point here
-     * as a value for the QueryFN property. So that fetchEvents will be
-     * executed by Tanstack Query to fetch my data."
+     * =========================================================================
+     * LESSON 415: DIRECT ASSIGNMENT vs WRAPPER FUNCTION
+     * =========================================================================
      *
-     * Important: We pass the FUNCTION REFERENCE, not the result!
-     * ✓ queryFn: fetchEvents      (correct - passes the function)
-     * ✗ queryFn: fetchEvents()    (wrong - would execute immediately)
+     * INSTRUCTOR QUOTE (Lesson 415):
+     * "We set this function directly as a value for queryFn if we're happy
+     * with the default object we're getting by React Query, which is the case
+     * here in NewEventsSection where I don't need to pass any custom data to
+     * my data fetching function."
+     *
+     * What happens when we pass fetchEvents directly:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  1. React Query calls: fetchEvents({ signal, queryKey, meta })      │
+     * │  2. fetchEvents destructures: { signal, searchTerm } = {}           │
+     * │  3. signal is used for abort capability                             │
+     * │  4. searchTerm is undefined (not in the object) → no filter applied │
+     * │  5. All events are fetched from http://localhost:3000/events        │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * This works because fetchEvents now accepts an object with { signal }
+     * which React Query provides by default!
+     *
+     * Compare with FindEventSection which uses a wrapper:
+     * queryFn: ({ signal }) => fetchEvents({ signal, searchTerm })
+     * ↑ Wrapper needed because we want to add custom searchTerm
      */
     queryFn: fetchEvents,
 

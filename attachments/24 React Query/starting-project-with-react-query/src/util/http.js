@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * HTTP UTILITY FUNCTIONS - Lessons 412-414
+ * HTTP UTILITY FUNCTIONS - Lessons 412-415
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
@@ -63,8 +63,10 @@
 
 /**
  * ============================================================================
- * LESSON 414: MAKING fetchEvents FLEXIBLE WITH SEARCH TERM
+ * LESSONS 414-415: MAKING fetchEvents FLEXIBLE WITH SEARCH TERM & SIGNAL
  * ============================================================================
+ *
+ * LESSON 414 - Adding search term support:
  *
  * INSTRUCTOR QUOTE:
  * "Now for the function, I still want to use this fetchEvents function here,
@@ -73,39 +75,50 @@
  * search term which is entered here into this input field, into this request
  * to the backend."
  *
- * INSTRUCTOR QUOTE:
- * "For this demo backend I am providing to you here you can simply incorporate
- * this search result by adding a query parameter to this backend URL.
- * The search query parameter, which should be set to the search term that
- * was entered by the user."
+ * ============================================================================
+ * LESSON 415: FIXING THE BUG - REACT QUERY'S DEFAULT OBJECT
+ * ============================================================================
+ *
+ * THE BUG (from Lesson 414):
+ * When we passed `fetchEvents` directly to `queryFn`, React Query passed
+ * an object to it (not undefined), causing "[object Object]" to be sent
+ * as the search parameter!
  *
  * INSTRUCTOR QUOTE:
- * "But of course this query parameter should not always be added, but instead
- * only if a request is triggered from inside the FindEventSection."
+ * "React Query and the useQuery hook actually passes some default data
+ * to this Query function you're defining here."
  *
- * This function will be passed to useQuery's queryFn option.
- * Requirements for a queryFn:
- * - Must return a Promise
- * - Must throw an error if the request fails (so useQuery can catch it)
+ * INSTRUCTOR QUOTE:
+ * "The data it passes in is an object that gives us information about the
+ * Query key that was used for that Query and a signal."
  *
- * @param {string} [searchTerm] - Optional search term to filter events
+ * WHAT REACT QUERY PASSES TO queryFn:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  {                                                                       │
+ * │    queryKey: ['events', { search: 'city' }],  // The queryKey used      │
+ * │    signal: AbortSignal { ... },                // For aborting requests │
+ * │    meta: undefined                             // Optional metadata     │
+ * │  }                                                                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that signal is required for aborting that request. If you, for example,
+ * navigate away from this page before the request was finished because React
+ * Query thankfully can do that for you, it can abort requests and it does
+ * that with help of that signal."
+ *
+ * THE FIX:
+ * Accept an object with destructuring to get { signal, searchTerm }
+ *
+ * @param {Object} options - Options object
+ * @param {AbortSignal} [options.signal] - AbortSignal for cancelling requests
+ * @param {string} [options.searchTerm] - Optional search term to filter events
  * @returns {Promise<Array>} Array of event objects
  * @throws {Error} If the response is not ok (4xx or 5xx status)
  */
-export async function fetchEvents(searchTerm) {
+export async function fetchEvents({ signal, searchTerm } = {}) {
   /**
    * DYNAMIC URL CONSTRUCTION (Lesson 414)
-   *
-   * INSTRUCTOR QUOTE:
-   * "So therefore, fetchEvents must get more flexible. It should accept a
-   * searchTerm parameter here as an input value. And then in here in this
-   * function, we can construct the backend URL dynamically by always starting
-   * with this part but by then checking if searchTerm is not false."
-   *
-   * INSTRUCTOR QUOTE:
-   * "So if it's set and not an empty string, for example. And if that's the
-   * case, we want to add a string to this URL. And that string is that search
-   * query parameter which is set equal to searchTerm like this."
    *
    * How the URL changes:
    * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -119,7 +132,22 @@ export async function fetchEvents(searchTerm) {
     url += '?search=' + searchTerm;
   }
 
-  const response = await fetch(url);
+  /**
+   * PASSING THE ABORT SIGNAL TO FETCH (Lesson 415)
+   *
+   * INSTRUCTOR QUOTE:
+   * "For that we can use this signal and pass it to the built-in fetch
+   * function by adding a second argument to fetch, a configuration object,
+   * which takes a signal property and wants a signal of that shape as React
+   * Query gives it to us so that the browser then can use that abort signal
+   * internally to stop this request if it receives that signal."
+   *
+   * Why this is important:
+   * - If user navigates away before request completes, React Query aborts it
+   * - Prevents memory leaks and unnecessary network traffic
+   * - Keeps the app responsive and efficient
+   */
+  const response = await fetch(url, { signal });
 
   /**
    * ERROR HANDLING IS CRITICAL FOR TANSTACK QUERY
