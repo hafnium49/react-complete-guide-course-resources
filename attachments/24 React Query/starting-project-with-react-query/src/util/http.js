@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * HTTP UTILITY FUNCTIONS - Lessons 412-415
+ * HTTP UTILITY FUNCTIONS - Lessons 412-417
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
@@ -186,4 +186,95 @@ export async function fetchEvents({ signal, searchTerm } = {}) {
   const { events } = await response.json();
 
   return events;
+}
+
+/**
+ * ============================================================================
+ * LESSON 417: createNewEvent - MUTATION FUNCTION FOR CREATING EVENTS
+ * ============================================================================
+ *
+ * WHY SEPARATE FUNCTIONS FOR MUTATIONS?
+ * INSTRUCTOR QUOTE:
+ * "I'll add a new function to this HTTP JS file for that. Now to save you
+ * some time and make sure that you don't have to write all that code on your
+ * own, attached to this lecture you find an updated HTTP.JS file which
+ * contains this createNewEvent function that's being exported, which will in
+ * the end send this post request to the backend that will create that event."
+ *
+ * MUTATION FUNCTIONS vs QUERY FUNCTIONS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Query Functions (fetchEvents):                                         │
+ * │    - GET requests                                                        │
+ * │    - Retrieve data from backend                                          │
+ * │    - Used with useQuery                                                  │
+ * │    - Response data is cached                                             │
+ * │                                                                          │
+ * │  Mutation Functions (createNewEvent):                                    │
+ * │    - POST/PUT/PATCH/DELETE requests                                      │
+ * │    - Change data on the backend                                          │
+ * │    - Used with useMutation                                               │
+ * │    - Response typically not cached (data changes, not retrieves)        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @param {Object} eventData - The event data to create
+ * @param {string} eventData.event.title - Event title
+ * @param {string} eventData.event.description - Event description
+ * @param {string} eventData.event.date - Event date
+ * @param {string} eventData.event.time - Event time
+ * @param {string} eventData.event.location - Event location
+ * @param {string} eventData.event.image - Event image filename
+ * @returns {Promise<Object>} The created event object
+ * @throws {Error} If the response is not ok (4xx or 5xx status)
+ */
+export async function createNewEvent(eventData) {
+  /**
+   * SENDING A POST REQUEST
+   *
+   * INSTRUCTOR QUOTE:
+   * "This function wants the event data as an input and it's now function
+   * which we can use in the new event JSX file."
+   *
+   * Key differences from GET requests:
+   * - method: 'POST' - tells the server we're creating data
+   * - body: JSON.stringify(eventData) - the data to create
+   * - headers: Content-Type - tells server we're sending JSON
+   */
+  const response = await fetch(`http://localhost:3000/events`, {
+    method: 'POST',
+    body: JSON.stringify(eventData),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  /**
+   * ERROR HANDLING FOR MUTATIONS
+   *
+   * INSTRUCTOR QUOTE:
+   * "If I open the network tab and I try sending this again, I again get an
+   * error here, a bad request error. And in my preview tab here where I see
+   * the response data I got back, I see this message 'invalid data provided'."
+   *
+   * The backend validates the data and returns error responses if:
+   * - Required fields are missing (title, description, date, time, location)
+   * - Image is not selected
+   * - Data format is invalid
+   */
+  if (!response.ok) {
+    const error = new Error('An error occurred while creating the event');
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  /**
+   * RETURNING THE CREATED EVENT
+   *
+   * The backend returns the newly created event with its generated ID.
+   * This can be useful for navigating to the new event's detail page
+   * or updating the UI optimistically.
+   */
+  const { event } = await response.json();
+
+  return event;
 }
