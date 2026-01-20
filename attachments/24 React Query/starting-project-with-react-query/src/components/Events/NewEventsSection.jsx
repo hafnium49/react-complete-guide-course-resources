@@ -238,7 +238,7 @@ export default function NewEventsSection() {
      *
      * Try changing this value and observing the Network tab to see the effect!
      */
-    staleTime: 5000, // 5 seconds - prevents unnecessary requests
+    staleTime: 500, // 0.5 seconds - prevents unnecessary requests
 
     /**
      * =========================================================================
@@ -275,6 +275,7 @@ export default function NewEventsSection() {
      * Uncomment below to experiment:
      * gcTime: 30000, // 30 seconds - cache expires after 30 seconds
      */
+    gcTime: 300, // 0.3 seconds - cache expires after 3 seconds
   });
 
   /**

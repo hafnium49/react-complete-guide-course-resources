@@ -387,3 +387,100 @@ export async function fetchSelectableImages({ signal }) {
 
   return images;
 }
+
+/**
+ * ============================================================================
+ * LESSON 420 CHALLENGE: fetchEvent - FETCHING A SINGLE EVENT BY ID
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll use this fetch event function for fetching one specific event. And this
+ * fetch event function accepts this object which contains the ID of the event
+ * that should be fetched and that signal. And the ID is then added to the URL
+ * to fetch that single event for which that ID was provided."
+ *
+ * KEY DIFFERENCE FROM fetchEvents:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  fetchEvents():                                                          │
+ * │    - URL: http://localhost:3000/events                                   │
+ * │    - Returns: Array of ALL events (or filtered by search)                │
+ * │    - Used in: NewEventsSection, FindEventSection                         │
+ * │                                                                          │
+ * │  fetchEvent({ id }):                                                     │
+ * │    - URL: http://localhost:3000/events/{id}                              │
+ * │    - Returns: ONE specific event object                                  │
+ * │    - Used in: EventDetails page                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * HOW THE id PARAMETER IS OBTAINED:
+ * INSTRUCTOR QUOTE:
+ * "Now where do we get that ID from? Well, we can use React Router's useParams
+ * hook to get hold of the params that are part of the URL. For example, that ID."
+ *
+ * @param {Object} options - Options object
+ * @param {string} options.id - The ID of the event to fetch
+ * @param {AbortSignal} [options.signal] - AbortSignal for cancelling requests
+ * @returns {Promise<Object>} The event object
+ * @throws {Error} If the response is not ok (4xx or 5xx status)
+ */
+export async function fetchEvent({ id, signal }) {
+  const response = await fetch(`http://localhost:3000/events/${id}`, { signal });
+
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the event');
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { event } = await response.json();
+
+  return event;
+}
+
+/**
+ * ============================================================================
+ * LESSON 420 CHALLENGE: deleteEvent - DELETING AN EVENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And then as a second step, also make this delete button here work. So make
+ * sure that when the Delete button is clicked, we use this delete event function
+ * together with React Query's useMutation. That's what we learned before."
+ *
+ * WHY useMutation (NOT useQuery)?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DELETE requests CHANGE data on the server:                              │
+ * │    - They remove a resource                                              │
+ * │    - They should only happen when user clicks a button                   │
+ * │    - They should NOT happen automatically on component mount             │
+ * │                                                                          │
+ * │  Therefore: useMutation is the right choice!                             │
+ * │    - Request only sent when mutate() is called                           │
+ * │    - Perfect for user-initiated actions like clicking Delete             │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * AFTER SUCCESSFUL DELETE:
+ * INSTRUCTOR QUOTE:
+ * "And you should also navigate the user away here and maybe also invalidate
+ * the queries that are related to events."
+ *
+ * @param {Object} options - Options object
+ * @param {string} options.id - The ID of the event to delete
+ * @returns {Promise<Object>} The response data
+ * @throws {Error} If the response is not ok (4xx or 5xx status)
+ */
+export async function deleteEvent({ id }) {
+  const response = await fetch(`http://localhost:3000/events/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const error = new Error('An error occurred while deleting the event');
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  return response.json();
+}
