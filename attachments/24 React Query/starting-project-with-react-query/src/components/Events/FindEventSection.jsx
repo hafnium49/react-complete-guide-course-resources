@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * FindEventSection - LESSONS 414-415: Dynamic Queries & Query Keys
+ * FindEventSection - LESSONS 414-416: Dynamic Queries, Query Keys & Disabling
  * ============================================================================
  *
  * This component demonstrates:
@@ -9,6 +9,8 @@
  * 3. Why different queries need different queryKeys
  * 4. Combining useState with useQuery for reactive searches
  * 5. (Lesson 415) Forwarding React Query's signal to enable request abortion
+ * 6. (Lesson 416) Disabling queries with `enabled` property
+ * 7. (Lesson 416) Difference between `isPending` and `isLoading`
  *
  * ============================================================================
  * WHY DIFFERENT QUERIES NEED DIFFERENT KEYS
@@ -156,7 +158,7 @@ export default function FindEventSection() {
    * And we'll need a query function and as you learned before, also this
    * query key. This doesn't change."
    */
-  const { data, isPending, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     /**
      * QUERY KEY WITH DYNAMIC SEARCH TERM
      *
@@ -206,6 +208,64 @@ export default function FindEventSection() {
      * 4. fetchEvents uses signal for abort capability and searchTerm for URL
      */
     queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
+
+    /**
+     * =========================================================================
+     * LESSON 416: DISABLING QUERIES WITH enabled PROPERTY
+     * =========================================================================
+     *
+     * THE PROBLEM:
+     * INSTRUCTOR QUOTE:
+     * "Because when the application initially loads, no searchTerm has been
+     * entered yet here. No one clicked to search button yet, yet a search
+     * request is being sent. And I don't really want that."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Instead it would be great if that request here would not be sent
+     * initially and only once the user did click the search button and did
+     * search for something."
+     *
+     * THE SOLUTION - enabled property:
+     * INSTRUCTOR QUOTE:
+     * "Well, there is another configuration option you can add here and that's
+     * the enabled option. This allows you to disable this query."
+     *
+     * INSTRUCTOR QUOTE:
+     * "If you set it to false, this query will not be sent. And we can set
+     * this dynamically. For example, if the searchTerm is undefined because
+     * no one searched for anything yet, we could set this to false."
+     *
+     * How enabled works:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  searchTerm = undefined  →  enabled = false  →  Query NOT sent     │
+     * │  searchTerm = ''         →  enabled = true   →  Query IS sent      │
+     * │  searchTerm = 'city'     →  enabled = true   →  Query IS sent      │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * INSTRUCTOR QUOTE:
+     * "We should check whether the searchTerm is not equal to undefined.
+     * So if it's anything but undefined this will be true and the query will
+     * be enabled. If it is undefined, it will be false and the query will
+     * not be enabled."
+     *
+     * WHY CHECK FOR undefined SPECIFICALLY (not falsy)?
+     * INSTRUCTOR QUOTE:
+     * "If searchTerm is an empty string, the query should be sent to get
+     * all events back, just as it worked before. But if it's undefined,
+     * meaning the user never searched for anything, the query should not be
+     * sent at all."
+     *
+     * Initial state flow:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  1. Component mounts → searchTerm = undefined                       │
+     * │  2. enabled = (undefined !== undefined) = false                     │
+     * │  3. Query is DISABLED → No request sent                             │
+     * │  4. User clicks Search with empty input → searchTerm = ''          │
+     * │  5. enabled = ('' !== undefined) = true                             │
+     * │  6. Query is ENABLED → Request sent for all events                  │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
+    enabled: searchTerm !== undefined,
   });
 
   /**
@@ -231,7 +291,55 @@ export default function FindEventSection() {
    */
   let content = <p>Please enter a search term and to find events.</p>;
 
-  if (isPending) {
+  /**
+   * =========================================================================
+   * LESSON 416: isPending vs isLoading - CRITICAL DIFFERENCE
+   * =========================================================================
+   *
+   * THE PROBLEM WITH isPending:
+   * INSTRUCTOR QUOTE:
+   * "The problem is that we are using isPending here because we learned
+   * that isPending is the property that tells us whether the Query is still
+   * in progress, whether it's still waiting for a response. Now this is not
+   * wrong, but here we got a problem."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now the problem just is that isPending is true if the Query is disabled,
+   * because technically it hasn't received a response yet."
+   *
+   * WHY THIS MATTERS:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  isPending = true when:                                             │
+   * │    - Request is in progress (waiting for response)                  │
+   * │    - Query is DISABLED (no request sent yet)  ← PROBLEM!            │
+   * │                                                                      │
+   * │  isLoading = true when:                                             │
+   * │    - Request is in progress AND query is enabled                    │
+   * │    - NOT true when query is disabled                                │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "And the difference here simply is that isLoading will be true if
+   * isPending is true, so if the request is on its way, and if the query
+   * is enabled. And therefore if you use isLoading instead of isPending,
+   * the Loading indicator won't be shown anymore initially."
+   *
+   * Visual comparison:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  SCENARIO                    │  isPending  │  isLoading            │
+   * │──────────────────────────────│─────────────│───────────────────────│
+   * │  Query disabled (enabled=false)│    true     │    false            │
+   * │  Query enabled, fetching     │    true     │    true               │
+   * │  Query enabled, data ready   │    false    │    false              │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "So now therefore, if we check for isLoading and we have this enabled
+   * check here, we can load this page here. And now you see we don't see
+   * that Loading indicator anymore. Instead we see this text
+   * 'Please enter a search term'."
+   */
+  if (isLoading) {
     content = <LoadingIndicator />;
   }
 
