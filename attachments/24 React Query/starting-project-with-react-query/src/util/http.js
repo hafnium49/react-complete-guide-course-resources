@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * HTTP UTILITY FUNCTIONS - Lessons 412-417
+ * HTTP UTILITY FUNCTIONS - Lessons 412-418
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
@@ -277,4 +277,75 @@ export async function createNewEvent(eventData) {
   const { event } = await response.json();
 
   return event;
+}
+
+/**
+ * ============================================================================
+ * LESSON 418: fetchSelectableImages - FETCHING IMAGE OPTIONS FOR EventForm
+ * ============================================================================
+ *
+ * WHY FETCH IMAGES FROM THE BACKEND?
+ *
+ * INSTRUCTOR QUOTE:
+ * "The way this app and this backend here works is that this backend code in
+ * this app.js file in the backend folder actually has a route, this events/images
+ * route, to which a GET request can be sent to get back a list of images from
+ * which the user can choose."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because those actual images that will be displayed are stored on the backend
+ * in that public folder there, they're not part of the frontend project.
+ * Therefore I can't just include them in my frontend code. Instead, a request
+ * must be sent to this backend route here so that we get that list of images
+ * that we can display and we can then render that list on the frontend."
+ *
+ * WHY useQuery (NOT useMutation)?
+ *
+ * INSTRUCTOR QUOTE:
+ * "And of course, this is a job for React Query again and here it's the Query
+ * hook we need because I don't want change any data on the backend. I don't
+ * wanna perform a data mutation. Therefore, instead I just wanna Query for data.
+ * I want to get some data so we can and should use useQuery."
+ *
+ * How this function is used:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  EventForm.jsx:                                                         │
+ * │    const { data } = useQuery({                                          │
+ * │      queryKey: ['events-images'],                                       │
+ * │      queryFn: fetchSelectableImages,  ← This function                   │
+ * │    });                                                                   │
+ * │                                                                          │
+ * │    <ImagePicker images={data} ... />                                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @param {Object} options - Options object from React Query
+ * @param {AbortSignal} options.signal - AbortSignal for cancelling requests
+ * @returns {Promise<string[]>} Array of image filenames
+ * @throws {Error} If the response is not ok (4xx or 5xx status)
+ */
+export async function fetchSelectableImages({ signal }) {
+  /**
+   * INSTRUCTOR QUOTE:
+   * "Attached you find another updated version of the http.js file, which now
+   * also includes this fetchSelectableImages function which sends a request to
+   * that backend URL, I just explained to you, where we get that list of
+   * selectable images."
+   *
+   * Backend route: GET /events/images
+   * Returns: { images: ['image1.jpg', 'image2.jpg', ...] }
+   */
+  const response = await fetch(`http://localhost:3000/events/images`, {
+    signal,
+  });
+
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the images');
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  const { images } = await response.json();
+
+  return images;
 }
