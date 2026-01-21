@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * FindEventSection - LESSONS 414-416: Dynamic Queries, Query Keys & Disabling
+ * FindEventSection - LESSONS 414-416, 427: Dynamic Queries & Query Keys
  * ============================================================================
  *
  * This component demonstrates:
@@ -11,6 +11,7 @@
  * 5. (Lesson 415) Forwarding React Query's signal to enable request abortion
  * 6. (Lesson 416) Disabling queries with `enabled` property
  * 7. (Lesson 416) Difference between `isPending` and `isLoading`
+ * 8. (Lesson 427) Using queryKey spreading to avoid redundancy
  *
  * ============================================================================
  * WHY DIFFERENT QUERIES NEED DIFFERENT KEYS
@@ -173,41 +174,56 @@ export default function FindEventSection() {
      * NewEventsSection component are not used as results for this query in
      * the FindEventSection component."
      *
+     * =========================================================================
+     * LESSON 427 UPDATE: Renamed 'search' to 'searchTerm' for consistency
+     * =========================================================================
+     *
      * INSTRUCTOR QUOTE:
-     * "So we could, for example, pass an object here to this key where we
-     * have a search property and then our dynamic search term as a value.
-     * Alternatively, we could also just pass our searchTerm as a dynamic
-     * value here. This is up to you, but here I'll go for this extra object
-     * to make it very clear which kind of other value we have in this queryKey."
+     * "We also could have named this year searchTerm, for example, so that we
+     * have the same property name as we expected here."
+     *
+     * WHY USE 'searchTerm' INSTEAD OF 'search'?
+     * - fetchEvents expects a property named 'searchTerm'
+     * - Using the same name allows us to use the spread operator directly
+     * - No need for property renaming when spreading queryKey[1]
      *
      * How queryKey enables proper caching:
-     * - ['events', { search: 'city' }]  → Cached separately
-     * - ['events', { search: 'park' }]  → Cached separately
-     * - ['events']                       → NewEventsSection cache (different!)
+     * - ['events', { searchTerm: 'city' }]  → Cached separately
+     * - ['events', { searchTerm: 'park' }]  → Cached separately
+     * - ['events', { max: 3 }]              → NewEventsSection (different!)
      */
-    queryKey: ['events', { search: searchTerm }],
+    queryKey: ['events', { searchTerm: searchTerm }],
 
     /**
-     * QUERY FUNCTION WITH WRAPPER (Lessons 414-415)
+     * =========================================================================
+     * LESSON 427: USING queryKey SPREADING TO AVOID REDUNDANCY
+     * =========================================================================
      *
-     * INSTRUCTOR QUOTE (Lesson 414):
-     * "The query function is now again fetchEvents but we now actually must
-     * control how this will be called to make sure that this search term
-     * that was entered in this input is forwarded to fetchEvents."
+     * INSTRUCTOR QUOTE:
+     * "And of course we could have used the same approach here for the searchTerm.
+     * We also could have named this searchTerm, for example, so that we have
+     * the same property name as we expected here. And we could have also accepted
+     * the queryKey here and then passed this with the spread operator into this
+     * object with queryKey[1], just as I did it in the NewEventsSection component
+     * a second ago."
      *
-     * INSTRUCTOR QUOTE (Lesson 415):
-     * "Now to also forward that signal here, we can simply accept this object
-     * here in this anonymous function because that's now the function that
-     * will actually be called by React Query and therefore we'll get the
-     * signal here."
+     * HOW SPREADING queryKey[1] WORKS:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  queryKey: ['events', { searchTerm: 'city' }]                       │
+     * │                                                                      │
+     * │  queryKey[1] = { searchTerm: 'city' }                               │
+     * │                                                                      │
+     * │  ...queryKey[1] spreads to: searchTerm: 'city'                      │
+     * │                                                                      │
+     * │  Result: fetchEvents({ signal, searchTerm: 'city' })                │
+     * └─────────────────────────────────────────────────────────────────────┘
      *
-     * How this works:
-     * 1. React Query calls our arrow function with { signal, queryKey, meta }
-     * 2. We destructure to extract just the signal
-     * 3. We pass { signal, searchTerm } to fetchEvents
-     * 4. fetchEvents uses signal for abort capability and searchTerm for URL
+     * BENEFITS OF THIS PATTERN:
+     * - Single source of truth (queryKey holds the filter parameters)
+     * - No copy/paste of values between queryKey and queryFn
+     * - Automatically stays in sync - change queryKey, queryFn follows
      */
-    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),
+    queryFn: ({ signal, queryKey }) => fetchEvents({ signal, ...queryKey[1] }),
 
     /**
      * =========================================================================
@@ -381,3 +397,40 @@ export default function FindEventSection() {
     </section>
   );
 }
+
+/**
+ * ============================================================================
+ * LESSON 427 SUMMARY: queryKey SPREADING PATTERN
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if I do that in both components here and I reload, you see that now we
+ * just got three elements here instead of all four elements. So we are just
+ * fetching the latest three elements, so the three most recently added elements."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if I search here, that also still works as you can see. And here I'm
+ * getting all four then in the search case, because here I did not set the
+ * max property. Here in this section, I'm just getting three."
+ *
+ * THE PATTERN EXPLAINED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (Redundant):                                                    │
+ * │    queryKey: ['events', { searchTerm: searchTerm }],                    │
+ * │    queryFn: ({ signal }) => fetchEvents({ signal, searchTerm }),        │
+ * │                            ↑ searchTerm appears twice!                  │
+ * │                                                                          │
+ * │  AFTER (DRY - Don't Repeat Yourself):                                   │
+ * │    queryKey: ['events', { searchTerm: searchTerm }],                    │
+ * │    queryFn: ({ signal, queryKey }) =>                                   │
+ * │              fetchEvents({ signal, ...queryKey[1] }),                   │
+ * │                                  ↑ Spreads { searchTerm: searchTerm }   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this is just a little tweak or little extra feature which I also
+ * wanted to show you because it allows you to avoid some repetition and
+ * write a bit more flexible code."
+ *
+ * ============================================================================
+ */

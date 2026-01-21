@@ -101,34 +101,35 @@ export const queryClient = new QueryClient();
 
 /**
  * ============================================================================
- * LESSONS 414-415: MAKING fetchEvents FLEXIBLE WITH SEARCH TERM & SIGNAL
+ * LESSONS 414-415, 427: MAKING fetchEvents FLEXIBLE
  * ============================================================================
  *
- * LESSON 414 - Adding search term support:
+ * LESSON 414 - Adding search term support
+ * LESSON 415 - Fixing the bug with React Query's default object
+ * LESSON 427 - Adding max parameter to limit number of events
+ *
+ * ============================================================================
+ * LESSON 427: ADDING max PARAMETER TO LIMIT EVENTS
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now for the function, I still want to use this fetchEvents function here,
- * but we now must be able to pass some extra data to this function, and we
- * must tweak this code here a little bit because now we must include this
- * search term which is entered here into this input field, into this request
- * to the backend."
+ * "And indeed my backend code supports this feature. In that backend code,
+ * in that route that delivers events, I'm looking for a max query parameter
+ * in the URL, and if that max query parameter is set, I'm fetching this
+ * maximum amount of items from the end of the array of events that is stored
+ * on this backend."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So we must set such a max query parameter on that outgoing URL to limit
+ * the number of items we're retrieving and to get the most recent items."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, in the frontend http.js file, we have to tweak this fetchEvents
+ * function here, just as we tweaked it before to include the search functionality."
  *
  * ============================================================================
  * LESSON 415: FIXING THE BUG - REACT QUERY'S DEFAULT OBJECT
  * ============================================================================
- *
- * THE BUG (from Lesson 414):
- * When we passed `fetchEvents` directly to `queryFn`, React Query passed
- * an object to it (not undefined), causing "[object Object]" to be sent
- * as the search parameter!
- *
- * INSTRUCTOR QUOTE:
- * "React Query and the useQuery hook actually passes some default data
- * to this Query function you're defining here."
- *
- * INSTRUCTOR QUOTE:
- * "The data it passes in is an object that gives us information about the
- * Query key that was used for that Query and a signal."
  *
  * WHAT REACT QUERY PASSES TO queryFn:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -139,35 +140,73 @@ export const queryClient = new QueryClient();
  * │  }                                                                       │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "And that signal is required for aborting that request. If you, for example,
- * navigate away from this page before the request was finished because React
- * Query thankfully can do that for you, it can abort requests and it does
- * that with help of that signal."
- *
- * THE FIX:
- * Accept an object with destructuring to get { signal, searchTerm }
- *
  * @param {Object} options - Options object
  * @param {AbortSignal} [options.signal] - AbortSignal for cancelling requests
  * @param {string} [options.searchTerm] - Optional search term to filter events
+ * @param {number} [options.max] - Optional maximum number of events to fetch
  * @returns {Promise<Array>} Array of event objects
  * @throws {Error} If the response is not ok (4xx or 5xx status)
  */
-export async function fetchEvents({ signal, searchTerm } = {}) {
+export async function fetchEvents({ signal, searchTerm, max } = {}) {
   /**
-   * DYNAMIC URL CONSTRUCTION (Lesson 414)
+   * =========================================================================
+   * LESSON 427: DYNAMIC URL CONSTRUCTION WITH MULTIPLE QUERY PARAMETERS
+   * =========================================================================
    *
-   * How the URL changes:
+   * INSTRUCTOR QUOTE:
+   * "Now here in fetchEvents, besides looking for a searchTerm property
+   * that might be set, I also wanna pull out a max property from this object.
+   * And this name of course is up to you."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now with that, I then want to tweak the URL depending on whether max
+   * and searchTerm are set or just one of the two or none of them."
+   *
+   * How the URL changes based on parameters:
    * ┌─────────────────────────────────────────────────────────────────────────┐
-   * │  No searchTerm:  http://localhost:3000/events                           │
-   * │  searchTerm:     http://localhost:3000/events?search=city               │
+   * │  No params:           http://localhost:3000/events                      │
+   * │  searchTerm only:     http://localhost:3000/events?search=city          │
+   * │  max only:            http://localhost:3000/events?max=3                │
+   * │  Both:                http://localhost:3000/events?search=city&max=3    │
    * └─────────────────────────────────────────────────────────────────────────┘
    */
   let url = 'http://localhost:3000/events';
 
-  if (searchTerm) {
+  /**
+   * HANDLING MULTIPLE QUERY PARAMETERS
+   *
+   * INSTRUCTOR QUOTE:
+   * "I first want to check if searchTerm and max are being set. So if both
+   * query parameters exist, because if that's the case, I wanna append both
+   * query parameters to the URL."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now if this should not be the case, if just one of them should be set,
+   * I want to check those different cases."
+   */
+  if (searchTerm && max) {
+    /**
+     * BOTH searchTerm AND max are set
+     *
+     * INSTRUCTOR QUOTE:
+     * "Which can be done by then adding a string where I first add search
+     * and set this equal to searchTerm, just as I'm doing it down there.
+     * But I then also add a second query parameter, max, which I set equal
+     * to this max value I'm getting here."
+     */
+    url += '?search=' + searchTerm + '&max=' + max;
+  } else if (searchTerm) {
+    // Only searchTerm is set
     url += '?search=' + searchTerm;
+  } else if (max) {
+    /**
+     * Only max is set
+     *
+     * INSTRUCTOR QUOTE:
+     * "And else if max is set, the URL should be tweaked to include just max.
+     * So ?max equals max, this maximum property."
+     */
+    url += '?max=' + max;
   }
 
   /**

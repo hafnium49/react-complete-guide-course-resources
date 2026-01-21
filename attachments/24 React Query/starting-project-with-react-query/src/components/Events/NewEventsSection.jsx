@@ -1,15 +1,33 @@
 /**
  * ============================================================================
- * NewEventsSection - USING TANSTACK QUERY (Lessons 412-415)
+ * NewEventsSection - USING TANSTACK QUERY (Lessons 412-415, 427)
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
  * LESSON 413 - Understanding & Configuring Query Behavior (Caching)
  * LESSON 415 - React Query's Default Object & Abort Signal
+ * LESSON 427 - Limiting Events & Using queryKey to Avoid Redundancy
  *
  * This component demonstrates the NEW Tanstack Query approach using useQuery.
  * Compare this with the traditional useEffect + fetch pattern to see how
  * much simpler the code becomes!
+ *
+ * ============================================================================
+ * LESSON 427: LIMITING EVENTS IN "RECENTLY ADDED EVENTS"
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And the first thing is that here, under recently added events, we are
+ * currently always showing all events which doesn't make a lot of sense.
+ * It would be better if we would only see some events here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And to achieve this, we can go to the NewEventsSection JSX file where we
+ * got this NewEventsSection component. And here we can tweak that query such
+ * that it does not fetch all events, but instead just some events, just the
+ * first three events, for example."
+ *
+ * ============================================================================
  *
  * ============================================================================
  * LESSON 413 - CACHING: A KEY FEATURE OF TANSTACK QUERY
@@ -132,77 +150,98 @@ export default function NewEventsSection() {
    */
   const { data, isPending, isError, error } = useQuery({
     /**
-     * queryFn - THE FUNCTION THAT FETCHES DATA (Lessons 412 & 415)
-     *
-     * INSTRUCTOR QUOTE (Lesson 412):
-     * "With this function, you define the actual code that will be executed
-     * that will send the actual request and that's really important."
-     *
      * =========================================================================
-     * LESSON 415: DIRECT ASSIGNMENT vs WRAPPER FUNCTION
+     * LESSON 427: queryKey WITH max PARAMETER
      * =========================================================================
      *
-     * INSTRUCTOR QUOTE (Lesson 415):
-     * "We set this function directly as a value for queryFn if we're happy
-     * with the default object we're getting by React Query, which is the case
-     * here in NewEventsSection where I don't need to pass any custom data to
-     * my data fetching function."
+     * INSTRUCTOR QUOTE:
+     * "But now we should of course also update the queryKey. For example, by
+     * passing an object here where we also say max 3, so that we have a
+     * dedicated queryKey for this query."
      *
-     * What happens when we pass fetchEvents directly:
+     * INSTRUCTOR QUOTE:
+     * "And that's of course kind of the same thing we did in the FindEventSection
+     * before with the searchTerm. There I also included the searchTerm in the
+     * queryKey."
+     *
+     * WHY UPDATE THE queryKey?
      * ┌─────────────────────────────────────────────────────────────────────┐
-     * │  1. React Query calls: fetchEvents({ signal, queryKey, meta })      │
-     * │  2. fetchEvents destructures: { signal, searchTerm } = {}           │
-     * │  3. signal is used for abort capability                             │
-     * │  4. searchTerm is undefined (not in the object) → no filter applied │
-     * │  5. All events are fetched from http://localhost:3000/events        │
+     * │  Old queryKey: ['events']                                           │
+     * │    - Same as FindEventSection's queryKey for all events             │
+     * │    - Would share cached data (wrong! we only want 3 events)        │
+     * │                                                                      │
+     * │  New queryKey: ['events', { max: 3 }]                               │
+     * │    - Unique key for "latest 3 events"                               │
+     * │    - Cached separately from all events queries                      │
      * └─────────────────────────────────────────────────────────────────────┘
      *
-     * This works because fetchEvents now accepts an object with { signal }
-     * which React Query provides by default!
-     *
-     * Compare with FindEventSection which uses a wrapper:
-     * queryFn: ({ signal }) => fetchEvents({ signal, searchTerm })
-     * ↑ Wrapper needed because we want to add custom searchTerm
+     * Examples of query keys:
+     * - ['events']                        → All events (no filter)
+     * - ['events', { max: 3 }]            → Latest 3 events
+     * - ['events', { search: 'city' }]    → Search results
+     * - ['events', eventId]               → Specific event by ID
      */
-    queryFn: fetchEvents,
+    queryKey: ['events', { max: 3 }],
 
     /**
-     * queryKey - UNIQUE IDENTIFIER FOR CACHING
+     * =========================================================================
+     * LESSON 427: USING queryKey TO AVOID REDUNDANCY
+     * =========================================================================
      *
      * INSTRUCTOR QUOTE:
-     * "Every Query, every fetch request you are sending, so every GET HTTP
-     * request you are sending in the end also should have such a Query key
-     * which will then internally be used by React Query, by Tanstack Query
-     * as it's called now, to cache the data that's yielded by that request."
+     * "So fetchEvents should be wrapped in an anonymous function here so that
+     * we can control how it will be executed. And we should pull out that signal,
+     * which we're getting from React Query here in this argument list, and
+     * forward it through that object, which we pass through fetchEvents."
      *
      * INSTRUCTOR QUOTE:
-     * "So that the response from that request could be reused in the future
-     * if you are trying to send the same request again and you can configure
-     * how long data should be stored and reused by React Query."
+     * "But then here, in addition, I also wanna set max to 3, for example,
+     * if I want to have the latest three events."
+     *
+     * THE REDUNDANCY PROBLEM:
+     * INSTRUCTOR QUOTE:
+     * "Because if you take a closer look at this code, you can see that we're
+     * passing the same information here essentially to the queryKey and also
+     * to fetchEvents. And that's of course kind of redundant."
+     *
+     * THE ELEGANT SOLUTION - REUSING queryKey:
+     * INSTRUCTOR QUOTE:
+     * "Especially since you also might recall that in this object which we're
+     * getting from React Query passed into this query function, we also get
+     * the queryKey that is responsible for triggering this function here.
+     * So we get this queryKey as an input here, and therefore it is actually
+     * enough to provide this information here once and then reuse it here."
      *
      * INSTRUCTOR QUOTE:
-     * "So that's why every Query needs such a key. And that key is actually
-     * an array. An array of values which are then internally stored by
-     * React Query such that whenever you are using a similar array of
-     * similar values, React Query sees that and is able to reuse existing data."
+     * "So in order to pass this information along with the signal to fetchEvents,
+     * we can simply use the spread operator that's built into JavaScript and
+     * spread this object which is the second element in our queryKey here by
+     * using queryKey[1]."
      *
      * INSTRUCTOR QUOTE:
-     * "So here we could for example add a string value as a first element
-     * to this array and give this an identifier of events but this is
-     * totally up to you."
+     * "queryKey[1] to access this second element here in the array, and then
+     * the spread operator to basically copy this object with its properties
+     * into this object."
+     *
+     * HOW THIS WORKS:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  queryKey: ['events', { max: 3 }]                                   │
+     * │                                                                      │
+     * │  In queryFn, React Query gives us:                                  │
+     * │    { signal, queryKey: ['events', { max: 3 }], meta }               │
+     * │                                                                      │
+     * │  queryKey[0] = 'events'                                             │
+     * │  queryKey[1] = { max: 3 }                                           │
+     * │                                                                      │
+     * │  ...queryKey[1] spreads to: max: 3                                  │
+     * │                                                                      │
+     * │  Result: fetchEvents({ signal, max: 3 })                            │
+     * └─────────────────────────────────────────────────────────────────────┘
      *
      * INSTRUCTOR QUOTE:
-     * "The key here could contain multiple values and you are not limited
-     * to just using strings here. You could also have objects in there
-     * or nested arrays or other kinds of values."
-     *
-     * Examples of query keys:
-     * - ['events']                        → Simple key for all events
-     * - ['events', { max: 3 }]            → Events with filter parameters
-     * - ['events', eventId]               → Specific event by ID
-     * - ['events', 'search', searchTerm]  → Search results
+     * "And this simply allows us to avoid some copy and pasting and repetition."
      */
-    queryKey: ['events'],
+    queryFn: ({ signal, queryKey }) => fetchEvents({ signal, ...queryKey[1] }),
 
     /**
      * =========================================================================
@@ -392,3 +431,50 @@ export default function NewEventsSection() {
     </section>
   );
 }
+
+/**
+ * ============================================================================
+ * LESSON 427 SUMMARY: LIMITING EVENTS & queryKey SPREADING
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if I do that in both components here and I reload, you see that now we
+ * just got three elements here instead of all four elements. So we are just
+ * fetching the latest three elements, so the three most recently added elements."
+ *
+ * WHAT WE IMPLEMENTED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. UPDATED http.js fetchEvents():                                      │
+ * │     - Added 'max' parameter support                                     │
+ * │     - Handles multiple query parameter combinations                     │
+ * │     - URL: ?search=term&max=3 or ?max=3 or ?search=term                │
+ * │                                                                          │
+ * │  2. UPDATED NewEventsSection queryKey:                                  │
+ * │     - From: ['events']                                                  │
+ * │     - To:   ['events', { max: 3 }]                                      │
+ * │                                                                          │
+ * │  3. USED queryKey SPREADING PATTERN:                                    │
+ * │     - Extract { signal, queryKey } from React Query's object           │
+ * │     - Pass { signal, ...queryKey[1] } to fetchEvents                   │
+ * │     - Avoids duplicating parameters in both queryKey and queryFn       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHY queryKey SPREADING IS ELEGANT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (Redundant - max appears twice):                                │
+ * │    queryKey: ['events', { max: 3 }],                                    │
+ * │    queryFn: ({ signal }) => fetchEvents({ signal, max: 3 }),           │
+ * │                                                                          │
+ * │  AFTER (DRY - max only in queryKey):                                    │
+ * │    queryKey: ['events', { max: 3 }],                                    │
+ * │    queryFn: ({ signal, queryKey }) =>                                   │
+ * │              fetchEvents({ signal, ...queryKey[1] }),                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this is just a little tweak or little extra feature which I also
+ * wanted to show you because it allows you to avoid some repetition and
+ * write a bit more flexible code."
+ *
+ * ============================================================================
+ */
