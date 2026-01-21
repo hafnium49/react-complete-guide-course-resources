@@ -252,11 +252,6 @@ export default function EventDetails() {
      * because since I deleted an event of course, all that data should be marked
      * as outdated and React Query should be forced to fetch data again."
      *
-     * INSTRUCTOR QUOTE:
-     * "And we can then use this queryClient here to call invalidate queries and
-     * pass this configuration object to invalidateQueries where I set the
-     * queryKey of the query that should be invalidated to just events."
-     *
      * WHY INVALIDATE ALL ['events'] QUERIES:
      * INSTRUCTOR QUOTE:
      * "So to an array that contains a single string that says events, because
@@ -264,7 +259,93 @@ export default function EventDetails() {
      * affected by the fact that an event has been deleted."
      */
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
+      /**
+       * =======================================================================
+       * LESSON 422: FIXING THE 404 ERROR WITH refetchType: 'none'
+       * =======================================================================
+       *
+       * THE 404 PROBLEM:
+       * INSTRUCTOR QUOTE:
+       * "If I delete an event and we're navigated back, I also get such a 404
+       * request here. Now, if we take a closer look at this request, we see that
+       * it actually was for one specific event with a specific ID."
+       *
+       * WHY THIS HAPPENS:
+       * INSTRUCTOR QUOTE:
+       * "Well, because for deleting an event, we were on that details page here
+       * and when then after deleting an event, we invalidated all event related
+       * queries. We still were on that page. And therefore, technically, since
+       * we invalidated all queries. React Query went ahead and immediately
+       * triggered a refetch for this details query here."
+       *
+       * Timeline of the problem:
+       * ┌─────────────────────────────────────────────────────────────────────┐
+       * │  1. User clicks Delete on EventDetails page (/events/e1)           │
+       * │  2. DELETE request succeeds → event e1 is deleted from backend     │
+       * │  3. onSuccess runs → invalidateQueries(['events']) called          │
+       * │  4. We're STILL on EventDetails page (navigate hasn't happened)    │
+       * │  5. React Query sees ['events', 'e1'] is invalid → tries refetch   │
+       * │  6. GET /events/e1 → 404 (event no longer exists!)                 │
+       * │  7. THEN navigate('/events') runs                                   │
+       * └─────────────────────────────────────────────────────────────────────┘
+       *
+       * THE SOLUTION - refetchType: 'none':
+       * INSTRUCTOR QUOTE:
+       * "Now, to avoid this behavior, we should go back to invalidate queries
+       * and add a second property to this configuration object for invalidate
+       * queries. Here, you can set the re fetch type to none, which makes sure
+       * that when you call invalidate queries, these existing queries will not
+       * automatically be triggered again immediately."
+       *
+       * INSTRUCTOR QUOTE:
+       * "Instead, they will just be invalidated and the next time they are
+       * required, they will run again. But they will not be re-triggered
+       * immediately which otherwise would be the default behavior."
+       *
+       * HOW IT WORKS:
+       * ┌─────────────────────────────────────────────────────────────────────┐
+       * │  refetchType options:                                               │
+       * │                                                                     │
+       * │  'active' (default) - Immediately refetch all active queries       │
+       * │                       that match the queryKey                       │
+       * │                                                                     │
+       * │  'inactive' - Refetch inactive queries                              │
+       * │                                                                     │
+       * │  'all' - Refetch both active and inactive queries                   │
+       * │                                                                     │
+       * │  'none' - Don't refetch anything, just mark as stale               │
+       * │           Queries will refetch when next needed                     │
+       * └─────────────────────────────────────────────────────────────────────┘
+       *
+       * WHY 'none' IS PERFECT HERE:
+       * INSTRUCTOR QUOTE:
+       * "And here, that's what I want because this makes sure that this event
+       * details query of this page on which I'm currently at is not triggered
+       * again."
+       *
+       * INSTRUCTOR QUOTE:
+       * "But if we then go back to this all events page here, the queries on
+       * this page will be triggered again because this component re-rendered,
+       * again, this entire page component and all the nested components, but
+       * the query on the page on which we triggered the deletion, where this
+       * component for this page was not re rendered, will not be triggered
+       * just because we called invalidate queries."
+       *
+       * Fixed timeline:
+       * ┌─────────────────────────────────────────────────────────────────────┐
+       * │  1. User clicks Delete on EventDetails page                        │
+       * │  2. DELETE request succeeds                                         │
+       * │  3. invalidateQueries({ refetchType: 'none' }) - just marks stale  │
+       * │  4. NO immediate refetch of ['events', 'e1'] → NO 404!             │
+       * │  5. navigate('/events') runs                                        │
+       * │  6. Events page mounts → queries are stale → refetch triggered     │
+       * │  7. Fresh data loaded (without the deleted event)                   │
+       * └─────────────────────────────────────────────────────────────────────┘
+       */
+      queryClient.invalidateQueries({
+        queryKey: ['events'],
+        refetchType: 'none',
+      });
       navigate('/events');
     },
   });
@@ -492,23 +573,29 @@ export default function EventDetails() {
 
 /**
  * ============================================================================
- * TEASER FOR NEXT LESSON
+ * LESSON 422 SUMMARY: 404 ERROR FIX
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "With that, again, if I go back and I view the details here and I open the
- * network tab just to see whether everything works, if I click Delete here
- * that's deleted, and I'm navigated back to the starting page. And there this
- * event is now indeed missing."
- *
+ * BEFORE THE FIX (Lesson 421):
  * INSTRUCTOR QUOTE:
  * "Though you might also notice that I also got one request here, which actually
  * yielded a 404 response, and that's what we'll tackle next."
  *
- * The 404 issue happens because:
- * - We invalidate queries BEFORE navigating away
- * - React Query tries to refetch the deleted event's data
- * - But the event no longer exists on the backend → 404!
+ * AFTER THE FIX (Lesson 422):
+ * INSTRUCTOR QUOTE:
+ * "And with that, if we make that change and we save that and we reload and open
+ * the developer tools if I click delete, we see that request, we are navigated
+ * back to the starting page and we see no failing request anymore. And that's
+ * therefore the behavior we now want to have."
  *
- * This will be addressed in the next lesson.
+ * KEY TAKEAWAY:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  When invalidating queries after deleting a resource:                   │
+ * │                                                                          │
+ * │  Use refetchType: 'none' to PREVENT immediate refetch of queries        │
+ * │  that reference the now-deleted resource.                               │
+ * │                                                                          │
+ * │  The queries will be marked as stale and refetch when actually needed   │
+ * │  (e.g., when the Events list page re-renders after navigation).         │
+ * └─────────────────────────────────────────────────────────────────────────┘
  */
