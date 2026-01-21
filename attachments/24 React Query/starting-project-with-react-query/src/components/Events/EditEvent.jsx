@@ -1,11 +1,12 @@
 /**
  * ============================================================================
- * EditEvent Component - LESSONS 424-425
+ * EditEvent Component - LESSONS 424-426
  * ============================================================================
  *
  * This component demonstrates:
  * - Lesson 424: Using useQuery to fetch and pre-populate form data
  * - Lesson 425: Using useMutation to update event data
+ * - Lesson 426: OPTIMISTIC UPDATING - Update UI instantly without waiting!
  *
  * LESSON 424 - FETCHING DATA:
  * INSTRUCTOR QUOTE:
@@ -17,6 +18,34 @@
  * "So let's work on this update functionality next. And for this, of course, we
  * need a mutation in this edit event component because we now wanna send a request
  * to the backend that changes the event data."
+ *
+ * ============================================================================
+ * LESSON 426: OPTIMISTIC UPDATING - THE CORE CONCEPT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So optimistic updating means that we update the UI in a optimistic way. So
+ * we're assuming that the backend request will succeed and we update the data
+ * on the frontend before the backend response is there."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if the update then happens to fail, we roll back and we show the old
+ * data again."
+ *
+ * WHY USE OPTIMISTIC UPDATING?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WITHOUT Optimistic Updating:                                           │
+ * │    1. User clicks "Update"                                              │
+ * │    2. Request sent to backend                                           │
+ * │    3. WAIT for response...                                              │
+ * │    4. UI updates (slow user experience)                                 │
+ * │                                                                          │
+ * │  WITH Optimistic Updating:                                              │
+ * │    1. User clicks "Update"                                              │
+ * │    2. UI updates IMMEDIATELY (instant feedback!)                        │
+ * │    3. Request sent to backend in background                             │
+ * │    4. If fails → Roll back to previous state                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * KEY CONCEPT: REUSING CACHED DATA ACROSS COMPONENTS
@@ -44,39 +73,26 @@
  * │  Result: Edit form opens instantly with pre-populated data              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "That's why if we are on this detail page, this edit page opens up instantly.
- * Whereas on the other hand, if I reload with that edit page opened, we see that
- * loading spinner initially. Because if we reload, the data is not there yet.
- * If we come from the details page, it is already there."
- *
- * INSTRUCTOR QUOTE:
- * "So that's another great example showing us why using React Query can lead to
- * a better user experience."
- *
  * ============================================================================
  */
 
 /**
  * IMPORTS
  *
+ * LESSON 426 - IMPORTING queryClient:
  * INSTRUCTOR QUOTE:
- * "And of course, fetching this data again means that we should use useQuery
- * from React Query, just as we did it before in this course."
+ * "We should, for example, import query client, which we exported from
+ * this HTTP JS file."
  *
- * LESSON 425 - ADDING useMutation:
- * INSTRUCTOR QUOTE:
- * "So as a first step, I'll import useMutation from React Query in the edit
- * event JSX file."
+ * Why import queryClient?
+ * - We need direct access to manipulate the cache
+ * - queryClient.cancelQueries() - Stop ongoing queries
+ * - queryClient.getQueryData() - Read current cached data
+ * - queryClient.setQueryData() - Manually update cached data
+ * - queryClient.invalidateQueries() - Mark data as stale for refetch
  */
 import { useQuery, useMutation } from '@tanstack/react-query';
 
-/**
- * INSTRUCTOR QUOTE:
- * "And to get this ID, we of course can and should use useParams from React
- * Router DOM to get this params object, because that then allows us to access
- * params.id."
- */
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import Modal from '../UI/Modal.jsx';
@@ -85,17 +101,19 @@ import LoadingIndicator from '../UI/LoadingIndicator.jsx';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 /**
- * INSTRUCTOR QUOTE:
- * "And here for this query function I want to use a function which I already
- * have in my HTTP JS file. This fetchEvent function because that will fetch us
- * the event details with which we want pre-populate this form."
+ * LESSON 426: Import queryClient for optimistic updating
  *
- * LESSON 425 - updateEvent function:
  * INSTRUCTOR QUOTE:
- * "This updated file, which you find attached, it's this update event function
- * that's set up as a mutation function here."
+ * "We should, for example, import query client, which we exported from
+ * this HTTP JS file."
+ *
+ * The queryClient gives us methods to:
+ * - Cancel queries: Prevent race conditions during optimistic update
+ * - Get cached data: Save previous state for potential rollback
+ * - Set cached data: Instantly update UI without waiting for backend
+ * - Invalidate queries: Sync with backend after mutation completes
  */
-import { fetchEvent, updateEvent } from '../../util/http.js';
+import { fetchEvent, updateEvent, queryClient } from '../../util/http.js';
 
 export default function EditEvent() {
   const navigate = useNavigate();
@@ -104,12 +122,6 @@ export default function EditEvent() {
    * ============================================================================
    * GETTING THE EVENT ID FROM URL PARAMS
    * ============================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "Because in our route definition, if we take a look at that, for the edit
-   * page, we got this dynamic path segment with an identifier of ID. So therefore,
-   * in this EditEvent component, this is how we can prepare our query function
-   * that should be executed."
    *
    * Route definition: /events/:id/edit
    * Example: /events/e1/edit → params.id = "e1"
@@ -122,77 +134,248 @@ export default function EditEvent() {
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "So with that imported, here in this component function. I'll execute it,
-   * pass this configuration object to it."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now this function needs the ID of the event, for which the data should be
-   * fetched and an abort signal as an input. And therefore, here in edit event
-   * for this query function we should define an anonymous function where we
-   * automatically get an object that contains a signal property from React Query."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Of course, I also want to have a query key and here, that's events, and then
-   * again, params.id because this query depends on the ID of the event which
-   * we're trying to edit."
+   * "I'm using the same query with the same key, events params ID in this
+   * EditEvent component and in the event details component. It's the same
+   * query with the same key, therefore this cached data is reused between
+   * those two components."
    */
   const { data, isPending, isError, error } = useQuery({
     /**
      * SAME queryKey AS EventDetails!
-     *
-     * INSTRUCTOR QUOTE:
-     * "I'm using the same query with the same key, events params ID in this
-     * EditEvent component and in the event details component. It's the same
-     * query with the same key, therefore this cached data is reused between
-     * those two components."
-     *
-     * This is KEY for React Query's cache sharing:
-     * ┌─────────────────────────────────────────────────────────────────────┐
-     * │  EventDetails uses: queryKey: ['events', params.id]                 │
-     * │  EditEvent uses:    queryKey: ['events', params.id]                 │
-     * │                                                                      │
-     * │  SAME KEY = SAME CACHE ENTRY = INSTANT DATA!                        │
-     * └─────────────────────────────────────────────────────────────────────┘
+     * This enables cache sharing between components.
      */
     queryKey: ['events', params.id],
-
-    /**
-     * INSTRUCTOR QUOTE:
-     * "And then here we should execute fetchEvent which must be imported from
-     * the HTTP JS file. And we then pass an object to fetchEvent which contains
-     * this signal and also this ID of this event here."
-     */
     queryFn: ({ signal }) => fetchEvent({ id: params.id, signal }),
   });
 
   /**
    * ============================================================================
-   * LESSON 425: useMutation FOR UPDATING EVENT DATA
+   * LESSON 426: useMutation WITH OPTIMISTIC UPDATING
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "And for this, of course, we need a mutation in this edit event component
-   * because we now wanna send a request to the backend that changes the event data."
+   * "And it all starts by adding a new property to this use mutation configuration
+   * object. And that's the onMutate property."
    *
    * INSTRUCTOR QUOTE:
-   * "Therefore back in edit event, we now wanna create a mutation which we can
-   * then trigger from inside our code and then target this update event function."
+   * "onMutate will be executed right when you call mutate. So before this process
+   * is done, before you got back a response."
    *
-   * INSTRUCTOR QUOTE:
-   * "And then execute it here in this component function and pass this configuration
-   * object to it. And here the mutation function should now be updateEvent."
-   *
-   * WHY NO isPending/isError EXTRACTION HERE:
-   * INSTRUCTOR QUOTE:
-   * "Now, unlike before in this section, for this mutation, I will actually not
-   * pull out isPending and so on, because in the next lecture, I'll show you a
-   * different way of handling mutations and the different states a mutation can
-   * go through."
-   *
-   * This will be enhanced with "Optimistic Updating" in the next lesson!
+   * THREE KEY CALLBACKS FOR OPTIMISTIC UPDATING:
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  onMutate:   Runs BEFORE mutation completes                            │
+   * │              → Update cache optimistically                              │
+   * │              → Save previous data for potential rollback                │
+   * │                                                                          │
+   * │  onError:    Runs if mutation FAILS                                     │
+   * │              → Roll back to previous cached data                        │
+   * │                                                                          │
+   * │  onSettled:  Runs when mutation is DONE (success or failure)           │
+   * │              → Invalidate queries to sync with actual backend state    │
+   * └─────────────────────────────────────────────────────────────────────────┘
    */
   const { mutate } = useMutation({
     mutationFn: updateEvent,
+
+    /**
+     * ========================================================================
+     * onMutate - RUNS BEFORE THE MUTATION COMPLETES
+     * ========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "onMutate will be executed right when you call mutate. So before this
+     * process is done, before you got back a response."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in here, you can then manipulate that cached data stored by React
+     * Query behind the scenes to make sure that you already update the data
+     * without waiting for the response."
+     *
+     * This function receives the same data that was passed to mutate():
+     * mutate({ id: params.id, event: formData })
+     * ↓
+     * onMutate receives: { id: '...', event: { ...formData } }
+     */
+    onMutate: async (data) => {
+      /**
+       * EXTRACT THE NEW EVENT DATA
+       *
+       * INSTRUCTOR QUOTE:
+       * "So in the end, it's the event data which I wanna get here as new event."
+       */
+      const newEvent = data.event;
+
+      /**
+       * STEP 1: CANCEL ONGOING QUERIES
+       *
+       * INSTRUCTOR QUOTE:
+       * "But before you manipulate the data behind the scenes yourself,
+       * you should also use query client to cancel all active queries for
+       * a specific key."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And that's important because if we had any outgoing queries for that
+       * same key, the response data from those queries would replace our
+       * optimistically updated query data. And that's of course something
+       * we wanna avoid."
+       *
+       * WHY await?
+       * INSTRUCTOR QUOTE:
+       * "And you should await this because this will return a promise."
+       *
+       * Race condition prevention:
+       * ┌─────────────────────────────────────────────────────────────────────┐
+       * │  WITHOUT cancelQueries:                                             │
+       * │    1. Old query in progress fetching data                          │
+       * │    2. User updates event                                            │
+       * │    3. We set new data in cache                                      │
+       * │    4. Old query completes and OVERWRITES our optimistic update!    │
+       * │                                                                      │
+       * │  WITH cancelQueries:                                                │
+       * │    1. Old query in progress fetching data                          │
+       * │    2. User updates event                                            │
+       * │    3. We CANCEL the old query                                       │
+       * │    4. We set new data in cache                                      │
+       * │    5. Our optimistic update is preserved!                          │
+       * └─────────────────────────────────────────────────────────────────────┘
+       */
+      await queryClient.cancelQueries({ queryKey: ['events', params.id] });
+
+      /**
+       * STEP 2: GET THE PREVIOUS DATA FOR POTENTIAL ROLLBACK
+       *
+       * INSTRUCTOR QUOTE:
+       * "We also need to get the old data and store that old data somewhere
+       * so that we can roll back to it if the mutation should fail."
+       *
+       * INSTRUCTOR QUOTE:
+       * "For this we use query client, and there we use the getQueryData
+       * method which allows us to get currently stored query data."
+       *
+       * This retrieves the data currently in the cache (before our update).
+       */
+      const previousEvent = queryClient.getQueryData(['events', params.id]);
+
+      /**
+       * STEP 3: UPDATE THE CACHE OPTIMISTICALLY
+       *
+       * INSTRUCTOR QUOTE:
+       * "For this, we can use query client and call the setQueryData method.
+       * And as I mentioned before, this method allows us to manipulate the
+       * stored data without waiting for a response."
+       *
+       * INSTRUCTOR QUOTE:
+       * "And here we should then set the new data, so new event, which is
+       * that object with the title, the description, the image, and so on."
+       *
+       * This IMMEDIATELY updates the cache with the new data!
+       * The UI will reflect this change INSTANTLY.
+       */
+      queryClient.setQueryData(['events', params.id], newEvent);
+
+      /**
+       * STEP 4: RETURN CONTEXT FOR POTENTIAL ROLLBACK
+       *
+       * INSTRUCTOR QUOTE:
+       * "And then we can return this previous event in an object that wraps
+       * it with this previous event key because I'll need that old data later
+       * to roll it back if things should fail."
+       *
+       * INSTRUCTOR QUOTE:
+       * "Whatever you return in onMutate will be passed to onError as a
+       * third argument, this context."
+       *
+       * The returned object becomes the "context" parameter in onError.
+       */
+      return { previousEvent };
+    },
+
+    /**
+     * ========================================================================
+     * onError - RUNS IF THE MUTATION FAILS
+     * ========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "So if the backend should fail for whatever reason, if an error is
+     * thrown on the backend, onError here will be executed."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in onError we typically wanna roll back our optimistic update
+     * to then show the old data again."
+     *
+     * Parameters:
+     * - error: The error that was thrown
+     * - data: The data that was passed to mutate()
+     * - context: The object returned from onMutate (contains previousEvent)
+     *
+     * ROLLBACK MECHANISM:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  1. User updates event                                               │
+     * │  2. onMutate: Cache updated with new data (optimistic)              │
+     * │  3. Backend request FAILS                                            │
+     * │  4. onError: Cache RESTORED to previous data (rollback)             │
+     * │  5. User sees original data again                                    │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
+    onError: (error, data, context) => {
+      /**
+       * ROLL BACK TO PREVIOUS DATA
+       *
+       * INSTRUCTOR QUOTE:
+       * "Here I wanna use query client set query data again, for this query
+       * key to set the old data again, so context previous event."
+       *
+       * This restores the cache to its state before the optimistic update.
+       */
+      queryClient.setQueryData(['events', params.id], context.previousEvent);
+    },
+
+    /**
+     * ========================================================================
+     * onSettled - RUNS WHEN MUTATION IS DONE (SUCCESS OR FAILURE)
+     * ========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "The unsettled property, which takes a function that will simply be
+     * called whenever this mutation is done, no matter if it failed or succeeded."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in here I wanna make sure that we sync the data with the backend
+     * because our frontend data might now be out of sync with the backend data."
+     *
+     * WHY INVALIDATE?
+     * Even if the update succeeded, the backend might have made additional
+     * changes (timestamps, validation, etc.). Invalidating ensures we have
+     * the TRUE current state from the backend.
+     *
+     * SYNC MECHANISM:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  SUCCESS CASE:                                                       │
+     * │    1. Optimistic update shown to user                               │
+     * │    2. Backend confirms update                                        │
+     * │    3. onSettled: Invalidate to fetch fresh data from backend        │
+     * │    4. User sees confirmed data (likely same as optimistic)          │
+     * │                                                                      │
+     * │  FAILURE CASE:                                                       │
+     * │    1. Optimistic update shown to user                               │
+     * │    2. Backend rejects update                                         │
+     * │    3. onError: Roll back to previous data                           │
+     * │    4. onSettled: Invalidate to confirm rollback matches backend     │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
+    onSettled: () => {
+      /**
+       * INVALIDATE TO SYNC WITH BACKEND
+       *
+       * INSTRUCTOR QUOTE:
+       * "And we do sync by calling invalidate queries for this query key here."
+       *
+       * This marks the cached data as "stale" and triggers a refetch.
+       * React Query will fetch fresh data from the backend to ensure
+       * our frontend state matches the actual backend state.
+       */
+      queryClient.invalidateQueries({ queryKey: ['events', params.id] });
+    },
   });
 
   /**
@@ -205,33 +388,26 @@ export default function EditEvent() {
    * this object that is returned by useMutation so that we can call this function
    * to trigger this mutation function."
    *
-   * INSTRUCTOR QUOTE:
-   * "And I wanna trigger this function from inside here, from inside this
-   * handleSubmit function, which is connected to this event form."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And then we have to pass this object with the data that we wanna forward to
-   * updateEvent to this mutate function. So in this case, an object that has an
-   * id property and an event property, that's what we must pass here to mutate."
-   *
-   * DATA FLOW:
+   * DATA FLOW WITH OPTIMISTIC UPDATING:
    * ┌─────────────────────────────────────────────────────────────────────────┐
    * │  1. User edits form and clicks "Update"                                │
-   * │  2. EventForm calls onSubmit with formData                             │
-   * │  3. handleSubmit receives formData                                      │
-   * │  4. mutate({ id: params.id, event: formData }) is called               │
-   * │  5. useMutation calls updateEvent({ id, event })                       │
-   * │  6. PUT request sent to backend                                        │
-   * │  7. navigate('../') closes the modal                                   │
+   * │  2. handleSubmit receives formData                                      │
+   * │  3. mutate({ id, event }) is called                                     │
+   * │  4. onMutate runs IMMEDIATELY:                                          │
+   * │     - Cancel any ongoing queries                                        │
+   * │     - Save previous data for rollback                                   │
+   * │     - Update cache with new data                                        │
+   * │  5. navigate('../') closes the modal                                    │
+   * │  6. User INSTANTLY sees updated data on EventDetails page!             │
+   * │  7. Backend request completes in background                             │
+   * │  8. onSettled: Sync with backend to confirm                            │
    * └─────────────────────────────────────────────────────────────────────────┘
    *
-   * WHY NAVIGATE IS CALLED AFTER mutate (NOT in onSuccess):
+   * WHY NAVIGATE IS CALLED AFTER mutate:
    * INSTRUCTOR QUOTE:
-   * "I'll use this navigate function here to close this modal... And I'm
-   * deliberately doing that here and not in this onSuccess method, in this
-   * configuration object. And I'll explain why I am doing that in the next lecture."
-   *
-   * This is intentional setup for "Optimistic Updating" in the next lesson!
+   * "If we now give this a try and I add this exclamation mark and I click
+   * update, not only does this close immediately, but the data is already
+   * updated here on this detail page as well."
    */
   function handleSubmit(formData) {
     mutate({ id: params.id, event: formData });
@@ -244,12 +420,8 @@ export default function EditEvent() {
 
   /**
    * ============================================================================
-   * CONDITIONAL RENDERING WITH content VARIABLE
+   * CONDITIONAL RENDERING
    * ============================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "Therefore, just as before, I'll actually add a content variable and check
-   * if isPending is true."
    *
    * States handled:
    * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -260,18 +432,6 @@ export default function EditEvent() {
    */
   let content;
 
-  /**
-   * LOADING STATE
-   *
-   * INSTRUCTOR QUOTE:
-   * "And if that's the case, if we are waiting for the response, I wanna output
-   * a div with a class name of center for styling purposes. And in there I want
-   * to have that loading indicator."
-   *
-   * INSTRUCTOR QUOTE:
-   * "And that loading indicator is simply a component you have to import from
-   * the UI folder."
-   */
   if (isPending) {
     content = (
       <div className="center">
@@ -280,28 +440,6 @@ export default function EditEvent() {
     );
   }
 
-  /**
-   * ERROR STATE
-   *
-   * INSTRUCTOR QUOTE:
-   * "As a next step, I'll check if we got an error just as we did it many times
-   * before in other components. And if that's the case, content will be set equal
-   * to a fragment, where for one, I want to have this error block. But below that,
-   * then also a div, which has a class of form-actions where I wanna provide a
-   * link which is a component provided by React Router which simply should allow
-   * me to leave this page and close this modal therefore, if we got an error
-   * fetching those events."
-   *
-   * INSTRUCTOR QUOTE:
-   * "So here I'll just say, okay, and give this link a class of button for
-   * styling purposes."
-   *
-   * NOTE ON ERROR BEHAVIOR:
-   * INSTRUCTOR QUOTE:
-   * "If I, for example, would try to load this page for an invalid ID... I get
-   * the loading spinner and it'll take a while because React Query actually
-   * tries re-fetching if we got an error. But then I got the error."
-   */
   if (isError) {
     content = (
       <>
@@ -321,26 +459,6 @@ export default function EditEvent() {
     );
   }
 
-  /**
-   * DATA STATE - FORM WITH PRE-POPULATED DATA
-   *
-   * INSTRUCTOR QUOTE:
-   * "Last but not least, if we have data, I'll set content equal to this event
-   * form here because then I want to present this form."
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now, in this component, as a first step we should load the data that should
-   * be filled into this form as a default. And for that, my custom event form
-   * component, which I'm providing as part of this project, actually has an
-   * inputData prop which can be used to pass an object with the default data for
-   * all these fields to this component."
-   *
-   * INSTRUCTOR QUOTE:
-   * "So now we can use data to pre-populate this form... we can therefore set
-   * inputData equal to this data because I built this event form component as
-   * such that it exactly expects data in that shape as we get it back from this
-   * backend. So this should just work."
-   */
   if (data) {
     content = (
       <EventForm inputData={data} onSubmit={handleSubmit}>
@@ -354,63 +472,78 @@ export default function EditEvent() {
     );
   }
 
-  /**
-   * INSTRUCTOR QUOTE:
-   * "And then, in the end, it's this content which should be output in this modal."
-   */
   return <Modal onClose={handleClose}>{content}</Modal>;
 }
 
 /**
  * ============================================================================
- * LESSONS 424-425 SUMMARY
+ * LESSON 426 SUMMARY: OPTIMISTIC UPDATING
  * ============================================================================
  *
- * LESSON 424 - FETCHING DATA FOR EDIT FORM:
- * ─────────────────────────────────────────
- * 1. REUSING useQuery WITH SAME queryKey FOR CACHE SHARING
- *    - EventDetails and EditEvent both use queryKey: ['events', params.id]
- *    - If EventDetails already fetched the data, EditEvent gets it instantly
- *    - No duplicate network requests = better user experience
- *
- * 2. PRE-POPULATING FORM DATA
- *    - Fetch event data with useQuery
- *    - Pass to EventForm via inputData prop
- *    - Form fields are automatically filled with existing values
- *
- * LESSON 425 - UPDATING EVENT DATA:
- * ──────────────────────────────────
- * 1. ADDING useMutation FOR UPDATE
- *    - Import useMutation from @tanstack/react-query
- *    - Import updateEvent from http.js
- *    - Execute useMutation with updateEvent as mutationFn
- *
- * 2. handleSubmit IMPLEMENTATION
- *    - Call mutate({ id: params.id, event: formData })
- *    - Call navigate('../') to close modal
- *
- * IMPORTANT - CURRENT LIMITATION:
  * INSTRUCTOR QUOTE:
- * "And with this code in place, if I now save this and I reload and I add an
- * exclamation mark here and I click update, this closes. And of course we are
- * not seeing the exclamation mark here if I reload however it is here."
+ * "That's the advantage of optimistic updating. We don't wait for the response,
+ * instead we just update the UI and assume that it will succeed."
  *
  * INSTRUCTOR QUOTE:
- * "So the update worked, but because I just closed this and I navigate away and
- * because I did not call invalidate queries as I did before in this course in
- * other places, this updated data was not fetched here."
+ * "If it doesn't succeed, we roll back. And to make sure that we are in sync
+ * with the backend again, we also use onSettled to then invalidate the queries
+ * and fetch the latest data."
  *
+ * THE THREE CALLBACKS EXPLAINED:
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * 1. onMutate (runs IMMEDIATELY when mutate() is called):
+ *    - await queryClient.cancelQueries() - Prevent race conditions
+ *    - queryClient.getQueryData() - Save old data for rollback
+ *    - queryClient.setQueryData() - Update cache optimistically
+ *    - return { previousData } - Pass context to onError
+ *
+ * 2. onError (runs if mutation FAILS):
+ *    - queryClient.setQueryData(key, context.previousData) - Roll back
+ *
+ * 3. onSettled (runs when mutation is DONE - success or failure):
+ *    - queryClient.invalidateQueries() - Sync with actual backend state
+ *
+ * VISUAL FLOW:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  PROBLEM: After update, the EventDetails page shows OLD data           │
- * │                                                                         │
- * │  WHY: We didn't invalidate queries, so cached data is stale            │
- * │                                                                         │
- * │  SOLUTION: "Optimistic Updating" - coming in the next lesson!          │
+ * │                                                                          │
+ * │  mutate() called                                                         │
+ * │       │                                                                  │
+ * │       ▼                                                                  │
+ * │  ┌─────────────┐                                                         │
+ * │  │  onMutate   │ ← Update UI immediately                                │
+ * │  └──────┬──────┘                                                         │
+ * │         │                                                                │
+ * │         ▼                                                                │
+ * │  ┌─────────────────────────────────────────┐                             │
+ * │  │     Backend request in progress...       │                            │
+ * │  └────────────────┬────────────────────────┘                             │
+ * │                   │                                                      │
+ * │         ┌─────────┴─────────┐                                            │
+ * │         │                   │                                            │
+ * │         ▼                   ▼                                            │
+ * │  ┌─────────────┐     ┌─────────────┐                                     │
+ * │  │   SUCCESS   │     │   FAILURE   │                                     │
+ * │  └──────┬──────┘     └──────┬──────┘                                     │
+ * │         │                   │                                            │
+ * │         │                   ▼                                            │
+ * │         │            ┌─────────────┐                                     │
+ * │         │            │   onError   │ ← Roll back UI                      │
+ * │         │            └──────┬──────┘                                     │
+ * │         │                   │                                            │
+ * │         └─────────┬─────────┘                                            │
+ * │                   │                                                      │
+ * │                   ▼                                                      │
+ * │            ┌─────────────┐                                               │
+ * │            │  onSettled  │ ← Sync with backend                           │
+ * │            └─────────────┘                                               │
+ * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * TEASER FOR NEXT LESSON:
- * INSTRUCTOR QUOTE:
- * "So that is what will change in the next lecture."
+ * WHY THIS PATTERN IS POWERFUL:
+ * - Instant UI feedback (no loading states needed!)
+ * - Graceful error handling with automatic rollback
+ * - Eventual consistency with backend via onSettled
  *
  * ============================================================================
  */
