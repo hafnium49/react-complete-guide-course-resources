@@ -1,13 +1,34 @@
 /**
  * ============================================================================
- * APP COMPONENT - Lessons 412-413, 419: QueryClientProvider & Caching
+ * APP COMPONENT - Lessons 412-413, 419, 428: QueryClientProvider & Routing
  * ============================================================================
  *
  * LESSON 412 - Installing & Using Tanstack Query
  * LESSON 413 - Understanding & Configuring Query Behavior (Caching)
+ * LESSON 428 - Combining React Router with React Query (Loader & Action)
  *
  * This file demonstrates how to set up the QueryClientProvider,
  * which is REQUIRED for using Tanstack Query in your application.
+ *
+ * ============================================================================
+ * LESSON 428: CONNECTING LOADER AND ACTION TO ROUTES
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now in order to use this loader here in App JSX we have to import it
+ * from that EditEvent file and register it as a loader for this edit
+ * event route here."
+ *
+ * KEY CHANGES FOR LESSON 428:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Import loader and action from EditEvent.jsx                         │
+ * │  2. Register loader on the /events/:id/edit route                       │
+ * │  3. Register action on the /events/:id/edit route                       │
+ * │                                                                          │
+ * │  This enables:                                                           │
+ * │    - Data pre-fetching before component renders (loader)                │
+ * │    - Form submission handling via React Router (action)                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * WHY QueryClientProvider IS REQUIRED
@@ -47,28 +68,6 @@
  * - Query states (loading, error, success)
  *
  * ============================================================================
- * AUTOMATIC REFETCHING EXAMPLE
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "If we take a look at the developer tools and we open the Network tab there
- * and I now go out of this page back to the code, let's say, and then come
- * back to it. Then you'll see this HTTP request being sent here and that's
- * being sent because of Tanstack Query which for example reacts to us going
- * away from this screen and coming back to it."
- *
- * INSTRUCTOR QUOTE:
- * "And the advantage of this, of course is that, if some data should change,
- * for example if in my backend, in the data folder and the events.json folder,
- * if in there, I add an exclamation mark here, so if data changed on the
- * backend, because it was changed in some database, let's say, if that's
- * the case, now if I come back that updated data is fetched."
- *
- * INSTRUCTOR QUOTE:
- * "And this happens automatically because we're using Tanstack Query.
- * And that's just one of the many reasons why this can be a very helpful library."
- *
- * ============================================================================
  */
 
 import {
@@ -96,7 +95,42 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import Events from './components/Events/Events.jsx';
 import EventDetails from './components/Events/EventDetails.jsx';
 import NewEvent from './components/Events/NewEvent.jsx';
-import EditEvent from './components/Events/EditEvent.jsx';
+
+/**
+ * ============================================================================
+ * LESSON 428: IMPORTING LOADER AND ACTION FROM EditEvent
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now in order to use this loader here in App JSX we have to import it
+ * from that EditEvent file and register it as a loader for this edit
+ * event route here."
+ *
+ * We import the component as default, and the loader/action as named exports:
+ * - EditEvent: The component that renders the edit form
+ * - loader: Function that pre-fetches event data (runs BEFORE component)
+ * - action: Function that handles form submissions
+ *
+ * IMPORT PATTERN:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  import EditEvent, { loader, action } from '...EditEvent.jsx'           │
+ * │                                                                          │
+ * │  EditEvent  → default export (the component)                            │
+ * │  loader     → named export (pre-fetch function)                         │
+ * │  action     → named export (form submission handler)                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * However, when you have multiple loaders/actions from different files,
+ * you need to rename them to avoid conflicts:
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here I'm using this as keyword, which is just a syntax supported by
+ * JavaScript that allows us to give a different name to an imported value."
+ */
+import EditEvent, {
+  loader as editEventLoader,
+  action as editEventAction,
+} from './components/Events/EditEvent.jsx';
 
 /**
  * ============================================================================
@@ -120,8 +154,9 @@ import EditEvent from './components/Events/EditEvent.jsx';
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  1. App.jsx uses it for QueryClientProvider                            │
  * │  2. NewEvent.jsx uses it for invalidateQueries() after mutations       │
- * │  3. Any component can import it to manually interact with the cache    │
- * │  4. Same instance ensures cache operations work correctly              │
+ * │  3. EditEvent.jsx uses it in loader for fetchQuery()                   │
+ * │  4. Any component can import it to manually interact with the cache    │
+ * │  5. Same instance ensures cache operations work correctly              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
@@ -150,6 +185,40 @@ import EditEvent from './components/Events/EditEvent.jsx';
  */
 import { queryClient } from './util/http.js';
 
+/**
+ * ============================================================================
+ * ROUTE CONFIGURATION WITH LOADER AND ACTION
+ * ============================================================================
+ *
+ * LESSON 428: REGISTERING LOADER AND ACTION ON ROUTES
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now in order to use this loader here in App JSX we have to import it
+ * from that EditEvent file and register it as a loader for this edit
+ * event route here."
+ *
+ * Route configuration with loader and action:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  {                                                                      │
+ * │    path: '/events/:id/edit',                                            │
+ * │    element: <EditEvent />,                                              │
+ * │    loader: editEventLoader,   ← Runs BEFORE component renders          │
+ * │    action: editEventAction,   ← Runs when form is submitted            │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * EXECUTION ORDER:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. User navigates to /events/:id/edit                                  │
+ * │  2. React Router calls editEventLoader({ params: { id } })              │
+ * │  3. loader fetches data and stores in React Query cache                 │
+ * │  4. React Router renders <EditEvent />                                  │
+ * │  5. EditEvent's useQuery finds data in cache (no loading state!)       │
+ * │  6. User edits and submits form                                         │
+ * │  7. React Router calls editEventAction({ request, params })             │
+ * │  8. action updates backend, invalidates cache, redirects                │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
 const router = createBrowserRouter([
   {
     path: '/',
@@ -171,8 +240,22 @@ const router = createBrowserRouter([
     element: <EventDetails />,
     children: [
       {
+        /**
+         * LESSON 428: EDIT EVENT ROUTE WITH LOADER AND ACTION
+         *
+         * INSTRUCTOR QUOTE:
+         * "Now in order to use this loader here in App JSX we have to import
+         * it from that EditEvent file and register it as a loader for this
+         * edit event route here."
+         *
+         * This route now has:
+         * - loader: Pre-fetches event data using queryClient.fetchQuery()
+         * - action: Handles form submissions and updates the event
+         */
         path: '/events/:id/edit',
         element: <EditEvent />,
+        loader: editEventLoader,
+        action: editEventAction,
       },
     ],
   },
