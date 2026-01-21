@@ -1,52 +1,35 @@
 /**
  * ============================================================================
- * EventDetails Component - LESSON 420 CHALLENGE: Fetching & Deleting Events
+ * EventDetails Component - LESSON 421: Challenge Solution
  * ============================================================================
  *
- * This component demonstrates the CHALLENGE from Lesson 420:
- * 1. Using useQuery to fetch a SINGLE event's details
- * 2. Using useMutation to DELETE an event
+ * This is the INSTRUCTOR'S SOLUTION to the challenge from Lesson 420.
+ * The challenge had two parts:
+ * 1. Load and display event detail data using useQuery
+ * 2. Make the Delete button work using useMutation
  *
  * ============================================================================
- * CHALLENGE REQUIREMENTS (from instructor)
+ * PART 1: FETCHING EVENT DETAILS WITH useQuery
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Your job is now to make sure that as this page is loaded, the details data
- * is loaded. So you should use useQuery with this fetch event function to fetch
- * the event details and you should then output that data here on this page."
+ * "And for that, of course, I'll start here in event details by importing
+ * useQuery from @tanstack/react-query. And then here we should execute useQuery
+ * in this EventDetails component function."
  *
  * INSTRUCTOR QUOTE:
- * "And then as a second step, also make this delete button here work. So make
- * sure that when the Delete button is clicked, we use this delete event function
- * together with React Query's useMutation."
+ * "And of course, as always, this should then also be configured. We need a
+ * query function and we need that queryKey, as always."
+ *
+ * ============================================================================
+ * PART 2: DELETING EVENTS WITH useMutation
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And you should also navigate the user away here and maybe also invalidate
- * the queries that are related to events."
- *
- * ============================================================================
- * DATA FLOW OVERVIEW
- * ============================================================================
- *
- * For FETCHING event details:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. User clicks on an event → navigates to /events/:id                  │
- * │  2. EventDetails component mounts                                        │
- * │  3. useParams() extracts the id from the URL                            │
- * │  4. useQuery calls fetchEvent({ id, signal })                           │
- * │  5. Backend returns event data                                           │
- * │  6. Component renders event details                                      │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * For DELETING an event:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. User clicks Delete button                                           │
- * │  2. handleDelete calls mutate({ id })                                   │
- * │  3. useMutation calls deleteEvent({ id })                               │
- * │  4. Backend deletes the event                                           │
- * │  5. onSuccess: invalidateQueries + navigate away                        │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * "So therefore here we of course have a mutation because we're not fetching
+ * or getting any data, instead we're sending a DELETE request. We are trying
+ * to change, to mutate, data on the backend. Hence we now also need useMutation
+ * from React Query."
  *
  * ============================================================================
  */
@@ -54,16 +37,14 @@
 import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
 
 /**
- * IMPORTING BOTH useQuery AND useMutation
+ * IMPORTING useQuery AND useMutation
  *
  * INSTRUCTOR QUOTE:
- * "So you should use useQuery with this fetch event function to fetch the event
- * details... And then as a second step, also make this delete button here work...
- * you should use this delete event function together with React Query's useMutation."
+ * "And for that, of course, I'll start here in event details by importing
+ * useQuery from @tanstack/react-query."
  *
- * Why we need BOTH hooks here:
- * - useQuery: For FETCHING data (GET request when component mounts)
- * - useMutation: For DELETING data (DELETE request when user clicks button)
+ * INSTRUCTOR QUOTE (for delete):
+ * "Hence we now also need useMutation from React Query."
  */
 import { useQuery, useMutation } from '@tanstack/react-query';
 
@@ -74,30 +55,57 @@ import ErrorBlock from '../UI/ErrorBlock.jsx';
  * IMPORTING FUNCTIONS AND queryClient FROM http.js
  *
  * INSTRUCTOR QUOTE:
- * "I'll use this fetch event function for fetching one specific event."
+ * "Now, for the query function, as mentioned, it's this fetchEvent function
+ * that should be triggered."
  *
- * We import:
- * - fetchEvent: Query function for useQuery (GET single event)
- * - deleteEvent: Mutation function for useMutation (DELETE event)
- * - queryClient: To call invalidateQueries() after successful deletion
+ * INSTRUCTOR QUOTE:
+ * "And for that, as mentioned before, you should use this deleteEvent function
+ * where a DELETE HTTP request is sent to the backend."
+ *
+ * INSTRUCTOR QUOTE (for invalidation):
+ * "Now, to do that I also must import my query client from http.js and we can
+ * then use this queryClient here to call invalidate queries."
  */
 import { fetchEvent, deleteEvent, queryClient } from '../../util/http.js';
 
 export default function EventDetails() {
   /**
    * ============================================================================
-   * GETTING THE EVENT ID FROM THE URL
+   * GETTING THE EVENT ID FROM URL PARAMS
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "Now where do we get that ID from? Well, we can use React Router's useParams
-   * hook to get hold of the params that are part of the URL. For example, that ID."
+   * "And this id will be available in this event details component because it
+   * is loaded through React Router. If you take a look at app.jsx you see that
+   * this EventDetails component is loaded for this dynamic route which includes
+   * a path segment with an identifier of id."
    *
-   * The route is defined as '/events/:id' in App.jsx, so:
-   * - URL: /events/e1 → params.id = "e1"
-   * - URL: /events/abc123 → params.id = "abc123"
+   * INSTRUCTOR QUOTE:
+   * "And therefore, as you learned in the routing section we can extract this
+   * id by using the useParams hook provided by react-router-dom."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And it's dot id here because in app.jsx it's colon id in this route
+   * definition. That's how we can get access to that id."
+   *
+   * Route definition in App.jsx: path: '/events/:id'
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  URL: /events/e1       →  params.id = "e1"                              │
+   * │  URL: /events/abc123   →  params.id = "abc123"                          │
+   * └─────────────────────────────────────────────────────────────────────────┘
    */
   const params = useParams();
+
+  /**
+   * INSTRUCTOR QUOTE:
+   * "And here in our mutation onSuccess function I wanna call navigate and go
+   * back to /events."
+   *
+   * INSTRUCTOR QUOTE:
+   * "You can add the onSuccess property to this mutation configuration object.
+   * And here we can then navigate away by using the navigate function, which we
+   * get from react-router-dom, with help of that useNavigate Hook."
+   */
   const navigate = useNavigate();
 
   /**
@@ -106,31 +114,81 @@ export default function EventDetails() {
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "So you should use useQuery with this fetch event function to fetch the event
-   * details and you should then output that data here on this page."
-   *
-   * ABOUT THE queryKey:
-   * ┌─────────────────────────────────────────────────────────────────────────┐
-   * │  queryKey: ['events', params.id]                                        │
-   * │                                                                          │
-   * │  Why include both 'events' AND params.id?                               │
-   * │                                                                          │
-   * │  1. 'events' - Groups this with other event-related queries             │
-   * │     - When we invalidateQueries({ queryKey: ['events'] }), this query   │
-   * │       will also be invalidated (because it INCLUDES 'events')           │
-   * │                                                                          │
-   * │  2. params.id - Makes the cache UNIQUE per event                        │
-   * │     - ['events', 'e1'] and ['events', 'e2'] are DIFFERENT cache entries │
-   * │     - Viewing event e1, then e2, then e1 again → e1 loads from cache!   │
-   * └─────────────────────────────────────────────────────────────────────────┘
-   *
-   * ABOUT THE queryFn:
-   * We need to pass the id to fetchEvent. Since React Query passes its default
-   * object (with signal) to queryFn, we use an arrow function to merge our id
-   * with the signal from React Query.
+   * "And of course, as always, this should then also be configured. We need a
+   * query function and we need that queryKey, as always."
    */
   const { data, isPending, isError, error } = useQuery({
+    /**
+     * =========================================================================
+     * queryKey - UNIQUE IDENTIFIER FOR THIS SPECIFIC EVENT
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now for the queryKey, I want to have an identifier that starts with
+     * events as a first element in this key array because we're still fetching
+     * some event data, but I then pass a second element to this key to make
+     * this key a bit more complex."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that second element should be the actual ID for which we're executing
+     * this query because when this EventDetails component is rendered for
+     * different IDs, so for different events, I of course wanna fetch different
+     * data for different events."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So we need different keys so that we're not caching and reusing the same
+     * data for the same single event all the time. Therefore, I'll add my ID
+     * here into this key."
+     *
+     * Why this matters:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  ['events', 'e1'] and ['events', 'e2'] = DIFFERENT cache entries   │
+     * │                                                                     │
+     * │  View event e1 → cached as ['events', 'e1']                        │
+     * │  View event e2 → cached as ['events', 'e2']                        │
+     * │  View event e1 again → loads from cache instantly!                  │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * INSTRUCTOR QUOTE:
+     * "And this is one way of doing it. We could also wrap it into an object
+     * like this, that's totally up to you, but here I'll just add it like this
+     * to my overall key."
+     */
     queryKey: ['events', params.id],
+
+    /**
+     * =========================================================================
+     * queryFn - WRAPPING fetchEvent WITH AN ANONYMOUS FUNCTION
+     * =========================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now, for the query function, as mentioned, it's this fetchEvent function
+     * that should be triggered. And if you take a look at this function, you see
+     * that it accepts an object as a parameter, which should contain this signal
+     * property, which is provided by React Query, but which also wants an id
+     * property, which we have to provide, the ID of the selected event."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So back in EventDetails, this means that we wanna wrap this fetchEvent
+     * function with our own anonymous function, which is then the actual function
+     * that's defined as a query function."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now this fetchEvent function should receive an object as an argument, an
+     * object with a signal property as you just saw, and an id property. So
+     * therefore I'll pass both here as properties to this object and we'll get
+     * this signal from this object which we automatically receive on this query
+     * function from React Query."
+     *
+     * Data flow:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  1. React Query calls our arrow function with { signal, ... }       │
+     * │  2. We destructure to get the signal                                │
+     * │  3. We call fetchEvent({ id: params.id, signal })                   │
+     * │  4. fetchEvent sends GET request to /events/{id}                    │
+     * │  5. Returns the event object                                         │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
     queryFn: ({ signal }) => fetchEvent({ id: params.id, signal }),
   });
 
@@ -140,31 +198,15 @@ export default function EventDetails() {
    * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "Make sure that when the Delete button is clicked, we use this delete event
-   * function together with React Query's useMutation. That's what we learned before."
+   * "So therefore here we of course have a mutation because we're not fetching
+   * or getting any data, instead we're sending a DELETE request. We are trying
+   * to change, to mutate, data on the backend."
    *
-   * WHY useMutation FOR DELETE?
-   * ┌─────────────────────────────────────────────────────────────────────────┐
-   * │  DELETE operations:                                                      │
-   * │    - Should NOT happen automatically                                     │
-   * │    - Should ONLY happen when user explicitly clicks Delete              │
-   * │    - Need to handle success (navigate away, invalidate cache)           │
-   * │    - Need to handle errors (show error message)                         │
-   * │                                                                          │
-   * │  useMutation is perfect because:                                        │
-   * │    - Request only sent when mutate() is called                          │
-   * │    - Provides isPending for loading state                               │
-   * │    - Provides onSuccess callback for post-delete actions                │
-   * └─────────────────────────────────────────────────────────────────────────┘
-   *
-   * ABOUT onSuccess:
    * INSTRUCTOR QUOTE:
-   * "And you should also navigate the user away here and maybe also invalidate
-   * the queries that are related to events."
-   *
-   * We invalidate queries with ['events'] to ensure:
-   * - The events list is refetched (deleted event is removed)
-   * - Any cached event details are marked as stale
+   * "And this hook should now also be executed here, useMutation, and in this
+   * configuration object that's passed to useMutation we then have to define a
+   * mutation function, which as mentioned is this deleteEvent function from the
+   * http.js file."
    */
   const {
     mutate,
@@ -172,30 +214,82 @@ export default function EventDetails() {
     isError: isErrorDeleting,
     error: deleteError,
   } = useMutation({
+    /**
+     * INSTRUCTOR QUOTE:
+     * "So this function must be imported and should then be used here as a
+     * value for this mutation function."
+     */
     mutationFn: deleteEvent,
+
+    /**
+     * =========================================================================
+     * onSuccess - WHAT HAPPENS AFTER SUCCESSFUL DELETION
+     * =========================================================================
+     *
+     * THE PROBLEM WITHOUT onSuccess:
+     * INSTRUCTOR QUOTE:
+     * "And now of course, nothing happens here. And we had that behavior before
+     * in this course because we haven't defined what should happen after the
+     * mutation succeeds. But if I go back to view all events I can tell that
+     * this event indeed is gone."
+     *
+     * THE SOLUTION:
+     * INSTRUCTOR QUOTE:
+     * "But of course it would be nice if we would give the user some feedback
+     * regarding that, or if we would do something after deleting it. And you
+     * also learned how to do that. You can add the onSuccess property to this
+     * mutation configuration object."
+     *
+     * NAVIGATE AWAY:
+     * INSTRUCTOR QUOTE:
+     * "And here we can then navigate away by using the navigate function...
+     * And then here in our mutation onSuccess function I wanna call navigate
+     * and go back to /events."
+     *
+     * INVALIDATE QUERIES:
+     * INSTRUCTOR QUOTE:
+     * "In addition, I also wanna invalidate my queries, my event related queries,
+     * because since I deleted an event of course, all that data should be marked
+     * as outdated and React Query should be forced to fetch data again."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And we can then use this queryClient here to call invalidate queries and
+     * pass this configuration object to invalidateQueries where I set the
+     * queryKey of the query that should be invalidated to just events."
+     *
+     * WHY INVALIDATE ALL ['events'] QUERIES:
+     * INSTRUCTOR QUOTE:
+     * "So to an array that contains a single string that says events, because
+     * all event related queries should be invalidated because they're all
+     * affected by the fact that an event has been deleted."
+     */
     onSuccess: () => {
-      /**
-       * INVALIDATE AND NAVIGATE AFTER SUCCESSFUL DELETION
-       *
-       * Order matters here:
-       * 1. Invalidate queries first - marks event data as stale
-       * 2. Navigate away - takes user back to events list
-       *
-       * The events list will refetch automatically because:
-       * - We invalidated queries with ['events']
-       * - The Events page is about to become visible
-       * - React Query refetches stale data when component mounts
-       */
       queryClient.invalidateQueries({ queryKey: ['events'] });
       navigate('/events');
     },
   });
 
   /**
-   * DELETE BUTTON HANDLER
+   * ============================================================================
+   * handleDelete - TRIGGERED WHEN DELETE BUTTON IS CLICKED
+   * ============================================================================
    *
-   * When user clicks Delete, we call mutate with the event ID.
-   * The ID is passed to deleteEvent via mutationFn.
+   * INSTRUCTOR QUOTE:
+   * "As you learned, this useMutation hook then returns an object where we most
+   * importantly get a mutate property, a function we can call to trigger this
+   * mutation function. And I wanna trigger it when that Delete button is pressed."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Therefore, here in this component function, we can add a new function,
+   * handleDelete could be a fitting name. And in this function I want to call
+   * this mutate function."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, deleteEvent, if you take a look at it, wants an object as an input,
+   * an object with an id property which should contain the ID of the event that
+   * should be deleted. Therefore here I'll pass an object to mutate and I'll add
+   * an id property. And the value of that id property of course is that ID of
+   * this event here, so params.id."
    */
   function handleDelete() {
     mutate({ id: params.id });
@@ -203,18 +297,41 @@ export default function EventDetails() {
 
   /**
    * ============================================================================
-   * CONDITIONAL RENDERING FOR LOADING/ERROR/DATA STATES
+   * CONDITIONAL RENDERING WITH content VARIABLE
    * ============================================================================
    *
-   * Pattern used throughout this course:
+   * INSTRUCTOR QUOTE:
+   * "And we can now use these pieces of data to output different content on the
+   * screen depending on the current state of this query. For that, just as I did
+   * it before in another component, I'll add a new content variable."
+   *
+   * States handled:
    * ┌─────────────────────────────────────────────────────────────────────────┐
-   * │  isPending = true  →  Show loading indicator                           │
-   * │  isError = true    →  Show error message                               │
-   * │  data exists       →  Show the actual content                          │
+   * │  isPending = true  →  Show "Fetching event data..." message            │
+   * │  isError = true    →  Show ErrorBlock with error details               │
+   * │  data exists       →  Show event details (title, image, etc.)          │
    * └─────────────────────────────────────────────────────────────────────────┘
    */
   let content;
 
+  /**
+   * LOADING STATE
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then I'll check if isPending is true. If that's the case, my content
+   * should be equal to some loading fallback text."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Here, for styling purposes, I'll output a div with an id of
+   * event-details-content... And I'll add a class name of center to center these
+   * elements here. And this element is simply a paragraph where I'll say,
+   * 'Fetching event data.'"
+   *
+   * INSTRUCTOR QUOTE:
+   * "But again, it doesn't really matter which content you are outputting in your
+   * loading state, it's just important that you are handling this loading state
+   * in some way at all."
+   */
   if (isPending) {
     content = (
       <div id="event-details-content" className="center">
@@ -223,6 +340,21 @@ export default function EventDetails() {
     );
   }
 
+  /**
+   * ERROR STATE
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now with that, I'll... as a next step check if we got an error, in which
+   * case content should be equal to that error block, though again wrapped in
+   * this special div, which will just make sure that it looks good on this page."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So here, I'll then output my ErrorBlock component and give this a title of
+   * 'Failed to load event.' And then as a message I'll output error.info?.message.
+   * So if we have an info property on the error I'll dig into its message and
+   * output that or if any of that seems to be undefined I'll output a hardcoded
+   * error message."
+   */
   if (isError) {
     content = (
       <div id="event-details-content" className="center">
@@ -230,7 +362,7 @@ export default function EventDetails() {
           title="Failed to load event"
           message={
             error.info?.message ||
-            'Failed to fetch event data. Please try again later.'
+            'Failed to fetch event data, please try again later.'
           }
         />
       </div>
@@ -238,47 +370,68 @@ export default function EventDetails() {
   }
 
   /**
-   * RENDERING EVENT DATA
+   * ============================================================================
+   * DATA STATE - DISPLAYING EVENT DETAILS
+   * ============================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "You should then output that data here on this page."
-   *
-   * The event object from the backend has this shape:
-   * {
-   *   id: "e1",
-   *   title: "Event Title",
-   *   description: "Event description...",
-   *   date: "2024-01-15",
-   *   time: "18:00",
-   *   location: "New York",
-   *   image: "image1.jpg"
-   * }
-   *
-   * IMAGE URL CONSTRUCTION:
-   * Images are served from the backend at: http://localhost:3000/{image}
-   * So if image = "image1.jpg", the full URL is: http://localhost:3000/image1.jpg
-   *
-   * DATE/TIME FORMATTING:
-   * The dateTime attribute follows ISO 8601 format: YYYY-MM-DDTHH:MM
-   * The displayed text shows a human-readable format
+   * "Well, and now as a last step, I of course want to check if data is set,
+   * if we got some data, and in that case I'll set content equal to this content
+   * here down there."
    */
   if (data) {
+    /**
+     * DATE FORMATTING (Optional polish)
+     *
+     * INSTRUCTOR QUOTE:
+     * "And now as our last step, so to say, to polish this, I also wanna make
+     * sure that in the EventDetails component this date is formatted in a nice
+     * way, which of course is 100% optional and not part of the solution you
+     * must have, just something I wanna do here."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in that data block, so if we have data, I'll get my formatted date by
+     * constructing a new date object and passing the date I'm getting back from
+     * the backend as a value to this date constructor."
+     *
+     * INSTRUCTOR QUOTE:
+     * "So that then, on this date object, I can call toLocaleDateString, a method
+     * built into the browser on this date object, which allows me to create a
+     * nicely formatted date by passing en-US as a first argument and then a
+     * configuration object as a second argument."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in that configuration object we can control how the day, month, and
+     * year part of the date should be formatted."
+     */
     const formattedDate = new Date(data.date).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
 
+    /**
+     * INSTRUCTOR QUOTE:
+     * "So that this is now my content if we do have data, where I'm outputting
+     * the title in the header and all the other information below that in this div."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And I'll then construct this URL to this image dynamically by using this
+     * template, literal syntax, and injecting data.image here as a value into
+     * this image URL."
+     */
     content = (
       <>
         <header>
           <h1>{data.title}</h1>
           <nav>
             {/**
-             * DELETE BUTTON WITH LOADING STATE
+             * DELETE BUTTON
              *
-             * While deletion is in progress (isPendingDeletion = true),
-             * we show "Deleting..." to give user feedback.
+             * INSTRUCTOR QUOTE:
+             * "With that, this request should be sent and now we just have to
+             * connect handleDelete to this Delete button. So down here I'll add
+             * the onClick prop and point at handleDelete."
              */}
             <button onClick={handleDelete} disabled={isPendingDeletion}>
               {isPendingDeletion ? 'Deleting...' : 'Delete'}
@@ -302,6 +455,12 @@ export default function EventDetails() {
     );
   }
 
+  /**
+   * INSTRUCTOR QUOTE:
+   * "And with that, we got different pieces of content for different circumstances.
+   * And hence now between those article tags we can output this content variable,
+   * which will either be that loading text, that error block, or this data block here."
+   */
   return (
     <>
       <Outlet />
@@ -314,8 +473,7 @@ export default function EventDetails() {
         {/**
          * ERROR HANDLING FOR DELETE MUTATION
          *
-         * If deletion fails, we show an error message at the top of the article.
-         * The user stays on the page and can try again.
+         * If deletion fails, show error at top while keeping event details visible.
          */}
         {isErrorDeleting && (
           <ErrorBlock
@@ -331,3 +489,26 @@ export default function EventDetails() {
     </>
   );
 }
+
+/**
+ * ============================================================================
+ * TEASER FOR NEXT LESSON
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, again, if I go back and I view the details here and I open the
+ * network tab just to see whether everything works, if I click Delete here
+ * that's deleted, and I'm navigated back to the starting page. And there this
+ * event is now indeed missing."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Though you might also notice that I also got one request here, which actually
+ * yielded a 404 response, and that's what we'll tackle next."
+ *
+ * The 404 issue happens because:
+ * - We invalidate queries BEFORE navigating away
+ * - React Query tries to refetch the deleted event's data
+ * - But the event no longer exists on the backend → 404!
+ *
+ * This will be addressed in the next lesson.
+ */
