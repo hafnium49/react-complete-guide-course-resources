@@ -1,39 +1,34 @@
 /**
  * ============================================================================
- * EventDetails Component - LESSON 421: Challenge Solution
+ * EventDetails Component - LESSONS 420-423
  * ============================================================================
  *
- * This is the INSTRUCTOR'S SOLUTION to the challenge from Lesson 420.
- * The challenge had two parts:
- * 1. Load and display event detail data using useQuery
- * 2. Make the Delete button work using useMutation
+ * This component demonstrates:
+ * - Lesson 420-421: Using useQuery to fetch event details and useMutation to delete
+ * - Lesson 422: Fixing the 404 error with refetchType: 'none'
+ * - Lesson 423: Adding a confirmation modal before deletion
  *
  * ============================================================================
- * PART 1: FETCHING EVENT DETAILS WITH useQuery
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And for that, of course, I'll start here in event details by importing
- * useQuery from @tanstack/react-query. And then here we should execute useQuery
- * in this EventDetails component function."
- *
- * INSTRUCTOR QUOTE:
- * "And of course, as always, this should then also be configured. We need a
- * query function and we need that queryKey, as always."
- *
- * ============================================================================
- * PART 2: DELETING EVENTS WITH useMutation
+ * LESSON 423: CONFIRMATION MODAL BEFORE DELETION
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So therefore here we of course have a mutation because we're not fetching
- * or getting any data, instead we're sending a DELETE request. We are trying
- * to change, to mutate, data on the backend. Hence we now also need useMutation
- * from React Query."
+ * "Now to enhance this app a bit more and this details page specifically, I now
+ * also want to add a little feature to this app and to this page where we show
+ * some confirmation modal before we actually trigger this deletion mutation."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that if a user accidentally clicked on delete, the deletion is not
+ * immediately initiated but we instead ask the user for confirmation first."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this feature does now not require any specific new React Query feature.
+ * Instead, it is something which we can build with our standard React knowledge."
  *
  * ============================================================================
  */
 
+import { useState } from 'react';
 import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
 
 /**
@@ -49,6 +44,7 @@ import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import Header from '../Header.jsx';
+import Modal from '../UI/Modal.jsx';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 /**
@@ -107,6 +103,33 @@ export default function EventDetails() {
    * get from react-router-dom, with help of that useNavigate Hook."
    */
   const navigate = useNavigate();
+
+  /**
+   * ============================================================================
+   * LESSON 423: STATE FOR DELETION CONFIRMATION MODAL
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Because here in the event details component, we can simply start managing
+   * some state with the useState hook. And this could be some state that simply
+   * tells us whether the user started the deletion process or not."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So I'll name my state variable here isDeleting and the updating function
+   * setIsDeleting. And initially that's false because initially we're not trying
+   * to delete this."
+   *
+   * State flow:
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  isDeleting = false  →  Modal is hidden, normal UI shown               │
+   * │  isDeleting = true   →  Modal opens, asking for confirmation           │
+   * │                                                                         │
+   * │  User clicks "Delete" button  →  setIsDeleting(true)  →  Modal opens   │
+   * │  User clicks "Cancel" in modal  →  setIsDeleting(false)  →  Modal closes│
+   * │  User clicks "Delete" in modal  →  handleDelete() triggers mutation    │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   */
+  const [isDeleting, setIsDeleting] = useState(false);
 
   /**
    * ============================================================================
@@ -378,6 +401,41 @@ export default function EventDetails() {
 
   /**
    * ============================================================================
+   * LESSON 423: HANDLERS FOR STARTING/STOPPING DELETION PROCESS
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "But I now wanna change this to true once the user clicks this button, this
+   * delete button and then I want open up a modal where the user has to click
+   * another button to actually start this mutation."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So I will add two new functions here, handleStartDelete in which I set
+   * isDeleting to true and also handleStopDelete if the user cancels this
+   * process, where I set isDeleting to false."
+   *
+   * TWO-STEP DELETION FLOW:
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  Step 1: User clicks "Delete" button in event details                  │
+   * │          → handleStartDelete() → setIsDeleting(true) → Modal opens     │
+   * │                                                                         │
+   * │  Step 2a: User clicks "Delete" in modal                                │
+   * │           → handleDelete() → mutate() → DELETE request sent            │
+   * │                                                                         │
+   * │  Step 2b: User clicks "Cancel" in modal                                │
+   * │           → handleStopDelete() → setIsDeleting(false) → Modal closes   │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   */
+  function handleStartDelete() {
+    setIsDeleting(true);
+  }
+
+  function handleStopDelete() {
+    setIsDeleting(false);
+  }
+
+  /**
+   * ============================================================================
    * CONDITIONAL RENDERING WITH content VARIABLE
    * ============================================================================
    *
@@ -507,16 +565,16 @@ export default function EventDetails() {
           <h1>{data.title}</h1>
           <nav>
             {/**
-             * DELETE BUTTON
+             * DELETE BUTTON - NOW OPENS CONFIRMATION MODAL (Lesson 423)
              *
              * INSTRUCTOR QUOTE:
-             * "With that, this request should be sent and now we just have to
-             * connect handleDelete to this Delete button. So down here I'll add
-             * the onClick prop and point at handleDelete."
+             * "And it's now handleStartDelete that should be connected to this
+             * delete button in this UI."
+             *
+             * Previously this called handleDelete directly, but now we show
+             * a confirmation modal first by calling handleStartDelete.
              */}
-            <button onClick={handleDelete} disabled={isPendingDeletion}>
-              {isPendingDeletion ? 'Deleting...' : 'Delete'}
-            </button>
+            <button onClick={handleStartDelete}>Delete</button>
             <Link to="edit">Edit</Link>
           </nav>
         </header>
@@ -544,6 +602,117 @@ export default function EventDetails() {
    */
   return (
     <>
+      {/**
+       * =======================================================================
+       * LESSON 423: CONFIRMATION MODAL FOR DELETION
+       * =======================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "For that, down here in my return statement maybe above that outlet,
+       * I'll add the modal component, a component that's built into this
+       * application."
+       *
+       * CONDITIONAL RENDERING:
+       * INSTRUCTOR QUOTE:
+       * "This modal should be displayed conditionally. If isDeleting is true,
+       * I wanna show it. If it's false, I don't wanna show it, so that this
+       * really only shows up if we start that deletion process."
+       *
+       * onClose PROP:
+       * INSTRUCTOR QUOTE:
+       * "Now this modal component, which I built for this application, actually
+       * also takes onClose prop, which wants a function that should be triggered
+       * if this modal is closed. And here I then wanna stop the deletion of course."
+       */}
+      {isDeleting && (
+        <Modal onClose={handleStopDelete}>
+          {/**
+           * CONFIRMATION CONTENT
+           *
+           * INSTRUCTOR QUOTE:
+           * "And with modal imported, we can now show some confirmation text in
+           * there. For example a title, a H2 title where we ask, are you sure?
+           * And then a paragraph where we may be say, do you really want to
+           * delete this event? This action cannot be undone."
+           */}
+          <h2>Are you sure?</h2>
+          <p>
+            Do you really want to delete this event? This action cannot be
+            undone.
+          </p>
+
+          {/**
+           * CONDITIONAL BUTTONS / LOADING STATE
+           *
+           * INSTRUCTOR QUOTE:
+           * "I for example wanna replace these buttons with some loading text
+           * if we are currently performing the deletion. So in here I'll
+           * actually check isPendingDeletion. And if that's the case, I wanna
+           * output some paragraph here where I simply say, deleting, please wait."
+           *
+           * INSTRUCTOR QUOTE:
+           * "On the other hand, if deletion is not pending, if it's not on its
+           * way, I wanna output these two buttons wrapped by a fragment since
+           * we have two sibling components here."
+           */}
+          <div className="form-actions">
+            {isPendingDeletion ? (
+              <p>Deleting, please wait...</p>
+            ) : (
+              <>
+                {/**
+                 * CANCEL BUTTON
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "If that other button here is pressed, I wanna trigger the
+                 * handleStopDelete function to close this modal again."
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "The cancel button should receive a button-text class."
+                 */}
+                <button onClick={handleStopDelete} className="button-text">
+                  Cancel
+                </button>
+
+                {/**
+                 * DELETE CONFIRMATION BUTTON
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "Now this second button when it's clicked should trigger the
+                 * handleDelete function we used before. And that's this function
+                 * that contains the mutate function call. So this function which
+                 * will then actually send that deletion request."
+                 *
+                 * INSTRUCTOR QUOTE:
+                 * "And the delete button should receive a button class."
+                 */}
+                <button onClick={handleDelete} className="button">
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+
+          {/**
+           * ERROR HANDLING IN MODAL
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now I also wanna show an error block if we got an error. And for
+           * that here after this form actions div, but still in the modal, I'll
+           * check if isErrorDeleting is true."
+           */}
+          {isErrorDeleting && (
+            <ErrorBlock
+              title="Failed to delete event"
+              message={
+                deleteError.info?.message ||
+                'Failed to delete event, please try again later.'
+              }
+            />
+          )}
+        </Modal>
+      )}
+
       <Outlet />
       <Header>
         <Link to="/events" className="nav-item">
@@ -552,19 +721,9 @@ export default function EventDetails() {
       </Header>
       <article id="event-details">
         {/**
-         * ERROR HANDLING FOR DELETE MUTATION
-         *
-         * If deletion fails, show error at top while keeping event details visible.
+         * Note: Error handling for delete mutation is now inside the Modal
+         * component (Lesson 423) where users can see errors and retry.
          */}
-        {isErrorDeleting && (
-          <ErrorBlock
-            title="Failed to delete event"
-            message={
-              deleteError.info?.message ||
-              'Failed to delete event. Please try again later.'
-            }
-          />
-        )}
         {content}
       </article>
     </>
@@ -573,29 +732,41 @@ export default function EventDetails() {
 
 /**
  * ============================================================================
- * LESSON 422 SUMMARY: 404 ERROR FIX
+ * LESSONS 422-423 SUMMARY
  * ============================================================================
  *
- * BEFORE THE FIX (Lesson 421):
- * INSTRUCTOR QUOTE:
- * "Though you might also notice that I also got one request here, which actually
- * yielded a 404 response, and that's what we'll tackle next."
+ * LESSON 422: 404 ERROR FIX
+ * ─────────────────────────
+ * Use refetchType: 'none' in invalidateQueries to prevent immediate refetch
+ * of queries that reference a deleted resource.
  *
- * AFTER THE FIX (Lesson 422):
+ * LESSON 423: CONFIRMATION MODAL
+ * ──────────────────────────────
  * INSTRUCTOR QUOTE:
- * "And with that, if we make that change and we save that and we reload and open
- * the developer tools if I click delete, we see that request, we are navigated
- * back to the starting page and we see no failing request anymore. And that's
- * therefore the behavior we now want to have."
+ * "And this feature does now not require any specific new React Query feature.
+ * Instead, it is something which we can build with our standard React knowledge."
  *
- * KEY TAKEAWAY:
+ * ALIAS SYNTAX FOR DESTRUCTURING:
+ * INSTRUCTOR QUOTE:
+ * "Now since with that I would have a name clash with isPending from useQuery,
+ * I'll assign a different name to it here by adding a colon here and then naming
+ * this isPendingDeletion and this is standard JavaScript syntax where when using
+ * object destructuring, as we're doing it here, you can assign an alias to one
+ * of those properties you are pulling out of this object by adding a colon after
+ * this original property name and then adding your new name under which you'll
+ * be able to use it in this file here."
+ *
+ * KEY PATTERN - CONFIRMATION MODAL BEFORE MUTATION:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  When invalidating queries after deleting a resource:                   │
- * │                                                                          │
- * │  Use refetchType: 'none' to PREVENT immediate refetch of queries        │
- * │  that reference the now-deleted resource.                               │
- * │                                                                          │
- * │  The queries will be marked as stale and refetch when actually needed   │
- * │  (e.g., when the Events list page re-renders after navigation).         │
+ * │  1. Add useState to track if user started deletion: [isDeleting]        │
+ * │  2. Main Delete button → sets isDeleting to true (opens modal)          │
+ * │  3. Modal shows confirmation with Cancel and Delete buttons             │
+ * │  4. Cancel button → sets isDeleting to false (closes modal)             │
+ * │  5. Delete button in modal → calls mutate() (actually sends request)    │
+ * │  6. Show isPendingDeletion loading state in modal                       │
+ * │  7. Show isErrorDeleting errors in modal                                │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * This is NOT a React Query feature - it's standard React state management
+ * that WRAPS the React Query mutation for better UX.
  */
