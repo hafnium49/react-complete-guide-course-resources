@@ -484,3 +484,57 @@ export async function deleteEvent({ id }) {
 
   return response.json();
 }
+
+/**
+ * ============================================================================
+ * LESSON 425: updateEvent - UPDATING AN EXISTING EVENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for this, of course, we need a mutation in this edit event component
+ * because we now wanna send a request to the backend that changes the event data."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now for this attached, you find another new version of the HTTP JS file which
+ * now also includes an update event function. And it's this function that should
+ * be triggered when we wanna send such a updating HTTP request because in this
+ * function, I'm sending a PUT request to the backend."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now this function also needs two pieces of data. It needs an ID of the event
+ * that should be updated and the new event data."
+ *
+ * HTTP METHOD COMPARISON:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  POST   - Create a new resource                                         │
+ * │  PUT    - Replace/update an existing resource (full update)             │
+ * │  PATCH  - Partially update an existing resource                         │
+ * │  DELETE - Remove a resource                                             │
+ * │                                                                          │
+ * │  In this case, we use PUT to replace the entire event with new data     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @param {Object} options - Options object
+ * @param {string} options.id - The ID of the event to update
+ * @param {Object} options.event - The new event data
+ * @returns {Promise<Object>} The response data
+ * @throws {Error} If the response is not ok (4xx or 5xx status)
+ */
+export async function updateEvent({ id, event }) {
+  const response = await fetch(`http://localhost:3000/events/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ event }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error('An error occurred while updating the event');
+    error.code = response.status;
+    error.info = await response.json();
+    throw error;
+  }
+
+  return response.json();
+}

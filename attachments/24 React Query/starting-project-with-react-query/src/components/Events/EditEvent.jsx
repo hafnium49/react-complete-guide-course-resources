@@ -1,17 +1,22 @@
 /**
  * ============================================================================
- * EditEvent Component - LESSON 424: Fetching Data for Edit Form
+ * EditEvent Component - LESSONS 424-425
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "Now there's one other thing we can do on this event details page. We can also
- * click this edit button to edit an event. And currently of course, this
- * functionality is also missing."
+ * This component demonstrates:
+ * - Lesson 424: Using useQuery to fetch and pre-populate form data
+ * - Lesson 425: Using useMutation to update event data
  *
+ * LESSON 424 - FETCHING DATA:
  * INSTRUCTOR QUOTE:
  * "And of course it would also be nice if this modal would be pre-populated with
- * the event data to which it belongs. So the event which we are trying to edit.
- * And that's what we'll work on next."
+ * the event data to which it belongs. So the event which we are trying to edit."
+ *
+ * LESSON 425 - UPDATING DATA:
+ * INSTRUCTOR QUOTE:
+ * "So let's work on this update functionality next. And for this, of course, we
+ * need a mutation in this edit event component because we now wanna send a request
+ * to the backend that changes the event data."
  *
  * ============================================================================
  * KEY CONCEPT: REUSING CACHED DATA ACROSS COMPONENTS
@@ -58,8 +63,13 @@
  * INSTRUCTOR QUOTE:
  * "And of course, fetching this data again means that we should use useQuery
  * from React Query, just as we did it before in this course."
+ *
+ * LESSON 425 - ADDING useMutation:
+ * INSTRUCTOR QUOTE:
+ * "So as a first step, I'll import useMutation from React Query in the edit
+ * event JSX file."
  */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 /**
  * INSTRUCTOR QUOTE:
@@ -79,8 +89,13 @@ import ErrorBlock from '../UI/ErrorBlock.jsx';
  * "And here for this query function I want to use a function which I already
  * have in my HTTP JS file. This fetchEvent function because that will fetch us
  * the event details with which we want pre-populate this form."
+ *
+ * LESSON 425 - updateEvent function:
+ * INSTRUCTOR QUOTE:
+ * "This updated file, which you find attached, it's this update event function
+ * that's set up as a mutation function here."
  */
-import { fetchEvent } from '../../util/http.js';
+import { fetchEvent, updateEvent } from '../../util/http.js';
 
 export default function EditEvent() {
   const navigate = useNavigate();
@@ -150,8 +165,77 @@ export default function EditEvent() {
     queryFn: ({ signal }) => fetchEvent({ id: params.id, signal }),
   });
 
+  /**
+   * ============================================================================
+   * LESSON 425: useMutation FOR UPDATING EVENT DATA
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And for this, of course, we need a mutation in this edit event component
+   * because we now wanna send a request to the backend that changes the event data."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Therefore back in edit event, we now wanna create a mutation which we can
+   * then trigger from inside our code and then target this update event function."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then execute it here in this component function and pass this configuration
+   * object to it. And here the mutation function should now be updateEvent."
+   *
+   * WHY NO isPending/isError EXTRACTION HERE:
+   * INSTRUCTOR QUOTE:
+   * "Now, unlike before in this section, for this mutation, I will actually not
+   * pull out isPending and so on, because in the next lecture, I'll show you a
+   * different way of handling mutations and the different states a mutation can
+   * go through."
+   *
+   * This will be enhanced with "Optimistic Updating" in the next lesson!
+   */
+  const { mutate } = useMutation({
+    mutationFn: updateEvent,
+  });
+
+  /**
+   * ============================================================================
+   * handleSubmit - TRIGGERS THE UPDATE MUTATION
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And with that, as you learned, we can extract this mutate function out of
+   * this object that is returned by useMutation so that we can call this function
+   * to trigger this mutation function."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I wanna trigger this function from inside here, from inside this
+   * handleSubmit function, which is connected to this event form."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then we have to pass this object with the data that we wanna forward to
+   * updateEvent to this mutate function. So in this case, an object that has an
+   * id property and an event property, that's what we must pass here to mutate."
+   *
+   * DATA FLOW:
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  1. User edits form and clicks "Update"                                │
+   * │  2. EventForm calls onSubmit with formData                             │
+   * │  3. handleSubmit receives formData                                      │
+   * │  4. mutate({ id: params.id, event: formData }) is called               │
+   * │  5. useMutation calls updateEvent({ id, event })                       │
+   * │  6. PUT request sent to backend                                        │
+   * │  7. navigate('../') closes the modal                                   │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   *
+   * WHY NAVIGATE IS CALLED AFTER mutate (NOT in onSuccess):
+   * INSTRUCTOR QUOTE:
+   * "I'll use this navigate function here to close this modal... And I'm
+   * deliberately doing that here and not in this onSuccess method, in this
+   * configuration object. And I'll explain why I am doing that in the next lecture."
+   *
+   * This is intentional setup for "Optimistic Updating" in the next lesson!
+   */
   function handleSubmit(formData) {
-    // Will be implemented in the next lesson (Lesson 425)
+    mutate({ id: params.id, event: formData });
+    navigate('../');
   }
 
   function handleClose() {
@@ -279,11 +363,11 @@ export default function EditEvent() {
 
 /**
  * ============================================================================
- * LESSON 424 SUMMARY
+ * LESSONS 424-425 SUMMARY
  * ============================================================================
  *
- * WHAT THIS LESSON DEMONSTRATES:
- *
+ * LESSON 424 - FETCHING DATA FOR EDIT FORM:
+ * ─────────────────────────────────────────
  * 1. REUSING useQuery WITH SAME queryKey FOR CACHE SHARING
  *    - EventDetails and EditEvent both use queryKey: ['events', params.id]
  *    - If EventDetails already fetched the data, EditEvent gets it instantly
@@ -294,15 +378,39 @@ export default function EditEvent() {
  *    - Pass to EventForm via inputData prop
  *    - Form fields are automatically filled with existing values
  *
- * 3. CONDITIONAL RENDERING PATTERN (same as EventDetails)
- *    - isPending → LoadingIndicator
- *    - isError → ErrorBlock with close button
- *    - data → Form with pre-populated values
+ * LESSON 425 - UPDATING EVENT DATA:
+ * ──────────────────────────────────
+ * 1. ADDING useMutation FOR UPDATE
+ *    - Import useMutation from @tanstack/react-query
+ *    - Import updateEvent from http.js
+ *    - Execute useMutation with updateEvent as mutationFn
+ *
+ * 2. handleSubmit IMPLEMENTATION
+ *    - Call mutate({ id: params.id, event: formData })
+ *    - Call navigate('../') to close modal
+ *
+ * IMPORTANT - CURRENT LIMITATION:
+ * INSTRUCTOR QUOTE:
+ * "And with this code in place, if I now save this and I reload and I add an
+ * exclamation mark here and I click update, this closes. And of course we are
+ * not seeing the exclamation mark here if I reload however it is here."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So the update worked, but because I just closed this and I navigate away and
+ * because I did not call invalidate queries as I did before in this course in
+ * other places, this updated data was not fetched here."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  PROBLEM: After update, the EventDetails page shows OLD data           │
+ * │                                                                         │
+ * │  WHY: We didn't invalidate queries, so cached data is stale            │
+ * │                                                                         │
+ * │  SOLUTION: "Optimistic Updating" - coming in the next lesson!          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * TEASER FOR NEXT LESSON:
  * INSTRUCTOR QUOTE:
- * "But speaking of a user experience, the next step, of course is to make this
- * update button work, so that we do actually send an update request to the backend."
+ * "So that is what will change in the next lecture."
  *
  * ============================================================================
  */
