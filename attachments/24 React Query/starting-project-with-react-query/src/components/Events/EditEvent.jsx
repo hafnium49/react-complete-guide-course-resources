@@ -70,6 +70,7 @@
 import {
   Link,
   redirect,
+  useActionData,
   useNavigate,
   useNavigation,
   useParams,
@@ -137,6 +138,25 @@ export default function EditEvent() {
    * └─────────────────────────────────────────────────────────────────────────┘
    */
   const { state } = useNavigation();
+
+  /**
+   * ============================================================================
+   * ERROR HANDLING: useActionData HOOK
+   * ============================================================================
+   *
+   * useActionData returns data returned by the action function.
+   * If the action returns error data (instead of throwing), we can display
+   * it here in the form.
+   *
+   * This allows us to:
+   * - Keep the modal open when validation fails
+   * - Show the error message to the user
+   * - Let them fix their input and try again
+   *
+   * Without this, errors from the action would crash to React Router's
+   * default error page, losing the user's context.
+   */
+  const actionData = useActionData();
 
   /**
    * ============================================================================
@@ -253,25 +273,45 @@ export default function EditEvent() {
 
   if (data) {
     content = (
-      <EventForm inputData={data} onSubmit={handleSubmit}>
-        {/**
-         * LESSON 428: SHOWING SUBMISSION STATE
-         *
-         * INSTRUCTOR QUOTE:
-         * "So I wanna disable my update button when we are submitting and
-         * maybe also show a different text on it."
-         *
-         * Using navigation.state to provide user feedback:
-         * - state === 'submitting' → Show "Sending..." and disable button
-         * - state !== 'submitting' → Show normal "Update" button
-         */}
-        <Link to="../" className="button-text">
-          Cancel
-        </Link>
-        <button type="submit" className="button" disabled={state === 'submitting'}>
-          {state === 'submitting' ? 'Sending...' : 'Update'}
-        </button>
-      </EventForm>
+      /**
+       * ERROR HANDLING: Display validation errors from action
+       *
+       * When the action catches an error and returns it (instead of throwing),
+       * actionData will contain the error information. We display it above
+       * the form so users can see what went wrong and fix their input.
+       *
+       * This keeps the modal open and preserves the user's context.
+       */
+      <>
+        {actionData?.errors && (
+          <ErrorBlock
+            title="Failed to update event"
+            message={
+              actionData.errors.message ||
+              'Please check your inputs and try again.'
+            }
+          />
+        )}
+        <EventForm inputData={data} onSubmit={handleSubmit}>
+          {/**
+           * LESSON 428: SHOWING SUBMISSION STATE
+           *
+           * INSTRUCTOR QUOTE:
+           * "So I wanna disable my update button when we are submitting and
+           * maybe also show a different text on it."
+           *
+           * Using navigation.state to provide user feedback:
+           * - state === 'submitting' → Show "Sending..." and disable button
+           * - state !== 'submitting' → Show normal "Update" button
+           */}
+          <Link to="../" className="button-text">
+            Cancel
+          </Link>
+          <button type="submit" className="button" disabled={state === 'submitting'}>
+            {state === 'submitting' ? 'Sending...' : 'Update'}
+          </button>
+        </EventForm>
+      </>
     );
   }
 
@@ -395,37 +435,68 @@ export async function action({ request, params }) {
   const updatedEventData = Object.fromEntries(formData);
 
   /**
-   * SENDING THE UPDATE REQUEST
+   * ============================================================================
+   * ERROR HANDLING: Try-catch to handle validation errors gracefully
+   * ============================================================================
    *
-   * We call updateEvent with the event ID and the updated data.
-   * Note: We await this to ensure the update completes before redirecting.
+   * Without try-catch:
+   * - updateEvent() throws an error on validation failure (400 response)
+   * - React Router catches it and shows its default error page
+   * - User loses the modal context and can't fix their input
+   *
+   * With try-catch:
+   * - We catch the error and RETURN it instead of throwing
+   * - React Router passes this return value to useActionData()
+   * - The component can display the error while keeping the modal open
+   * - User can fix their input and try again
    */
-  await updateEvent({ id: params.id, event: updatedEventData });
+  try {
+    /**
+     * SENDING THE UPDATE REQUEST
+     *
+     * We call updateEvent with the event ID and the updated data.
+     * Note: We await this to ensure the update completes before redirecting.
+     */
+    await updateEvent({ id: params.id, event: updatedEventData });
 
-  /**
-   * INVALIDATING QUERIES TO REFRESH CACHE
-   *
-   * INSTRUCTOR QUOTE:
-   * "And you might also wanna invalidate your queries here after updating
-   * an event."
-   *
-   * This ensures that after the update:
-   * - The cache is marked as stale
-   * - Next time this event is viewed, fresh data is fetched
-   * - All components showing this event will see the updated version
-   */
-  await queryClient.invalidateQueries(['events']);
+    /**
+     * INVALIDATING QUERIES TO REFRESH CACHE
+     *
+     * INSTRUCTOR QUOTE:
+     * "And you might also wanna invalidate your queries here after updating
+     * an event."
+     *
+     * This ensures that after the update:
+     * - The cache is marked as stale
+     * - Next time this event is viewed, fresh data is fetched
+     * - All components showing this event will see the updated version
+     */
+    await queryClient.invalidateQueries(['events']);
 
-  /**
-   * REDIRECT BACK TO EVENT DETAILS
-   *
-   * INSTRUCTOR QUOTE:
-   * "And then you can use the redirect function to redirect the user
-   * back to the event details page."
-   *
-   * redirect('../') navigates one level up from /events/:id/edit to /events/:id
-   */
-  return redirect('../');
+    /**
+     * REDIRECT BACK TO EVENT DETAILS
+     *
+     * INSTRUCTOR QUOTE:
+     * "And then you can use the redirect function to redirect the user
+     * back to the event details page."
+     *
+     * redirect('../') navigates one level up from /events/:id/edit to /events/:id
+     */
+    return redirect('../');
+  } catch (error) {
+    /**
+     * RETURNING ERROR DATA INSTEAD OF THROWING
+     *
+     * By returning an object with an 'errors' property, we can:
+     * - Access this data in the component via useActionData()
+     * - Display the error message in the form
+     * - Keep the modal open for the user to fix their input
+     *
+     * The error.info property contains the server's error response
+     * (set in http.js when response is not OK).
+     */
+    return { errors: error.info || { message: error.message } };
+  }
 }
 
 /**
