@@ -194,7 +194,7 @@ export default function EditEvent() {
    * even if we go back to the events, let's say, and visit it again,
    * you see that no request is being sent."
    */
-  const { data, isError, error } = useQuery({
+  const { data, isError, error } = useQuery({ // This useQuery uses the cache populated by the loader
     queryKey: ['events', params.id],
     queryFn: ({ signal }) => fetchEvent({ id: params.id, signal }),
     staleTime: 10000, // 10 seconds - prevents refetch if data was just loaded by loader
