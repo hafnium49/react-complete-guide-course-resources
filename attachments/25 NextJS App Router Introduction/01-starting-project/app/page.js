@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-431: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-432: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -139,6 +139,25 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
+ * LESSON 432 - ADDING MORE PAGES (FILE-BASED ROUTING)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In this app directory, you can add new paths, which you wanna handle as
+ * routes by adding new folders. So if we want to support a /about route,
+ * we have to add an about folder."
+ *
+ * HOW TO ADD A NEW PAGE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Create a new folder with the route name: app/about/                 │
+ * │  2. Add page.js inside: app/about/page.js                               │
+ * │  3. Export a component from that page.js                                │
+ * │  4. Visit the route: http://localhost:3000/about                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * See: app/about/page.js for the about page created in Lesson 432
+ *
+ * ============================================================================
  */
 
 /**
@@ -197,32 +216,45 @@ export default function Home() {
       <img src="/logo.png" alt="A server surrounded by magic sparkles." />
       <h1>Welcome to this NextJS Course!</h1>
       <p>🔥 Let&apos;s get started! 🔥</p>
+      {/**
+       * LESSON 432: LINK TO ANOTHER PAGE
+       *
+       * This is a basic HTML <a> tag. In a later lesson, we'll learn about
+       * Next.js's <Link> component which provides client-side navigation
+       * without full page reloads.
+       *
+       * The /about route works because we created:
+       * - app/about/page.js
+       */}
+      <p>
+        <a href="/about">Learn more about us</a>
+      </p>
     </main>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 431 SUMMARY: SERVER COMPONENTS
+ * LESSONS 431-432 SUMMARY
  * ============================================================================
  *
  * KEY TAKEAWAYS:
  *
+ * LESSON 431 - SERVER COMPONENTS:
  * 1. The `app/` folder is the MOST IMPORTANT folder in Next.js
- *    - This is where you define your pages and routes
- *
  * 2. `page.js` is a RESERVED filename
- *    - Next.js knows to render this as a page
- *    - Other reserved names: layout.js, loading.js, error.js, etc.
- *
  * 3. Components in app/ are SERVER COMPONENTS by default
- *    - They execute on the server, not in the browser
- *    - console.log appears in terminal, not browser console
- *    - JSX is sent to browser as HTML
+ *    - They execute on the server
+ *    - console.log appears in terminal, not browser
+ *
+ * LESSON 432 - FILE-BASED ROUTING:
+ * 4. Add new routes by creating FOLDERS with page.js files
+ *    - /about route → app/about/page.js
+ *    - Folder alone = 404 error (need page.js!)
  *
  * INSTRUCTOR QUOTE:
- * "So it's a regular React component, but treated in a special way by NextJS.
- * It is treated as a server component and executed on the server."
+ * "So that is how we can add a new route by adding a folder with a page.js
+ * file inside of it."
  *
  * VISUAL: How Server Components Work
  * ┌─────────────────────────────────────────────────────────────────────────┐
