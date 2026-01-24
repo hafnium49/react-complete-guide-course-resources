@@ -1,4 +1,48 @@
 {
+  /**
+   * ============================================================================
+   * JSCONFIG.JSON - LESSON 435: The @ Import Alias
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "It's this jsconfig file that configures this alias, and that's simply a
+   * little convenience feature, which can simplify your import paths because
+   * now I can simply refer to the root project folder with at, and then dive
+   * into the components folder, and target the header.js file."
+   *
+   * WHAT THIS FILE DOES:
+   * - Configures JavaScript/TypeScript compiler options for your IDE
+   * - Sets up path aliases for cleaner imports
+   * - Helps VS Code with IntelliSense and auto-completion
+   *
+   * THE @ ALIAS:
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  "@/*": ["./*"]                                                         │
+   * │                                                                          │
+   * │  This means: @ points to the project root directory                     │
+   * │                                                                          │
+   * │  BEFORE (without alias):                                                │
+   * │    import Header from '../../../components/header'                      │
+   * │    import utils from '../../lib/utils'                                  │
+   * │                                                                          │
+   * │  AFTER (with @ alias):                                                  │
+   * │    import Header from '@/components/header'                             │
+   * │    import utils from '@/lib/utils'                                      │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "Here you can take advantage of another feature that's typically unlocked
+   * in NextJS projects, where you can use an at symbol in your import paths
+   * to refer to the root project."
+   *
+   * BENEFITS:
+   * 1. No more ../../../ relative path confusion
+   * 2. Always know imports come from project root
+   * 3. Easier refactoring when moving files
+   * 4. Cleaner, more readable import statements
+   *
+   * ============================================================================
+   */
   "compilerOptions": {
     "paths": {
       "@/*": ["./*"]

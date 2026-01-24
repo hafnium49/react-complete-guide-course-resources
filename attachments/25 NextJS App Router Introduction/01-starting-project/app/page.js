@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-433: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-435: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -102,6 +102,8 @@
  * │  route.js        │  API endpoint (backend route handler)                │
  * │  template.js     │  Like layout but re-renders on navigation            │
  * │  default.js      │  Fallback for parallel routes                        │
+ * │  icon.png        │  Favicon (Lesson 435)                                │
+ * │  globals.css     │  Global styles (imported in layout.js)               │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
@@ -149,6 +151,41 @@
 import Link from 'next/link';
 
 /**
+ * ============================================================================
+ * LESSON 435: IMPORTING CUSTOM COMPONENTS WITH @ ALIAS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now with that components folder moved out of header.js, you, of course, also
+ * again must update your import here and here you can take advantage of another
+ * feature that's typically unlocked in NextJS projects, where you can use an at
+ * symbol in your import paths to refer to the root project."
+ *
+ * THE @ ALIAS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  @/ = Root of the project (same level as app/ folder)                   │
+ * │                                                                          │
+ * │  Instead of: import Header from '../components/header'                  │
+ * │  You write:  import Header from '@/components/header'                   │
+ * │                                                                          │
+ * │  This is configured in jsconfig.json:                                   │
+ * │  { "compilerOptions": { "paths": { "@/*": ["./*"] } } }                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "It's this jsconfig file that configures this alias, and that's simply a
+ * little convenience feature, which can simplify your import paths because
+ * now I can simply refer to the root project folder with at, and then dive
+ * into the components folder, and target the header.js file."
+ *
+ * BENEFITS OF @ ALIAS:
+ * - No need for complex relative paths (../../components)
+ * - Always know where the import is coming from (root)
+ * - Easier refactoring when moving files around
+ */
+import Header from '@/components/header';
+
+/**
  * HOME PAGE COMPONENT - A SERVER COMPONENT
  *
  * Notice: No 'use client' directive = This is a SERVER COMPONENT
@@ -163,11 +200,26 @@ export default function Home() {
   return (
     <main>
       {/**
-       * STATIC ASSETS IN NEXT.JS
-       * Images in the `public/` folder are served at the root URL.
+       * ====================================================================
+       * LESSON 435: USING CUSTOM COMPONENTS
+       * ====================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "We can of course import it now. We can import it here into page.js
+       * like this, and then here we can output it just as you learned it
+       * with Vanilla React because we are still working with React here,
+       * we are still working with components, and JSX just enhanced with
+       * some extra features."
+       *
+       * The Header component contains the logo image and h1 heading.
+       * It's a regular React component stored in /components/header.js
+       * (outside the app/ folder, following the instructor's preference).
+       *
+       * INSTRUCTOR QUOTE:
+       * "With that if you save that and you reload, you see the same content
+       * as before, but now with that custom component being used."
        */}
-      <img src="/logo.png" alt="A server surrounded by magic sparkles." />
-      <h1>Welcome to this NextJS Course!</h1>
+      <Header />
       <p>🔥 Let&apos;s get started! 🔥</p>
 
       {/**
@@ -207,7 +259,7 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSONS 431-433 SUMMARY
+ * LESSONS 431-435 SUMMARY
  * ============================================================================
  *
  * KEY TAKEAWAYS:
@@ -223,6 +275,14 @@ export default function Home() {
  * 4. Use <Link> from 'next/link' instead of <a> for internal links
  * 5. <Link> keeps you in the Single-Page Application (SPA)
  * 6. <a> causes full page reloads (bad for user experience)
+ *
+ * LESSON 435 - CUSTOM COMPONENTS & PROJECT STRUCTURE:
+ * 7. Not every file is "special" - only reserved names have special meaning
+ * 8. icon.png in app/ is used as favicon automatically
+ * 9. globals.css is imported in layout.js for app-wide styles
+ * 10. Custom components can be stored anywhere (app/ or outside)
+ * 11. Folders without page.js are NOT routes (/components = 404)
+ * 12. Use @/ alias to import from project root (configured in jsconfig.json)
  *
  * WHEN TO USE WHAT:
  * ┌─────────────────────────────────────────────────────────────────────────┐

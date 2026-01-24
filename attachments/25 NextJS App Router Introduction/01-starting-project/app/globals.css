@@ -1,18 +1,28 @@
 /**
  * ============================================================================
- * GLOBAL STYLES - LESSONS 429-430: Next.js Starting Project
+ * GLOBAL STYLES - LESSON 435: CSS Files in Next.js
  * ============================================================================
  *
- * GLOBAL CSS IN NEXT.JS
- *
- * This file contains global styles that apply to your ENTIRE application.
- * In Next.js, global CSS must be imported in a layout file (typically layout.js).
- *
- * See layout.js: import './globals.css'
+ * LESSON 435 - HOW CSS FILES WORK IN NEXT.JS
  *
  * INSTRUCTOR QUOTE:
- * "I replaced the content of this app folder. And this app folder is there
- * right from the start, even in an unedited project."
+ * "Now there also are two other files in that app directory, which I haven't
+ * covered yet. And one is the globals.css file. Now, in there I set up some
+ * CSS styles for you, and this file is being imported into the layout.js file,
+ * so that it's essentially available on every page that's being loaded."
+ *
+ * INSTRUCTOR QUOTE:
+ * "This is how you can import CSS files in NextJS. It's an approach that also
+ * works in most Vanilla React projects, and this will then simply ensure that
+ * these styles are made available on every loaded page."
+ *
+ * HOW IT WORKS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. globals.css is stored in the app/ folder                            │
+ * │  2. layout.js imports it: import './globals.css'                        │
+ * │  3. Since layout.js wraps ALL pages, styles apply everywhere            │
+ * │  4. Next.js handles bundling and optimization automatically             │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * CSS OPTIONS IN NEXT.JS
@@ -158,12 +168,12 @@ p a:active {
 }
 
 /* ============================================================================
- * LESSON 429-430 SUMMARY: STYLING IN NEXT.JS
+ * LESSON 435 SUMMARY: CSS AND SPECIAL FILES IN NEXT.JS
  * ============================================================================
  *
  * KEY POINTS:
  *
- * 1. Global CSS goes in globals.css and is imported in layout.js
+ * 1. globals.css is imported in layout.js to apply styles to all pages
  *
  * 2. For component-specific styles, use CSS Modules:
  *    - Create: MyComponent.module.css
@@ -174,6 +184,12 @@ p a:active {
  *    - CSS is extracted and minified in production
  *    - Unused CSS can be purged (with Tailwind or similar)
  *    - Critical CSS is inlined for faster initial render
+ *
+ * INSTRUCTOR QUOTE:
+ * "So as you can tell by now, the app folder is very important. In there, you
+ * define your routes by adding folders, and you have some reserved file names
+ * like page.js, icon.png, or layout.js, which then simply unlock different
+ * features, you could say."
  *
  * ============================================================================
  */
