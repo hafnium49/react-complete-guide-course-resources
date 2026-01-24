@@ -1,33 +1,129 @@
+/**
+ * ============================================================================
+ * GLOBAL STYLES - LESSONS 429-430: Next.js Starting Project
+ * ============================================================================
+ *
+ * GLOBAL CSS IN NEXT.JS
+ *
+ * This file contains global styles that apply to your ENTIRE application.
+ * In Next.js, global CSS must be imported in a layout file (typically layout.js).
+ *
+ * See layout.js: import './globals.css'
+ *
+ * INSTRUCTOR QUOTE:
+ * "I replaced the content of this app folder. And this app folder is there
+ * right from the start, even in an unedited project."
+ *
+ * ============================================================================
+ * CSS OPTIONS IN NEXT.JS
+ * ============================================================================
+ *
+ * Next.js supports multiple styling approaches:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Global CSS (this file)                                              │
+ * │     - Imported in layout.js                                             │
+ * │     - Applies to all pages                                              │
+ * │                                                                          │
+ * │  2. CSS Modules (recommended for components)                            │
+ * │     - File: ComponentName.module.css                                    │
+ * │     - Scoped to component (no class name conflicts)                     │
+ * │     - import styles from './Component.module.css'                       │
+ * │                                                                          │
+ * │  3. Tailwind CSS (optional)                                             │
+ * │     - Utility-first CSS framework                                       │
+ * │     - Can be added via create-next-app or manually                      │
+ * │                                                                          │
+ * │  4. CSS-in-JS (styled-components, Emotion, etc.)                        │
+ * │     - Requires additional setup in Next.js                              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE (on Tailwind):
+ * "We could use Tailwind CSS for styling and amazing CSS library, but since
+ * this course here is not about styling and not about Tailwind, and I
+ * therefore wanna keep the amount of styling related code we have to write
+ * to a minimum, I'll choose no here."
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * GOOGLE FONTS IMPORT
+ * ============================================================================
+ *
+ * Importing fonts directly in CSS. In a production Next.js app, you might
+ * use the built-in next/font for better performance (automatic self-hosting).
+ *
+ * Alternative approach with next/font (in layout.js):
+ *   import { Open_Sans, Poppins } from 'next/font/google'
+ *   const openSans = Open_Sans({ subsets: ['latin'] })
+ * ============================================================================
+ */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Poppins:wght@400;700&display=swap');
 
+/* ============================================================================
+ * CSS RESET / BASELINE
+ * ============================================================================
+ *
+ * Basic CSS reset to ensure consistent styling across browsers.
+ * ============================================================================
+ */
+
+/* Apply border-box to all elements for easier sizing calculations */
 * {
   box-sizing: border-box;
 }
 
+/* Set base font and full viewport height */
 html {
   font-family: 'Open Sans', sans-serif;
   height: 100%;
 }
 
+/* ============================================================================
+ * BODY STYLES
+ * ============================================================================
+ *
+ * Dark theme with gradient background - the signature look of this course.
+ * ============================================================================
+ */
 body {
   height: 100%;
   margin: 0;
+  /* Dark purple gradient background */
   background: linear-gradient(180deg, #232029, #231e2d);
+  /* Light text for dark background */
   color: #ddd8e4;
 }
 
+/* ============================================================================
+ * MAIN CONTENT AREA
+ * ============================================================================
+ *
+ * Centered content for the welcome page.
+ * This styles the <main> element in page.js.
+ * ============================================================================
+ */
 main {
   text-align: center;
   margin: 5rem auto;
 }
 
+/* Logo image styling with glow effect */
 main img {
   width: 8rem;
   height: 8rem;
   object-fit: cover;
+  /* Golden glow effect around the logo */
   filter: drop-shadow(0 0 4px #f6c363);
 }
 
+/* ============================================================================
+ * TYPOGRAPHY
+ * ============================================================================
+ */
+
+/* Main heading - uses Poppins font for emphasis */
 h1 {
   font-size: 3rem;
   margin: 3rem auto;
@@ -35,10 +131,19 @@ h1 {
   font-family: 'Poppins', sans-serif;
 }
 
+/* Paragraph text */
 p {
   font-size: 1.5rem;
 }
 
+/* ============================================================================
+ * LINK STYLES
+ * ============================================================================
+ *
+ * Golden links with underline, purple on hover.
+ * Will be used for navigation links in future lessons.
+ * ============================================================================
+ */
 p a {
   color: #f4c33d;
   text-decoration: none;
@@ -51,3 +156,24 @@ p a:active {
   color: #bd3df4;
   border-color: #bd3df4;
 }
+
+/* ============================================================================
+ * LESSON 429-430 SUMMARY: STYLING IN NEXT.JS
+ * ============================================================================
+ *
+ * KEY POINTS:
+ *
+ * 1. Global CSS goes in globals.css and is imported in layout.js
+ *
+ * 2. For component-specific styles, use CSS Modules:
+ *    - Create: MyComponent.module.css
+ *    - Import: import styles from './MyComponent.module.css'
+ *    - Use: <div className={styles.myClass}>
+ *
+ * 3. Next.js automatically handles CSS optimization:
+ *    - CSS is extracted and minified in production
+ *    - Unused CSS can be purged (with Tailwind or similar)
+ *    - Critical CSS is inlined for faster initial render
+ *
+ * ============================================================================
+ */
