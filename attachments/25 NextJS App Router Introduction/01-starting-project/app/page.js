@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-430: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-431: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -53,66 +53,136 @@
  * │  ? Customize default import alias?                → No                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * ============================================================================
+ * LESSON 431 - THE APP FOLDER & RESERVED FILENAMES
+ * ============================================================================
+ *
  * INSTRUCTOR QUOTE:
- * "You should confirm the App Router if asked. So you should pick yes here."
+ * "Let's take a look at that app folder because that is the most important
+ * folder in a modern NextJS project. It's this app folder where you set up
+ * your different pages that you want to have on your overall website."
  *
- * The App Router is Next.js 13+ recommended routing system that uses:
- * - File-based routing (folders = routes)
- * - Server Components by default
- * - Layouts, loading states, error boundaries
+ * RESERVED FILENAMES IN THE app/ FOLDER:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Filename        │  Purpose                                             │
+ * │  ────────────────│──────────────────────────────────────────────────────│
+ * │  page.js         │  Defines a page/route (THIS FILE)                    │
+ * │  layout.js       │  Wraps pages with shared UI (header, footer, etc.)   │
+ * │  loading.js      │  Loading UI (shown while page loads)                 │
+ * │  error.js        │  Error UI (shown when page has an error)             │
+ * │  not-found.js    │  404 page                                            │
+ * │  route.js        │  API endpoint (backend route handler)                │
+ * │  template.js     │  Like layout but re-renders on navigation            │
+ * │  default.js      │  Fallback for parallel routes                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "Page.js is a reserved filename just as Layout.js and a couple of other
+ * filenames you'll encounter throughout this section."
  *
  * ============================================================================
- * THIS FILE: app/page.js
+ * THIS FILE: app/page.js - THE HOME PAGE
  * ============================================================================
  *
- * In the App Router, this file represents the HOME PAGE (root route "/").
+ * INSTRUCTOR QUOTE:
+ * "A file named Page.js simply tells NextJS that it should render a page."
  *
  * FILE-BASED ROUTING IN NEXT.JS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  File Path                    │  URL Route                              │
  * │  ─────────────────────────────│─────────────────────────────────────────│
- * │  app/page.js                  │  /                                      │
+ * │  app/page.js                  │  /  (home page - THIS FILE)             │
  * │  app/about/page.js            │  /about                                 │
  * │  app/meals/page.js            │  /meals                                 │
  * │  app/meals/[slug]/page.js     │  /meals/:slug (dynamic route)           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * This is DIFFERENT from React Router where you define routes in code:
- *   <Route path="/" element={<Home />} />
- *
- * In Next.js, the FILE STRUCTURE defines the routes automatically!
- *
  * ============================================================================
- * SERVER COMPONENTS (Default in Next.js App Router)
+ * LESSON 431 - SERVER COMPONENTS: THE KEY CONCEPT
  * ============================================================================
  *
- * By default, ALL components in the `app/` folder are SERVER COMPONENTS.
- * This means:
- * - They render on the SERVER, not in the browser
- * - They can directly access databases, file systems, etc.
- * - They send pre-rendered HTML to the client (faster initial load)
- * - They CANNOT use useState, useEffect, or browser APIs
+ * INSTRUCTOR QUOTE:
+ * "If you take a look at that file, you see that in there, it's in the end
+ * a React component function that's stored in the file, something you of
+ * course know as a React developer."
  *
- * To make a component a CLIENT COMPONENT (like traditional React):
- *   Add 'use client' at the top of the file
+ * INSTRUCTOR QUOTE:
+ * "The special thing about this component here just is that it's a so-called
+ * server component, a type of component that's not really easily built with
+ * just React, but that is embraced and supported by NextJS."
+ *
+ * WHAT MAKES IT A SERVER COMPONENT?
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, on the surface, it's a regular component. There's nothing special
+ * about it, but NextJS ensures that this component is actually rendered on
+ * the server, that this component function is executed on the server."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  SERVER COMPONENT (default in app/ folder):                             │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  ✓ Component function executes on the SERVER                           │
+ * │  ✓ console.log appears in TERMINAL (server), not browser               │
+ * │  ✓ Can directly access databases, file system, env variables           │
+ * │  ✓ Returned JSX is sent to browser as HTML                             │
+ * │  ✓ Reduces JavaScript sent to browser (faster page loads)              │
+ * │                                                                          │
+ * │  ✗ CANNOT use useState, useEffect, useContext                          │
+ * │  ✗ CANNOT use browser APIs (window, document, localStorage)            │
+ * │  ✗ CANNOT use event handlers (onClick, onChange, etc.)                 │
+ * │                                                                          │
+ * │  CLIENT COMPONENT (add 'use client' at top of file):                   │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  ✓ Works like traditional React (runs in browser)                      │
+ * │  ✓ Can use hooks, state, effects, event handlers                       │
+ * │  ✓ Can use browser APIs                                                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
 
 /**
- * HOME PAGE COMPONENT
- *
- * This is a Server Component (default in Next.js App Router).
- * It renders on the server and sends HTML to the browser.
- *
- * Notice: No 'use client' directive at the top = Server Component
+ * HOME PAGE COMPONENT - A SERVER COMPONENT
  *
  * INSTRUCTOR QUOTE:
- * "And if you then go to that address, you should see something like this
- * on the screen. And that's that very basic first starting project I
- * prepared for you."
+ * "It is treated as a server component and executed on the server, and it's
+ * then the returned JSX code that's sent over the wire to the browser to be
+ * rendered as HTML, so to say, and that's why we can see what we see here,
+ * thanks to this component."
+ *
+ * Notice: No 'use client' directive = This is a SERVER COMPONENT
  */
 export default function Home() {
+  /**
+   * ============================================================================
+   * LESSON 431: PROVING SERVER-SIDE EXECUTION WITH console.log
+   * ============================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Hence, if you, for example, add a console log statement here where you
+   * say executing, you will not see that here on the client side."
+   *
+   * INSTRUCTOR QUOTE:
+   * "If you open your developer tools and the JavaScript console, you can
+   * refresh as often as you want, you will not see that log statement here."
+   *
+   * WHERE DOES THIS LOG APPEAR?
+   *
+   * INSTRUCTOR QUOTE:
+   * "Instead, you can see it on the backend. There, if you open the terminal
+   * where you started the development server, you see all these executing logs
+   * and that proves that it's executing on the server because this process
+   * and the terminal is running the server, all the logs here are coming from
+   * the server side."
+   *
+   * TRY IT YOURSELF:
+   * 1. Open browser DevTools → Console tab → You will NOT see "Executing"
+   * 2. Look at your terminal (where you ran `npm run dev`) → You WILL see it!
+   *
+   * This PROVES the component runs on the server, not in the browser.
+   */
+  console.log('Executing'); // Check your TERMINAL, not browser console!
+
   return (
     <main>
       {/**
@@ -122,7 +192,6 @@ export default function Home() {
        * - File: public/logo.png
        * - URL: /logo.png
        *
-       * This is similar to how CRA (Create React App) handles static assets.
        * Next.js also has an optimized <Image> component (covered later).
        */}
       <img src="/logo.png" alt="A server surrounded by magic sparkles." />
@@ -134,39 +203,51 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSON 429-430 SUMMARY
+ * LESSON 431 SUMMARY: SERVER COMPONENTS
  * ============================================================================
  *
- * WHAT YOU'LL LEARN IN THIS SECTION:
+ * KEY TAKEAWAYS:
+ *
+ * 1. The `app/` folder is the MOST IMPORTANT folder in Next.js
+ *    - This is where you define your pages and routes
+ *
+ * 2. `page.js` is a RESERVED filename
+ *    - Next.js knows to render this as a page
+ *    - Other reserved names: layout.js, loading.js, error.js, etc.
+ *
+ * 3. Components in app/ are SERVER COMPONENTS by default
+ *    - They execute on the server, not in the browser
+ *    - console.log appears in terminal, not browser console
+ *    - JSX is sent to browser as HTML
  *
  * INSTRUCTOR QUOTE:
- * "In this section here, you will learn what exactly NextJS is and why you
- * might wanna use it, before you'll then learn how to use it, how to set
- * up routes and pages and work with React components when working with
- * NextJS, and how to fetch and send data."
+ * "So it's a regular React component, but treated in a special way by NextJS.
+ * It is treated as a server component and executed on the server."
  *
+ * VISUAL: How Server Components Work
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Topics Covered:                                                        │
- * │  ─────────────────────────────────────────────────────────────────────  │
- * │  1. What is NextJS & Why use it?                                        │
- * │  2. Routing, Pages & Server Components                                  │
- * │  3. Fetching & Sending Data                                             │
- * │  4. Styling, Image Upload & Managing Page Metadata                      │
+ * │                                                                          │
+ * │  1. Browser requests page (http://localhost:3000)                       │
+ * │                              │                                          │
+ * │                              ▼                                          │
+ * │  2. Server receives request                                             │
+ * │                              │                                          │
+ * │                              ▼                                          │
+ * │  3. Server EXECUTES Home() component function                           │
+ * │     - console.log('Executing') runs HERE (in terminal)                  │
+ * │     - Returns JSX: <main><h1>Welcome...</h1></main>                     │
+ * │                              │                                          │
+ * │                              ▼                                          │
+ * │  4. Server converts JSX to HTML                                         │
+ * │     <main><h1>Welcome to this NextJS Course!</h1></main>                │
+ * │                              │                                          │
+ * │                              ▼                                          │
+ * │  5. HTML is sent to browser (no JavaScript needed for this component!) │
+ * │                              │                                          │
+ * │                              ▼                                          │
+ * │  6. Browser displays the HTML                                           │
+ * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * PROJECT COMMANDS:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  npm install     → Install dependencies                                 │
- * │  npm run dev     → Start development server (http://localhost:3000)     │
- * │  npm run build   → Build for production                                 │
- * │  npm start       → Run production build                                 │
- * │  npm run lint    → Run ESLint                                           │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * INSTRUCTOR QUOTE:
- * "By the end of this section, you'll be able to use your React knowledge
- * and enhance it tremendously, so that you are able to build fullstack
- * applications and not just front-end applications with React."
  *
  * ============================================================================
  */
