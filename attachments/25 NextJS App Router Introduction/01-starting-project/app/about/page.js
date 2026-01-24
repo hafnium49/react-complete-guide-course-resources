@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ABOUT PAGE - LESSON 432: Adding a Second Page (File-Based Routing)
+ * ABOUT PAGE - LESSONS 432-433: File-Based Routing & Link Component
  * ============================================================================
  *
  * LESSON 432 - HOW TO ADD NEW ROUTES IN NEXT.JS
@@ -95,6 +95,21 @@
  */
 
 /**
+ * ============================================================================
+ * LESSON 433: IMPORTING THE <Link> COMPONENT
+ * ============================================================================
+ *
+ * Just like in page.js, we import Link from 'next/link' to enable
+ * SPA navigation back to the home page.
+ *
+ * This creates a complete navigation loop:
+ *   Home (/) → About (/about) → Home (/)
+ *
+ * All without full page reloads!
+ */
+import Link from 'next/link';
+
+/**
  * ABOUT PAGE COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -142,16 +157,39 @@ export default function AboutPage() {
         Created by adding an <code>about</code> folder with a{' '}
         <code>page.js</code> file inside.
       </p>
+
+      {/**
+       * ====================================================================
+       * LESSON 433: USING <Link> TO NAVIGATE BACK HOME
+       * ====================================================================
+       *
+       * This Link component allows users to navigate back to the home page
+       * WITHOUT triggering a full page reload.
+       *
+       * HOW TO TEST:
+       * 1. Navigate from Home → About (using the Link on home page)
+       * 2. Click "Back to Home" below
+       * 3. Watch the refresh icon - it should NOT turn to an X
+       * 4. The navigation is instant and smooth (SPA behavior)
+       *
+       * INSTRUCTOR QUOTE:
+       * "With that link component being used here, if you now take a look
+       * at that refresh icon, as I click this link, you see it never
+       * changes to a cross."
+       */}
+      <p>
+        <Link href="/">Back to Home</Link>
+      </p>
     </main>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 432 SUMMARY: FILE-BASED ROUTING
+ * LESSONS 432-433 SUMMARY: FILE-BASED ROUTING & LINK COMPONENT
  * ============================================================================
  *
- * KEY TAKEAWAYS:
+ * LESSON 432 KEY TAKEAWAYS:
  *
  * 1. To add a new route, create a FOLDER with that route name
  *    - /about route → create app/about/ folder
@@ -172,6 +210,17 @@ export default function AboutPage() {
  * "So that is how we can add a new route by adding a folder with a page.js
  * file inside of it."
  *
+ * LESSON 433 KEY TAKEAWAYS:
+ *
+ * 5. Use <Link> from 'next/link' instead of <a> for internal links
+ *
+ * 6. <Link> enables SPA (Single-Page Application) behavior
+ *    - No full page reloads
+ *    - Faster navigation
+ *    - State is preserved
+ *
+ * 7. Still use <a> for external links (to other websites)
+ *
  * COMPARISON: NEXT.JS vs REACT ROUTER
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  REACT ROUTER:                   NEXT.JS:                               │
@@ -179,6 +228,7 @@ export default function AboutPage() {
  * │  Routes defined in code          Routes defined by file structure       │
  * │  Import components manually      Components auto-discovered             │
  * │  Need <Routes> and <Route>       Just create folders + page.js          │
+ * │  <Link to="/path">               <Link href="/path">                    │
  * │  More flexible                   More convention-based                  │
  * │  Manual configuration            Zero configuration                     │
  * └─────────────────────────────────────────────────────────────────────────┘

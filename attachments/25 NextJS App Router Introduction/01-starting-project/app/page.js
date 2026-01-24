@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-432: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-433: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -27,40 +27,68 @@
  * │    - Seamless data fetching                                             │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "Applications where the front end is still controlled by React, just as
- * you learned it throughout this course, but where this front-end then
- * seamlessly blends with the backend."
- *
  * ============================================================================
- * LESSON 430 - CREATING A NEXT.JS PROJECT
+ * LESSON 433 - THE <Link> COMPONENT: STAYING IN THE SPA
  * ============================================================================
  *
- * To create a new Next.js project, run:
- *   npx create-next-app@latest your-project-name
+ * THE PROBLEM WITH REGULAR <a> TAGS:
  *
  * INSTRUCTOR QUOTE:
- * "We need a project that comes with NextJS pre-installed and that has a
- * certain structure and setup that's needed by NextJS."
+ * "This approach now has a flaw. It's not ideal, and you can see that there
+ * is a flaw if you take a look at this refresh icon up here, as I click
+ * About Us, you will see that it briefly turns to a cross, which always is
+ * a sign that a brand new page was downloaded from the backend."
  *
- * During setup, you'll be asked several questions:
+ * INSTRUCTOR QUOTE:
+ * "The disadvantage with that is that we now no longer have a single-page
+ * application as we normally do when working with React."
+ *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  ? Would you like to use TypeScript?              → No (for this course)│
- * │  ? Would you like to use ESLint?                  → Yes                 │
- * │  ? Would you like to use Tailwind CSS?            → No (for simplicity) │
- * │  ? Would you like to use `src/` directory?        → No                  │
- * │  ? Would you like to use App Router? (recommended)→ YES (important!)    │
- * │  ? Customize default import alias?                → No                  │
+ * │  <a href="/about">                                                      │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  ✗ Full page reload (browser refreshes entirely)                       │
+ * │  ✗ Loses JavaScript state                                              │
+ * │  ✗ Slower navigation (downloads new HTML, CSS, JS)                     │
+ * │  ✗ Not a Single-Page Application (SPA)                                 │
+ * │  ✗ Browser refresh icon turns to X during navigation                   │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * THE SOLUTION: <Link> COMPONENT FROM next/link
+ *
+ * INSTRUCTOR QUOTE:
+ * "In order to stay in there, we have to use a special component called Link,
+ * which we can import from next/link. This is a component provided by the
+ * NextJS framework, which you should use instead of the anchor element if
+ * you have some internal link."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  <Link href="/about">                                                   │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  ✓ Client-side navigation (no full page reload)                        │
+ * │  ✓ Preserves JavaScript state                                          │
+ * │  ✓ Faster navigation (only fetches new content)                        │
+ * │  ✓ Stays in Single-Page Application (SPA)                              │
+ * │  ✓ Refresh icon does NOT change during navigation                      │
+ * │  ✓ Content still pre-rendered on server, then updated on client        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * THE BEST OF BOTH WORLDS:
+ *
+ * INSTRUCTOR QUOTE:
+ * "Actually the great thing about NextJS is that we get both. When we visit
+ * a page for the first time by, for example, manually entering the URL, then
+ * indeed it's rendered on the server, we get the finished page, and we're
+ * here. But if we are on a page and we then navigate around by clicking
+ * links, NextJS allows us to actually stay in a single-page application."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore you can get the best of both worlds, a highly interactive,
+ * reactive client-side application once it's active, but a finished page
+ * being served if you are visiting the page for the first time."
  *
  * ============================================================================
  * LESSON 431 - THE APP FOLDER & RESERVED FILENAMES
  * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Let's take a look at that app folder because that is the most important
- * folder in a modern NextJS project. It's this app folder where you set up
- * your different pages that you want to have on your overall website."
  *
  * RESERVED FILENAMES IN THE app/ FOLDER:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -76,16 +104,9 @@
  * │  default.js      │  Fallback for parallel routes                        │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "Page.js is a reserved filename just as Layout.js and a couple of other
- * filenames you'll encounter throughout this section."
- *
  * ============================================================================
  * THIS FILE: app/page.js - THE HOME PAGE
  * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "A file named Page.js simply tells NextJS that it should render a page."
  *
  * FILE-BASED ROUTING IN NEXT.JS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -98,107 +119,44 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * LESSON 431 - SERVER COMPONENTS: THE KEY CONCEPT
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "If you take a look at that file, you see that in there, it's in the end
- * a React component function that's stored in the file, something you of
- * course know as a React developer."
- *
- * INSTRUCTOR QUOTE:
- * "The special thing about this component here just is that it's a so-called
- * server component, a type of component that's not really easily built with
- * just React, but that is embraced and supported by NextJS."
- *
- * WHAT MAKES IT A SERVER COMPONENT?
- *
- * INSTRUCTOR QUOTE:
- * "Now, on the surface, it's a regular component. There's nothing special
- * about it, but NextJS ensures that this component is actually rendered on
- * the server, that this component function is executed on the server."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  SERVER COMPONENT (default in app/ folder):                             │
- * │  ─────────────────────────────────────────────────────────────────────  │
- * │  ✓ Component function executes on the SERVER                           │
- * │  ✓ console.log appears in TERMINAL (server), not browser               │
- * │  ✓ Can directly access databases, file system, env variables           │
- * │  ✓ Returned JSX is sent to browser as HTML                             │
- * │  ✓ Reduces JavaScript sent to browser (faster page loads)              │
- * │                                                                          │
- * │  ✗ CANNOT use useState, useEffect, useContext                          │
- * │  ✗ CANNOT use browser APIs (window, document, localStorage)            │
- * │  ✗ CANNOT use event handlers (onClick, onChange, etc.)                 │
- * │                                                                          │
- * │  CLIENT COMPONENT (add 'use client' at top of file):                   │
- * │  ─────────────────────────────────────────────────────────────────────  │
- * │  ✓ Works like traditional React (runs in browser)                      │
- * │  ✓ Can use hooks, state, effects, event handlers                       │
- * │  ✓ Can use browser APIs                                                 │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * LESSON 432 - ADDING MORE PAGES (FILE-BASED ROUTING)
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "In this app directory, you can add new paths, which you wanna handle as
- * routes by adding new folders. So if we want to support a /about route,
- * we have to add an about folder."
- *
- * HOW TO ADD A NEW PAGE:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. Create a new folder with the route name: app/about/                 │
- * │  2. Add page.js inside: app/about/page.js                               │
- * │  3. Export a component from that page.js                                │
- * │  4. Visit the route: http://localhost:3000/about                        │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * See: app/about/page.js for the about page created in Lesson 432
- *
- * ============================================================================
  */
 
 /**
- * HOME PAGE COMPONENT - A SERVER COMPONENT
+ * ============================================================================
+ * LESSON 433: IMPORTING THE <Link> COMPONENT
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "It is treated as a server component and executed on the server, and it's
- * then the returned JSX code that's sent over the wire to the browser to be
- * rendered as HTML, so to say, and that's why we can see what we see here,
- * thanks to this component."
+ * "We have to use a special component called Link, which we can import from
+ * next/link."
+ *
+ * The Link component:
+ * - Comes from the 'next/link' package (built into Next.js)
+ * - Replaces <a> for INTERNAL links (links within your app)
+ * - Still use <a> for EXTERNAL links (links to other websites)
+ *
+ * USAGE:
+ *   import Link from 'next/link';
+ *   <Link href="/about">About Us</Link>
+ *
+ * PROPS:
+ * - href (required): The path to navigate to
+ * - className: CSS class for styling
+ * - prefetch: Pre-fetch the page in background (default: true)
+ * - replace: Replace current history entry instead of push
+ * - scroll: Scroll to top after navigation (default: true)
+ */
+import Link from 'next/link';
+
+/**
+ * HOME PAGE COMPONENT - A SERVER COMPONENT
  *
  * Notice: No 'use client' directive = This is a SERVER COMPONENT
  */
 export default function Home() {
   /**
-   * ============================================================================
-   * LESSON 431: PROVING SERVER-SIDE EXECUTION WITH console.log
-   * ============================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "Hence, if you, for example, add a console log statement here where you
-   * say executing, you will not see that here on the client side."
-   *
-   * INSTRUCTOR QUOTE:
-   * "If you open your developer tools and the JavaScript console, you can
-   * refresh as often as you want, you will not see that log statement here."
-   *
-   * WHERE DOES THIS LOG APPEAR?
-   *
-   * INSTRUCTOR QUOTE:
-   * "Instead, you can see it on the backend. There, if you open the terminal
-   * where you started the development server, you see all these executing logs
-   * and that proves that it's executing on the server because this process
-   * and the terminal is running the server, all the logs here are coming from
-   * the server side."
-   *
-   * TRY IT YOURSELF:
-   * 1. Open browser DevTools → Console tab → You will NOT see "Executing"
-   * 2. Look at your terminal (where you ran `npm run dev`) → You WILL see it!
-   *
-   * This PROVES the component runs on the server, not in the browser.
+   * LESSON 431: PROVING SERVER-SIDE EXECUTION
+   * This log appears in your TERMINAL, not browser console.
    */
   console.log('Executing'); // Check your TERMINAL, not browser console!
 
@@ -206,28 +164,42 @@ export default function Home() {
     <main>
       {/**
        * STATIC ASSETS IN NEXT.JS
-       *
        * Images in the `public/` folder are served at the root URL.
-       * - File: public/logo.png
-       * - URL: /logo.png
-       *
-       * Next.js also has an optimized <Image> component (covered later).
        */}
       <img src="/logo.png" alt="A server surrounded by magic sparkles." />
       <h1>Welcome to this NextJS Course!</h1>
       <p>🔥 Let&apos;s get started! 🔥</p>
+
       {/**
-       * LESSON 432: LINK TO ANOTHER PAGE
+       * ====================================================================
+       * LESSON 433: USING <Link> INSTEAD OF <a>
+       * ====================================================================
        *
-       * This is a basic HTML <a> tag. In a later lesson, we'll learn about
-       * Next.js's <Link> component which provides client-side navigation
-       * without full page reloads.
+       * INSTRUCTOR QUOTE:
+       * "It then still takes the href prop and you could still also add
+       * other props like className and so on. But now it is a component
+       * that will actually ensure that we stay in that single-page
+       * application."
        *
-       * The /about route works because we created:
-       * - app/about/page.js
+       * BEFORE (Lesson 432 - causes full page reload):
+       *   <a href="/about">Learn more about us</a>
+       *
+       * AFTER (Lesson 433 - stays in SPA):
+       *   <Link href="/about">Learn more about us</Link>
+       *
+       * HOW TO TEST THIS:
+       * 1. Watch the browser's refresh icon as you click the link
+       * 2. With <a>: Icon briefly turns to X (full reload)
+       * 3. With <Link>: Icon stays the same (SPA navigation)
+       *
+       * INSTRUCTOR QUOTE:
+       * "With that link component being used here, if you now take a look
+       * at that refresh icon, as I click this link, you see it never
+       * changes to a cross. It always stays the same, which proves that
+       * we're not leaving the page, we're not loading a brand new page."
        */}
       <p>
-        <a href="/about">Learn more about us</a>
+        <Link href="/about">Learn more about us</Link>
       </p>
     </main>
   );
@@ -235,51 +207,61 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSONS 431-432 SUMMARY
+ * LESSONS 431-433 SUMMARY
  * ============================================================================
  *
  * KEY TAKEAWAYS:
  *
  * LESSON 431 - SERVER COMPONENTS:
- * 1. The `app/` folder is the MOST IMPORTANT folder in Next.js
- * 2. `page.js` is a RESERVED filename
- * 3. Components in app/ are SERVER COMPONENTS by default
- *    - They execute on the server
- *    - console.log appears in terminal, not browser
+ * 1. Components in app/ are SERVER COMPONENTS by default
+ * 2. console.log appears in terminal, not browser
  *
  * LESSON 432 - FILE-BASED ROUTING:
- * 4. Add new routes by creating FOLDERS with page.js files
- *    - /about route → app/about/page.js
- *    - Folder alone = 404 error (need page.js!)
+ * 3. Add routes by creating folders with page.js files
  *
- * INSTRUCTOR QUOTE:
- * "So that is how we can add a new route by adding a folder with a page.js
- * file inside of it."
+ * LESSON 433 - THE <Link> COMPONENT:
+ * 4. Use <Link> from 'next/link' instead of <a> for internal links
+ * 5. <Link> keeps you in the Single-Page Application (SPA)
+ * 6. <a> causes full page reloads (bad for user experience)
  *
- * VISUAL: How Server Components Work
+ * WHEN TO USE WHAT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Use <Link>:                                                            │
+ * │    - Internal navigation (within your Next.js app)                     │
+ * │    - /about, /meals, /contact, etc.                                    │
+ * │                                                                          │
+ * │  Use <a>:                                                               │
+ * │    - External links (to other websites)                                 │
+ * │    - https://google.com, https://github.com, etc.                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * VISUAL: How <Link> Navigation Works
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │                                                                          │
- * │  1. Browser requests page (http://localhost:3000)                       │
+ * │  1. User clicks <Link href="/about">                                    │
  * │                              │                                          │
  * │                              ▼                                          │
- * │  2. Server receives request                                             │
+ * │  2. Next.js intercepts the click (prevents default navigation)         │
  * │                              │                                          │
  * │                              ▼                                          │
- * │  3. Server EXECUTES Home() component function                           │
- * │     - console.log('Executing') runs HERE (in terminal)                  │
- * │     - Returns JSX: <main><h1>Welcome...</h1></main>                     │
+ * │  3. Server renders the /about page content                              │
  * │                              │                                          │
  * │                              ▼                                          │
- * │  4. Server converts JSX to HTML                                         │
- * │     <main><h1>Welcome to this NextJS Course!</h1></main>                │
+ * │  4. Content sent to client via JavaScript                               │
  * │                              │                                          │
  * │                              ▼                                          │
- * │  5. HTML is sent to browser (no JavaScript needed for this component!) │
+ * │  5. Client-side JavaScript updates the DOM (no full reload!)           │
  * │                              │                                          │
  * │                              ▼                                          │
- * │  6. Browser displays the HTML                                           │
+ * │  6. Browser URL updates to /about                                       │
+ * │     (But page never fully reloads - SPA behavior)                       │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "Behind the scenes, the content of the next page will still be rendered
+ * on the server, but it'll then be sent to the client, and there it'll be
+ * handled by client-side JavaScript code to update what we see on the screen."
  *
  * ============================================================================
  */
