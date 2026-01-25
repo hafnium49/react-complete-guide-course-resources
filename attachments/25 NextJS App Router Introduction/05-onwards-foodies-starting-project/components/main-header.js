@@ -1,8 +1,39 @@
 /**
  * ============================================================================
- * MAIN HEADER COMPONENT - LESSON 442: Adding a Custom Component (Header)
+ * MAIN HEADER COMPONENT - LESSONS 442 & 443: Header with CSS Modules
  * ============================================================================
  *
+ * LESSON 443 - STYLING WITH CSS MODULES
+ *
+ * INSTRUCTOR QUOTE:
+ * "Instead, here in this section we'll use another solution that's supported
+ * by NextJS and that would be CSS modules, which is in general standard CSS
+ * code, but scoped to specific components by assigning special names to your
+ * CSS files."
+ *
+ * ============================================================================
+ * CSS MODULES IMPORT SYNTAX
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for that, we need a special way of importing this, not as we imported
+ * CSS in the layout JSS file like this. That would simply add the CSS classes
+ * as global classes that affect all pages and all components, but instead by
+ * using import and then any name of your choice like classes from, and then
+ * main header module CSS, in this case, a relative path to that file."
+ *
+ * GLOBAL CSS vs CSS MODULES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  GLOBAL CSS (in layout.js):                                             │
+ * │  import './globals.css';  ← Affects ALL pages/components                │
+ * │                                                                          │
+ * │  CSS MODULES (scoped):                                                  │
+ * │  import classes from './main-header.module.css';                        │
+ * │  ← Returns an object with class names as properties                     │
+ * │  ← Classes are scoped to THIS component only                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
  * LESSON 442 - CREATING A SHARED HEADER COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -149,6 +180,29 @@ import logoImg from '@/assets/logo.png';
 import Link from 'next/link';
 
 /**
+ * ============================================================================
+ * LESSON 443 - IMPORTING CSS MODULES
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for that, we need a special way of importing this, not as we imported
+ * CSS in the layout JSS file like this... but instead by using import and then
+ * any name of your choice like classes from, and then main header module CSS."
+ *
+ * KEY POINTS:
+ * - Use "import X from" syntax (not just "import")
+ * - The name (classes) is your choice
+ * - The file MUST end with .module.css
+ * - Returns an object where class names are properties
+ *
+ * INSTRUCTOR QUOTE:
+ * "And with that added, you can now use this classes object, which it is to
+ * access certain properties. And every class defined here in this main header
+ * module CSS file will simply be available as a property on this imported object."
+ */
+import classes from './main-header.module.css';
+
+/**
  * MAIN HEADER COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -171,23 +225,36 @@ export default function MainHeader() {
      * "And then there I'll return a header element like this. And in that
      * header, I then wanna have a logo and the main navigation of this page."
      */
-    <header>
+    /**
+     * LESSON 443 - APPLYING CSS MODULE CLASSES
+     *
+     * INSTRUCTOR QUOTE:
+     * "In addition, I also want to add a class name to the header itself,
+     * and that would be classes.header."
+     *
+     * NOTE: We use className={classes.header} instead of className="header"
+     * because CSS Modules transform class names to unique hashes.
+     */
+    <header className={classes.header}>
       {/**
        * ====================================================================
-       * CLICKABLE LOGO
+       * CLICKABLE LOGO WITH CSS MODULE CLASS
        * ====================================================================
        *
        * INSTRUCTOR QUOTE:
-       * "Now that logo should be clickable and therefore I'll start by
-       * adding a link here, using the link component provided by NextJS
-       * so that we can wrap that around the logo to make it clickable.
-       * And the idea is that clicking the logo simply takes us back to the
-       * starting page, so to this path here."
+       * "So for example, here on this logo, we can assign a class to this
+       * link. And we now don't do this as a string like some class, but
+       * instead as a dynamic value where we access this class's object.
+       * And then here it's the logo class."
        *
-       * The logo is wrapped in a Link component pointing to "/" (home).
-       * This is a common UX pattern - clicking the logo returns to home.
+       * INSTRUCTOR QUOTE:
+       * "And this will apply this class here and all the other related
+       * styles to this link and the nested elements. But it's doing that
+       * such that the styles are scoped to this component and can't affect
+       * any other component on the page, even if you would use a similar
+       * class name there."
        */}
-      <Link href="/">
+      <Link className={classes.logo} href="/">
         {/**
          * LOGO IMAGE
          *
@@ -220,19 +287,17 @@ export default function MainHeader() {
 
       {/**
        * ====================================================================
-       * NAVIGATION
+       * NAVIGATION WITH CSS MODULE CLASS
        * ====================================================================
        *
        * INSTRUCTOR QUOTE:
-       * "Now, that's not everything though. Instead I also want to have my
-       * navigation here, hence I'll add a nav element and in there an
-       * unordered list and in there a list item."
+       * "And then on the navigation, I want to add a class to this nav
+       * element here with classes.nav."
        *
-       * The navigation contains links to:
-       * - /meals - Browse meals shared by community
-       * - /community - View the foodies community
+       * The .nav class in the CSS module also styles nested ul and a elements
+       * using descendant selectors (.nav ul, .nav a).
        */}
-      <nav>
+      <nav className={classes.nav}>
         <ul>
           {/**
            * BROWSE MEALS LINK
@@ -267,10 +332,10 @@ export default function MainHeader() {
 
 /**
  * ============================================================================
- * LESSON 442 SUMMARY: CREATING A HEADER COMPONENT
+ * LESSONS 442-443 SUMMARY: HEADER COMPONENT WITH CSS MODULES
  * ============================================================================
  *
- * WHAT WE ACCOMPLISHED:
+ * LESSON 442 - WHAT WE ACCOMPLISHED:
  *
  * 1. Created a new component file outside the app folder
  *    - Keeps app folder clean (routing only)
@@ -285,18 +350,40 @@ export default function MainHeader() {
  *    - Navigation with Link components
  *    - Links to /meals and /community
  *
+ * ============================================================================
+ * LESSON 443 - CSS MODULES STYLING
+ * ============================================================================
+ *
+ * STYLING OPTIONS IN NEXT.JS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Global CSS   - Imported in layout.js, affects all pages             │
+ * │  2. Tailwind CSS - Utility classes, popular but verbose                 │
+ * │  3. CSS Modules  - Scoped styles, standard CSS (USED HERE)              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * HOW CSS MODULES WORK:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Create file: component-name.module.css                              │
+ * │  2. Import: import classes from './component-name.module.css'           │
+ * │  3. Use: className={classes.className}                                  │
+ * │  4. Benefit: Styles are SCOPED to this component only!                  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * CLASSES APPLIED IN THIS COMPONENT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ELEMENT      │  CLASS APPLIED         │  STYLES                        │
+ * │  ─────────────│────────────────────────│────────────────────────────────│
+ * │  <header>     │  classes.header        │  Flexbox layout, spacing       │
+ * │  <Link> logo  │  classes.logo          │  Logo styling, uppercase text  │
+ * │  <nav>        │  classes.nav           │  Nav links styling             │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * INSTRUCTOR QUOTE:
- * "If you do that and you save everything, you should see something like this
- * if you revisit the page, a total mess, but at least the header is there,
- * it's there and it's working, and it's there on every page, which is amazing."
- *
- * NEXT STEP:
- *
- * INSTRUCTOR QUOTE:
- * "And we can also go back to the starting page, but of course it's totally
- * unstyled and doesn't look good. And that's therefore what we'll change next."
- *
- * The next lesson will add styling to make this header look good!
+ * "With all that done, if you save that and you go back to your page, this
+ * now looks much better. Now we got a properly styled header, a properly
+ * styled logo, and these navigation links here, which also look better and
+ * which of course also still work. But now all styled in a beautiful way
+ * with help of CSS modules."
  *
  * ============================================================================
  */

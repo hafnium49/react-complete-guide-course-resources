@@ -1,0 +1,270 @@
+/**
+ * ============================================================================
+ * MAIN HEADER STYLES - LESSON 443: Styling with CSS Modules
+ * ============================================================================
+ *
+ * LESSON 443 - CSS MODULES IN NEXT.JS
+ *
+ * INSTRUCTOR QUOTE:
+ * "Instead, here in this section we'll use another solution that's supported
+ * by NextJS and that would be CSS modules, which is in general standard CSS
+ * code, but scoped to specific components by assigning special names to your
+ * CSS files."
+ *
+ * ============================================================================
+ * STYLING OPTIONS IN NEXT.JS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So let's work on styling this header. And when it comes to styling NextJS
+ * projects, you got a couple of different options as is the case for React
+ * projects as well."
+ *
+ * AVAILABLE OPTIONS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. GLOBAL CSS                                                          │
+ * │     - Files imported in layout.js (like globals.css)                    │
+ * │     - Styles available on ALL pages                                     │
+ * │     - Good for: base styles, resets, fonts                              │
+ * │                                                                          │
+ * │  2. TAILWIND CSS                                                        │
+ * │     - Popular utility-class framework                                   │
+ * │     - Add small classes directly in JSX                                 │
+ * │     - Built-in option when creating Next.js projects                    │
+ * │                                                                          │
+ * │  3. CSS MODULES (THIS FILE)                                             │
+ * │     - Standard CSS, scoped to components                                │
+ * │     - Files named: *.module.css                                         │
+ * │     - Classes accessed as object properties                             │
+ * │     - Supported out of the box by Next.js                               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * WHY CSS MODULES?
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE (on Tailwind):
+ * "So it's amazing but not great for a course like this where I want to focus
+ * on the main topic, which is NextJS and React, not Tailwind, therefore I'll
+ * not use it here, but you could use it."
+ *
+ * CSS MODULES BENEFITS:
+ * - Standard CSS syntax (no new library to learn)
+ * - Scoped to component (no class name conflicts)
+ * - Supported by Next.js out of the box
+ * - Clean separation of styles and components
+ *
+ * ============================================================================
+ * HOW CSS MODULES WORK
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And the idea simply is that you add CSS files that end with dot module
+ * dot css and you can then import an object from those files, which will be
+ * generated automatically by the underlying build process and development
+ * server, which gives you access to all the CSS classes defined in those
+ * files as properties."
+ *
+ * FILE NAMING:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  REGULAR CSS:                                                           │
+ * │  main-header.css      → Imported as global styles                       │
+ * │                                                                          │
+ * │  CSS MODULES:                                                           │
+ * │  main-header.module.css → Imported as scoped object                     │
+ * │                                                                          │
+ * │  The ".module.css" suffix tells Next.js to treat this as a CSS Module!  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * IMPORTING AND USING:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  // In main-header.js:                                                  │
+ * │  import classes from './main-header.module.css';                        │
+ * │                                                                          │
+ * │  // Using classes:                                                      │
+ * │  <header className={classes.header}>                                    │
+ * │  <Link className={classes.logo}>                                        │
+ * │  <nav className={classes.nav}>                                          │
+ * │                                                                          │
+ * │  Each class becomes a property on the imported object!                  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * SCOPING: HOW IT PREVENTS CONFLICTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But it's doing that such that the styles are scoped to this component and
+ * can't affect any other component on the page, even if you would use a
+ * similar class name there."
+ *
+ * WHAT HAPPENS BEHIND THE SCENES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  YOUR CODE:                                                             │
+ * │  .header { ... }                                                        │
+ * │                                                                          │
+ * │  GENERATED OUTPUT:                                                      │
+ * │  .header_abc123 { ... }   ← Unique hash added automatically!            │
+ * │                                                                          │
+ * │  This means:                                                            │
+ * │  - Two components can have .header class                                │
+ * │  - Each gets a unique hash, no conflicts                                │
+ * │  - Styles are truly isolated                                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/**
+ * HEADER CONTAINER
+ *
+ * Flexbox layout for horizontal arrangement of logo and navigation.
+ * Responsive padding adjusts for larger screens.
+ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+/**
+ * RESPONSIVE PADDING
+ *
+ * On larger screens (768px+), add more horizontal padding
+ * to create breathing room and better proportions.
+ */
+@media (min-width: 768px) {
+  .header {
+    padding: 2rem 10%;
+  }
+}
+
+/**
+ * NAVIGATION STYLES
+ *
+ * The navigation uses nested selectors (.nav ul, .nav a).
+ * In CSS Modules, we only apply the .nav class to the <nav> element,
+ * and the nested rules automatically apply to children.
+ */
+.nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.5rem;
+  font-size: 1.25rem;
+}
+
+/**
+ * NAVIGATION LINKS
+ *
+ * Subtle, clean link styling with warm cream color (#ddd6cb)
+ * that complements the brown-to-orange gradient background.
+ */
+.nav a {
+  text-decoration: none;
+  color: #ddd6cb;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/**
+ * NAVIGATION LINK HOVER/ACTIVE STATE
+ *
+ * Beautiful gradient text effect using background-clip: text.
+ * The text-shadow adds a warm glow effect.
+ */
+.nav a:hover,
+.nav a:active {
+  background: linear-gradient(90deg, #ff8a05, #f9b331);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 18px rgba(248, 190, 42, 0.8);
+}
+
+/**
+ * ACTIVE LINK STATE
+ *
+ * For indicating the current page in navigation.
+ * Uses the same gradient effect as hover.
+ * (Will be used in a later lesson with usePathname hook)
+ */
+.active {
+  background: linear-gradient(90deg, #ff8a05, #f9b331);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/**
+ * LOGO STYLES
+ *
+ * INSTRUCTOR QUOTE:
+ * "So for example, here on this logo, we can assign a class to this link.
+ * And we now don't do this as a string like some class, but instead as a
+ * dynamic value where we access this class's object. And then here it's
+ * the logo class."
+ *
+ * The logo is a flex container with the image and text side by side.
+ */
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  text-decoration: none;
+  color: #ddd6cb;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.15rem;
+  text-transform: uppercase;
+  font-size: 1.5rem;
+}
+
+/**
+ * LOGO IMAGE
+ *
+ * Fixed size with drop-shadow for a subtle lifted effect.
+ * object-fit: contain ensures the image isn't distorted.
+ */
+.logo img {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.5));
+}
+
+/**
+ * ============================================================================
+ * LESSON 443 SUMMARY: CSS MODULES
+ * ============================================================================
+ *
+ * HOW TO USE CSS MODULES:
+ *
+ * 1. Name your file: component-name.module.css
+ *
+ * 2. Import as object: import classes from './component-name.module.css'
+ *
+ * 3. Apply classes dynamically: className={classes.className}
+ *
+ * CLASSES IN THIS FILE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  CLASS NAME    │  APPLIED TO           │  PURPOSE                       │
+ * │  ──────────────│───────────────────────│────────────────────────────────│
+ * │  .header       │  <header>             │  Flexbox layout                │
+ * │  .nav          │  <nav>                │  Navigation styling            │
+ * │  .logo         │  <Link> (logo link)   │  Logo container styling        │
+ * │  .active       │  (future use)         │  Current page indicator        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "With all that done, if you save that and you go back to your page, this
+ * now looks much better. Now we got a properly styled header, a properly
+ * styled logo, and these navigation links here, which also look better and
+ * which of course also still work."
+ *
+ * ============================================================================
+ */
