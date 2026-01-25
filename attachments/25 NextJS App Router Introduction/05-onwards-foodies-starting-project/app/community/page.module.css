@@ -1,0 +1,129 @@
+/**
+ * ============================================================================
+ * COMMUNITY PAGE STYLES - LESSON 449: Community Page CSS Module
+ * ============================================================================
+ *
+ * This CSS module provides scoped styles for the community page.
+ * The styles create a centered, visually appealing layout for
+ * showcasing the community perks.
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * HEADER SECTION STYLES
+ * ============================================================================
+ *
+ * The header contains the hero tagline and call-to-action text.
+ * Centered layout with generous spacing and warm color scheme.
+ */
+.header {
+  gap: 3rem;
+  margin: 3rem auto 5rem auto;
+  width: 90%;
+  max-width: 75rem;
+  color: #ddd6cb;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.header h1 {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ============================================================================
+ * HIGHLIGHT CLASS - GRADIENT TEXT EFFECT
+ * ============================================================================
+ *
+ * Creates a vibrant orange gradient effect on the word "Food".
+ * Uses background-clip: text to apply the gradient to the text itself.
+ *
+ * TECHNIQUE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Set a gradient background on the span                               │
+ * │  2. Use background-clip: text to clip the background to the text shape  │
+ * │  3. Make the text itself transparent so the gradient shows through      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.highlight {
+  background: linear-gradient(90deg, #f9572a, #ff8a05);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================================
+ * MAIN SECTION STYLES
+ * ============================================================================
+ *
+ * Container for the community perks section.
+ * Narrower than header for focused content presentation.
+ */
+.main {
+  width: 90%;
+  max-width: 40rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.main h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  margin-bottom: 3rem;
+  color: #ddd6cb;
+}
+
+/* ============================================================================
+ * PERKS LIST STYLES
+ * ============================================================================
+ *
+ * Styles for the unordered list of community benefits.
+ * Each item displays vertically with an icon and description.
+ */
+.perks {
+  list-style: none;
+  margin: 3rem 0;
+  padding: 0;
+}
+
+.perks li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Icon images - fixed size with contained fit */
+.perks img {
+  width: 8rem;
+  height: 8rem;
+  object-fit: contain;
+}
+
+/* Perk description text */
+.perks p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: #ddd6cb;
+}
+
+/**
+ * ============================================================================
+ * LESSON 449 CSS SUMMARY
+ * ============================================================================
+ *
+ * STYLES DEFINED:
+ *
+ * 1. .header       - Hero section container with centered layout
+ * 2. .highlight    - Gradient text effect for "Food" emphasis
+ * 3. .main         - Narrower container for perks section
+ * 4. .perks        - List styling for community benefits
+ *
+ * COLOR SCHEME:
+ * - Text: #ddd6cb (warm off-white)
+ * - Gradient: #f9572a → #ff8a05 (orange to amber)
+ *
+ * ============================================================================
+ */

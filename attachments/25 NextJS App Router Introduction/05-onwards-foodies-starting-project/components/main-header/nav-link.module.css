@@ -1,0 +1,100 @@
+/**
+ * ============================================================================
+ * NAV LINK STYLES - LESSON 449: Active Link Highlighting Styles
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "But that's not all I wanna do here. Instead, I also wanna make sure that
+ * we can tell in the header which page we're on. So I want these links here
+ * to receive some special highlighting if we are on the respective page."
+ *
+ * This CSS module provides styles for the NavLink component.
+ * It contains:
+ * - .link   : Base styles for navigation links
+ * - .active : Highlight styles for the current page link
+ *
+ * ============================================================================
+ */
+
+/**
+ * LINK BASE STYLES
+ *
+ * Default styling for navigation links.
+ * Warm cream color (#ddd6cb) that complements the gradient background.
+ */
+.link {
+  text-decoration: none;
+  color: #ddd6cb;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/**
+ * LINK HOVER STATE
+ *
+ * Beautiful gradient text effect using background-clip: text.
+ * The text-shadow adds a warm glow effect on hover.
+ */
+.link:hover {
+  background: linear-gradient(90deg, #ff8a05, #f9b331);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 18px rgba(248, 190, 42, 0.8);
+}
+
+/**
+ * ACTIVE LINK STATE
+ *
+ * INSTRUCTOR QUOTE:
+ * "So I want these links here to receive some special highlighting if we
+ * are on the respective page."
+ *
+ * Applied when the current path matches the link's href.
+ * Uses the same gradient effect as hover to indicate the current page.
+ *
+ * HOW IT'S APPLIED (in nav-link.js):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  className={                                                            │
+ * │    path.startsWith(href)                                                │
+ * │      ? `${classes.link} ${classes.active}`  ← Both classes when active  │
+ * │      : classes.link                         ← Just .link when inactive  │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.active {
+  background: linear-gradient(90deg, #ff8a05, #f9b331);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/**
+ * ============================================================================
+ * LESSON 449 CSS SUMMARY
+ * ============================================================================
+ *
+ * STYLES IN THIS FILE:
+ *
+ * 1. .link
+ *    - Base navigation link styling
+ *    - Applied to all NavLink components
+ *
+ * 2. .link:hover
+ *    - Gradient text effect on hover
+ *    - Warm glow shadow effect
+ *
+ * 3. .active
+ *    - Gradient text effect for current page
+ *    - Added alongside .link when path matches href
+ *
+ * GRADIENT TEXT TECHNIQUE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Set a gradient as the background                                    │
+ * │  2. Use background-clip: text to clip gradient to text shape            │
+ * │  3. Make text color transparent so gradient shows through               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */

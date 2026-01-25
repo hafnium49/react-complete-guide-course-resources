@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MAIN HEADER STYLES - LESSON 443: Styling with CSS Modules
+ * MAIN HEADER STYLES - LESSONS 443 & 449: Styling with CSS Modules
  * ============================================================================
  *
  * LESSON 443 - CSS MODULES IN NEXT.JS
@@ -143,9 +143,12 @@
 /**
  * NAVIGATION STYLES
  *
- * The navigation uses nested selectors (.nav ul, .nav a).
- * In CSS Modules, we only apply the .nav class to the <nav> element,
- * and the nested rules automatically apply to children.
+ * LESSON 449 UPDATE:
+ * The link-specific styles (.nav a, .nav a:hover, .active) have been moved
+ * to nav-link.module.css to be used with the NavLink component.
+ *
+ * This file now only contains the .nav ul styles for the list layout.
+ * The NavLink component handles its own link styling with its CSS module.
  */
 .nav ul {
   list-style: none;
@@ -154,49 +157,6 @@
   display: flex;
   gap: 1.5rem;
   font-size: 1.25rem;
-}
-
-/**
- * NAVIGATION LINKS
- *
- * Subtle, clean link styling with warm cream color (#ddd6cb)
- * that complements the brown-to-orange gradient background.
- */
-.nav a {
-  text-decoration: none;
-  color: #ddd6cb;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-}
-
-/**
- * NAVIGATION LINK HOVER/ACTIVE STATE
- *
- * Beautiful gradient text effect using background-clip: text.
- * The text-shadow adds a warm glow effect.
- */
-.nav a:hover,
-.nav a:active {
-  background: linear-gradient(90deg, #ff8a05, #f9b331);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 18px rgba(248, 190, 42, 0.8);
-}
-
-/**
- * ACTIVE LINK STATE
- *
- * For indicating the current page in navigation.
- * Uses the same gradient effect as hover.
- * (Will be used in a later lesson with usePathname hook)
- */
-.active {
-  background: linear-gradient(90deg, #ff8a05, #f9b331);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 /**
@@ -239,7 +199,7 @@
 
 /**
  * ============================================================================
- * LESSON 443 SUMMARY: CSS MODULES
+ * LESSONS 443 & 449 SUMMARY: CSS MODULES
  * ============================================================================
  *
  * HOW TO USE CSS MODULES:
@@ -250,21 +210,28 @@
  *
  * 3. Apply classes dynamically: className={classes.className}
  *
- * CLASSES IN THIS FILE:
+ * CLASSES IN THIS FILE (AFTER LESSON 449):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  CLASS NAME    │  APPLIED TO           │  PURPOSE                       │
  * │  ──────────────│───────────────────────│────────────────────────────────│
  * │  .header       │  <header>             │  Flexbox layout                │
- * │  .nav          │  <nav>                │  Navigation styling            │
+ * │  .nav          │  <nav>                │  Navigation list layout        │
  * │  .logo         │  <Link> (logo link)   │  Logo container styling        │
- * │  .active       │  (future use)         │  Current page indicator        │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "With all that done, if you save that and you go back to your page, this
- * now looks much better. Now we got a properly styled header, a properly
- * styled logo, and these navigation links here, which also look better and
- * which of course also still work."
+ * LESSON 449 - STYLES MOVED TO nav-link.module.css:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  MOVED CLASS        │  NOW IN              │  REASON                    │
+ * │  ───────────────────│──────────────────────│────────────────────────────│
+ * │  .nav a             │  .link               │  NavLink component styling │
+ * │  .nav a:hover       │  .link:hover         │  NavLink hover effect      │
+ * │  .active            │  .active             │  NavLink active state      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHY MOVE LINK STYLES?
+ * The NavLink component is a Client Component that handles its own styling.
+ * Moving the styles to its own CSS module keeps the styles colocated with
+ * the component they belong to.
  *
  * ============================================================================
  */

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MAIN HEADER COMPONENT - LESSONS 442-445: Header with Background Component
+ * MAIN HEADER COMPONENT - LESSONS 442-445 & 449: Header with NavLink Component
  * ============================================================================
  *
  * LESSON 445 - COMPONENT EXTRACTION AND FILE ORGANIZATION
@@ -25,7 +25,9 @@
  * │      ├── main-header.js            ← THIS FILE                          │
  * │      ├── main-header.module.css    ← Header styles                      │
  * │      ├── main-header-background.js ← Background component               │
- * │      └── main-header-background.module.css ← Background styles          │
+ * │      ├── main-header-background.module.css ← Background styles          │
+ * │      ├── nav-link.js               ← NavLink component (Lesson 449)     │
+ * │      └── nav-link.module.css       ← NavLink styles                     │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
@@ -344,6 +346,39 @@ import classes from './main-header.module.css';
 import MainHeaderBackground from './main-header-background';
 
 /**
+ * ============================================================================
+ * LESSON 449 - IMPORTING THE NAVLINK COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I'll add a new component file, nav-link.js sounds like a fitting name."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And this is then a component we can use anywhere in our project where we
+ * want to output a navigation link, a link that should receive a certain
+ * class when the page we're currently on is matching the path the link is
+ * pointing at."
+ *
+ * WHY USE NavLink INSTEAD OF Link FOR NAVIGATION?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  NavLink adds active state highlighting when the current page matches   │
+ * │  the link's href. This provides visual feedback to users about which    │
+ * │  page they are currently on.                                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * COMPONENT TREE OPTIMIZATION:
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here we made sure that we still keep use client as far down as possible
+ * by extracting it into an extra component instead of adding it to the main
+ * header or, even worse, the entire layout component."
+ *
+ * By having 'use client' only in NavLink (not in MainHeader), we keep
+ * MainHeader as a Server Component for better performance.
+ */
+import NavLink from './nav-link';
+
+/**
  * MAIN HEADER COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -489,29 +524,36 @@ export default function MainHeader() {
       <nav className={classes.nav}>
         <ul>
           {/**
-           * BROWSE MEALS LINK
+           * ================================================================
+           * LESSON 449 - BROWSE MEALS NAVLINK
+           * ================================================================
            *
            * INSTRUCTOR QUOTE:
-           * "And that list item should then contain another link leading to
-           * a certain page. To be precise, a link that allows us to browse
-           * the meals that have been shared by community members. So here,
-           * it should lead to slash meals."
+           * "But that's not all I wanna do here. Instead, I also wanna make
+           * sure that we can tell in the header which page we're on. So I
+           * want these links here to receive some special highlighting if
+           * we are on the respective page."
+           *
+           * NavLink replaces Link for navigation items because it:
+           * - Automatically adds .active class when path matches href
+           * - Uses usePathname hook internally to detect current route
+           * - Keeps 'use client' isolated to the NavLink component
            */}
           <li>
-            <Link href="/meals">Browse Meals</Link>
+            <NavLink href="/meals">Browse Meals</NavLink>
           </li>
 
           {/**
-           * FOODIES COMMUNITY LINK
+           * LESSON 449 - FOODIES COMMUNITY NAVLINK
            *
            * INSTRUCTOR QUOTE:
-           * "Now, that's not the only link though. Instead I'll also add
-           * another link, which should allow us to go to the community, to
-           * the Foodies Community. And hence here, it should lead to slash
-           * community like that."
+           * "And this is then a component we can use anywhere in our project
+           * where we want to output a navigation link, a link that should
+           * receive a certain class when the page we're currently on is
+           * matching the path the link is pointing at."
            */}
           <li>
-            <Link href="/community">Foodies Community</Link>
+            <NavLink href="/community">Foodies Community</NavLink>
           </li>
         </ul>
       </nav>
@@ -522,7 +564,7 @@ export default function MainHeader() {
 
 /**
  * ============================================================================
- * LESSONS 442-445 SUMMARY: HEADER WITH BACKGROUND COMPONENT
+ * LESSONS 442-445 & 449 SUMMARY: HEADER WITH NAVLINK COMPONENT
  * ============================================================================
  *
  * LESSON 442 - COMPONENT CREATION:
@@ -536,35 +578,39 @@ export default function MainHeader() {
  * - Optimized images with lazy loading and WebP
  * - Used priority prop for above-the-fold images
  *
+ * LESSON 445 - COMPONENT EXTRACTION AND ORGANIZATION:
+ * - Extracted header background to separate component
+ * - Organized files into subfolder
+ *
  * ============================================================================
- * LESSON 445 - COMPONENT EXTRACTION AND ORGANIZATION
+ * LESSON 449 - NAVLINK COMPONENT FOR ACTIVE LINK HIGHLIGHTING
  * ============================================================================
  *
  * WHAT WE ACCOMPLISHED:
  *
- * 1. EXTRACTED HEADER BACKGROUND TO SEPARATE COMPONENT
+ * 1. CREATED NAVLINK COMPONENT
  *    INSTRUCTOR QUOTE:
- *    "Now, I mentioned that I also wanted to outsource this header background
- *    here into a separate component, and that's what I'll do next."
+ *    "I'll add a new component file, nav-link.js sounds like a fitting name."
  *
- * 2. MOVED CSS FROM globals.css TO CSS MODULE
- *    - header-background class → main-header-background.module.css
- *    - Changed svg selector to be scoped: .header-background svg
- *
- * 3. USED FRAGMENTS FOR MULTIPLE ELEMENTS
+ * 2. USED usePathname HOOK
  *    INSTRUCTOR QUOTE:
- *    "There we could return a fragment so that we can add a sibling element
- *    next to the header, and that sibling is now that MainHeaderBackground."
+ *    "And the great thing is that we can find out which path the user is on
+ *    with help of a hook provided by NextJS. And that's the usePathname hook,
+ *    which can be imported from next/navigation."
  *
- * 4. ORGANIZED FILES INTO SUBFOLDER
+ * 3. KEPT 'use client' AS FAR DOWN AS POSSIBLE
  *    INSTRUCTOR QUOTE:
- *    "Now, I also wanna group all these main-header related files together
- *    into a separate subfolder inside of components so that we keep that
- *    components folder manageable and easy to navigate."
+ *    "So here we made sure that we still keep use client as far down as
+ *    possible by extracting it into an extra component instead of adding
+ *    it to the main header or, even worse, the entire layout component."
  *
- * CURRENT COMPONENT STRUCTURE:
+ * 4. REPLACED Link WITH NavLink FOR NAVIGATION
+ *    - Navigation links now highlight when on the matching page
+ *    - Uses path.startsWith(href) to match nested routes too
+ *
+ * UPDATED COMPONENT STRUCTURE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  MainHeader renders:                                                    │
+ * │  MainHeader (SERVER COMPONENT) renders:                                 │
  * │  <>                                                                     │
  * │    <MainHeaderBackground />    ← Decorative SVG gradient               │
  * │    <header className={classes.header}>                                  │
@@ -574,18 +620,20 @@ export default function MainHeader() {
  * │      </Link>                                                            │
  * │      <nav className={classes.nav}>                                      │
  * │        <ul>                                                             │
- * │          <li><Link href="/meals">...</Link></li>                        │
- * │          <li><Link href="/community">...</Link></li>                    │
+ * │          <li><NavLink href="/meals">...</NavLink></li>    ← CLIENT     │
+ * │          <li><NavLink href="/community">...</NavLink></li> ← CLIENT    │
  * │        </ul>                                                            │
  * │      </nav>                                                             │
  * │    </header>                                                            │
  * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "And with that, if we save everything, we got the same result as before.
- * But now using another extra component, which you of course don't have to
- * do, but which I did want to add here for practice purposes."
+ * COMPONENT TREE WITH 'use client':
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  layout.js           (SERVER COMPONENT)                                 │
+ * │    └── MainHeader    (SERVER COMPONENT - this file)                     │
+ * │         └── NavLink  (CLIENT COMPONENT - has 'use client')              │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
