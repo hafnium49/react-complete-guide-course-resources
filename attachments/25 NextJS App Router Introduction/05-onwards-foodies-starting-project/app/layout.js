@@ -1,8 +1,19 @@
 /**
  * ============================================================================
- * ROOT LAYOUT - LESSONS 438 & 441: Layouts in Next.js
+ * ROOT LAYOUT - LESSONS 438, 441 & 442: Layouts in Next.js
  * ============================================================================
  *
+ * LESSON 442 - ADDING THE MAIN HEADER
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now to add that header, I'll add a brand new component. We could of course
+ * also just add it in here in this layout file. But in order to keep this a
+ * bit leaner, I'll add a separate component."
+ *
+ * The MainHeader component is imported from the components folder (outside app)
+ * and placed above the children to appear on ALL pages.
+ *
+ * ============================================================================
  * LESSON 441 - UNDERSTANDING LAYOUTS
  *
  * INSTRUCTOR QUOTE:
@@ -123,6 +134,26 @@ import './globals.css';
 
 /**
  * ============================================================================
+ * LESSON 442 - IMPORTING THE MAIN HEADER COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that all added, and with this main header component finished, we can
+ * go back to that root layout and then there output this main header above
+ * that children slot here, so above the page content. Simply like this though,
+ * very important, you of course must import it."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here I added this import from that components folder in the root project
+ * directory."
+ *
+ * The @ alias makes this import clean:
+ * @/components/main-header → project-root/components/main-header.js
+ */
+import MainHeader from '@/components/main-header';
+
+/**
+ * ============================================================================
  * METADATA EXPORT
  * ============================================================================
  *
@@ -192,6 +223,29 @@ export default function RootLayout({ children }) {
 
         {/**
          * ====================================================================
+         * LESSON 442 - MAIN HEADER COMPONENT
+         * ====================================================================
+         *
+         * INSTRUCTOR QUOTE:
+         * "With that all added, and with this main header component finished,
+         * we can go back to that root layout and then there output this main
+         * header above that children slot here, so above the page content."
+         *
+         * WHY IT'S PLACED HERE (in root layout):
+         * - Visible on ALL pages automatically
+         * - No need to add it to each individual page
+         * - Consistent navigation across the entire app
+         *
+         * INSTRUCTOR QUOTE:
+         * "If you do that and you save everything, you should see something
+         * like this if you revisit the page, a total mess, but at least the
+         * header is there, it's there and it's working, and it's there on
+         * every page, which is amazing."
+         */}
+        <MainHeader />
+
+        {/**
+         * ====================================================================
          * CHILDREN - PAGE OR NESTED LAYOUT CONTENT
          * ====================================================================
          *
@@ -221,10 +275,10 @@ export default function RootLayout({ children }) {
 
 /**
  * ============================================================================
- * LESSON 441 SUMMARY: LAYOUTS IN NEXT.JS
+ * LESSONS 441-442 SUMMARY: LAYOUTS AND SHARED COMPONENTS
  * ============================================================================
  *
- * KEY TAKEAWAYS:
+ * LESSON 441 KEY TAKEAWAYS:
  *
  * 1. LAYOUTS ARE WRAPPERS
  *    - They wrap around pages
@@ -238,20 +292,46 @@ export default function RootLayout({ children }) {
  *    - Create layout.js in a route folder for route-specific layouts
  *    - Nested layouts are wrapped by parent layouts (including root)
  *
- * 4. NEXT.JS RENDERS LAYOUTS AUTOMATICALLY
- *    - You don't use <Layout> in your code
- *    - Next.js handles the wrapping based on file location
+ * ============================================================================
+ * LESSON 442 KEY TAKEAWAYS:
+ * ============================================================================
  *
- * 5. ONLY ROOT LAYOUT HAS <html> AND <body>
- *    - Nested layouts should return fragments or divs
- *    - They inherit the HTML structure from root
+ * 1. SHARED COMPONENTS IN LAYOUTS
+ *    - Add components to root layout for site-wide visibility
+ *    - MainHeader appears on ALL pages automatically
+ *
+ * 2. COMPONENT FILE ORGANIZATION
+ *    - Keep components OUTSIDE app folder (instructor preference)
+ *    - app folder = routing only
+ *    - components folder = reusable components
+ *
+ * 3. IMAGE IMPORTS IN NEXT.JS
+ *    - Use @ alias for clean imports (@/assets/logo.png)
+ *    - Access .src property (images are objects in Next.js)
+ *
+ * CURRENT LAYOUT STRUCTURE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  <html>                                                                 │
+ * │    <body>                                                               │
+ * │      <div className="header-background">                                │
+ * │        <svg>...</svg>  ← Decorative background                          │
+ * │      </div>                                                             │
+ * │      <MainHeader />    ← Navigation (Lesson 442)                        │
+ * │      {children}        ← Page content                                   │
+ * │    </body>                                                              │
+ * │  </html>                                                                │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
- * "But here, we actually don't need that nested layout, hence I'll delete it.
- * But we will now work on the root layout to add some header that's visible
- * on all pages, some header that allows us to navigate between those pages."
+ * "If you do that and you save everything, you should see something like this
+ * if you revisit the page, a total mess, but at least the header is there,
+ * it's there and it's working, and it's there on every page, which is amazing."
  *
- * COMING NEXT: Adding a proper header with navigation to this root layout!
+ * NEXT STEP (Lesson 443):
+ *
+ * INSTRUCTOR QUOTE:
+ * "And we can also go back to the starting page, but of course it's totally
+ * unstyled and doesn't look good. And that's therefore what we'll change next."
  *
  * ============================================================================
  */
