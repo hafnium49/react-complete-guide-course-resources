@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ROOT LAYOUT - LESSON 434: Understanding the Layout File
+ * ROOT LAYOUT - LESSONS 434 & 436: Understanding the Layout File
  * ============================================================================
  *
  * LESSON 434 - LAYOUT.JS: ANOTHER RESERVED FILE NAME
@@ -11,16 +11,42 @@
  * file, and that's actually another reserved file name, another special type
  * of file."
  *
+ * ============================================================================
+ * LESSON 436 - RESERVED FILENAMES (DOCUMENT REFERENCE)
+ * ============================================================================
+ *
+ * From Lesson 436 Document:
+ * "layout.js => Create a new layout that wraps sibling and nested pages"
+ *
+ * IMPORTANT from Lesson 436:
+ * "These filenames are only reserved when creating them inside of the app/
+ * folder (or any subfolder). Outside of the app/ folder, these filenames
+ * are not treated in any special way."
+ *
+ * WHAT "SIBLING AND NESTED PAGES" MEANS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  RESERVED FILENAMES IN app/ FOLDER:                                     │
- * │  ─────────────────────────────────────────────────────────────────────  │
- * │  page.js    → Defines the CONTENT of a page                             │
- * │  layout.js  → Defines the SHELL around one or more pages (THIS FILE)    │
- * │  loading.js → Loading UI (shown while page loads)                       │
- * │  error.js   → Error UI (shown when page errors)                         │
- * │  not-found.js → 404 page                                                │
- * │  route.js   → API endpoint (backend route)                              │
+ * │  app/                                                                   │
+ * │  ├── layout.js      ← THIS layout wraps:                                │
+ * │  ├── page.js        ← SIBLING (same folder level)                       │
+ * │  └── about/                                                             │
+ * │      └── page.js    ← NESTED (child folder)                             │
+ * │                                                                          │
+ * │  Both page.js files are wrapped by the root layout.js!                  │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * RESERVED FILENAMES (from Lesson 436):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Filename        │  Purpose (from Lesson 436)                           │
+ * │  ────────────────│──────────────────────────────────────────────────────│
+ * │  page.js         │  Create a new page                                   │
+ * │  layout.js       │  Wraps SIBLING and NESTED pages (THIS FILE)          │
+ * │  not-found.js    │  Fallback for "Not Found" errors                     │
+ * │  error.js        │  Fallback for other errors                           │
+ * │  loading.js      │  Shown whilst sibling/nested pages fetch data        │
+ * │  route.js        │  API route (returns data like JSON, not JSX)         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * Official docs: https://nextjs.org/docs/app/api-reference/file-conventions
  *
  * ============================================================================
  * WHAT IS layout.js? THE WRAPPER/SHELL AROUND PAGES
@@ -253,7 +279,7 @@ export default function RootLayout({ children }) {
 
 /**
  * ============================================================================
- * LESSON 434 SUMMARY: LAYOUT.JS AND PAGE.JS WORK TOGETHER
+ * LESSONS 434 & 436 SUMMARY: LAYOUT.JS AND PAGE.JS WORK TOGETHER
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
@@ -262,6 +288,7 @@ export default function RootLayout({ children }) {
  *
  * KEY TAKEAWAYS:
  *
+ * LESSON 434:
  * 1. layout.js is a RESERVED FILENAME (like page.js)
  *
  * 2. It defines the SHELL/WRAPPER around one or more pages
@@ -279,6 +306,18 @@ export default function RootLayout({ children }) {
  *    (title, description, etc.) instead of writing <head> manually
  *
  * 7. The `children` prop automatically contains the active page's content
+ *
+ * LESSON 436 ADDITIONS:
+ * 8. Reserved filenames ONLY work inside app/ folder or subfolders
+ *    - Outside app/, they're just regular files!
+ *
+ * 9. layout.js wraps SIBLING pages (same folder) AND NESTED pages (subfolders)
+ *
+ * 10. Other reserved files (from Lesson 436 document):
+ *     - not-found.js → Fallback for "Not Found" errors (sibling/nested)
+ *     - error.js → Fallback for other errors (sibling/nested)
+ *     - loading.js → Shown whilst sibling/nested pages fetch data
+ *     - route.js → API route (returns data, not JSX)
  *
  * ============================================================================
  * VISUAL: HOW LAYOUT AND PAGE WORK TOGETHER

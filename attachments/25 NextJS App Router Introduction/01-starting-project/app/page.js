@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-435: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-436: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -87,24 +87,55 @@
  * being served if you are visiting the page for the first time."
  *
  * ============================================================================
- * LESSON 431 - THE APP FOLDER & RESERVED FILENAMES
+ * LESSONS 431 & 436 - THE APP FOLDER & RESERVED FILENAMES
  * ============================================================================
  *
- * RESERVED FILENAMES IN THE app/ FOLDER:
+ * LESSON 436 - IMPORTANT: RESERVED FILENAMES ONLY WORK INSIDE app/ FOLDER!
+ *
+ * From the course document:
+ * "These filenames are only reserved when creating them inside of the app/
+ * folder (or any subfolder). Outside of the app/ folder, these filenames
+ * are not treated in any special way."
+ *
+ * This means:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Filename        │  Purpose                                             │
- * │  ────────────────│──────────────────────────────────────────────────────│
- * │  page.js         │  Defines a page/route (THIS FILE)                    │
- * │  layout.js       │  Wraps pages with shared UI (header, footer, etc.)   │
- * │  loading.js      │  Loading UI (shown while page loads)                 │
- * │  error.js        │  Error UI (shown when page has an error)             │
- * │  not-found.js    │  404 page                                            │
- * │  route.js        │  API endpoint (backend route handler)                │
- * │  template.js     │  Like layout but re-renders on navigation            │
- * │  default.js      │  Fallback for parallel routes                        │
- * │  icon.png        │  Favicon (Lesson 435)                                │
- * │  globals.css     │  Global styles (imported in layout.js)               │
+ * │  app/page.js              → SPECIAL: Creates the "/" route              │
+ * │  app/about/page.js        → SPECIAL: Creates the "/about" route         │
+ * │  components/page.js       → NOT SPECIAL: Just a regular JS file!        │
+ * │  lib/layout.js            → NOT SPECIAL: Just a regular JS file!        │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * RESERVED FILENAMES IN THE app/ FOLDER (Lesson 436):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Filename        │  Purpose (from Lesson 436 document)                  │
+ * │  ────────────────│──────────────────────────────────────────────────────│
+ * │  page.js         │  Create a new page (e.g., app/about/page.js creates  │
+ * │                  │  a <your-domain>/about page) - THIS FILE             │
+ * │                  │                                                      │
+ * │  layout.js       │  Create a new layout that wraps sibling and nested   │
+ * │                  │  pages                                               │
+ * │                  │                                                      │
+ * │  not-found.js    │  Fallback page for "Not Found" errors (thrown by     │
+ * │                  │  sibling or nested pages or layouts)                 │
+ * │                  │                                                      │
+ * │  error.js        │  Fallback page for other errors (thrown by sibling   │
+ * │                  │  pages or nested pages or layouts)                   │
+ * │                  │                                                      │
+ * │  loading.js      │  Fallback page shown whilst sibling or nested pages  │
+ * │                  │  (or layouts) are fetching data                      │
+ * │                  │                                                      │
+ * │  route.js        │  Allows you to create an API route (a page which     │
+ * │                  │  does NOT return JSX but instead data, e.g., JSON)   │
+ * │                  │                                                      │
+ * │  template.js     │  Like layout but creates new instance on navigation  │
+ * │                  │                                                      │
+ * │  default.js      │  Fallback for parallel routes                        │
+ * │                  │                                                      │
+ * │  icon.png        │  Favicon (Lesson 435)                                │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * OFFICIAL DOCUMENTATION:
+ * https://nextjs.org/docs/app/api-reference/file-conventions
  *
  * ============================================================================
  * THIS FILE: app/page.js - THE HOME PAGE
@@ -259,7 +290,7 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSONS 431-435 SUMMARY
+ * LESSONS 431-436 SUMMARY
  * ============================================================================
  *
  * KEY TAKEAWAYS:
@@ -283,6 +314,16 @@ export default function Home() {
  * 10. Custom components can be stored anywhere (app/ or outside)
  * 11. Folders without page.js are NOT routes (/components = 404)
  * 12. Use @/ alias to import from project root (configured in jsconfig.json)
+ *
+ * LESSON 436 - RESERVED FILENAMES REFERENCE:
+ * 13. Reserved filenames ONLY work inside app/ folder (or subfolders)
+ * 14. Outside app/, these are just regular files with no special meaning
+ * 15. page.js → Creates a page/route
+ * 16. layout.js → Wraps sibling AND nested pages
+ * 17. loading.js → Shows while sibling/nested pages fetch data
+ * 18. error.js → Catches errors from sibling/nested pages
+ * 19. not-found.js → 404 fallback for sibling/nested pages
+ * 20. route.js → API endpoint (returns data like JSON, not JSX)
  *
  * WHEN TO USE WHAT:
  * ┌─────────────────────────────────────────────────────────────────────────┐

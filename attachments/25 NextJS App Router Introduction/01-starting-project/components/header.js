@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * HEADER COMPONENT - LESSON 435: Custom Components in Next.js
+ * HEADER COMPONENT - LESSONS 435 & 436: Custom Components in Next.js
  * ============================================================================
  *
  * LESSON 435 - CUSTOM COMPONENTS ARE NOT SPECIAL FILES
@@ -13,6 +13,28 @@
  * 1. You can create regular React components in Next.js projects
  * 2. Not every .js file is a "special" file - only reserved names are
  * 3. Components can be stored anywhere in your project
+ *
+ * ============================================================================
+ * LESSON 436 - RESERVED FILENAMES ONLY WORK INSIDE app/ FOLDER!
+ * ============================================================================
+ *
+ * From Lesson 436 Document:
+ * "These filenames are only reserved when creating them inside of the app/
+ * folder (or any subfolder). Outside of the app/ folder, these filenames
+ * are not treated in any special way."
+ *
+ * THIS FILE IS PROOF OF LESSON 436!
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  This file (header.js) is in /components/ - OUTSIDE the app/ folder    │
+ * │                                                                          │
+ * │  Even if we named this file page.js or layout.js:                       │
+ * │    /components/page.js    → Just a regular file (NOT a route!)          │
+ * │    /components/layout.js  → Just a regular file (NOT a layout!)         │
+ * │                                                                          │
+ * │  vs. inside app/:                                                        │
+ * │    /app/page.js           → SPECIAL: Creates the "/" route              │
+ * │    /app/layout.js         → SPECIAL: Creates the root layout            │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * WHY "header.js" IS NOT A SPECIAL FILE
@@ -157,11 +179,12 @@ export default function Header() {
 
 /**
  * ============================================================================
- * LESSON 435 SUMMARY: CUSTOM COMPONENTS IN NEXT.JS
+ * LESSONS 435 & 436 SUMMARY: CUSTOM COMPONENTS IN NEXT.JS
  * ============================================================================
  *
  * KEY TAKEAWAYS:
  *
+ * LESSON 435:
  * 1. Not every file in a Next.js project is "special"
  *    - Only reserved names (page.js, layout.js, etc.) have special meaning
  *    - Other files are treated as regular JavaScript/React files
@@ -179,6 +202,21 @@ export default function Header() {
  *    - Same JSX syntax
  *    - Same import/export mechanics
  *    - Just enhanced with Next.js features
+ *
+ * LESSON 436:
+ * 5. Reserved filenames ONLY work inside the app/ folder (or subfolders)
+ *    - Outside app/, these names have NO special meaning
+ *    - This file is proof: it's outside app/, so it's just a regular file
+ *
+ * 6. Complete list of reserved filenames (from Lesson 436):
+ *    - page.js → Create a new page
+ *    - layout.js → Wraps sibling and nested pages
+ *    - not-found.js → Fallback for "Not Found" errors
+ *    - error.js → Fallback for other errors
+ *    - loading.js → Shown while sibling/nested pages fetch data
+ *    - route.js → API route (returns data like JSON, not JSX)
+ *
+ * Official docs: https://nextjs.org/docs/app/api-reference/file-conventions
  *
  * INSTRUCTOR QUOTE:
  * "So that's how the Next App Router works."
