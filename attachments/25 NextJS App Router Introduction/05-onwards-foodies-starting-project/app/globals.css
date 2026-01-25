@@ -1,18 +1,80 @@
+/**
+ * ============================================================================
+ * GLOBAL STYLES - LESSON 438: The Foodies Project Introduction
+ * ============================================================================
+ *
+ * LESSON 438 - UPDATED STYLES FOR THE FOODIES APP
+ *
+ * INSTRUCTOR QUOTE:
+ * "...and I also of course have updated styles..."
+ *
+ * This CSS file contains the global styles for the Foodies/Meals application.
+ * It's imported in layout.js and applies to all pages in the app.
+ *
+ * KEY STYLE FEATURES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • Google Fonts: Quicksand (body) and Montserrat (headings)            │
+ * │  • Dark gradient background for a modern food app aesthetic            │
+ * │  • Header background positioning for the SVG in layout.js              │
+ * │  • Pre-styled error and not-found page classes                         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * GOOGLE FONTS IMPORT
+ * ============================================================================
+ *
+ * Two fonts are used in this project:
+ * - Quicksand: A rounded, friendly font for body text
+ * - Montserrat: A bold, modern font for emphasis (error pages)
+ */
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Montserrat:wght@400;700&display=swap');
 
+/* ============================================================================
+ * CSS RESET / BASELINE
+ * ============================================================================
+ *
+ * Basic CSS reset to ensure consistent styling across browsers.
+ */
+
+/* Apply border-box to all elements for easier sizing calculations */
 * {
   box-sizing: border-box;
 }
 
+/* Set the base font to Quicksand for a friendly, food-app feel */
 html {
   font-family: 'Quicksand', sans-serif;
 }
 
+/* ============================================================================
+ * BODY STYLES
+ * ============================================================================
+ *
+ * Dark theme background - creates a modern, sleek look for the food app.
+ * The radial-gradient creates a subtle depth effect.
+ */
 body {
   margin: 0;
   background: radial-gradient(#282c34, #282c34);
 }
 
+/* ============================================================================
+ * HEADER BACKGROUND (SVG CONTAINER)
+ * ============================================================================
+ *
+ * This class is used in layout.js to position the decorative SVG background.
+ *
+ * INSTRUCTOR QUOTE:
+ * "...you would then also find an SVG graphic in there, which is simply there
+ * for aesthetic reasons and which will be rendered behind the header of this
+ * website in the end."
+ *
+ * KEY PROPERTIES:
+ * - position: absolute → Removes from document flow
+ * - z-index: -1 → Places BEHIND all other content
+ * - top: 0 → Anchors to top of viewport
+ * - height: 320px → Matches the SVG viewBox height
+ */
 .header-background {
   position: absolute;
   width: 100%;
@@ -22,18 +84,33 @@ body {
   z-index: -1;
 }
 
+/* Ensure SVG fills its container and displays properly */
 svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
+/* ============================================================================
+ * ERROR AND NOT-FOUND PAGE STYLES
+ * ============================================================================
+ *
+ * Pre-styled classes for error.js and not-found.js pages.
+ * These will be used when we create custom error handling pages.
+ *
+ * Features:
+ * - Centered text with top margin
+ * - Large gradient text for the heading (eye-catching)
+ * - Uses Montserrat font for bold impact
+ * - Orange-to-yellow gradient matching the food theme
+ */
 .not-found,
 .error {
   margin-top: 5rem;
   text-align: center;
 }
 
+/* Large gradient heading for error/not-found pages */
 .not-found h1,
 .error h1 {
   font-size: 5rem;
@@ -41,6 +118,7 @@ svg {
   font-weight: 900;
   color: #262626;
   text-transform: uppercase;
+  /* Gradient text effect using background-clip */
   background: linear-gradient(90deg, #f9572a, #ffc905);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -49,9 +127,49 @@ svg {
   font-family: 'Montserrat', sans-serif;
 }
 
+/* Subtitle/description for error pages */
 .not-found p,
 .error p {
   font-size: 1.5rem;
   font-weight: 500;
   color: #ddd8d8;
 }
+
+/* ============================================================================
+ * LESSON 438 SUMMARY: STYLES IN THE FOODIES PROJECT
+ * ============================================================================
+ *
+ * KEY STYLING DECISIONS:
+ *
+ * 1. DARK THEME
+ *    - Background: radial-gradient(#282c34, #282c34)
+ *    - Creates a modern, sleek app feel
+ *    - Good contrast for food images
+ *
+ * 2. DECORATIVE HEADER
+ *    - SVG gradient background (brown to orange)
+ *    - Positioned absolutely behind content
+ *    - Creates a warm, food-themed header area
+ *
+ * 3. TYPOGRAPHY
+ *    - Quicksand: Friendly, rounded font for body
+ *    - Montserrat: Bold, impactful font for errors
+ *
+ * 4. COLOR PALETTE
+ *    - Browns/Oranges: #59453c, #8f3a09 (warm, food colors)
+ *    - Accent: #f9572a (orange), #ffc905 (yellow)
+ *    - Text: #ddd8d8 (light gray on dark background)
+ *
+ * COMPARISON: BASIC PROJECT vs FOODIES PROJECT
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BASIC PROJECT:                     FOODIES PROJECT:                    │
+ * │  ─────────────────────────────────  ─────────────────────────────────── │
+ * │  Open Sans + Poppins fonts          Quicksand + Montserrat fonts        │
+ * │  Linear gradient background         Radial gradient background          │
+ * │  Purple/pink accent colors          Orange/yellow accent colors         │
+ * │  Simple centered content            Header background with SVG          │
+ * │  Generic course app                 Food-themed styling                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
