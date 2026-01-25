@@ -1,26 +1,29 @@
 /**
  * ============================================================================
- * HOME PAGE - LESSONS 438-440, 446 & 447: The Foodies Starting Page
+ * HOME PAGE - LESSONS 438-440, 446, 447 & 448: The Foodies Starting Page
  * ============================================================================
  *
+ * ============================================================================
+ * LESSON 448 - THIS PAGE IS A SERVER COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for example, by default, all those React components you have in your
+ * NextJS project, no matter if they're pages, layouts or standard components
+ * are only rendered on the Server. That's why they're called React Server
+ * components."
+ *
+ * This page.js file is a SERVER COMPONENT because:
+ * - It has NO 'use client' directive at the top
+ * - It doesn't use useState, useEffect, or event handlers directly
+ * - It CAN import and use Client Components (like ImageSlideshow)
+ *
+ * IMPORTANT: A Server Component CAN render Client Components as children.
+ * The ImageSlideshow component has 'use client' in its own file, so it
+ * works correctly even though this page is a Server Component.
+ *
+ * ============================================================================
  * LESSON 447 - ADDING THE IMAGE SLIDESHOW
- *
- * INSTRUCTOR QUOTE:
- * "With that, we can go to that page.js file to that div here where I'm saying
- * slideshow, and in there, we can now output that image slideshow component.
- * Of course, you also must add that import, though."
- *
- * IMPORTANT - EXPECTED ERROR:
- *
- * INSTRUCTOR QUOTE:
- * "But if you try to do that, you'll notice that you get an error if you wanna
- * preview the site. There in that error, you're learning that we're importing
- * a component that needs use state and that that only works in a client
- * component, but that none of its parents are marked with use client, so
- * they're in a server component. And what does that now mean?"
- *
- * This error is expected! It will be resolved in the next lesson (448)
- * by adding the 'use client' directive.
  *
  * ============================================================================
  * LESSON 446 - STYLING THE STARTING PAGE
@@ -106,20 +109,26 @@ import classes from './page.module.css';
 
 /**
  * ============================================================================
- * LESSON 447 - IMPORTING THE IMAGE SLIDESHOW COMPONENT
+ * LESSONS 447 & 448 - IMPORTING THE IMAGE SLIDESHOW COMPONENT
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "Of course, you also must add that import, though."
+ * INSTRUCTOR QUOTE (Lesson 448):
+ * "And with that added, we can go back to that main page and bring back that
+ * import and bring back that component here. And now you will see that if you
+ * reload, this works, we no longer get an error and we now have that image
+ * here which changes every five seconds."
  *
- * NOTE: This import will cause an error because ImageSlideshow uses useState
- * and useEffect, which require a Client Component. The error will be:
+ * HOW THIS WORKS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  page.js (this file)       = SERVER COMPONENT (no 'use client')        │
+ * │  ImageSlideshow            = CLIENT COMPONENT (has 'use client')       │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  Server Components CAN import and render Client Components!            │
+ * │  The Client Component handles its own client-side logic.               │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
- * "You're importing a component that needs useState. It only works in a
- * Client Component but none of its parents are marked with 'use client',
- * so they're Server Components by default."
- *
- * This will be fixed in Lesson 448 by adding 'use client' to the component.
+ * ImageSlideshow works because it has 'use client' in its own file,
+ * which tells Next.js to run that specific component on the client.
  */
 import ImageSlideshow from '@/components/images/image-slideshow';
 
@@ -168,19 +177,18 @@ export default function Home() {
       <header className={classes.header}>
         {/**
          * ====================================================================
-         * LESSON 447 - IMAGE SLIDESHOW COMPONENT
+         * LESSONS 447 & 448 - IMAGE SLIDESHOW COMPONENT
          * ====================================================================
          *
-         * INSTRUCTOR QUOTE:
-         * "With that, we can go to that page.js file to that div here where
-         * I'm saying slideshow, and in there, we can now output that image
-         * slideshow component."
+         * INSTRUCTOR QUOTE (Lesson 448):
+         * "And now you will see that if you reload, this works, we no longer
+         * get an error and we now have that image here which changes every
+         * five seconds. And that's now the behavior I want here, now unlocked
+         * with help of client components."
          *
-         * The slideshow cycles through food images every 5 seconds using
-         * useState and useEffect hooks.
-         *
-         * NOTE: This will cause a Server Component error until we add
-         * 'use client' directive in Lesson 448.
+         * The slideshow cycles through food images every 5 seconds.
+         * It works because ImageSlideshow has 'use client' directive,
+         * making it a Client Component that can use useState and useEffect.
          */}
         <div className={classes.slideshow}>
           <ImageSlideshow />
@@ -302,7 +310,7 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSONS 446 & 447 SUMMARY
+ * LESSONS 446, 447 & 448 SUMMARY
  * ============================================================================
  *
  * LESSON 446 - STYLING THE STARTING PAGE:
@@ -310,59 +318,57 @@ export default function Home() {
  * - Applied CSS Modules to a page component
  * - Used fragments for multiple root elements
  *
+ * LESSON 447 - ADDING THE IMAGE SLIDESHOW:
+ * - Created ImageSlideshow component with useState and useEffect
+ * - Imported and used it in the slideshow container
+ * - Encountered Server Component error (hooks don't work in Server Components)
+ *
  * ============================================================================
- * LESSON 447 - ADDING THE IMAGE SLIDESHOW
+ * LESSON 448 - SERVER VS CLIENT COMPONENTS (THE FIX)
  * ============================================================================
  *
- * WHAT WE ADDED:
- *
- * 1. CREATED ImageSlideshow COMPONENT
- *    - Located at: components/images/image-slideshow.js
- *    - Cycles through 7 food images every 5 seconds
- *    - Uses useState to track current image index
- *    - Uses useEffect with setInterval for auto-advance
- *
- * 2. IMPORTED AND USED THE COMPONENT
- *    INSTRUCTOR QUOTE:
- *    "With that, we can go to that page.js file to that div here where I'm
- *    saying slideshow, and in there, we can now output that image slideshow
- *    component. Of course, you also must add that import, though."
- *
- * EXPECTED ERROR (Server Component Issue):
+ * THE SOLUTION:
+ * Added 'use client' directive to ImageSlideshow component file.
  *
  * INSTRUCTOR QUOTE:
- * "But if you try to do that, you'll notice that you get an error if you
- * wanna preview the site. There in that error, you're learning that we're
- * importing a component that needs use state and that that only works in a
- * client component, but that none of its parents are marked with use client,
- * so they're in a server component. And what does that now mean?"
+ * "So therefore here, in order to make this slideshow component work, we have
+ * to add this use client directive at the top of this file."
  *
- * THE PROBLEM EXPLAINED:
+ * WHY THIS PAGE REMAINS A SERVER COMPONENT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Next.js App Router default = SERVER COMPONENTS                        │
- * │  useState / useEffect       = CLIENT-SIDE ONLY features                │
+ * │  This page.js does NOT have 'use client' - it's a Server Component     │
  * │  ─────────────────────────────────────────────────────────────────────  │
- * │  Server Components cannot use React hooks like useState or useEffect!  │
- * │  Solution: Add 'use client' directive (covered in Lesson 448)          │
+ * │  • It doesn't use useState, useEffect, or event handlers               │
+ * │  • It CAN import Client Components (like ImageSlideshow)               │
+ * │  • The Client Component handles its own client-side interactivity      │
+ * │  • Server Components get better SEO and performance benefits           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * CURRENT PAGE STRUCTURE (After Lesson 447):
+ * KEY LESSON 448 CONCEPTS:
+ *
+ * INSTRUCTOR QUOTE:
+ * "And it's super important to know about this difference and to understand
+ * that these two component types exist in general in React, but really only
+ * work and can be used when using a framework like NextJS."
+ *
+ * SERVER COMPONENTS (default):
+ * - Execute only on the server
+ * - console.log appears in terminal (not browser)
+ * - Cannot use hooks or event handlers
+ * - Better for SEO and performance
+ *
+ * CLIENT COMPONENTS ('use client'):
+ * - Pre-rendered on server, hydrated on client
+ * - console.log appears in browser
+ * - CAN use hooks and event handlers
+ * - Required for interactivity
+ *
+ * CURRENT COMPONENT HIERARCHY:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  <>                                                                     │
- * │    <header className={classes.header}>                                  │
- * │      <div className={classes.slideshow}>                                │
- * │        <ImageSlideshow />  ← NEW: Auto-cycling food images             │
- * │      </div>                                                             │
- * │      <div>                                                              │
- * │        <div className={classes.hero}>...</div>                          │
- * │        <div className={classes.cta}>...</div>                           │
- * │      </div>                                                             │
- * │    </header>                                                            │
- * │    <main>...</main>                                                     │
- * │  </>                                                                    │
+ * │  page.js (SERVER COMPONENT - this file)                                │
+ * │    └── ImageSlideshow (CLIENT COMPONENT - has 'use client')            │
+ * │          └── Uses useState, useEffect for image cycling                │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * NEXT LESSON (448): Understanding Server vs Client Components
  *
  * ============================================================================
  */

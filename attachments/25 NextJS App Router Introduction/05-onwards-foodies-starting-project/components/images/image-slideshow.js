@@ -1,66 +1,165 @@
 /**
  * ============================================================================
- * IMAGE SLIDESHOW COMPONENT - LESSON 447: Creating the Image Slideshow
+ * LESSON 448 - THE 'use client' DIRECTIVE
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "So I wanna add a little image slideshow here, which basically automatically
- * goes through some food images that should show up here."
+ * "So therefore here, in order to make this slideshow component work, we have
+ * to add this use client directive at the top of this file. And with that
+ * added, we can go back to that main page and bring back that import and
+ * bring back that component here."
+ *
+ * THE SOLUTION:
+ * Adding 'use client' at the very top of the file tells Next.js this is a
+ * Client Component that can use client-side features like useState, useEffect,
+ * and event handlers (onClick, onChange, etc.).
  *
  * ============================================================================
- * FILE ORGANIZATION
+ */
+'use client';
+
+/**
+ * ============================================================================
+ * IMAGE SLIDESHOW COMPONENT - LESSONS 447 & 448
+ * ============================================================================
+ *
+ * LESSON 447: Creating the Image Slideshow
+ * LESSON 448: Understanding Server vs Client Components
+ *
+ * ============================================================================
+ * LESSON 448 - SERVER COMPONENTS VS CLIENT COMPONENTS
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And for that, we'll build a new component. We could also build it in here,
- * but to keep that file relatively lean, I will add a new component, and I'll
- * do that here in my root components folder. There, I'll add a subfolder
- * called images, and in there, I'll add a image-slideshow.js file."
+ * "NextJS knows Server components, React Server components and Client
+ * Components. And actually that's technically not just NextJS, instead, React
+ * itself has this differentiation though in most React apps, in all those
+ * vanilla React apps which you are building with help of create React app or
+ * with help of Vite, you are using client components out of the box."
  *
- * FOLDER STRUCTURE:
+ * WHY THE DIFFERENCE EXISTS:
+ *
+ * INSTRUCTOR QUOTE:
+ * "With NextJS, that changes because NextJS is a full stack framework. It has
+ * a backend, not just a front end, and therefore code also executes on that
+ * backend when working with NextJS."
+ *
+ * ============================================================================
+ * SERVER COMPONENTS (DEFAULT IN NEXT.JS APP ROUTER)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for example, by default, all those React components you have in your
+ * NextJS project, no matter if they're pages, layouts or standard components
+ * are only rendered on the Server. That's why they're called React Server
+ * components."
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that means that this component and this layout component, but also the
+ * slideshow component at the header component, all those components do not
+ * execute in the browser. Those component functions don't execute there, but
+ * instead on the Server."
+ *
+ * WHERE SERVER COMPONENTS RUN:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  components/                                                            │
- * │  ├── main-header/          ← Header-related components                  │
- * │  │   ├── main-header.js                                                │
- * │  │   └── ...                                                           │
- * │  └── images/               ← Image-related components (NEW)            │
- * │      ├── image-slideshow.js        ← THIS FILE                         │
- * │      └── image-slideshow.module.css                                    │
+ * │  SERVER COMPONENTS:                                                     │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  • Execute on the SERVER (backend)                                     │
+ * │  • console.log appears in TERMINAL (not browser console)               │
+ * │  • Cannot use useState, useEffect, or event handlers                   │
+ * │  • Provide better SEO (content is in page source)                      │
+ * │  • Less JavaScript sent to browser (better performance)                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * IMPORTANT: REACT HOOKS AND SERVER COMPONENTS
+ * CLIENT COMPONENTS (REQUIRES 'use client' DIRECTIVE)
  * ============================================================================
  *
- * This component uses useState and useEffect, which are React hooks.
- * In Next.js App Router, components are SERVER COMPONENTS by default.
+ * INSTRUCTOR QUOTE:
+ * "Nonetheless, in NextJS projects, you can still also build client
+ * components, and that would be components that are still technically
+ * pre-rendered on the server, but then also potentially rendered on the
+ * client. And most importantly, these are components that must be rendered
+ * on the client because they contain some code or use some features that are
+ * only available on the client."
+ *
+ * CLIENT-ONLY FEATURES:
  *
  * INSTRUCTOR QUOTE:
- * "But if you try to do that, you'll notice that you get an error if you
- * wanna preview the site. There in that error, you're learning that we're
- * importing a component that needs use state and that that only works in a
- * client component, but that none of its parents are marked with use client,
- * so they're in a server component."
+ * "Like for example here in this image slideshow JS file, they use state
+ * hook, or the use fact hook. These hooks are not available on the Server
+ * side, which kind of makes sense if you think about it because we're not
+ * interested in setting this interval on the Server side, we wanna run this
+ * in the browser so that the image swaps every five seconds after the page
+ * has been loaded."
  *
- * This error will be addressed in the NEXT LESSON (448) by adding 'use client'.
+ * INSTRUCTOR QUOTE:
+ * "Another example for a feature that would only be available in client
+ * components would be event handlers. So if you would use the on click prop
+ * to trigger some function, obviously since you are waiting for some user
+ * interaction here, that would require to be a client component because that
+ * would require code that runs on the client."
+ *
+ * CLIENT COMPONENTS SUMMARY:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  CLIENT COMPONENTS (marked with 'use client'):                         │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  • Pre-rendered on server, then hydrated on client                     │
+ * │  • console.log appears in BROWSER console                              │
+ * │  • CAN use useState, useEffect, useReducer, etc.                       │
+ * │  • CAN use event handlers (onClick, onChange, onSubmit, etc.)          │
+ * │  • Required for any interactivity that runs in the browser             │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * WHY SERVER COMPONENTS ARE BENEFICIAL
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And therefore NextJS embraces this concept of having those Server
+ * components. Now that's an important concept and an important advantage of
+ * NextJS projects, because with Server components you have potentially less
+ * client side JavaScript code that must be downloaded, hence possibly
+ * improving the performance of your website."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And it's also great for search engine optimization, because web search
+ * crawlers now see pages that contain the complete finished content. Compare
+ * that with a Vanilla JavaScript project where you are not using a framework
+ * like NextJS. There, if you take a look at the source code of a page, you'll
+ * see that it's essentially an empty page because all the content is created
+ * and populated on the client side by client side code with help of those
+ * client side components."
+ *
+ * INSTRUCTOR QUOTE:
+ * "In NextJS, project stats different. If you take a look at the source code
+ * there, you will see that all the content is in there. All that text that's
+ * visible on the screen is part of the actual page source code, and that is
+ * also what web search engine crawlers will see."
  *
  * ============================================================================
  */
 
 /**
  * ============================================================================
- * REACT HOOKS IMPORTS
+ * REACT HOOKS IMPORTS (REQUIRE CLIENT COMPONENT)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "...because here, I'm using use state, so the standard use state hook
- * provided by React, to control some state which changes over time. To be
- * precise, it changes with help of use effect every five seconds with help
- * of set interval."
+ * "Like for example here in this image slideshow JS file, they use state
+ * hook, or the use fact hook. These hooks are not available on the Server
+ * side, which kind of makes sense if you think about it because we're not
+ * interested in setting this interval on the Server side, we wanna run this
+ * in the browser so that the image swaps every five seconds after the page
+ * has been loaded."
  *
- * These are standard React hooks - nothing Next.js specific:
- * - useEffect: For side effects (setting up the interval)
- * - useState: For tracking which image is currently visible
+ * These hooks REQUIRE the 'use client' directive because:
+ * - useState: Manages state that changes in the browser (user interaction)
+ * - useEffect: Runs side effects AFTER the component renders in the browser
+ *
+ * Without 'use client', Next.js would try to run these on the server,
+ * which would fail because the server doesn't have a concept of
+ * "component lifecycle" or "state that persists between renders."
  */
 import { useEffect, useState } from 'react';
 
@@ -241,34 +340,52 @@ export default function ImageSlideshow() {
 
 /**
  * ============================================================================
- * LESSON 447 SUMMARY: IMAGE SLIDESHOW COMPONENT
+ * LESSONS 447 & 448 SUMMARY
  * ============================================================================
  *
- * WHAT WE BUILT:
+ * LESSON 447 - BUILDING THE SLIDESHOW:
+ * - Created ImageSlideshow component with useState and useEffect
+ * - Cycles through 7 food images every 5 seconds
+ * - Uses CSS transitions for smooth animations
  *
- * 1. A self-cycling image slideshow that changes every 5 seconds
- * 2. Uses standard React hooks (useState, useEffect) - nothing Next.js specific
- * 3. Imports and displays 7 food images from the assets folder
- * 4. Uses CSS for smooth transitions between images
- *
- * IMPORTANT - UPCOMING ERROR:
+ * LESSON 448 - SERVER VS CLIENT COMPONENTS:
  *
  * INSTRUCTOR QUOTE:
- * "But if you try to do that, you'll notice that you get an error if you
- * wanna preview the site. There in that error, you're learning that we're
- * importing a component that needs use state and that that only works in a
- * client component, but that none of its parents are marked with use client,
- * so they're in a server component. And what does that now mean?"
+ * "So therefore here, in order to make this slideshow component work, we have
+ * to add this use client directive at the top of this file."
  *
- * This sets up the NEXT LESSON about Server Components vs Client Components.
+ * THE FIX: Added 'use client' at the very top of this file.
  *
- * THE PROBLEM:
+ * RESULT:
+ *
+ * INSTRUCTOR QUOTE:
+ * "And now you will see that if you reload, this works, we no longer get an
+ * error and we now have that image here which changes every five seconds.
+ * And that's now the behavior I want here, now unlocked with help of client
+ * components."
+ *
+ * WHEN TO USE 'use client':
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Next.js App Router = Server Components by default                      │
- * │  useState/useEffect = Client-side React features                        │
+ * │  USE 'use client' WHEN YOUR COMPONENT NEEDS:                           │
  * │  ─────────────────────────────────────────────────────────────────────  │
- * │  These are INCOMPATIBLE without 'use client' directive!                │
+ * │  ✓ useState, useEffect, useReducer, useContext, or other React hooks   │
+ * │  ✓ Event handlers (onClick, onChange, onSubmit, etc.)                  │
+ * │  ✓ Browser-only APIs (window, document, localStorage, etc.)            │
+ * │  ✓ Any interactivity that must run in the browser                      │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * KEEP AS SERVER COMPONENT (NO 'use client') WHEN:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✓ Component only displays data (no interactivity)                     │
+ * │  ✓ Component fetches data from database or API                         │
+ * │  ✓ Component doesn't need browser-specific features                    │
+ * │  ✓ You want better SEO and performance                                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And it's super important to know about this difference and to understand
+ * that these two component types exist in general in React, but really only
+ * work and can be used when using a framework like NextJS."
  *
  * ============================================================================
  */
