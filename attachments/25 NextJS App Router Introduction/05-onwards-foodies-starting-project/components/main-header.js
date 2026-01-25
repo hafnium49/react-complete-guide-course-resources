@@ -1,8 +1,59 @@
 /**
  * ============================================================================
- * MAIN HEADER COMPONENT - LESSONS 442 & 443: Header with CSS Modules
+ * MAIN HEADER COMPONENT - LESSONS 442, 443 & 444: Header with Optimized Image
  * ============================================================================
  *
+ * LESSON 444 - OPTIMIZING IMAGES WITH NEXT.JS IMAGE COMPONENT
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because at the moment, we're simply using the regular image element for
+ * displaying this image. And that's not bad or a problem, but in NextJS, you
+ * actually got a better element for outputting images than this default image
+ * element."
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because in NextJS, you have a special built-in image component, which exists
+ * to help you output images in a more optimized way."
+ *
+ * ============================================================================
+ * NEXT.JS IMAGE COMPONENT BENEFITS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "For example, by lazy loading images under the hood so that they're only
+ * displayed if they're really visible on the page. It does that automatically
+ * for you without any extra configuration. It can also simplify the process
+ * of setting up responsive images and so on."
+ *
+ * AUTOMATIC OPTIMIZATIONS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. LAZY LOADING                                                        │
+ * │     - Images only load when visible on page                             │
+ * │     - Adds loading="lazy" automatically                                 │
+ * │                                                                          │
+ * │  2. RESPONSIVE IMAGES                                                   │
+ * │     - Generates srcset for different screen sizes                       │
+ * │     - Serves appropriate size based on viewport                         │
+ * │                                                                          │
+ * │  3. FORMAT OPTIMIZATION                                                 │
+ * │     - Automatically serves WebP for supported browsers                  │
+ * │     - Falls back to original format when needed                         │
+ * │                                                                          │
+ * │  4. SIZE DETECTION                                                      │
+ * │     - Automatically detects width/height from imported images           │
+ * │     - Prevents Cumulative Layout Shift (CLS)                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * DOCUMENTATION:
+ * See: https://nextjs.org/docs/app/api-reference/components/image
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, this image component has a lot of props and configuration options,
+ * and attached you find a link to the full article on this component. Though
+ * I will say that many of those props and options are really for more advanced
+ * use cases."
+ *
+ * ============================================================================
  * LESSON 443 - STYLING WITH CSS MODULES
  *
  * INSTRUCTOR QUOTE:
@@ -181,6 +232,20 @@ import Link from 'next/link';
 
 /**
  * ============================================================================
+ * LESSON 444 - IMPORTING THE NEXT.JS IMAGE COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And all you have to do here in this main header component is to replace
+ * the default IMG element here with the image element that can be imported
+ * from next/image."
+ *
+ * The Image component is built into Next.js - no additional installation needed.
+ */
+import Image from 'next/image';
+
+/**
+ * ============================================================================
  * LESSON 443 - IMPORTING CSS MODULES
  * ============================================================================
  *
@@ -256,24 +321,56 @@ export default function MainHeader() {
        */}
       <Link className={classes.logo} href="/">
         {/**
-         * LOGO IMAGE
+         * ================================================================
+         * LESSON 444 - OPTIMIZED IMAGE COMPONENT
+         * ================================================================
          *
          * INSTRUCTOR QUOTE:
-         * "And I wanna set it to an image which I provided as part of the
-         * starting project. There, I provided this assets folder to you.
-         * And that assets folder then has a logo PNG file, which is that
-         * logo I want to use."
+         * "And all you have to do here in this main header component is
+         * to replace the default IMG element here with the image element
+         * that can be imported from next/image."
          *
-         * IMPORTANT - Using logo.src:
+         * KEY CHANGES FROM <img> TO <Image>:
          *
          * INSTRUCTOR QUOTE:
-         * "What's important in Next projects, unlike in many other React
-         * projects, is that you can't just assign it like this. It's that
-         * you have to access the SRC property because this imported logo
-         * in Next projects will be an object where the path to the image
-         * is then stored under that SRC property."
+         * "Then you need to set the source to such an imported image, but
+         * now to that overall object and not just the src property value."
+         *
+         * ┌───────────────────────────────────────────────────────────────┐
+         * │  BEFORE (regular <img>):                                      │
+         * │  <img src={logoImg.src} alt="..." />                          │
+         * │  ↑ Must use .src property                                     │
+         * │                                                                │
+         * │  AFTER (Next.js <Image>):                                     │
+         * │  <Image src={logoImg} alt="..." priority />                   │
+         * │  ↑ Use the FULL object (not .src)                             │
+         * └───────────────────────────────────────────────────────────────┘
+         *
+         * INSTRUCTOR QUOTE:
+         * "So I changed that src prop value therefore, because this object
+         * that's generated by NextJS, when you import an image like this,
+         * contains useful information that's used under the hood by this
+         * image component to display it in an optimized way. For example,
+         * it automatically detects the size of this image."
+         *
+         * THE priority PROP:
+         *
+         * INSTRUCTOR QUOTE:
+         * "Now, one thing we should do here, about which we also learn here
+         * in the console, the JavaScript console, is add the priority
+         * property to this image since it will always be visible when this
+         * page loads. So lazy loading doesn't make a lot of sense here, and
+         * we want to tell NextJS and the browser that this image should
+         * always be loaded as quickly as possible to make sure that we got
+         * no unnecessary content shift or flickering when the page loads."
+         *
+         * WHEN TO USE priority:
+         * - Images that are visible "above the fold" (on initial load)
+         * - Logo images that are always present
+         * - Hero images at the top of pages
+         * - Any image that would benefit from preloading
          */}
-        <img src={logoImg.src} alt="A plate with food on it" />
+        <Image src={logoImg} alt="A plate with food on it" priority />
 
         {/**
          * LOGO TEXT
@@ -332,58 +429,69 @@ export default function MainHeader() {
 
 /**
  * ============================================================================
- * LESSONS 442-443 SUMMARY: HEADER COMPONENT WITH CSS MODULES
+ * LESSONS 442-444 SUMMARY: HEADER WITH CSS MODULES AND OPTIMIZED IMAGE
  * ============================================================================
  *
- * LESSON 442 - WHAT WE ACCOMPLISHED:
+ * LESSON 442 - COMPONENT CREATION:
+ * - Created component file outside app folder (instructor preference)
+ * - Learned about image imports and @ alias
+ * - Built header with logo and navigation
  *
- * 1. Created a new component file outside the app folder
- *    - Keeps app folder clean (routing only)
- *    - Personal preference, but recommended organization
- *
- * 2. Learned about image imports in Next.js
- *    - Use @ alias for clean imports
- *    - Access .src property (unlike regular React)
- *
- * 3. Built a header with:
- *    - Clickable logo linking to home
- *    - Navigation with Link components
- *    - Links to /meals and /community
+ * LESSON 443 - CSS MODULES:
+ * - File naming: *.module.css
+ * - Import: import classes from './file.module.css'
+ * - Usage: className={classes.className}
+ * - Benefit: Scoped styles (no conflicts)
  *
  * ============================================================================
- * LESSON 443 - CSS MODULES STYLING
+ * LESSON 444 - NEXT.JS IMAGE COMPONENT
  * ============================================================================
  *
- * STYLING OPTIONS IN NEXT.JS:
+ * <img> vs <Image> COMPARISON:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. Global CSS   - Imported in layout.js, affects all pages             │
- * │  2. Tailwind CSS - Utility classes, popular but verbose                 │
- * │  3. CSS Modules  - Scoped styles, standard CSS (USED HERE)              │
+ * │  REGULAR <img>                    │  NEXT.JS <Image>                    │
+ * │  ─────────────────────────────────│─────────────────────────────────────│
+ * │  Manual optimization needed       │  Automatic optimization             │
+ * │  No lazy loading by default       │  Lazy loading built-in              │
+ * │  Single image format              │  Auto WebP conversion               │
+ * │  Fixed size                       │  Responsive srcset generated        │
+ * │  src={logo.src}                   │  src={logo} (full object)           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * HOW CSS MODULES WORK:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. Create file: component-name.module.css                              │
- * │  2. Import: import classes from './component-name.module.css'           │
- * │  3. Use: className={classes.className}                                  │
- * │  4. Benefit: Styles are SCOPED to this component only!                  │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * CLASSES APPLIED IN THIS COMPONENT:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  ELEMENT      │  CLASS APPLIED         │  STYLES                        │
- * │  ─────────────│────────────────────────│────────────────────────────────│
- * │  <header>     │  classes.header        │  Flexbox layout, spacing       │
- * │  <Link> logo  │  classes.logo          │  Logo styling, uppercase text  │
- * │  <nav>        │  classes.nav           │  Nav links styling             │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * WHAT <Image> ADDS AUTOMATICALLY:
  *
  * INSTRUCTOR QUOTE:
- * "With all that done, if you save that and you go back to your page, this
- * now looks much better. Now we got a properly styled header, a properly
- * styled logo, and these navigation links here, which also look better and
- * which of course also still work. But now all styled in a beautiful way
- * with help of CSS modules."
+ * "With that, if you reload, you will see the image as before, but if you
+ * now inspect it, you will see that this image element that's being rendered
+ * here has a couple of extra attributes which we didn't add."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ATTRIBUTE        │  PURPOSE                                            │
+ * │  ─────────────────│─────────────────────────────────────────────────────│
+ * │  loading="lazy"   │  Only load image when visible on screen             │
+ * │  width, height    │  Auto-detected from imported image                  │
+ * │  srcset           │  Different sizes for different viewports            │
+ * │  WebP format      │  Efficient format served to supported browsers      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * THE priority PROP:
+ *
+ * INSTRUCTOR QUOTE:
+ * "Therefore, on this image component, I'll now also add the priority
+ * property, like this, to make sure that this is loaded with priority."
+ *
+ * USE priority WHEN:
+ * - Image is above the fold (visible on initial load)
+ * - Logo or hero images
+ * - Any LCP (Largest Contentful Paint) image
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that is how we can use this image component. Now as mentioned, you
+ * can definitely dive in deeper to explore all the different use cases of
+ * this component and all the different configuration options."
+ *
+ * DOCUMENTATION:
+ * https://nextjs.org/docs/app/api-reference/components/image
  *
  * ============================================================================
  */
