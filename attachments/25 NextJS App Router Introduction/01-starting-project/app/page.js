@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PAGE COMPONENT - LESSONS 429-436: Introduction to Next.js
+ * PAGE COMPONENT - LESSONS 429-437: Introduction to Next.js
  * ============================================================================
  *
  * LESSON 429 - WHAT IS NEXT.JS?
@@ -141,14 +141,27 @@
  * THIS FILE: app/page.js - THE HOME PAGE
  * ============================================================================
  *
- * FILE-BASED ROUTING IN NEXT.JS:
+ * FILE-BASED ROUTING IN NEXT.JS (Updated for Lesson 437):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  File Path                    │  URL Route                              │
  * │  ─────────────────────────────│─────────────────────────────────────────│
  * │  app/page.js                  │  /  (home page - THIS FILE)             │
  * │  app/about/page.js            │  /about                                 │
+ * │  app/blog/page.js             │  /blog (Lesson 437)                     │
+ * │  app/blog/[slug]/page.js      │  /blog/* (DYNAMIC - Lesson 437)         │
  * │  app/meals/page.js            │  /meals                                 │
  * │  app/meals/[slug]/page.js     │  /meals/:slug (dynamic route)           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * LESSON 437 - DYNAMIC ROUTES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  [slug] = Square brackets create a DYNAMIC route                        │
+ * │                                                                          │
+ * │  /blog/post-1       → Handled by app/blog/[slug]/page.js                │
+ * │  /blog/post-2       → Handled by app/blog/[slug]/page.js                │
+ * │  /blog/anything     → Handled by app/blog/[slug]/page.js                │
+ * │                                                                          │
+ * │  Access the value: params.slug                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
@@ -284,13 +297,30 @@ export default function Home() {
       <p>
         <Link href="/about">Learn more about us</Link>
       </p>
+
+      {/**
+       * ====================================================================
+       * LESSON 437: LINK TO BLOG (DYNAMIC ROUTES)
+       * ====================================================================
+       *
+       * This link navigates to the blog section, which demonstrates
+       * dynamic routes. The /blog page lists links to individual posts,
+       * and each post is handled by a SINGLE page.js file using the
+       * [slug] dynamic route pattern.
+       *
+       * See: app/blog/page.js (blog index)
+       * See: app/blog/[slug]/page.js (dynamic blog post page)
+       */}
+      <p>
+        <Link href="/blog">Visit our Blog</Link>
+      </p>
     </main>
   );
 }
 
 /**
  * ============================================================================
- * LESSONS 431-436 SUMMARY
+ * LESSONS 431-437 SUMMARY
  * ============================================================================
  *
  * KEY TAKEAWAYS:
@@ -324,6 +354,14 @@ export default function Home() {
  * 18. error.js → Catches errors from sibling/nested pages
  * 19. not-found.js → 404 fallback for sibling/nested pages
  * 20. route.js → API endpoint (returns data like JSON, not JSX)
+ *
+ * LESSON 437 - DYNAMIC ROUTES:
+ * 21. Use [placeholder] syntax for dynamic route segments
+ * 22. The folder name becomes the key in params (e.g., [slug] → params.slug)
+ * 23. ONE page.js can handle MANY URLs (scalable!)
+ * 24. Next.js passes params prop to page components automatically
+ * 25. Use params.slug (or your chosen name) to access the URL value
+ * 26. Ideal for blogs, products, user profiles - anything data-driven
  *
  * WHEN TO USE WHAT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
