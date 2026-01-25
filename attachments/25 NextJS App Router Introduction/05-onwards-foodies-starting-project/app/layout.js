@@ -1,8 +1,21 @@
 /**
  * ============================================================================
- * ROOT LAYOUT - LESSONS 438, 441 & 442: Layouts in Next.js
+ * ROOT LAYOUT - LESSONS 438, 441, 442 & 445: Layouts in Next.js
  * ============================================================================
  *
+ * LESSON 445 - EXTRACTING THE HEADER BACKGROUND
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, we can save this and go back to layout.js and then also output
+ * the MainHeaderBackground here, or since it, as the name suggests, belongs
+ * to the MainHeader, we can actually not do that, get rid of the import and
+ * the usage in the root layout.js file, and instead use it here in main-header.js."
+ *
+ * The SVG background has been moved from this file into a dedicated
+ * MainHeaderBackground component, which is now rendered inside MainHeader.
+ * This keeps the layout file focused on structure.
+ *
+ * ============================================================================
  * LESSON 442 - ADDING THE MAIN HEADER
  *
  * INSTRUCTOR QUOTE:
@@ -150,7 +163,7 @@ import './globals.css';
  * The @ alias makes this import clean:
  * @/components/main-header → project-root/components/main-header.js
  */
-import MainHeader from '@/components/main-header';
+import MainHeader from '@/components/main-header/main-header';
 
 /**
  * ============================================================================
@@ -187,60 +200,29 @@ export default function RootLayout({ children }) {
       <body>
         {/**
          * ====================================================================
-         * DECORATIVE SVG BACKGROUND
+         * LESSONS 442 & 445 - MAIN HEADER COMPONENT
          * ====================================================================
          *
-         * This SVG creates the warm brown-to-orange gradient header background.
-         * It's visible on ALL pages because it's in the ROOT layout.
+         * LESSON 445 UPDATE:
+         * The SVG background that was previously here has been extracted into
+         * the MainHeaderBackground component, which is now rendered inside
+         * MainHeader. This keeps the layout file leaner.
          *
-         * INSTRUCTOR QUOTE (from Lesson 441):
-         * "And yet the root layout is still active, as you can, for example,
-         * tell by this SVG, this brownish SVG, which is still visible here."
-         *
-         * This proves that even with nested layouts, the root layout
-         * (and everything in it) remains active.
-         */}
-        <div className="header-background">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop
-                  offset="0%"
-                  style={{ stopColor: '#59453c', stopOpacity: '1' }}
-                />
-                <stop
-                  offset="100%"
-                  style={{ stopColor: '#8f3a09', stopOpacity: '1' }}
-                />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#gradient)"
-              d="M0,256L48,240C96,224,192,192,288,181.3C384,171,480,181,576,186.7C672,192,768,192,864,181.3C960,171,1056,149,1152,133.3C1248,117,1344,107,1392,101.3L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-            ></path>
-          </svg>
-        </div>
-
-        {/**
-         * ====================================================================
-         * LESSON 442 - MAIN HEADER COMPONENT
-         * ====================================================================
-         *
-         * INSTRUCTOR QUOTE:
-         * "With that all added, and with this main header component finished,
-         * we can go back to that root layout and then there output this main
-         * header above that children slot here, so above the page content."
+         * INSTRUCTOR QUOTE (Lesson 445):
+         * "With that, we can save this and go back to layout.js and then also
+         * output the MainHeaderBackground here, or since it, as the name
+         * suggests, belongs to the MainHeader, we can actually not do that,
+         * get rid of the import and the usage in the root layout.js file,
+         * and instead use it here in main-header.js."
          *
          * WHY IT'S PLACED HERE (in root layout):
          * - Visible on ALL pages automatically
          * - No need to add it to each individual page
          * - Consistent navigation across the entire app
          *
-         * INSTRUCTOR QUOTE:
-         * "If you do that and you save everything, you should see something
-         * like this if you revisit the page, a total mess, but at least the
-         * header is there, it's there and it's working, and it's there on
-         * every page, which is amazing."
+         * MainHeader now renders:
+         * - MainHeaderBackground (the SVG gradient)
+         * - The header element with logo and navigation
          */}
         <MainHeader />
 
@@ -286,7 +268,7 @@ export default function RootLayout({ children }) {
  *
  * 2. ROOT LAYOUT IS ALWAYS ACTIVE
  *    - Even with nested layouts, root layout stays active
- *    - That's why the SVG background appears on all pages
+ *    - MainHeader (including background) appears on all pages
  *
  * 3. NESTED LAYOUTS ARE OPTIONAL
  *    - Create layout.js in a route folder for route-specific layouts
@@ -309,29 +291,38 @@ export default function RootLayout({ children }) {
  *    - Use @ alias for clean imports (@/assets/logo.png)
  *    - Access .src property (images are objects in Next.js)
  *
- * CURRENT LAYOUT STRUCTURE:
+ * ============================================================================
+ * LESSON 445 KEY TAKEAWAYS:
+ * ============================================================================
+ *
+ * 1. COMPONENT EXTRACTION
+ *    - Moved SVG background from layout.js to MainHeaderBackground component
+ *    - Keeps root layout leaner and more focused
+ *
+ * 2. FILE ORGANIZATION WITH SUBFOLDERS
+ *    - Related components grouped in subfolders (main-header/)
+ *    - main-header.js, main-header-background.js, and their CSS modules
+ *
+ * 3. REACT FRAGMENTS
+ *    - MainHeader uses <></> to return multiple sibling elements
+ *    - Background and header rendered together without wrapper div
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, you then just have to make sure that in the root layout.js file,
+ * this import path here is updated, which in my case, my IDE did for me.
+ * And with that, the page still works as before."
+ *
+ * CURRENT LAYOUT STRUCTURE (After Lesson 445):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  <html>                                                                 │
  * │    <body>                                                               │
- * │      <div className="header-background">                                │
- * │        <svg>...</svg>  ← Decorative background                          │
- * │      </div>                                                             │
- * │      <MainHeader />    ← Navigation (Lesson 442)                        │
- * │      {children}        ← Page content                                   │
+ * │      <MainHeader />  ← Now includes:                                    │
+ * │        │               - MainHeaderBackground (SVG)                     │
+ * │        │               - Header with logo and nav                       │
+ * │      {children}      ← Page content                                     │
  * │    </body>                                                              │
  * │  </html>                                                                │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * INSTRUCTOR QUOTE:
- * "If you do that and you save everything, you should see something like this
- * if you revisit the page, a total mess, but at least the header is there,
- * it's there and it's working, and it's there on every page, which is amazing."
- *
- * NEXT STEP (Lesson 443):
- *
- * INSTRUCTOR QUOTE:
- * "And we can also go back to the starting page, but of course it's totally
- * unstyled and doesn't look good. And that's therefore what we'll change next."
  *
  * ============================================================================
  */

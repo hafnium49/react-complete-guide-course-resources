@@ -1,0 +1,108 @@
+/**
+ * ============================================================================
+ * MAIN HEADER BACKGROUND STYLES - LESSON 445: Component Refactoring
+ * ============================================================================
+ *
+ * LESSON 445 - EXTRACTING CSS TO A CSS MODULE
+ *
+ * INSTRUCTOR QUOTE:
+ * "As a little bonus, we can now also extract that CSS class, which is set up
+ * in that globals CSS file, and put it into a CSS modules file so that we
+ * practice working with that again as well."
+ *
+ * ============================================================================
+ * WHY EXTRACT TO CSS MODULE?
+ * ============================================================================
+ *
+ * BEFORE (in globals.css):
+ * - Styles were global
+ * - Could potentially conflict with other elements
+ * - Not co-located with the component
+ *
+ * AFTER (in this CSS module):
+ * - Styles are SCOPED to the MainHeaderBackground component
+ * - Co-located with the component file
+ * - Better organization and maintainability
+ *
+ * ============================================================================
+ * IMPORTANT: CSS MODULES SELECTOR CHANGE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "You should now also tweak that SVG selector and actually select SVGs inside
+ * of a element with header-background as a class. Otherwise, this won't work
+ * with CSS modules."
+ *
+ * WHY THE CHANGE?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (globals.css):                                                  │
+ * │  svg { ... }                                                            │
+ * │  ↑ Global selector - affects ALL SVGs on the page                       │
+ * │                                                                          │
+ * │  AFTER (CSS module):                                                    │
+ * │  .header-background svg { ... }                                         │
+ * │  ↑ Scoped selector - only affects SVGs INSIDE this component            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/**
+ * HEADER BACKGROUND CONTAINER
+ *
+ * This class positions the SVG gradient behind all page content.
+ *
+ * KEY PROPERTIES:
+ * - position: absolute → Removes from document flow
+ * - z-index: -1 → Places BEHIND all other content
+ * - top: 0, left: 0 → Anchors to top-left of viewport
+ * - height: 320px → Matches the SVG viewBox height
+ */
+.header-background {
+  position: absolute;
+  width: 100%;
+  height: 320px;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+/**
+ * SVG STYLING (SCOPED TO THIS COMPONENT)
+ *
+ * INSTRUCTOR QUOTE:
+ * "You should now also tweak that SVG selector and actually select SVGs inside
+ * of a element with header-background as a class. Otherwise, this won't work
+ * with CSS modules."
+ *
+ * By using .header-background svg, we ensure:
+ * - Only SVGs inside this component are affected
+ * - Other SVGs on the page (icons, etc.) won't get these styles
+ * - CSS Modules can properly scope this selector
+ */
+.header-background svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/**
+ * ============================================================================
+ * LESSON 445 - CSS MODULES SCOPING
+ * ============================================================================
+ *
+ * HOW CSS MODULES TRANSFORM THIS FILE:
+ *
+ * YOUR CODE:
+ *   .header-background { ... }
+ *   .header-background svg { ... }
+ *
+ * GENERATED OUTPUT:
+ *   .header-background_abc123 { ... }
+ *   .header-background_abc123 svg { ... }
+ *
+ * The unique hash ensures no conflicts with other .header-background classes
+ * anywhere else in the application.
+ *
+ * ============================================================================
+ */

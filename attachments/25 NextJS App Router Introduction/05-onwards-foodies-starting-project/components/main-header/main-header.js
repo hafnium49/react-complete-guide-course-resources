@@ -1,8 +1,67 @@
 /**
  * ============================================================================
- * MAIN HEADER COMPONENT - LESSONS 442, 443 & 444: Header with Optimized Image
+ * MAIN HEADER COMPONENT - LESSONS 442-445: Header with Background Component
  * ============================================================================
  *
+ * LESSON 445 - COMPONENT EXTRACTION AND FILE ORGANIZATION
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, I mentioned that I also wanted to outsource this header background
+ * here into a separate component, and that's what I'll do next."
+ *
+ * ============================================================================
+ * FILE ORGANIZATION (LESSON 445)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, I also wanna group all these main-header related files together into
+ * a separate subfolder inside of components so that we keep that components
+ * folder manageable and easy to navigate."
+ *
+ * CURRENT FOLDER STRUCTURE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  components/                                                            │
+ * │  └── main-header/                  ← Subfolder for header files         │
+ * │      ├── main-header.js            ← THIS FILE                          │
+ * │      ├── main-header.module.css    ← Header styles                      │
+ * │      ├── main-header-background.js ← Background component               │
+ * │      └── main-header-background.module.css ← Background styles          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "And hence, I'll add a main-header folder in that components folder, and
+ * move all these main-header related files into that main-header subfolder
+ * inside of that components folder."
+ *
+ * ============================================================================
+ * USING FRAGMENTS FOR MULTIPLE ELEMENTS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "There we could return a fragment so that we can add a sibling element
+ * next to the header, and that sibling is now that MainHeaderBackground,
+ * which I guess makes a lot of sense if we look at it like this."
+ *
+ * WHY USE A FRAGMENT?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  React components must return a SINGLE element                          │
+ * │                                                                          │
+ * │  PROBLEM:                                                               │
+ * │  return (                                                               │
+ * │    <MainHeaderBackground />   ← Error! Two sibling elements             │
+ * │    <header>...</header>                                                 │
+ * │  );                                                                     │
+ * │                                                                          │
+ * │  SOLUTION: Use a Fragment (<>...</>)                                    │
+ * │  return (                                                               │
+ * │    <>                          ← Fragment wraps siblings                │
+ * │      <MainHeaderBackground />                                           │
+ * │      <header>...</header>                                               │
+ * │    </>                                                                  │
+ * │  );                                                                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
  * LESSON 444 - OPTIMIZING IMAGES WITH NEXT.JS IMAGE COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -268,6 +327,23 @@ import Image from 'next/image';
 import classes from './main-header.module.css';
 
 /**
+ * ============================================================================
+ * LESSON 445 - IMPORTING THE HEADER BACKGROUND COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "...or since it, as the name suggests, belongs to the MainHeader, we can
+ * actually not do that, get rid of the import and the usage in the root
+ * layout.js file, and instead use it here in main-header.js."
+ *
+ * The background component is imported here because:
+ * - It logically belongs with the header
+ * - Both are in the same subfolder
+ * - Keeps layout.js cleaner
+ */
+import MainHeaderBackground from './main-header-background';
+
+/**
  * MAIN HEADER COMPONENT
  *
  * INSTRUCTOR QUOTE:
@@ -284,23 +360,39 @@ import classes from './main-header.module.css';
 export default function MainHeader() {
   return (
     /**
-     * HEADER ELEMENT
+     * ====================================================================
+     * LESSON 445 - FRAGMENT FOR MULTIPLE SIBLING ELEMENTS
+     * ====================================================================
      *
      * INSTRUCTOR QUOTE:
-     * "And then there I'll return a header element like this. And in that
-     * header, I then wanna have a logo and the main navigation of this page."
-     */
-    /**
-     * LESSON 443 - APPLYING CSS MODULE CLASSES
+     * "There we could return a fragment so that we can add a sibling element
+     * next to the header, and that sibling is now that MainHeaderBackground,
+     * which I guess makes a lot of sense if we look at it like this."
      *
-     * INSTRUCTOR QUOTE:
-     * "In addition, I also want to add a class name to the header itself,
-     * and that would be classes.header."
-     *
-     * NOTE: We use className={classes.header} instead of className="header"
-     * because CSS Modules transform class names to unique hashes.
+     * The fragment (<>...</>) allows us to return two sibling elements:
+     * 1. MainHeaderBackground - The decorative SVG gradient
+     * 2. header - The actual header with logo and navigation
      */
-    <header className={classes.header}>
+    <>
+      {/**
+       * LESSON 445 - HEADER BACKGROUND COMPONENT
+       *
+       * INSTRUCTOR QUOTE:
+       * "...and instead use it here in main-header.js."
+       *
+       * The background component renders the decorative SVG gradient
+       * that appears behind the header on all pages.
+       */}
+      <MainHeaderBackground />
+
+      {/**
+       * LESSON 443 - APPLYING CSS MODULE CLASSES
+       *
+       * INSTRUCTOR QUOTE:
+       * "In addition, I also want to add a class name to the header itself,
+       * and that would be classes.header."
+       */}
+      <header className={classes.header}>
       {/**
        * ====================================================================
        * CLICKABLE LOGO WITH CSS MODULE CLASS
@@ -424,74 +516,76 @@ export default function MainHeader() {
         </ul>
       </nav>
     </header>
+    </>
   );
 }
 
 /**
  * ============================================================================
- * LESSONS 442-444 SUMMARY: HEADER WITH CSS MODULES AND OPTIMIZED IMAGE
+ * LESSONS 442-445 SUMMARY: HEADER WITH BACKGROUND COMPONENT
  * ============================================================================
  *
  * LESSON 442 - COMPONENT CREATION:
- * - Created component file outside app folder (instructor preference)
- * - Learned about image imports and @ alias
+ * - Created component file outside app folder
  * - Built header with logo and navigation
  *
  * LESSON 443 - CSS MODULES:
- * - File naming: *.module.css
- * - Import: import classes from './file.module.css'
- * - Usage: className={classes.className}
- * - Benefit: Scoped styles (no conflicts)
+ * - Scoped styles with *.module.css files
+ *
+ * LESSON 444 - NEXT.JS IMAGE COMPONENT:
+ * - Optimized images with lazy loading and WebP
+ * - Used priority prop for above-the-fold images
  *
  * ============================================================================
- * LESSON 444 - NEXT.JS IMAGE COMPONENT
+ * LESSON 445 - COMPONENT EXTRACTION AND ORGANIZATION
  * ============================================================================
  *
- * <img> vs <Image> COMPARISON:
+ * WHAT WE ACCOMPLISHED:
+ *
+ * 1. EXTRACTED HEADER BACKGROUND TO SEPARATE COMPONENT
+ *    INSTRUCTOR QUOTE:
+ *    "Now, I mentioned that I also wanted to outsource this header background
+ *    here into a separate component, and that's what I'll do next."
+ *
+ * 2. MOVED CSS FROM globals.css TO CSS MODULE
+ *    - header-background class → main-header-background.module.css
+ *    - Changed svg selector to be scoped: .header-background svg
+ *
+ * 3. USED FRAGMENTS FOR MULTIPLE ELEMENTS
+ *    INSTRUCTOR QUOTE:
+ *    "There we could return a fragment so that we can add a sibling element
+ *    next to the header, and that sibling is now that MainHeaderBackground."
+ *
+ * 4. ORGANIZED FILES INTO SUBFOLDER
+ *    INSTRUCTOR QUOTE:
+ *    "Now, I also wanna group all these main-header related files together
+ *    into a separate subfolder inside of components so that we keep that
+ *    components folder manageable and easy to navigate."
+ *
+ * CURRENT COMPONENT STRUCTURE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  REGULAR <img>                    │  NEXT.JS <Image>                    │
- * │  ─────────────────────────────────│─────────────────────────────────────│
- * │  Manual optimization needed       │  Automatic optimization             │
- * │  No lazy loading by default       │  Lazy loading built-in              │
- * │  Single image format              │  Auto WebP conversion               │
- * │  Fixed size                       │  Responsive srcset generated        │
- * │  src={logo.src}                   │  src={logo} (full object)           │
+ * │  MainHeader renders:                                                    │
+ * │  <>                                                                     │
+ * │    <MainHeaderBackground />    ← Decorative SVG gradient               │
+ * │    <header className={classes.header}>                                  │
+ * │      <Link className={classes.logo}>                                    │
+ * │        <Image ... priority />   ← Optimized logo image                  │
+ * │        NextLevel Food                                                   │
+ * │      </Link>                                                            │
+ * │      <nav className={classes.nav}>                                      │
+ * │        <ul>                                                             │
+ * │          <li><Link href="/meals">...</Link></li>                        │
+ * │          <li><Link href="/community">...</Link></li>                    │
+ * │        </ul>                                                            │
+ * │      </nav>                                                             │
+ * │    </header>                                                            │
+ * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * WHAT <Image> ADDS AUTOMATICALLY:
- *
  * INSTRUCTOR QUOTE:
- * "With that, if you reload, you will see the image as before, but if you
- * now inspect it, you will see that this image element that's being rendered
- * here has a couple of extra attributes which we didn't add."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  ATTRIBUTE        │  PURPOSE                                            │
- * │  ─────────────────│─────────────────────────────────────────────────────│
- * │  loading="lazy"   │  Only load image when visible on screen             │
- * │  width, height    │  Auto-detected from imported image                  │
- * │  srcset           │  Different sizes for different viewports            │
- * │  WebP format      │  Efficient format served to supported browsers      │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * THE priority PROP:
- *
- * INSTRUCTOR QUOTE:
- * "Therefore, on this image component, I'll now also add the priority
- * property, like this, to make sure that this is loaded with priority."
- *
- * USE priority WHEN:
- * - Image is above the fold (visible on initial load)
- * - Logo or hero images
- * - Any LCP (Largest Contentful Paint) image
- *
- * INSTRUCTOR QUOTE:
- * "And that is how we can use this image component. Now as mentioned, you
- * can definitely dive in deeper to explore all the different use cases of
- * this component and all the different configuration options."
- *
- * DOCUMENTATION:
- * https://nextjs.org/docs/app/api-reference/components/image
+ * "And with that, if we save everything, we got the same result as before.
+ * But now using another extra component, which you of course don't have to
+ * do, but which I did want to add here for practice purposes."
  *
  * ============================================================================
  */

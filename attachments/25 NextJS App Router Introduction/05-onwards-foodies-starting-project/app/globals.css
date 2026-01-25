@@ -1,12 +1,17 @@
 /**
  * ============================================================================
- * GLOBAL STYLES - LESSON 438: The Foodies Project Introduction
+ * GLOBAL STYLES - LESSONS 438 & 445: The Foodies Project Introduction
  * ============================================================================
  *
  * LESSON 438 - UPDATED STYLES FOR THE FOODIES APP
  *
  * INSTRUCTOR QUOTE:
  * "...and I also of course have updated styles..."
+ *
+ * LESSON 445 - HEADER BACKGROUND STYLES EXTRACTED
+ *
+ * The .header-background and svg styles have been moved to a CSS Module
+ * (main-header-background.module.css) for better component encapsulation.
  *
  * This CSS file contains the global styles for the Foodies/Meals application.
  * It's imported in layout.js and applies to all pages in the app.
@@ -15,7 +20,6 @@
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  • Google Fonts: Quicksand (body) and Montserrat (headings)            │
  * │  • Dark gradient background for a modern food app aesthetic            │
- * │  • Header background positioning for the SVG in layout.js              │
  * │  • Pre-styled error and not-found page classes                         │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
@@ -59,37 +63,22 @@ body {
 }
 
 /* ============================================================================
- * HEADER BACKGROUND (SVG CONTAINER)
+ * HEADER BACKGROUND STYLES (MOVED IN LESSON 445)
  * ============================================================================
  *
- * This class is used in layout.js to position the decorative SVG background.
+ * NOTE: The .header-background and svg styles that were previously here have
+ * been moved to components/main-header/main-header-background.module.css
  *
- * INSTRUCTOR QUOTE:
- * "...you would then also find an SVG graphic in there, which is simply there
- * for aesthetic reasons and which will be rendered behind the header of this
- * website in the end."
+ * INSTRUCTOR QUOTE (Lesson 445):
+ * "With that, we can save this and go back to layout.js and then also output
+ * the MainHeaderBackground here, or since it, as the name suggests, belongs
+ * to the MainHeader, we can actually not do that, get rid of the import and
+ * the usage in the root layout.js file, and instead use it here in main-header.js."
  *
- * KEY PROPERTIES:
- * - position: absolute → Removes from document flow
- * - z-index: -1 → Places BEHIND all other content
- * - top: 0 → Anchors to top of viewport
- * - height: 320px → Matches the SVG viewBox height
+ * The styles are now scoped to the MainHeaderBackground component using CSS
+ * Modules, which is a better pattern than global styles for component-specific
+ * styling.
  */
-.header-background {
-  position: absolute;
-  width: 100%;
-  height: 320px;
-  top: 0;
-  left: 0;
-  z-index: -1;
-}
-
-/* Ensure SVG fills its container and displays properly */
-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 
 /* ============================================================================
  * ERROR AND NOT-FOUND PAGE STYLES
@@ -136,7 +125,7 @@ svg {
 }
 
 /* ============================================================================
- * LESSON 438 SUMMARY: STYLES IN THE FOODIES PROJECT
+ * LESSONS 438 & 445 SUMMARY: STYLES IN THE FOODIES PROJECT
  * ============================================================================
  *
  * KEY STYLING DECISIONS:
@@ -146,10 +135,10 @@ svg {
  *    - Creates a modern, sleek app feel
  *    - Good contrast for food images
  *
- * 2. DECORATIVE HEADER
+ * 2. DECORATIVE HEADER (Lesson 445 Update)
  *    - SVG gradient background (brown to orange)
- *    - Positioned absolutely behind content
- *    - Creates a warm, food-themed header area
+ *    - MOVED: Styles now in main-header-background.module.css
+ *    - Better encapsulation with CSS Modules
  *
  * 3. TYPOGRAPHY
  *    - Quicksand: Friendly, rounded font for body
@@ -160,15 +149,12 @@ svg {
  *    - Accent: #f9572a (orange), #ffc905 (yellow)
  *    - Text: #ddd8d8 (light gray on dark background)
  *
- * COMPARISON: BASIC PROJECT vs FOODIES PROJECT
+ * FILE ORGANIZATION (After Lesson 445):
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  BASIC PROJECT:                     FOODIES PROJECT:                    │
- * │  ─────────────────────────────────  ─────────────────────────────────── │
- * │  Open Sans + Poppins fonts          Quicksand + Montserrat fonts        │
- * │  Linear gradient background         Radial gradient background          │
- * │  Purple/pink accent colors          Orange/yellow accent colors         │
- * │  Simple centered content            Header background with SVG          │
- * │  Generic course app                 Food-themed styling                 │
+ * │  globals.css               - Global styles (fonts, reset, error pages) │
+ * │  main-header.module.css    - MainHeader component styles               │
+ * │  main-header-background.   - MainHeaderBackground component styles     │
+ * │    module.css              (header-background and svg styles)          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
