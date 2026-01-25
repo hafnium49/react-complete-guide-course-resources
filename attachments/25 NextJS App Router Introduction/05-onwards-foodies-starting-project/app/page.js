@@ -1,77 +1,90 @@
 /**
  * ============================================================================
- * HOME PAGE - LESSON 438: The Foodies Project Introduction
+ * HOME PAGE - LESSONS 438-440: The Foodies Project
  * ============================================================================
  *
  * LESSON 438 - THE STARTING PAGE
  *
- * This is the starting home page for the Foodies/Meals app.
- * It's intentionally minimal as a placeholder that we'll build upon
- * throughout the rest of this section.
+ * This is the home page for the Foodies/Meals app.
+ * It was updated in Lesson 440 to include navigation links.
+ *
+ * ============================================================================
+ * LESSON 440 - ADDING NAVIGATION LINKS
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "...and then also an updated layout and page JS file."
+ * "Now with that, we got those three routes set up, but I also told you to
+ * add some links that allow users to navigate between those routes. And
+ * therefore that's exactly what I'll do here. And I'll start on the homepage
+ * actually."
  *
  * ============================================================================
- * FILE LOCATION: app/page.js
+ * THE LINK COMPONENT
  * ============================================================================
  *
- * This file is located at:
- *   05-onwards-foodies-starting-project/app/page.js
+ * INSTRUCTOR QUOTE:
+ * "There, below this H1 element, I'll add a paragraph that should display a
+ * link to the meals page. And for that, as you learned, you should use the
+ * link component provided by NextJS."
  *
- * According to Next.js file-based routing:
- *   app/page.js → URL: / (home page)
+ * WHY USE <Link> INSTEAD OF <a>?
  *
- * ============================================================================
- * WHAT WE'LL BUILD
- * ============================================================================
- *
- * Throughout this section, we'll transform this simple placeholder into
- * a full-featured food-sharing application with:
+ * INSTRUCTOR QUOTE:
+ * "This is a component that renders an anchor element, but that also allows
+ * NextJS to gain control of the ongoing navigation and keep you in that
+ * single page application."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  UPCOMING FEATURES:                                                      │
- * │  ─────────────────────────────────────────────────────────────────────── │
- * │  • Navigation header with logo and links                                 │
- * │  • Hero section with call-to-action                                      │
- * │  • Meals browsing page (/meals)                                          │
- * │  • Individual meal details (/meals/[slug])                               │
- * │  • Share a meal form (/meals/share)                                      │
- * │  • Community page (/community)                                           │
- * │  • Data fetching from database                                           │
- * │  • Image uploads                                                         │
- * │  • Server Actions for form handling                                      │
+ * │  <a href="/meals">            │  <Link href="/meals">                   │
+ * │  ─────────────────────────────│─────────────────────────────────────────│
+ * │  Full page reload             │  Client-side navigation (SPA)           │
+ * │  Slower user experience       │  Faster, smoother transitions           │
+ * │  Loses React state            │  Preserves React state                  │
+ * │  Browser requests new HTML    │  Next.js handles navigation             │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- *
- * LESSON 439 - EXERCISE: ADDING NAVIGATION LINKS
+ * PATHS MAP TO FOLDER STRUCTURE
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And of course as an optional exercise, you can also try adding some links
- * that lead from one page to another."
+ * "And of course, these paths, which I'm setting up here, do map to the paths
+ * I set up in my folder structure. So slash meals goes to this page, meals
+ * share goes to this page or this folder and community goes to this folder.
+ * And then of course, the respective page JS files become active."
  *
- * We've added navigation links to all the routes created in the exercise:
- * - /meals - Browse all meals
- * - /meals/share - Share your own meal
- * - /community - Join the community
+ * LINK href TO FOLDER MAPPING:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Link href          │  Folder                    │  File activated      │
+ * │  ───────────────────│────────────────────────────│──────────────────────│
+ * │  /meals             │  app/meals/                │  page.js             │
+ * │  /meals/share       │  app/meals/share/          │  page.js             │
+ * │  /community         │  app/community/            │  page.js             │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
 
+/**
+ * IMPORTING THE LINK COMPONENT
+ *
+ * INSTRUCTOR QUOTE:
+ * "So here, if I want a link that takes me to the meals page, we can use the
+ * link component..."
+ *
+ * The Link component is provided by Next.js - no installation needed!
+ * It's part of the 'next/link' module.
+ */
 import Link from 'next/link';
 
 /**
  * HOME PAGE COMPONENT
  *
- * UPDATED FOR LESSON 439 EXERCISE:
- * - Added Link import from 'next/link'
- * - Added navigation links to all new routes
+ * INSTRUCTOR QUOTE:
+ * "There, below this H1 element, I'll add a paragraph that should display a
+ * link to the meals page."
  *
- * NOTE: This is a SERVER COMPONENT by default (no 'use client' directive).
- * The page is rendered on the server and sent to the client as HTML.
- *
- * @returns {JSX.Element} The home page content
+ * @returns {JSX.Element} The home page content with navigation links
  */
 export default function Home() {
   return (
@@ -81,109 +94,96 @@ export default function Home() {
       </h1>
 
       {/**
-       * NAVIGATION LINKS - LESSON 439 EXERCISE
+       * ====================================================================
+       * NAVIGATION LINKS - LESSON 440
+       * ====================================================================
        *
        * INSTRUCTOR QUOTE:
-       * "And of course as an optional exercise, you can also try adding some
-       * links that lead from one page to another."
+       * "And then simply set the href attribute or the href prop to slash
+       * meals. And of course, now we can also add extra links now, for
+       * example, one that leads to slash meals slash share like this.
+       * And then I'll add one last link that takes me to the community
+       * page by pointing at slash community."
        *
-       * These links use the Next.js Link component for SPA-style navigation.
-       * Clicking a link navigates without a full page reload.
+       * Each link uses the Link component for SPA navigation.
+       * The href values match our folder structure in app/.
        */}
-      <nav style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/meals" style={{ color: '#f9572a', fontSize: '1.2rem' }}>
-              Browse Meals
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/meals/share" style={{ color: '#f9572a', fontSize: '1.2rem' }}>
-              Share a Meal
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/community" style={{ color: '#f9572a', fontSize: '1.2rem' }}>
-              Join the Community
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
-      {/**
-       * EXAMPLE DYNAMIC ROUTE LINKS
-       *
-       * These demonstrate the dynamic [slug] route.
-       * Each link goes to a different meal detail page.
-       */}
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <p style={{ color: '#ddd8d8' }}>Example meal links (dynamic routes):</p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/meals/burger" style={{ color: '#ffc905' }}>Burger</Link>
-          <Link href="/meals/pizza" style={{ color: '#ffc905' }}>Pizza</Link>
-          <Link href="/meals/curry" style={{ color: '#ffc905' }}>Curry</Link>
-        </div>
-      </div>
+      <p>
+        <Link href="/meals">Meals</Link>
+      </p>
+      <p>
+        <Link href="/meals/share">Share a meal</Link>
+      </p>
+      <p>
+        <Link href="/community">Community</Link>
+      </p>
     </main>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 438 - WHAT'S INCLUDED IN THE PROJECT
+ * LESSON 440 - TESTING THE ROUTES
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now, of course, the project we got here is pretty similar to what we have
- * before, but I removed all those pages we created, we got an extra assets
- * folder with some images that we need for this application we're building,
- * so that's important. In addition, the public folder also contains some
- * images that will be used..."
+ * "And if you now save that and you then make sure that the development server
+ * is up and running, which is the case on Code Sandbox, but which you have to
+ * start manually locally, by the way, locally in order to start it, you also
+ * have to run npm install first and then you should be able to start it."
  *
- * ASSETS FOLDER (assets/):
+ * TO TEST LOCALLY:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  assets/                                                                │
- * │  ├── logo.png          ← App logo                                       │
- * │  ├── burger.jpg        ← Food images for the app                        │
- * │  ├── curry.jpg                                                          │
- * │  ├── dumplings.jpg                                                      │
- * │  ├── macncheese.jpg                                                     │
- * │  ├── pizza.jpg                                                          │
- * │  ├── schnitzel.jpg                                                      │
- * │  ├── tomato-salad.jpg                                                   │
- * │  └── icons/            ← Icon images                                    │
- * │      ├── community.png                                                  │
- * │      ├── events.png                                                     │
- * │      └── meal.png                                                       │
+ * │  1. cd into the project folder                                          │
+ * │  2. npm install (if not done already)                                   │
+ * │  3. npm run dev                                                         │
+ * │  4. Open http://localhost:3000 (or the shown port)                      │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * PUBLIC FOLDER (public/images/):
+ * INSTRUCTOR QUOTE:
+ * "And you should be able to see that starting page. Now those links here are
+ * a bit hard to read. This is of course not the final styling, we'll make
+ * this app look better throughout this section. But we have these links at
+ * least, and we can click them."
+ *
+ * TESTING THE LINKS:
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if I click the meals link, I'm taken to the meals page. So that works.
+ * If I click the share meal link, I'm taken to slash meals slash share, and
+ * that also works. And if I click the community link, I'm unsurprisingly
+ * taken to slash community and that community page."
+ *
+ * ============================================================================
+ * LESSON 440 SUMMARY
+ * ============================================================================
+ *
+ * WHAT WE ACCOMPLISHED:
+ *
+ * 1. Created /meals route (app/meals/page.js)
+ * 2. Created /meals/share nested route (app/meals/share/page.js)
+ * 3. Created /community sibling route (app/community/page.js)
+ * 4. Created /meals/[mealSlug] dynamic route (app/meals/[mealSlug]/page.js)
+ * 5. Added navigation links on the home page
+ *
+ * KEY CONCEPTS REINFORCED:
+ *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  public/images/         ← Served at /images/*                           │
- * │  ├── logo.png                                                           │
- * │  ├── burger.jpg                                                         │
- * │  ├── curry.jpg                                                          │
- * │  ├── dumplings.jpg                                                      │
- * │  ├── macncheese.jpg                                                     │
- * │  ├── pizza.jpg                                                          │
- * │  ├── schnitzel.jpg                                                      │
- * │  └── tomato-salad.jpg                                                   │
+ * │  CONCEPT              │  EXAMPLE                                        │
+ * │  ─────────────────────│─────────────────────────────────────────────────│
+ * │  Folder = URL segment │  app/meals/ → /meals                            │
+ * │  Nested folder        │  app/meals/share/ → /meals/share                │
+ * │  Sibling folder       │  app/community/ → /community                    │
+ * │  Dynamic segment      │  app/meals/[mealSlug]/ → /meals/:mealSlug       │
+ * │  Static precedence    │  /meals/share matches static before dynamic     │
+ * │  Link component       │  SPA navigation, no full page reload            │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * DIFFERENCE BETWEEN assets/ AND public/:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  assets/ folder:                                                        │
- * │    - Imported directly into components                                  │
- * │    - Processed by Next.js build system                                  │
- * │    - Can be optimized (resized, compressed)                             │
- * │    - Usage: import logo from '@/assets/logo.png'                        │
- * │                                                                          │
- * │  public/ folder:                                                        │
- * │    - Served statically as-is                                            │
- * │    - Accessible via URL path                                            │
- * │    - Not processed by build system                                      │
- * │    - Usage: <img src="/images/logo.png" />                              │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * INSTRUCTOR QUOTE:
+ * "And with that, we repeated what we learned and you got more practice with
+ * this file-based router that's provided by NextJS. And we're therefore now
+ * ready to finally start working on the contents of those pages and on making
+ * this website more useful and beautiful."
  *
  * ============================================================================
  */

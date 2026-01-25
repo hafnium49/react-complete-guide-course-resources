@@ -1,109 +1,105 @@
 /**
  * ============================================================================
- * MEALS PAGE - LESSON 439: Exercise - Adding More Routes
+ * MEALS PAGE - LESSON 440: Setting Up The Meals Routes
  * ============================================================================
  *
- * LESSON 439 - EXERCISE: CREATE THE /meals ROUTE
+ * LESSON 440 - CREATING THE /meals ROUTE
  *
  * INSTRUCTOR QUOTE:
- * "My exercise for you is to create three new routes in this new project.
- * I want you to create a meals route..."
+ * "And I will start with the meals route. Now, for that, we should go to that
+ * app folder because that folder has a special role in NextJS projects as you
+ * learned."
  *
  * ============================================================================
- * FILE-BASED ROUTING REVIEW
+ * CREATING A NEW ROUTE
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And this course should be pretty straightforward to complete because
- * creating routes was something we already did together before."
+ * "And in there we can set up a new route and a new path segment that can be
+ * entered in the URL by simply adding a folder with that intended path segment
+ * as a name. So for example, meals if we want to be able to go to our domain
+ * slash meals."
  *
- * HOW THIS ROUTE IS CREATED:
+ * THE TWO-STEP PROCESS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  FOLDER STRUCTURE:          URL ROUTE:                                  │
- * │  ─────────────────────────  ─────────────────────────────────────────── │
- * │  app/                       /                                           │
- * │  └── meals/                 (creates /meals path segment)               │
- * │      └── page.js            → /meals (THIS FILE)                        │
+ * │  STEP 1: Create a folder with the path segment name                     │
+ * │          app/meals/  ← Creates the /meals URL segment                   │
+ * │                                                                          │
+ * │  STEP 2: Add a page.js file inside that folder                          │
+ * │          app/meals/page.js  ← Makes the route visitable                 │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * INSTRUCTOR QUOTE:
+ * "Now, as I also mentioned before, adding just a folder like this won't do
+ * anything though. Instead you must add a page.js file here to show something
+ * on the screen."
+ *
+ * ============================================================================
+ * COMPONENT NAMING
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And then in this page.js file, you should export a component, a React
+ * component, a functional component to be precise. In this case, you could
+ * name it MealsPage, though this name here, as I mentioned, doesn't matter,
+ * it's totally up to you, but you must export a component, that's important."
+ *
  * KEY POINTS:
- * - Creating a folder named "meals" inside app/ adds /meals to the URL
- * - The page.js file inside that folder renders the page content
- * - This is a SERVER COMPONENT by default (no 'use client' directive)
+ * - The component name (MealsPage) is YOUR choice
+ * - What matters is that you EXPORT a component
+ * - Next.js doesn't care about the name, only that it's a valid component
  *
  * ============================================================================
  */
-
-import Link from 'next/link';
 
 /**
  * MEALS PAGE COMPONENT
  *
  * INSTRUCTOR QUOTE:
- * "Create those routes, add some links, but don't worry about styling or the
- * page content. In the next lecture, we're going to set up those routes together."
+ * "And then here I'll simply return an H1 element where I say meals page,
+ * that's of course just some dummy content and we're going to replace it
+ * with more meaningful content later."
  *
- * This is a simple placeholder page for the /meals route.
- * We'll build this out with actual meal listings in upcoming lessons.
+ * This is placeholder content. Throughout this section, we'll transform this
+ * into a full meals listing page with:
+ * - Grid of meal cards
+ * - Images and descriptions
+ * - Links to individual meal pages
+ * - Data fetched from a database
  *
  * @returns {JSX.Element} The meals page content
  */
 export default function MealsPage() {
   return (
-    <main>
-      <h1 style={{ color: 'white', textAlign: 'center' }}>
-        Meals Page
-      </h1>
-
-      {/**
-       * NAVIGATION LINKS
-       *
-       * Adding links to navigate between pages.
-       * The Link component provides SPA-style navigation.
-       */}
-      <nav style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/" style={{ color: '#f9572a' }}>
-              Home
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/meals/share" style={{ color: '#f9572a' }}>
-              Share a Meal
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/community" style={{ color: '#f9572a' }}>
-              Community
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </main>
+    <h1>Meals Page</h1>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 439 - EXERCISE SUMMARY: /meals ROUTE
+ * LESSON 440 - ROUTE CREATION SUMMARY
  * ============================================================================
  *
  * WHAT WE LEARNED:
  *
- * 1. Creating a route is as simple as:
- *    - Create a folder with the desired path name (meals/)
- *    - Add a page.js file inside that folder
+ * 1. FOLDER = URL SEGMENT
+ *    - app/meals/ folder creates /meals URL path
  *
- * 2. The folder structure directly maps to the URL structure:
- *    app/meals/page.js → /meals
+ * 2. page.js = RENDERABLE ROUTE
+ *    - Just a folder isn't enough
+ *    - page.js makes the route actually work
  *
- * 3. This pattern is consistent across all routes in Next.js App Router
+ * 3. COMPONENT EXPORT = REQUIRED
+ *    - Must export a React component function
+ *    - Name is flexible, export is mandatory
  *
- * UPCOMING IN THIS SECTION:
- * - Adding actual meal data
- * - Fetching from a database
- * - Displaying meal cards with images
+ * FILE-BASED ROUTING VISUALIZATION:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  FOLDER         │  FILE        │  URL           │  WORKS?              │
+ * │  ───────────────│──────────────│────────────────│──────────────────────│
+ * │  app/meals/     │  (none)      │  /meals        │  No (404)            │
+ * │  app/meals/     │  page.js     │  /meals        │  Yes (THIS FILE)     │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */

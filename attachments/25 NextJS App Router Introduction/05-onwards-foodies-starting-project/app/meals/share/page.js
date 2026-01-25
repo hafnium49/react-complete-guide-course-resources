@@ -1,131 +1,91 @@
 /**
  * ============================================================================
- * SHARE MEAL PAGE - LESSON 439: Exercise - Adding More Routes
+ * SHARE MEAL PAGE - LESSON 440: Setting Up The Meals Routes
  * ============================================================================
  *
- * LESSON 439 - EXERCISE: CREATE THE /meals/share NESTED ROUTE
+ * LESSON 440 - CREATING THE /meals/share NESTED ROUTE
  *
  * INSTRUCTOR QUOTE:
- * "I want you to create a meals route, a /meals/share route, so a nested
- * route in the meals route with an extra path of share..."
+ * "Now the goal also was to add a nested route in that meals folder so that
+ * we can also visit slash meals slash share."
  *
  * ============================================================================
- * NESTED ROUTES IN NEXT.JS
+ * NESTED ROUTES EXPLAINED
  * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And for that we can simply create a nested folder with again, that path
+ * segment that we want to have as a folder name. And again, we need a page.js
+ * file in there in order to be able to visit that."
  *
  * HOW NESTED ROUTES WORK:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  FOLDER STRUCTURE:              URL ROUTE:                              │
+ * │  FOLDER STRUCTURE:              RESULTING URL:                          │
  * │  ───────────────────────────    ─────────────────────────────────────── │
  * │  app/                           /                                       │
  * │  └── meals/                     /meals                                  │
- * │      ├── page.js                → /meals                                │
- * │      └── share/                 /meals/share (nested folder!)           │
- * │          └── page.js            → /meals/share (THIS FILE)              │
+ * │      └── share/                 /meals/share (nested!)                  │
+ * │          └── page.js            → This file handles /meals/share        │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * KEY POINTS ABOUT NESTED ROUTES:
- * - Create a subfolder inside an existing route folder
- * - The path segments stack: meals + share = /meals/share
- * - Each folder with a page.js becomes its own accessible route
- * - Both /meals AND /meals/share are valid routes
- *
- * ============================================================================
- * ROUTE HIERARCHY
- * ============================================================================
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  /                    → app/page.js          (Home)                     │
- * │  /meals               → app/meals/page.js    (Meals listing)            │
- * │  /meals/share         → app/meals/share/page.js (THIS FILE - Form)      │
- * │  /meals/[slug]        → app/meals/[slug]/page.js (Individual meal)      │
- * │  /community           → app/community/page.js (Community page)          │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * KEY INSIGHT:
+ * - Nested folders = Nested URL paths
+ * - Each level adds another segment to the URL
+ * - meals + share = /meals/share
  *
  * ============================================================================
  */
 
-import Link from 'next/link';
-
 /**
  * SHARE MEAL PAGE COMPONENT
  *
- * This page will eventually contain a form for users to share their own meals.
- * For now, it's a simple placeholder as per the exercise instructions.
- *
  * INSTRUCTOR QUOTE:
- * "Create those routes, add some links, but don't worry about styling or the
- * page content. In the next lecture, we're going to set up those routes together."
+ * "And then of course, export a component function. So here are the share
+ * meal page, that sounds like a fitting name. And then I'll return an H1
+ * element where I say share meal."
  *
- * FUTURE FUNCTIONALITY:
- * - Form to submit meal name, description, instructions
- * - Image upload capability
- * - Server Action to handle form submission
- * - Database storage of new meals
+ * This is placeholder content. Later in this section, this page will contain:
+ * - A form to submit new meals
+ * - Image upload functionality
+ * - Server Actions for form handling
  *
  * @returns {JSX.Element} The share meal page content
  */
 export default function ShareMealPage() {
   return (
-    <main>
-      <h1 style={{ color: 'white', textAlign: 'center' }}>
-        Share Your Meal
-      </h1>
-
-      <p style={{ color: '#ddd8d8', textAlign: 'center' }}>
-        This page will contain a form to share your favorite meals!
-      </p>
-
-      {/**
-       * NAVIGATION LINKS
-       *
-       * Provides navigation back to other parts of the app.
-       */}
-      <nav style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/" style={{ color: '#f9572a' }}>
-              Home
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/meals" style={{ color: '#f9572a' }}>
-              Browse Meals
-            </Link>
-          </li>
-          <li style={{ margin: '1rem 0' }}>
-            <Link href="/community" style={{ color: '#f9572a' }}>
-              Community
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </main>
+    <h1>Share Meal</h1>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 439 - EXERCISE SUMMARY: /meals/share NESTED ROUTE
+ * LESSON 440 - NESTED ROUTES SUMMARY
  * ============================================================================
  *
  * WHAT WE LEARNED:
  *
- * 1. NESTED ROUTES are created by nesting folders:
+ * 1. NESTED FOLDERS = NESTED PATHS
+ *    - Put a folder inside another folder
+ *    - URL segments stack automatically
+ *
+ * 2. EACH LEVEL NEEDS page.js (if you want it visitable)
+ *    - app/meals/page.js → /meals
  *    - app/meals/share/page.js → /meals/share
+ *    - Both can exist independently!
  *
- * 2. Each path segment = one folder level:
- *    - "meals" folder creates /meals
- *    - "share" folder inside creates /meals/share
+ * 3. COMPONENT NAMING IS FLEXIBLE
+ *    - ShareMealPage is a descriptive choice
+ *    - The export is what matters, not the name
  *
- * 3. Both parent and child routes can have their own page.js:
- *    - /meals has its own page (meals listing)
- *    - /meals/share has its own page (share form)
- *
- * 4. This is different from having ONLY a dynamic route:
- *    - /meals/share is a STATIC nested route
- *    - /meals/[slug] is a DYNAMIC route
- *    - Both can coexist! Next.js matches static routes first.
+ * FOLDER STRUCTURE SO FAR:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  app/                                                                   │
+ * │  ├── page.js              → /                                           │
+ * │  └── meals/                                                             │
+ * │      ├── page.js          → /meals                                      │
+ * │      └── share/                                                         │
+ * │          └── page.js      → /meals/share (THIS FILE)                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
