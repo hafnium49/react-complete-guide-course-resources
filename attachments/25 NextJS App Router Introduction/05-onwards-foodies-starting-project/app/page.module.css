@@ -1,0 +1,196 @@
+/**
+ * ============================================================================
+ * HOME PAGE STYLES - LESSON 446: Styling the Starting Page
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I also prepared some styles which we can use here, and therefore, attached,
+ * you'll find a page.module.css file."
+ *
+ * KEY CONCEPT: CSS MODULES WORK ON PAGES TOO
+ *
+ * INSTRUCTOR QUOTE:
+ * "And yes, you can use CSS modules on pages as well, because in the end,
+ * that's also just a regular component file. Just treat it in a special way
+ * by Next.js."
+ *
+ * ============================================================================
+ * LAYOUT STRUCTURE
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  .header (flexbox container)                                            │
+ * │  ┌─────────────────────┐  ┌────────────────────────────────────────┐    │
+ * │  │  .slideshow         │  │  <div> (content wrapper)               │    │
+ * │  │  (image carousel)   │  │  ┌──────────────────────────────────┐  │    │
+ * │  │  40rem x 25rem      │  │  │  .hero (marketing text)          │  │    │
+ * │  │                     │  │  │  - h1: Gradient title            │  │    │
+ * │  │                     │  │  │  - p: Tagline                    │  │    │
+ * │  │                     │  │  └──────────────────────────────────┘  │    │
+ * │  │                     │  │  ┌──────────────────────────────────┐  │    │
+ * │  │                     │  │  │  .cta (call-to-action links)     │  │    │
+ * │  │                     │  │  │  - Community link (text style)   │  │    │
+ * │  │                     │  │  │  - Meals link (button style)     │  │    │
+ * │  │                     │  │  └──────────────────────────────────┘  │    │
+ * │  └─────────────────────┘  └────────────────────────────────────────┘    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * HEADER SECTION LAYOUT
+ * ============================================================================
+ *
+ * The header contains the hero section with slideshow and marketing content.
+ * Uses flexbox to arrange slideshow and text content side by side.
+ */
+.header {
+  display: flex;
+  gap: 3rem;
+  margin: 3rem auto;
+  width: 90%;
+  max-width: 75rem;
+}
+
+/* ============================================================================
+ * SLIDESHOW CONTAINER
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now in that header, I then later wanna have a div, which should receive a
+ * class of slideshow, because here, we'll soon have a image slideshow, or a
+ * couple of images that change automatically, that simply show different
+ * food images."
+ *
+ * This empty container will be populated with an image slideshow component
+ * in a future lesson. Fixed dimensions ensure consistent layout.
+ */
+.slideshow {
+  width: 40rem;
+  height: 25rem;
+}
+
+/* ============================================================================
+ * HERO SECTION - MARKETING TEXT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "...where the first inner div here will receive a class name of hero..."
+ *
+ * Contains the main headline and tagline for the landing page.
+ * Uses the app's warm color scheme (#ddd6cb) for readability on dark background.
+ */
+.hero {
+  color: #ddd6cb;
+  font-size: 1.5rem;
+}
+
+/* Gradient headline - matches the food theme with orange-to-yellow gradient */
+.hero h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.15rem;
+  text-transform: uppercase;
+  /* Gradient text effect - same technique as header nav hover states */
+  background: linear-gradient(90deg, #f9572a, #ffc905);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================================
+ * CALL-TO-ACTION SECTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "...and that second div inside of a div will receive a class name of cta
+ * for call to action."
+ *
+ * Contains the two main navigation links:
+ * 1. "Join the Community" - subtle text link style
+ * 2. "Explore Meals" - prominent button style
+ */
+.cta {
+  font-size: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+/* Base button style for CTA links - orange gradient */
+.cta a {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, #f9572a, #ff9b05);
+  color: #ffffff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* Hover/active state - slightly brighter gradient */
+.cta a:hover,
+.cta a:active {
+  background: linear-gradient(90deg, #fd4715, #f9b241);
+}
+
+/* First link (Community) gets a text-only style for visual variety */
+.cta a:first-child {
+  background: transparent;
+  font-weight: normal;
+  color: #ff9b05;
+  padding-left: 0;
+}
+
+.cta a:first-child:hover,
+.cta a:first-child:active {
+  background: transparent;
+  color: #f9b241;
+}
+
+/* ============================================================================
+ * MAIN CONTENT SECTIONS
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, in that main area here, in that main section, I just wanna have some
+ * dummy text, which I prepared for you."
+ *
+ * These sections contain explanatory content about the platform.
+ * Centered text layout with maximum width for readability.
+ */
+.section {
+  display: flex;
+  flex-direction: column;
+  color: #ddd6cb;
+  font-size: 1.5rem;
+  max-width: 50rem;
+  width: 90%;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+/* ============================================================================
+ * LESSON 446 SUMMARY: PAGE-SPECIFIC CSS MODULES
+ * ============================================================================
+ *
+ * KEY TAKEAWAY:
+ *
+ * INSTRUCTOR QUOTE:
+ * "And yes, you can use CSS modules on pages as well, because in the end,
+ * that's also just a regular component file. Just treat it in a special way
+ * by Next.js."
+ *
+ * CSS MODULES WORK EVERYWHERE IN NEXT.JS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  File Type              │  CSS Module Support                           │
+ * │  ───────────────────────│───────────────────────────────────────────────│
+ * │  page.js (Route Page)   │  YES - page.module.css                        │
+ * │  layout.js (Layout)     │  YES - layout.module.css                      │
+ * │  component.js (Regular) │  YES - component.module.css                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */

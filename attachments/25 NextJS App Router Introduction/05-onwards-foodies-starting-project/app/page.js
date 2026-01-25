@@ -1,66 +1,64 @@
 /**
  * ============================================================================
- * HOME PAGE - LESSONS 438-440: The Foodies Project
+ * HOME PAGE - LESSONS 438-440 & 446: The Foodies Starting Page
  * ============================================================================
  *
- * LESSON 438 - THE STARTING PAGE
+ * LESSON 446 - STYLING THE STARTING PAGE
  *
- * This is the home page for the Foodies/Meals app.
- * It was updated in Lesson 440 to include navigation links.
+ * INSTRUCTOR QUOTE:
+ * "Now that we finished the header, let's continue working on this main page
+ * content, on this starting page content. And that means that we need to work
+ * on this page.js file inside of the app folder."
  *
  * ============================================================================
- * LESSON 440 - ADDING NAVIGATION LINKS
+ * WHICH PAGE.JS FILE?
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now with that, we got those three routes set up, but I also told you to
- * add some links that allow users to navigate between those routes. And
- * therefore that's exactly what I'll do here. And I'll start on the homepage
- * actually."
+ * "So not any nested page.js file, but this main root page.js file directly
+ * in the app folder. Because that is that starting page we're seeing, that's
+ * the page that's being rendered if we visit our address slash nothing, so if
+ * we have no segment thereafter."
  *
- * ============================================================================
- * THE LINK COMPONENT
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "There, below this H1 element, I'll add a paragraph that should display a
- * link to the meals page. And for that, as you learned, you should use the
- * link component provided by NextJS."
- *
- * WHY USE <Link> INSTEAD OF <a>?
- *
- * INSTRUCTOR QUOTE:
- * "This is a component that renders an anchor element, but that also allows
- * NextJS to gain control of the ongoing navigation and keep you in that
- * single page application."
- *
+ * FILE LOCATION MATTERS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  <a href="/meals">            │  <Link href="/meals">                   │
- * │  ─────────────────────────────│─────────────────────────────────────────│
- * │  Full page reload             │  Client-side navigation (SPA)           │
- * │  Slower user experience       │  Faster, smoother transitions           │
- * │  Loses React state            │  Preserves React state                  │
- * │  Browser requests new HTML    │  Next.js handles navigation             │
+ * │  app/page.js           → /         (THIS FILE - starting page)         │
+ * │  app/meals/page.js     → /meals    (meals listing)                     │
+ * │  app/community/page.js → /community (community page)                   │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * PATHS MAP TO FOLDER STRUCTURE
+ * PAGE STRUCTURE OVERVIEW
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And of course, these paths, which I'm setting up here, do map to the paths
- * I set up in my folder structure. So slash meals goes to this page, meals
- * share goes to this page or this folder and community goes to this folder.
- * And then of course, the respective page JS files become active."
+ * "And here on this page, I actually don't wanna have the content we currently
+ * have there. Instead, my goal is to have some header here, so not the main
+ * navigation header, but some nested page-specific header that introduces
+ * users to this page, you could say. And then below that, the main section
+ * of this page."
  *
- * LINK href TO FOLDER MAPPING:
+ * PAGE LAYOUT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Link href          │  Folder                    │  File activated      │
- * │  ───────────────────│────────────────────────────│──────────────────────│
- * │  /meals             │  app/meals/                │  page.js             │
- * │  /meals/share       │  app/meals/share/          │  page.js             │
- * │  /community         │  app/community/            │  page.js             │
+ * │  <> (Fragment - required for sibling JSX)                               │
+ * │    <header>           ← Page-specific hero header                       │
+ * │      ├── slideshow    ← Image carousel (placeholder for now)            │
+ * │      └── content      ← Hero text + CTA buttons                         │
+ * │    <main>             ← Main content sections                           │
+ * │      ├── section      ← "How it works"                                  │
+ * │      └── section      ← "Why NextLevel Food?"                           │
+ * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * CSS MODULES ON PAGES
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I also prepared some styles which we can use here, and therefore, attached,
+ * you'll find a page.module.css file. And yes, you can use CSS modules on
+ * pages as well, because in the end, that's also just a regular component
+ * file. Just treat it in a special way by Next.js."
  *
  * ============================================================================
  */
@@ -69,121 +67,251 @@
  * IMPORTING THE LINK COMPONENT
  *
  * INSTRUCTOR QUOTE:
- * "So here, if I want a link that takes me to the meals page, we can use the
- * link component..."
- *
- * The Link component is provided by Next.js - no installation needed!
- * It's part of the 'next/link' module.
+ * "In that cta area, I then wanna have two links that allow us to go to
+ * different places, and I'm still importing that link component, so we
+ * don't have to change anything there."
  */
 import Link from 'next/link';
 
 /**
- * HOME PAGE COMPONENT
+ * IMPORTING CSS MODULE FOR PAGE-SPECIFIC STYLES
  *
  * INSTRUCTOR QUOTE:
- * "There, below this H1 element, I'll add a paragraph that should display a
- * link to the meals page."
+ * "But with that, we can import our classes from this page.module.css file..."
  *
- * @returns {JSX.Element} The home page content with navigation links
+ * Just like with components, pages can have their own CSS modules.
+ * The scoped class names prevent style conflicts with other pages.
+ */
+import classes from './page.module.css';
+
+/**
+ * HOME PAGE COMPONENT
+ *
+ * This is the starting page (/) of the NextLevel Food application.
+ * It serves as a landing page with marketing content and navigation.
+ *
+ * @returns {JSX.Element} The home page with hero header and content sections
  */
 export default function Home() {
   return (
-    <main>
-      <h1 style={{ color: 'white', textAlign: 'center' }}>
-        Time to get started!
-      </h1>
-
+    /**
+     * ====================================================================
+     * FRAGMENT FOR SIBLING JSX ELEMENTS
+     * ====================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now, since sibling JSX content is not allowed like this, we have to
+     * wrap that into a fragment in order to make this work."
+     *
+     * React requires a single root element. Fragments (<>...</>) let us
+     * return multiple siblings without adding extra DOM elements.
+     */
+    <>
       {/**
        * ====================================================================
-       * NAVIGATION LINKS - LESSON 440
+       * PAGE-SPECIFIC HEADER (Not the main navigation header)
        * ====================================================================
        *
        * INSTRUCTOR QUOTE:
-       * "And then simply set the href attribute or the href prop to slash
-       * meals. And of course, now we can also add extra links now, for
-       * example, one that leads to slash meals slash share like this.
-       * And then I'll add one last link that takes me to the community
-       * page by pointing at slash community."
+       * "...my goal is to have some header here, so not the main navigation
+       * header, but some nested page-specific header that introduces users
+       * to this page..."
        *
-       * Each link uses the Link component for SPA navigation.
-       * The href values match our folder structure in app/.
+       * INSTRUCTOR QUOTE:
+       * "...and then add a class to this header, for example, to be precise
+       * at the header class here."
+       *
+       * This header contains the landing page hero content:
+       * - An image slideshow (to be implemented later)
+       * - Marketing headline and tagline
+       * - Call-to-action buttons
        */}
-      <p>
-        <Link href="/meals">Meals</Link>
-      </p>
-      <p>
-        <Link href="/meals/share">Share a meal</Link>
-      </p>
-      <p>
-        <Link href="/community">Community</Link>
-      </p>
-    </main>
+      <header className={classes.header}>
+        {/**
+         * SLIDESHOW CONTAINER
+         *
+         * INSTRUCTOR QUOTE:
+         * "Now in that header, I then later wanna have a div, which should
+         * receive a class of slideshow, because here, we'll soon have a
+         * image slideshow, or a couple of images that change automatically,
+         * that simply show different food images. So that's one thing."
+         *
+         * This is currently empty - the slideshow component will be added
+         * in a future lesson.
+         */}
+        <div className={classes.slideshow}></div>
+
+        {/**
+         * CONTENT WRAPPER
+         *
+         * INSTRUCTOR QUOTE:
+         * "In addition here, I'll add another div below that other div here,
+         * which contains two more divs..."
+         *
+         * Contains the hero section and call-to-action section.
+         */}
+        <div>
+          {/**
+           * HERO SECTION - Marketing Text
+           *
+           * INSTRUCTOR QUOTE:
+           * "...where the first inner div here will receive a class name of
+           * hero..."
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now, in that hero div here, I wanna have my h1 title where I'll
+           * say, NextLevel Food for NextLevel Foodies, or any other catchy
+           * phrase of your choice. And below that, a paragraph where we could
+           * say, taste and share food from all over the world. So this is
+           * simply some marketing text here."
+           */}
+          <div className={classes.hero}>
+            <h1>NextLevel Food for NextLevel Foodies</h1>
+            <p>Taste & share food from all over the world.</p>
+          </div>
+
+          {/**
+           * CALL-TO-ACTION SECTION
+           *
+           * INSTRUCTOR QUOTE:
+           * "...and that second div inside of a div will receive a class name
+           * of cta for call to action."
+           *
+           * INSTRUCTOR QUOTE:
+           * "In that cta area, I then wanna have two links that allow us to
+           * go to different places..."
+           */}
+          <div className={classes.cta}>
+            {/**
+             * COMMUNITY LINK
+             *
+             * INSTRUCTOR QUOTE:
+             * "The first link should say, Join the Community, and the href
+             * should point to that community page with slash community."
+             */}
+            <Link href="/community">Join the Community</Link>
+
+            {/**
+             * MEALS LINK
+             *
+             * INSTRUCTOR QUOTE:
+             * "And the second link should point to the meals page and say,
+             * Explore Meals, like this."
+             */}
+            <Link href="/meals">Explore Meals</Link>
+          </div>
+        </div>
+      </header>
+
+      {/**
+       * ====================================================================
+       * MAIN CONTENT SECTIONS
+       * ====================================================================
+       *
+       * INSTRUCTOR QUOTE:
+       * "Now, in that main area here, in that main section, I just wanna have
+       * some dummy text, which I prepared for you. Attached, you'll find my
+       * page.js file, which is the same file you see here, just also with
+       * some extra sections added into this main block here..."
+       */}
+      <main>
+        {/**
+         * "HOW IT WORKS" SECTION
+         *
+         * Explains the platform's purpose and functionality to new visitors.
+         */}
+        <section className={classes.section}>
+          <h2>How it works</h2>
+          <p>
+            NextLevel Food is a platform for foodies to share their favorite
+            recipes with the world. It&apos;s a place to discover new dishes, and to
+            connect with other food lovers.
+          </p>
+          <p>
+            NextLevel Food is a place to discover new dishes, and to connect
+            with other food lovers.
+          </p>
+        </section>
+
+        {/**
+         * "WHY NEXTLEVEL FOOD?" SECTION
+         *
+         * Additional marketing content to encourage user engagement.
+         */}
+        <section className={classes.section}>
+          <h2>Why NextLevel Food?</h2>
+          <p>
+            NextLevel Food is a platform for foodies to share their favorite
+            recipes with the world. It&apos;s a place to discover new dishes, and to
+            connect with other food lovers.
+          </p>
+          <p>
+            NextLevel Food is a place to discover new dishes, and to connect
+            with other food lovers.
+          </p>
+        </section>
+      </main>
+    </>
   );
 }
 
 /**
  * ============================================================================
- * LESSON 440 - TESTING THE ROUTES
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And if you now save that and you then make sure that the development server
- * is up and running, which is the case on Code Sandbox, but which you have to
- * start manually locally, by the way, locally in order to start it, you also
- * have to run npm install first and then you should be able to start it."
- *
- * TO TEST LOCALLY:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. cd into the project folder                                          │
- * │  2. npm install (if not done already)                                   │
- * │  3. npm run dev                                                         │
- * │  4. Open http://localhost:3000 (or the shown port)                      │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * INSTRUCTOR QUOTE:
- * "And you should be able to see that starting page. Now those links here are
- * a bit hard to read. This is of course not the final styling, we'll make
- * this app look better throughout this section. But we have these links at
- * least, and we can click them."
- *
- * TESTING THE LINKS:
- *
- * INSTRUCTOR QUOTE:
- * "And if I click the meals link, I'm taken to the meals page. So that works.
- * If I click the share meal link, I'm taken to slash meals slash share, and
- * that also works. And if I click the community link, I'm unsurprisingly
- * taken to slash community and that community page."
- *
- * ============================================================================
- * LESSON 440 SUMMARY
+ * LESSON 446 SUMMARY: STYLING THE STARTING PAGE
  * ============================================================================
  *
  * WHAT WE ACCOMPLISHED:
  *
- * 1. Created /meals route (app/meals/page.js)
- * 2. Created /meals/share nested route (app/meals/share/page.js)
- * 3. Created /community sibling route (app/community/page.js)
- * 4. Created /meals/[mealSlug] dynamic route (app/meals/[mealSlug]/page.js)
- * 5. Added navigation links on the home page
+ * 1. RESTRUCTURED THE PAGE LAYOUT
+ *    - Added a page-specific header (different from main navigation)
+ *    - Created slideshow placeholder for future image carousel
+ *    - Built hero section with headline and tagline
+ *    - Added call-to-action links
  *
- * KEY CONCEPTS REINFORCED:
+ * 2. APPLIED CSS MODULES TO A PAGE
+ *    INSTRUCTOR QUOTE:
+ *    "And yes, you can use CSS modules on pages as well, because in the end,
+ *    that's also just a regular component file."
  *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  CONCEPT              │  EXAMPLE                                        │
- * │  ─────────────────────│─────────────────────────────────────────────────│
- * │  Folder = URL segment │  app/meals/ → /meals                            │
- * │  Nested folder        │  app/meals/share/ → /meals/share                │
- * │  Sibling folder       │  app/community/ → /community                    │
- * │  Dynamic segment      │  app/meals/[mealSlug]/ → /meals/:mealSlug       │
- * │  Static precedence    │  /meals/share matches static before dynamic     │
- * │  Link component       │  SPA navigation, no full page reload            │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * 3. USED FRAGMENTS FOR MULTIPLE ROOT ELEMENTS
+ *    INSTRUCTOR QUOTE:
+ *    "Now, since sibling JSX content is not allowed like this, we have to
+ *    wrap that into a fragment in order to make this work."
+ *
+ * RESULT:
  *
  * INSTRUCTOR QUOTE:
- * "And with that, we repeated what we learned and you got more practice with
- * this file-based router that's provided by NextJS. And we're therefore now
- * ready to finally start working on the contents of those pages and on making
- * this website more useful and beautiful."
+ * "With that done, you should see something like this on the screen, which I
+ * would say looks a lot better than what we had before."
+ *
+ * NEXT STEP (Slideshow):
+ *
+ * INSTRUCTOR QUOTE:
+ * "But of course here, we also have this blank space where I wanna add that
+ * image slideshow, and that is there for what we'll work on next."
+ *
+ * CURRENT PAGE STRUCTURE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  <>                                                                     │
+ * │    <header className={classes.header}>                                  │
+ * │      <div className={classes.slideshow}></div>  ← Empty (slideshow)    │
+ * │      <div>                                                              │
+ * │        <div className={classes.hero}>                                   │
+ * │          <h1>NextLevel Food for NextLevel Foodies</h1>                  │
+ * │          <p>Taste & share food from all over the world.</p>             │
+ * │        </div>                                                           │
+ * │        <div className={classes.cta}>                                    │
+ * │          <Link href="/community">Join the Community</Link>              │
+ * │          <Link href="/meals">Explore Meals</Link>                       │
+ * │        </div>                                                           │
+ * │      </div>                                                             │
+ * │    </header>                                                            │
+ * │    <main>                                                               │
+ * │      <section className={classes.section}>How it works...</section>     │
+ * │      <section className={classes.section}>Why NextLevel Food?...</section>│
+ * │    </main>                                                              │
+ * │  </>                                                                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
