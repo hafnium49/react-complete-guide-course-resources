@@ -1,8 +1,28 @@
 /**
  * ============================================================================
- * HOME PAGE - LESSONS 438-440 & 446: The Foodies Starting Page
+ * HOME PAGE - LESSONS 438-440, 446 & 447: The Foodies Starting Page
  * ============================================================================
  *
+ * LESSON 447 - ADDING THE IMAGE SLIDESHOW
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that, we can go to that page.js file to that div here where I'm saying
+ * slideshow, and in there, we can now output that image slideshow component.
+ * Of course, you also must add that import, though."
+ *
+ * IMPORTANT - EXPECTED ERROR:
+ *
+ * INSTRUCTOR QUOTE:
+ * "But if you try to do that, you'll notice that you get an error if you wanna
+ * preview the site. There in that error, you're learning that we're importing
+ * a component that needs use state and that that only works in a client
+ * component, but that none of its parents are marked with use client, so
+ * they're in a server component. And what does that now mean?"
+ *
+ * This error is expected! It will be resolved in the next lesson (448)
+ * by adding the 'use client' directive.
+ *
+ * ============================================================================
  * LESSON 446 - STYLING THE STARTING PAGE
  *
  * INSTRUCTOR QUOTE:
@@ -85,6 +105,25 @@ import Link from 'next/link';
 import classes from './page.module.css';
 
 /**
+ * ============================================================================
+ * LESSON 447 - IMPORTING THE IMAGE SLIDESHOW COMPONENT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Of course, you also must add that import, though."
+ *
+ * NOTE: This import will cause an error because ImageSlideshow uses useState
+ * and useEffect, which require a Client Component. The error will be:
+ *
+ * "You're importing a component that needs useState. It only works in a
+ * Client Component but none of its parents are marked with 'use client',
+ * so they're Server Components by default."
+ *
+ * This will be fixed in Lesson 448 by adding 'use client' to the component.
+ */
+import ImageSlideshow from '@/components/images/image-slideshow';
+
+/**
  * HOME PAGE COMPONENT
  *
  * This is the starting page (/) of the NextLevel Food application.
@@ -128,18 +167,24 @@ export default function Home() {
        */}
       <header className={classes.header}>
         {/**
-         * SLIDESHOW CONTAINER
+         * ====================================================================
+         * LESSON 447 - IMAGE SLIDESHOW COMPONENT
+         * ====================================================================
          *
          * INSTRUCTOR QUOTE:
-         * "Now in that header, I then later wanna have a div, which should
-         * receive a class of slideshow, because here, we'll soon have a
-         * image slideshow, or a couple of images that change automatically,
-         * that simply show different food images. So that's one thing."
+         * "With that, we can go to that page.js file to that div here where
+         * I'm saying slideshow, and in there, we can now output that image
+         * slideshow component."
          *
-         * This is currently empty - the slideshow component will be added
-         * in a future lesson.
+         * The slideshow cycles through food images every 5 seconds using
+         * useState and useEffect hooks.
+         *
+         * NOTE: This will cause a Server Component error until we add
+         * 'use client' directive in Lesson 448.
          */}
-        <div className={classes.slideshow}></div>
+        <div className={classes.slideshow}>
+          <ImageSlideshow />
+        </div>
 
         {/**
          * CONTENT WRAPPER
@@ -257,61 +302,67 @@ export default function Home() {
 
 /**
  * ============================================================================
- * LESSON 446 SUMMARY: STYLING THE STARTING PAGE
+ * LESSONS 446 & 447 SUMMARY
  * ============================================================================
  *
- * WHAT WE ACCOMPLISHED:
+ * LESSON 446 - STYLING THE STARTING PAGE:
+ * - Restructured the page layout with header and main sections
+ * - Applied CSS Modules to a page component
+ * - Used fragments for multiple root elements
  *
- * 1. RESTRUCTURED THE PAGE LAYOUT
- *    - Added a page-specific header (different from main navigation)
- *    - Created slideshow placeholder for future image carousel
- *    - Built hero section with headline and tagline
- *    - Added call-to-action links
+ * ============================================================================
+ * LESSON 447 - ADDING THE IMAGE SLIDESHOW
+ * ============================================================================
  *
- * 2. APPLIED CSS MODULES TO A PAGE
+ * WHAT WE ADDED:
+ *
+ * 1. CREATED ImageSlideshow COMPONENT
+ *    - Located at: components/images/image-slideshow.js
+ *    - Cycles through 7 food images every 5 seconds
+ *    - Uses useState to track current image index
+ *    - Uses useEffect with setInterval for auto-advance
+ *
+ * 2. IMPORTED AND USED THE COMPONENT
  *    INSTRUCTOR QUOTE:
- *    "And yes, you can use CSS modules on pages as well, because in the end,
- *    that's also just a regular component file."
+ *    "With that, we can go to that page.js file to that div here where I'm
+ *    saying slideshow, and in there, we can now output that image slideshow
+ *    component. Of course, you also must add that import, though."
  *
- * 3. USED FRAGMENTS FOR MULTIPLE ROOT ELEMENTS
- *    INSTRUCTOR QUOTE:
- *    "Now, since sibling JSX content is not allowed like this, we have to
- *    wrap that into a fragment in order to make this work."
- *
- * RESULT:
+ * EXPECTED ERROR (Server Component Issue):
  *
  * INSTRUCTOR QUOTE:
- * "With that done, you should see something like this on the screen, which I
- * would say looks a lot better than what we had before."
+ * "But if you try to do that, you'll notice that you get an error if you
+ * wanna preview the site. There in that error, you're learning that we're
+ * importing a component that needs use state and that that only works in a
+ * client component, but that none of its parents are marked with use client,
+ * so they're in a server component. And what does that now mean?"
  *
- * NEXT STEP (Slideshow):
+ * THE PROBLEM EXPLAINED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Next.js App Router default = SERVER COMPONENTS                        │
+ * │  useState / useEffect       = CLIENT-SIDE ONLY features                │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  Server Components cannot use React hooks like useState or useEffect!  │
+ * │  Solution: Add 'use client' directive (covered in Lesson 448)          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
- * INSTRUCTOR QUOTE:
- * "But of course here, we also have this blank space where I wanna add that
- * image slideshow, and that is there for what we'll work on next."
- *
- * CURRENT PAGE STRUCTURE:
+ * CURRENT PAGE STRUCTURE (After Lesson 447):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  <>                                                                     │
  * │    <header className={classes.header}>                                  │
- * │      <div className={classes.slideshow}></div>  ← Empty (slideshow)    │
+ * │      <div className={classes.slideshow}>                                │
+ * │        <ImageSlideshow />  ← NEW: Auto-cycling food images             │
+ * │      </div>                                                             │
  * │      <div>                                                              │
- * │        <div className={classes.hero}>                                   │
- * │          <h1>NextLevel Food for NextLevel Foodies</h1>                  │
- * │          <p>Taste & share food from all over the world.</p>             │
- * │        </div>                                                           │
- * │        <div className={classes.cta}>                                    │
- * │          <Link href="/community">Join the Community</Link>              │
- * │          <Link href="/meals">Explore Meals</Link>                       │
- * │        </div>                                                           │
+ * │        <div className={classes.hero}>...</div>                          │
+ * │        <div className={classes.cta}>...</div>                           │
  * │      </div>                                                             │
  * │    </header>                                                            │
- * │    <main>                                                               │
- * │      <section className={classes.section}>How it works...</section>     │
- * │      <section className={classes.section}>Why NextLevel Food?...</section>│
- * │    </main>                                                              │
+ * │    <main>...</main>                                                     │
  * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NEXT LESSON (448): Understanding Server vs Client Components
  *
  * ============================================================================
  */

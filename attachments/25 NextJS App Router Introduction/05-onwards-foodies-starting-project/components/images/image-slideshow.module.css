@@ -1,0 +1,126 @@
+/**
+ * ============================================================================
+ * IMAGE SLIDESHOW STYLES - LESSON 447: Slideshow CSS Module
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Attached, you also find an image-slideshow.module.css file, which you
+ * should add next to your JavaScript file."
+ *
+ * ============================================================================
+ * ANIMATION STRATEGY
+ * ============================================================================
+ *
+ * This CSS implements a "stack and fade" slideshow technique:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  HOW IT WORKS:                                                          │
+ * │                                                                          │
+ * │  1. All images are absolutely positioned (stacked on top of each other) │
+ * │  2. All images start with opacity: 0 (invisible)                        │
+ * │  3. The .active class sets opacity: 1 (visible)                         │
+ * │  4. CSS transitions create smooth fade effects                          │
+ * │  5. Transform properties add subtle animation effects                   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * SLIDESHOW CONTAINER
+ * ============================================================================
+ *
+ * The container creates the bounds for the slideshow.
+ * - position: relative → Establishes positioning context for absolute children
+ * - overflow: hidden → Clips any content outside the container bounds
+ * - border-radius → Rounded corners for modern aesthetic
+ * - box-shadow → Subtle depth effect
+ */
+.slideshow {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================================
+ * ALL IMAGES (DEFAULT STATE - HIDDEN)
+ * ============================================================================
+ *
+ * Every image in the slideshow starts with these styles:
+ * - position: absolute → Stacks all images on top of each other
+ * - opacity: 0 → All images are invisible by default
+ * - transform → Slight rotation and offset for entrance animation
+ * - transition → Smooth animation over 0.5 seconds
+ *
+ * TRANSFORM BREAKDOWN:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  scale(1.1)         → Slightly zoomed in (110%)                        │
+ * │  translateX(-1rem)  → Shifted 1rem to the left                         │
+ * │  rotate(-5deg)      → Tilted 5 degrees counter-clockwise               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * This creates an interesting "entrance" animation when images become active.
+ */
+.slideshow img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: scale(1.1) translateX(-1rem) rotate(-5deg);
+  transition: all 0.5s ease-in-out;
+}
+
+/* ============================================================================
+ * ACTIVE IMAGE (VISIBLE STATE)
+ * ============================================================================
+ *
+ * When an image receives the .active class (via JavaScript):
+ * - z-index: 1 → Brings it to the front of the stack
+ * - opacity: 1 → Makes it fully visible
+ * - transform: reset → Returns to normal size, position, and rotation
+ *
+ * THE ANIMATION EFFECT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  INACTIVE → ACTIVE:                                                     │
+ * │  ─────────────────────────────────────────────────────────────────────  │
+ * │  opacity: 0 → 1       (fades in)                                        │
+ * │  scale: 1.1 → 1       (zooms out slightly)                              │
+ * │  translateX: -1rem → 0 (slides into position)                           │
+ * │  rotate: -5deg → 0    (straightens up)                                  │
+ * │                                                                          │
+ * │  All happening simultaneously over 0.5s with ease-in-out timing!       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.slideshow .active {
+  z-index: 1;
+  opacity: 1;
+  transform: scale(1) translateX(0) rotate(0);
+}
+
+/* ============================================================================
+ * LESSON 447 CSS SUMMARY
+ * ============================================================================
+ *
+ * SLIDESHOW ANIMATION TECHNIQUE:
+ *
+ * 1. STACKING: All images are position: absolute, stacked at same location
+ * 2. HIDING: All images start invisible (opacity: 0)
+ * 3. REVEALING: JavaScript adds .active class to current image
+ * 4. ANIMATING: CSS transitions create smooth fade + transform effects
+ * 5. CYCLING: Every 5 seconds, .active moves to the next image
+ *
+ * WHY THIS APPROACH?
+ *
+ * - All images are preloaded (no delay when switching)
+ * - Smooth CSS transitions (hardware accelerated)
+ * - Simple JavaScript logic (just toggle a class)
+ * - Accessible (all images in DOM for screen readers)
+ *
+ * ============================================================================
+ */
