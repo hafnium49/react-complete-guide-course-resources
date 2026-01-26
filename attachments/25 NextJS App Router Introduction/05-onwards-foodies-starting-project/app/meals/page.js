@@ -1,29 +1,58 @@
 /**
  * ============================================================================
- * MEALS PAGE - LESSONS 440 & 450: Meals Listing with Grid Layout
+ * MEALS PAGE - LESSONS 440, 450 & 452: Fetching Data in Server Components
  * ============================================================================
  *
- * LESSON 450 - OUTPUTTING MEALS DATA & IMAGES
+ * LESSON 452 - FETCHING DATA WITHOUT useEffect OR fetch()
  *
  * INSTRUCTOR QUOTE:
- * "Now that we worked on the starting page and the community page and improved
- * the header, it's finally time to work on that meals page and it's time to
- * output some meals there before we then thereafter, will make sure that users
- * can also share meals."
+ * "Now when it comes to loading data in a NextJS application, we get a couple
+ * of different options. We could fetch the data as we would do it in any
+ * vanilla React application. We could, for example, use the useEffect hook
+ * like this, and then in there use the fetch function to send a request to
+ * a backend."
  *
  * INSTRUCTOR QUOTE:
- * "Now for that, it's this page.js file in the meals folder on which we'll
- * work. And there, I wanna output a bunch of meals, a bunch of meals which
- * we'll soon store in a database."
+ * "But actually, because we have those server components as a default, we
+ * don't need useEffect and we don't need to send a fetch request to get data.
+ * Instead, since this component by default runs on the server and only there,
+ * we can directly reach out to the database from here."
  *
  * ============================================================================
- * PAGE STRUCTURE OVERVIEW
+ * WHY THIS APPROACH IS DIFFERENT FROM TRADITIONAL REACT
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "But before we'll do that, let's set up the base markup of this page, the
- * base structure of this page, you could say. And here I again wanna have a
- * header section, and then below that, the main section of this page."
+ * "And that's definitely not something you're used to from other React apps.
+ * But that's absolutely fine in Next apps because this is a server component
+ * that only runs on the server. So reaching out to a database is safe here."
+ *
+ * TRADITIONAL REACT DATA FETCHING:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  function MealsPage() {                                                 │
+ * │    const [meals, setMeals] = useState([]);                              │
+ * │                                                                          │
+ * │    useEffect(() => {                                                    │
+ * │      fetch('/api/meals')                                                │
+ * │        .then(res => res.json())                                         │
+ * │        .then(data => setMeals(data));                                   │
+ * │    }, []);                                                              │
+ * │                                                                          │
+ * │    return <MealsGrid meals={meals} />;                                  │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NEXT.JS SERVER COMPONENT DATA FETCHING (THIS FILE):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  async function MealsPage() {                                           │
+ * │    const meals = await getMeals();  // Direct database access!          │
+ * │    return <MealsGrid meals={meals} />;                                  │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * PAGE STRUCTURE OVERVIEW (Lesson 450)
+ * ============================================================================
  *
  * PAGE LAYOUT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -33,129 +62,97 @@
  * │      ├── p           ← Description text                                 │
  * │      └── p.cta       ← Link to share meals page                         │
  * │    <main>            ← Main content area                                │
- * │      └── MealsGrid   ← Grid of meal cards                               │
+ * │      └── MealsGrid   ← Grid of meal cards (now with real data!)         │
  * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * LESSON 440 - CREATING THE /meals ROUTE
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And in there we can set up a new route and a new path segment that can be
- * entered in the URL by simply adding a folder with that intended path segment
- * as a name. So for example, meals if we want to be able to go to our domain
- * slash meals."
- *
- * ============================================================================
  */
 
-/**
- * IMPORTING THE LINK COMPONENT
- *
- * INSTRUCTOR QUOTE:
- * "...because in there, I then wanna have a link using the next/link component,
- * which therefore, of course, also is imported as it always is."
- */
 import Link from 'next/link';
 
-/**
- * ============================================================================
- * CSS MODULES IMPORT FOR PAGE STYLES
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "I also again prepared some styles and therefore, attached, you'll find
- * another page.module.css file, the page.module.css file for this meals page.
- * And we can and should then import this page.module.css file, again using
- * this special CSS modules import syntax so that we can access the CSS classes
- * set up in that file."
- */
 import classes from './page.module.css';
 
-/**
- * ============================================================================
- * IMPORTING THE MEALSGRID COMPONENT
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "I will add a separate component for outputting the meals though, and
- * therefore, for that, back in my root components folder, I'll add a meals
- * subfolder to store any meal-related components."
- *
- * COMPONENT ORGANIZATION:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  components/                                                            │
- * │  └── meals/                                                             │
- * │      ├── meals-grid.js       ← Displays meals in a grid                 │
- * │      └── meal-item.js        ← Individual meal card                     │
- * └─────────────────────────────────────────────────────────────────────────┘
- */
 import MealsGrid from '@/components/meals/meals-grid';
 
 /**
- * MEALS PAGE COMPONENT
+ * ============================================================================
+ * IMPORTING THE DATA FETCHING FUNCTION
+ * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And then in this page.js file, you should export a component, a React
- * component, a functional component to be precise. In this case, you could
- * name it MealsPage, though this name here, as I mentioned, doesn't matter,
- * it's totally up to you, but you must export a component, that's important."
+ * "Now, in order to keep things separated, I'll not write my code in here
+ * though. Instead, I'll add a new folder in my root project folder, which
+ * I'll name lib... But in there I'll add a new file, which I'll name meals.js.
+ * And in here I wanna write the code that reaches out to a database and gets
+ * data from that database."
  *
- * @returns {JSX.Element} The meals listing page with header and grid
+ * The getMeals function:
+ * - Connects to the SQLite database
+ * - Executes a SELECT query
+ * - Returns an array of meal objects
+ * - Includes a 2-second simulated delay (for demo purposes)
  */
-export default function MealsPage() {
+import { getMeals } from '@/lib/meals';
+
+/**
+ * ============================================================================
+ * ASYNC SERVER COMPONENT - MEALS PAGE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And if you then had some code that would use a promise, you could use
+ * await here. And this also allows me to show you that you can use async
+ * await here, of course, because it's a regular function, but you can also
+ * use it here in this component function. And that's not something you can
+ * normally do in React, but you can do it with server components."
+ *
+ * KEY INSIGHT: This component is marked as `async`!
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • In traditional React, component functions CANNOT be async            │
+ * │  • In Next.js Server Components, they CAN be async                      │
+ * │  • This allows direct await usage without useEffect or .then()          │
+ * │  • The component waits for data before rendering                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @returns {Promise<JSX.Element>} The meals listing page with fetched data
+ */
+export default async function MealsPage() {
+  /**
+   * FETCHING MEALS DATA DIRECTLY IN THE COMPONENT
+   *
+   * INSTRUCTOR QUOTE:
+   * "So here we can then await the call to get meals, to get the meals data,
+   * and we'll get back our meals here just like that without useEffect,
+   * without any unnecessary fetch request being sent."
+   *
+   * DATA FLOW:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  1. MealsPage component renders on the server                       │
+   * │  2. getMeals() is called (with 2-second simulated delay)            │
+   * │  3. Database query executes: SELECT * FROM meals                    │
+   * │  4. Meals array is returned                                         │
+   * │  5. Component continues rendering with the data                     │
+   * │  6. HTML is sent to the client (no JavaScript needed for data)      │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * NOTE: Because of the simulated delay in getMeals(), this page will
+   * take ~2 seconds to load. In a future lesson, we'll learn how to
+   * handle loading states with Suspense.
+   */
+  const meals = await getMeals();
+
   return (
     <>
-      {/**
-       * ====================================================================
-       * PAGE HEADER SECTION
-       * ====================================================================
-       *
-       * INSTRUCTOR QUOTE:
-       * "Because there, for example, should be a class added to this header,
-       * the header class like this."
-       */}
       <header className={classes.header}>
-        {/**
-         * PAGE TITLE WITH HIGHLIGHTED TEXT
-         *
-         * INSTRUCTOR QUOTE:
-         * "Now inside of that header, I then wanna have an h1 element where I
-         * say, delicious meals, created, and then a span, by you. And I'm using
-         * that span for some extra styling because to that span, I wanna assign
-         * a class. To be precise, the highlight class like this."
-         */}
         <h1>
           Delicious meals, created <span className={classes.highlight}>by you</span>
         </h1>
 
-        {/**
-         * DESCRIPTION PARAGRAPH
-         *
-         * INSTRUCTOR QUOTE:
-         * "Below this h1 element, we can then add a paragraph which simply
-         * outputs some dummy text, like choose your favorite recipe and cook
-         * it yourself. It is easy and fun."
-         */}
         <p>
           Choose your favorite recipe and cook it yourself. It is easy and fun!
         </p>
 
-        {/**
-         * CALL-TO-ACTION LINK
-         *
-         * INSTRUCTOR QUOTE:
-         * "Now below that paragraph, I wanna have yet another paragraph which
-         * should receive a className of cta for call to action, because in
-         * there, I then wanna have a link using the next/link component..."
-         *
-         * INSTRUCTOR QUOTE:
-         * "And I'm using that Link component to link to that share page, so to
-         * /meals/share, which will be the page that can be used by users later
-         * to share their own meals with the community. And therefore, I'll say,
-         * share your favorite recipe."
-         */}
         <p className={classes.cta}>
           <Link href="/meals/share">
             Share Your Favorite Recipe
@@ -163,39 +160,25 @@ export default function MealsPage() {
         </p>
       </header>
 
-      {/**
-       * ====================================================================
-       * MAIN CONTENT - MEALS GRID
-       * ====================================================================
-       *
-       * INSTRUCTOR QUOTE:
-       * "I also wanna add a class to the main section, and that is the main
-       * class that's added here."
-       *
-       * NOTE: The main class is available in the CSS module but not currently
-       * used. It can be added for additional styling if needed.
-       */}
       <main>
         {/**
-         * MEALS GRID COMPONENT
+         * ================================================================
+         * PASSING FETCHED MEALS TO THE GRID
+         * ================================================================
          *
          * INSTRUCTOR QUOTE:
-         * "Now, of course, at the moment we have no data source yet, so at the
-         * moment, we won't see anything on the screen. Nonetheless, we can
-         * already take this MealsGrid component here and go to this page.js
-         * file in the meals folder and output it here. But at the moment, I'll
-         * set meals to an empty array because, as mentioned, we have no meals yet."
+         * "And with that done, we can therefore then use these meals down
+         * here where we have that MealsGrid. We can simply pass meals to
+         * MealsGrid."
          *
-         * DATA FLOW:
-         * ┌─────────────────────────────────────────────────────────────────┐
-         * │  Currently: meals = []  (empty, no data yet)                    │
-         * │  Future: meals will come from database                          │
-         * │                                                                  │
-         * │  MealsPage passes meals → MealsGrid maps over them →            │
-         * │  MealItem displays each meal card                               │
-         * └─────────────────────────────────────────────────────────────────┘
+         * The meals variable now contains actual data from the database:
+         * [
+         *   { id: 1, title: 'Juicy Cheese Burger', slug: '...', ... },
+         *   { id: 2, title: 'Spicy Curry', slug: '...', ... },
+         *   ...
+         * ]
          */}
-        <MealsGrid meals={[]} />
+        <MealsGrid meals={meals} />
       </main>
     </>
   );
@@ -203,40 +186,44 @@ export default function MealsPage() {
 
 /**
  * ============================================================================
- * LESSON 450 - MEALS PAGE SUMMARY
+ * LESSON 452 - DATA FETCHING IN SERVER COMPONENTS SUMMARY
  * ============================================================================
  *
- * WHAT WE BUILT:
+ * WHAT WE LEARNED:
  *
- * 1. PAGE STRUCTURE
- *    - Header with title, description, and CTA link
- *    - Main section with MealsGrid component
+ * 1. SERVER COMPONENTS CAN BE ASYNC
+ *    - Add the `async` keyword to the component function
+ *    - Use `await` directly in the component body
+ *    - No useEffect, no useState, no fetch() needed
  *
- * 2. COMPONENT HIERARCHY
- *    ┌─────────────────────────────────────────────────────────────────────────┐
- *    │  MealsPage (this file)                                                  │
- *    │    └── MealsGrid                                                        │
- *    │          └── MealItem (for each meal)                                   │
- *    │                ├── Image (with fill prop)                               │
- *    │                └── Link (dynamic path to meal details)                  │
- *    └─────────────────────────────────────────────────────────────────────────┘
+ * 2. DIRECT DATABASE ACCESS
+ *    - Server Components run only on the server
+ *    - Safe to access databases, file systems, etc.
+ *    - No API endpoints needed for data fetching
  *
- * 3. STYLING
- *    - CSS Modules for scoped page styles
- *    - Gradient highlight effect on "by you" text
- *    - CTA button styled link
+ * 3. SEPARATION OF CONCERNS
+ *    - Data fetching logic in lib/meals.js
+ *    - Rendering logic in page component
+ *    - Clean, maintainable code
  *
- * 4. CURRENT STATE
+ * INSTRUCTOR QUOTE:
+ * "And with all that done, if you save everything and you restart that
+ * development server, you should be able to reload this meals page and see
+ * all those meals here."
  *
- *    INSTRUCTOR QUOTE:
- *    "So if we save that and we go to the Browse Meals page, we see our header,
- *    which allows us to go to that share meal page, but we see no meals yet,
- *    but that's what we'll add next."
+ * INSTRUCTOR QUOTE:
+ * "But you can see those meals here, and that's now data being fetched from
+ * the databases and images being fetched from that public folder because
+ * that's where we're storing them."
  *
- * NEXT STEPS (Future Lessons):
- * - Set up a database to store meals
- * - Fetch meals data and pass to MealsGrid
- * - Implement the share meals functionality
+ * CURRENT STATE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✓ Database set up with 7 dummy meals (Lesson 451)                      │
+ * │  ✓ getMeals() function fetches all meals (Lesson 452)                   │
+ * │  ✓ MealsPage displays meals from database (Lesson 452)                  │
+ * │  ✓ MealItem links to /meals/[slug] (works, but no detail page yet)      │
+ * │  ⏳ Loading state handling (future lesson with Suspense)                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
