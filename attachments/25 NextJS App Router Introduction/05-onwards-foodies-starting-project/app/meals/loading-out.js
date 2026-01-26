@@ -1,6 +1,45 @@
 /**
  * ============================================================================
- * LOADING STATE - LESSON 453: Adding a Loading Indicator
+ * LOADING STATE - LESSONS 453 & 454: Loading Indicator (RENAMED/DISABLED)
+ * ============================================================================
+ *
+ * LESSON 454 - WHY THIS FILE WAS RENAMED TO loading-out.js
+ *
+ * INSTRUCTOR QUOTE:
+ * "So a better solution is to not use this loading.js file here, and hence,
+ * I'll name it loading-out so that it does not have any special purpose
+ * anymore, because that's now not a file name NextJS will be looking for,
+ * and I renamed it instead of deleting it so that we can still see it and
+ * you still have that as an alternative."
+ *
+ * WHY NOT USE loading.js?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  PROBLEM: loading.js replaces the ENTIRE page during loading           │
+ * │                                                                          │
+ * │  ┌─────────────────────────────┐    ┌─────────────────────────────┐     │
+ * │  │     LOADING STATE          │ → │      LOADED STATE           │     │
+ * │  │  ┌───────────────────────┐ │    │  ┌───────────────────────┐ │     │
+ * │  │  │                       │ │    │  │       Header          │ │     │
+ * │  │  │   "Fetching meals..." │ │    │  ├───────────────────────┤ │     │
+ * │  │  │                       │ │    │  │    Meals Grid         │ │     │
+ * │  │  └───────────────────────┘ │    │  └───────────────────────┘ │     │
+ * │  └─────────────────────────────┘    └─────────────────────────────┘     │
+ * │                                                                          │
+ * │  The header content doesn't depend on data, but loading.js hides it!   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "But if we take a closer look at this meals page, we actually have that
+ * header here, which does not depend on any loaded data at all. So it would
+ * be great if we could show that header instantly and only show that loading
+ * text whilst we're waiting for the meals to be fetched."
+ *
+ * SOLUTION: Use React Suspense in the page component instead (see page.js)
+ *
+ * ============================================================================
+ *
+ * ORIGINAL LESSON 453 CONTENT BELOW (kept for reference)
+ *
  * ============================================================================
  *
  * LESSON 453 - THE PROBLEM: NO FEEDBACK DURING DATA FETCHING

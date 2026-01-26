@@ -1,68 +1,55 @@
 /**
  * ============================================================================
- * MEALS PAGE - LESSONS 440, 450 & 452: Fetching Data in Server Components
+ * MEALS PAGE - LESSONS 450, 452 & 454: Suspense for Granular Loading States
  * ============================================================================
  *
- * LESSON 452 - FETCHING DATA WITHOUT useEffect OR fetch()
+ * LESSON 454 - WHY USE SUSPENSE INSTEAD OF loading.js?
  *
  * INSTRUCTOR QUOTE:
- * "Now when it comes to loading data in a NextJS application, we get a couple
- * of different options. We could fetch the data as we would do it in any
- * vanilla React application. We could, for example, use the useEffect hook
- * like this, and then in there use the fetch function to send a request to
- * a backend."
+ * "But if we take a closer look at this meals page, we actually have that
+ * header here, which does not depend on any loaded data at all. So it would
+ * be great if we could show that header instantly and only show that loading
+ * text whilst we're waiting for the meals to be fetched."
  *
- * INSTRUCTOR QUOTE:
- * "But actually, because we have those server components as a default, we
- * don't need useEffect and we don't need to send a fetch request to get data.
- * Instead, since this component by default runs on the server and only there,
- * we can directly reach out to the database from here."
- *
- * ============================================================================
- * WHY THIS APPROACH IS DIFFERENT FROM TRADITIONAL REACT
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "And that's definitely not something you're used to from other React apps.
- * But that's absolutely fine in Next apps because this is a server component
- * that only runs on the server. So reaching out to a database is safe here."
- *
- * TRADITIONAL REACT DATA FETCHING:
+ * THE PROBLEM WITH loading.js:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  function MealsPage() {                                                 │
- * │    const [meals, setMeals] = useState([]);                              │
+ * │  loading.js replaces the ENTIRE page during loading                     │
  * │                                                                          │
- * │    useEffect(() => {                                                    │
- * │      fetch('/api/meals')                                                │
- * │        .then(res => res.json())                                         │
- * │        .then(data => setMeals(data));                                   │
- * │    }, []);                                                              │
+ * │  LOADING STATE:              LOADED STATE:                              │
+ * │  ┌───────────────────┐       ┌───────────────────┐                      │
+ * │  │                   │       │     Header        │ ← Header is static!  │
+ * │  │ "Fetching meals..." │  →  ├───────────────────┤                      │
+ * │  │                   │       │   Meals Grid      │ ← Only this loads    │
+ * │  └───────────────────┘       └───────────────────┘                      │
  * │                                                                          │
- * │    return <MealsGrid meals={meals} />;                                  │
- * │  }                                                                      │
+ * │  The header doesn't depend on data, but loading.js hides it anyway!     │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * NEXT.JS SERVER COMPONENT DATA FETCHING (THIS FILE):
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  async function MealsPage() {                                           │
- * │    const meals = await getMeals();  // Direct database access!          │
- * │    return <MealsGrid meals={meals} />;                                  │
- * │  }                                                                      │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * THE SOLUTION: React Suspense for granular control
+ *
+ * INSTRUCTOR QUOTE:
+ * "So a better solution is to not use this loading.js file here, and hence,
+ * I'll name it loading-out so that it does not have any special purpose
+ * anymore, because that's now not a file name NextJS will be looking for."
  *
  * ============================================================================
- * PAGE STRUCTURE OVERVIEW (Lesson 450)
+ * HOW SUSPENSE PROVIDES GRANULAR LOADING STATES
  * ============================================================================
  *
- * PAGE LAYOUT:
+ * INSTRUCTOR QUOTE:
+ * "Instead, we can add a more granular loading state by going into that page
+ * component and using an alternative approach. We can simply go to the place
+ * where we have some operation that may take a bit longer, like fetching
+ * the meals from the database, and we can then create a separate component."
+ *
+ * PAGE LAYOUT WITH SUSPENSE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  <> (Fragment)                                                          │
- * │    <header>          ← Hero section with title and CTA                  │
- * │      ├── h1          ← "Delicious meals, created by you"                │
- * │      ├── p           ← Description text                                 │
- * │      └── p.cta       ← Link to share meals page                         │
- * │    <main>            ← Main content area                                │
- * │      └── MealsGrid   ← Grid of meal cards (now with real data!)         │
+ * │  MealsPage (synchronous - renders immediately)                          │
+ * │    <header> ← Shows instantly (no data dependency)                      │
+ * │    <main>                                                               │
+ * │      <Suspense fallback={loading...}>                                   │
+ * │        <Meals /> ← Async component, shows fallback while loading        │
+ * │      </Suspense>                                                        │
  * │  </>                                                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
@@ -70,78 +57,78 @@
  */
 
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import classes from './page.module.css';
 
 import MealsGrid from '@/components/meals/meals-grid';
-
-/**
- * ============================================================================
- * IMPORTING THE DATA FETCHING FUNCTION
- * ============================================================================
- *
- * INSTRUCTOR QUOTE:
- * "Now, in order to keep things separated, I'll not write my code in here
- * though. Instead, I'll add a new folder in my root project folder, which
- * I'll name lib... But in there I'll add a new file, which I'll name meals.js.
- * And in here I wanna write the code that reaches out to a database and gets
- * data from that database."
- *
- * The getMeals function:
- * - Connects to the SQLite database
- * - Executes a SELECT query
- * - Returns an array of meal objects
- * - Includes a 2-second simulated delay (for demo purposes)
- */
 import { getMeals } from '@/lib/meals';
 
 /**
  * ============================================================================
- * ASYNC SERVER COMPONENT - MEALS PAGE
+ * SEPARATE ASYNC COMPONENT FOR DATA FETCHING
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "And if you then had some code that would use a promise, you could use
- * await here. And this also allows me to show you that you can use async
- * await here, of course, because it's a regular function, but you can also
- * use it here in this component function. And that's not something you can
- * normally do in React, but you can do it with server components."
+ * "And I'll name this component Meals. And the idea behind this component is
+ * that it's now this component that will fetch the data. So we can move that
+ * code where we're calling get meals out of meals page, into this new
+ * component function."
  *
- * KEY INSIGHT: This component is marked as `async`!
+ * WHY A SEPARATE COMPONENT?
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  • In traditional React, component functions CANNOT be async            │
- * │  • In Next.js Server Components, they CAN be async                      │
- * │  • This allows direct await usage without useEffect or .then()          │
- * │  • The component waits for data before rendering                        │
+ * │  • Suspense can only show fallback for child components                 │
+ * │  • By extracting data fetching into a child, we control what "loads"    │
+ * │  • The parent (MealsPage) renders instantly with static content         │
+ * │  • Only this child component triggers the loading state                 │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * @returns {Promise<JSX.Element>} The meals listing page with fetched data
+ * INSTRUCTOR QUOTE:
+ * "So this component here now is the one that will take a bit longer to
+ * execute."
+ *
+ * @returns {Promise<JSX.Element>} MealsGrid with fetched data
  */
-export default async function MealsPage() {
-  /**
-   * FETCHING MEALS DATA DIRECTLY IN THE COMPONENT
-   *
-   * INSTRUCTOR QUOTE:
-   * "So here we can then await the call to get meals, to get the meals data,
-   * and we'll get back our meals here just like that without useEffect,
-   * without any unnecessary fetch request being sent."
-   *
-   * DATA FLOW:
-   * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  1. MealsPage component renders on the server                       │
-   * │  2. getMeals() is called (with 2-second simulated delay)            │
-   * │  3. Database query executes: SELECT * FROM meals                    │
-   * │  4. Meals array is returned                                         │
-   * │  5. Component continues rendering with the data                     │
-   * │  6. HTML is sent to the client (no JavaScript needed for data)      │
-   * └─────────────────────────────────────────────────────────────────────┘
-   *
-   * NOTE: Because of the simulated delay in getMeals(), this page will
-   * take ~2 seconds to load. In a future lesson, we'll learn how to
-   * handle loading states with Suspense.
-   */
+async function Meals() {
   const meals = await getMeals();
 
+  return <MealsGrid meals={meals} />;
+}
+
+/**
+ * ============================================================================
+ * MEALS PAGE - NOW SYNCHRONOUS WITH SUSPENSE
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's a function that's built into React, the suspense function...
+ * Suspense is a component provided by React that allows you to handle loading
+ * states and show fallback content until some data or resource has been
+ * loaded."
+ *
+ * KEY CHANGES FROM LESSON 452:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (Lesson 452):                 AFTER (Lesson 454):               │
+ * │  ─────────────────────────────────    ────────────────────────────────  │
+ * │  async function MealsPage() {         function MealsPage() {            │
+ * │    const meals = await getMeals();      return (                        │
+ * │    return (                               <>                            │
+ * │      <>                                     <header>...</header>        │
+ * │        <header>...</header>                 <Suspense fallback={...}>   │
+ * │        <MealsGrid meals={meals} />            <Meals />                 │
+ * │      </>                                    </Suspense>                 │
+ * │    );                                     </>                           │
+ * │  }                                      );                              │
+ * │                                       }                                 │
+ * │                                                                          │
+ * │  • Page was async                     • Page is now sync (faster!)      │
+ * │  • Entire page waited for data        • Header shows immediately        │
+ * │  • loading.js for loading state       • Suspense for granular control   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @returns {JSX.Element} The meals listing page with Suspense boundary
+ */
+export default function MealsPage() {
   return (
     <>
       <header className={classes.header}>
@@ -163,22 +150,32 @@ export default async function MealsPage() {
       <main>
         {/**
          * ================================================================
-         * PASSING FETCHED MEALS TO THE GRID
+         * REACT SUSPENSE BOUNDARY
          * ================================================================
          *
          * INSTRUCTOR QUOTE:
-         * "And with that done, we can therefore then use these meals down
-         * here where we have that MealsGrid. We can simply pass meals to
-         * MealsGrid."
+         * "So we can now wrap this component with a component that's built
+         * into React. We can wrap this here with the suspense component...
+         * And I now have to import suspense from React."
          *
-         * The meals variable now contains actual data from the database:
-         * [
-         *   { id: 1, title: 'Juicy Cheese Burger', slug: '...', ... },
-         *   { id: 2, title: 'Spicy Curry', slug: '...', ... },
-         *   ...
-         * ]
+         * HOW SUSPENSE WORKS:
+         * ┌──────────────────────────────────────────────────────────────┐
+         * │  1. MealsPage renders, reaches Suspense boundary             │
+         * │  2. React tries to render <Meals /> child                    │
+         * │  3. Meals is async and starts fetching data                  │
+         * │  4. While waiting, Suspense shows the fallback               │
+         * │  5. When Meals resolves, it replaces the fallback            │
+         * └──────────────────────────────────────────────────────────────┘
+         *
+         * INSTRUCTOR QUOTE:
+         * "With that, you can specify a fallback prop on this suspense
+         * component. And that fallback should be the content that should
+         * be shown whilst this component here is waiting for the data to
+         * be loaded."
          */}
-        <MealsGrid meals={meals} />
+        <Suspense fallback={<p className={classes.loading}>Fetching meals...</p>}>
+          <Meals />
+        </Suspense>
       </main>
     </>
   );
@@ -186,43 +183,62 @@ export default async function MealsPage() {
 
 /**
  * ============================================================================
- * LESSON 452 - DATA FETCHING IN SERVER COMPONENTS SUMMARY
+ * LESSON 454 - SUSPENSE FOR GRANULAR LOADING SUMMARY
  * ============================================================================
  *
  * WHAT WE LEARNED:
  *
- * 1. SERVER COMPONENTS CAN BE ASYNC
- *    - Add the `async` keyword to the component function
- *    - Use `await` directly in the component body
- *    - No useEffect, no useState, no fetch() needed
+ * 1. loading.js REPLACES THE ENTIRE PAGE
  *
- * 2. DIRECT DATABASE ACCESS
- *    - Server Components run only on the server
- *    - Safe to access databases, file systems, etc.
- *    - No API endpoints needed for data fetching
+ *    INSTRUCTOR QUOTE:
+ *    "The problem with loading.js is that indeed the entire page is being
+ *    replaced by this loading.js file's content."
  *
- * 3. SEPARATION OF CONCERNS
- *    - Data fetching logic in lib/meals.js
- *    - Rendering logic in page component
- *    - Clean, maintainable code
+ * 2. SUSPENSE PROVIDES GRANULAR CONTROL
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Now with that, if I save this, let me go back, let me reload this
+ *    meals page, and now you see the header is there instantly. Only the
+ *    meals are now being loaded."
+ *
+ * 3. EXTRACT ASYNC OPERATIONS INTO CHILD COMPONENTS
+ *    - Create a separate component for data fetching
+ *    - Wrap it with Suspense
+ *    - Static content renders immediately
+ *
+ * 4. THE PATTERN:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  <Suspense fallback={<LoadingUI />}>                                │
+ *    │    <AsyncComponentThatFetchesData />                                │
+ *    │  </Suspense>                                                        │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * USER EXPERIENCE IMPROVEMENT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WITH loading.js:              WITH Suspense:                          │
+ * │  ─────────────────────────     ─────────────────────────               │
+ * │  ┌─────────────────────┐       ┌─────────────────────┐                 │
+ * │  │ "Fetching meals..." │       │      HEADER         │ ← Instant!      │
+ * │  │                     │       ├─────────────────────┤                 │
+ * │  │                     │       │ "Fetching meals..." │ ← Only meals    │
+ * │  └─────────────────────┘       └─────────────────────┘                 │
+ * │                                                                         │
+ * │  User sees blank page          User sees partial page immediately      │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
- * "And with all that done, if you save everything and you restart that
- * development server, you should be able to reload this meals page and see
- * all those meals here."
- *
- * INSTRUCTOR QUOTE:
- * "But you can see those meals here, and that's now data being fetched from
- * the databases and images being fetched from that public folder because
- * that's where we're storing them."
+ * "And that is then this more granular approach which I typically prefer.
+ * Though of course, if you truly have a page where all the content depends
+ * on fetched data, adding a loading.js might be the better approach because
+ * it requires less code."
  *
  * CURRENT STATE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  ✓ Database set up with 7 dummy meals (Lesson 451)                      │
  * │  ✓ getMeals() function fetches all meals (Lesson 452)                   │
- * │  ✓ MealsPage displays meals from database (Lesson 452)                  │
- * │  ✓ MealItem links to /meals/[slug] (works, but no detail page yet)      │
- * │  ⏳ Loading state handling (future lesson with Suspense)                 │
+ * │  ✓ loading.js renamed to loading-out.js (disabled) (Lesson 454)         │
+ * │  ✓ Suspense for granular loading state (Lesson 454)                     │
+ * │  ✓ Header shows instantly, meals load separately (Lesson 454)           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
