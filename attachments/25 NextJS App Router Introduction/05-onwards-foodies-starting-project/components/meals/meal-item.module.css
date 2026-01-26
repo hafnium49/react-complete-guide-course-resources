@@ -1,0 +1,165 @@
+/**
+ * ============================================================================
+ * MEAL ITEM STYLES - LESSON 450: Individual Meal Card Styling
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I prepared a meal-item.module.css file, which is also attached."
+ *
+ * These styles create a card-like appearance for individual meal items
+ * with a hover effect, image display, and call-to-action button.
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * MEAL CARD CONTAINER
+ * ============================================================================
+ *
+ * The main card wrapper with flexbox layout for consistent spacing.
+ * Uses a subtle gradient background with warm, food-themed colors.
+ */
+.meal {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  color: #ddd6cb;
+  background: linear-gradient(90deg, #2c1e19, #25200f);
+}
+
+/* ============================================================================
+ * HEADER TEXT STYLES
+ * ============================================================================
+ *
+ * Styling for the title and creator information below the image.
+ */
+.headerText {
+  padding: 0.5rem 1rem 0 1rem;
+}
+
+.headerText h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.headerText p {
+  font-size: 0.75rem;
+  color: #cfa69b;
+  font-style: italic;
+}
+
+/* Reset margins for text elements inside meal cards */
+.meal h2,
+.meal p {
+  margin: 0;
+}
+
+/* ============================================================================
+ * IMAGE CONTAINER - CRITICAL FOR fill PROP
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "This then tells NextJS that it should simply fill the available space
+ * with that image as defined by its parent components. And I set up
+ * appropriate CSS styles that make sure that this will look good."
+ *
+ * IMPORTANT: position: relative IS REQUIRED for the Image fill prop!
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  When using <Image fill />, the parent container MUST:                  │
+ * │  1. Have position: relative (or absolute/fixed)                         │
+ * │  2. Have a defined height (the image will fill this height)             │
+ * │  3. The Image component becomes position: absolute internally           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.image {
+  position: relative;
+  height: 15rem;
+}
+
+/* Image scaling behavior - ensures images cover the container nicely */
+.meal img {
+  object-fit: cover;
+}
+
+/* ============================================================================
+ * CONTENT AREA STYLES
+ * ============================================================================
+ *
+ * Container for the summary and action button.
+ * Uses flexbox to push the button to the bottom of the card.
+ */
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* Summary text styling */
+.summary {
+  padding: 1rem 1rem 0 1rem;
+}
+
+/* ============================================================================
+ * ACTION BUTTON STYLES
+ * ============================================================================
+ *
+ * The "View Details" link styled as a button.
+ * Uses the same orange gradient as other CTAs in the app.
+ */
+.actions {
+  padding: 1rem;
+  text-align: right;
+}
+
+.actions a {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, #f9572a, #ff9b05);
+  color: #ffffff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* Hover effect with enhanced glow */
+.actions a:hover,
+.actions a:active {
+  background: linear-gradient(90deg, #fd4715, #f9b241);
+  box-shadow: 0 0 12px rgba(242, 100, 18, 0.8);
+}
+
+/**
+ * ============================================================================
+ * LESSON 450 CSS SUMMARY
+ * ============================================================================
+ *
+ * KEY CSS CONCEPTS FOR THE fill PROP:
+ *
+ * The .image class is the most important part of this file:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  .image {                                                               │
+ * │    position: relative;  ← REQUIRED for <Image fill />                   │
+ * │    height: 15rem;       ← Defines the image display height              │
+ * │  }                                                                      │
+ * │                                                                          │
+ * │  Without position: relative, the fill prop won't work correctly!        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * CLASSES DEFINED:
+ * - .meal        : Card container with gradient background
+ * - .headerText  : Title and creator section
+ * - .image       : Image container (position: relative for fill)
+ * - .content     : Summary and actions area
+ * - .summary     : Description text
+ * - .actions     : Button container
+ *
+ * ============================================================================
+ */

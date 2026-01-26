@@ -1,0 +1,87 @@
+/**
+ * ============================================================================
+ * MEALS GRID STYLES - LESSON 450: Responsive Grid Layout for Meals
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "I also prepared a CSS file, meals-grid.module, which you'll find attached,
+ * which you should then import into this meals-grid.js file."
+ *
+ * This CSS module creates a responsive grid layout for displaying meal cards.
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * RESPONSIVE CSS GRID LAYOUT
+ * ============================================================================
+ *
+ * The .meals class creates a flexible, responsive grid for meal cards.
+ *
+ * GRID MAGIC EXPLAINED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr))           │
+ * │                                                                          │
+ * │  BREAKDOWN:                                                             │
+ * │  - repeat(auto-fill, ...) = Create as many columns as will fit          │
+ * │  - minmax(20rem, 1fr)     = Each column is at least 20rem,              │
+ * │                             but can grow to fill available space        │
+ * │                                                                          │
+ * │  RESPONSIVE BEHAVIOR:                                                   │
+ * │  - Wide screen: Multiple columns (3-4 cards per row)                    │
+ * │  - Medium screen: 2 columns                                             │
+ * │  - Narrow screen: 1 column                                              │
+ * │  - All without media queries!                                           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.meals {
+  width: 90%;
+  max-width: 90rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  grid-gap: 5rem;
+  margin: 2rem auto;
+  list-style: none;
+  padding: 0;
+}
+
+/**
+ * ============================================================================
+ * LESSON 450 CSS SUMMARY
+ * ============================================================================
+ *
+ * KEY CSS CONCEPTS:
+ *
+ * 1. CSS GRID with auto-fill
+ *    - Creates a responsive grid without media queries
+ *    - Columns automatically adjust based on available space
+ *
+ * 2. minmax() FUNCTION
+ *    - Sets minimum and maximum column widths
+ *    - 20rem minimum ensures cards are never too narrow
+ *    - 1fr maximum allows cards to stretch evenly
+ *
+ * 3. RESET STYLES
+ *    - list-style: none removes bullet points
+ *    - padding: 0 removes default list padding
+ *
+ * VISUAL REPRESENTATION:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WIDE SCREEN (e.g., 1200px):                                            │
+ * │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐                │
+ * │  │  Meal 1  │  │  Meal 2  │  │  Meal 3  │  │  Meal 4  │                │
+ * │  └──────────┘  └──────────┘  └──────────┘  └──────────┘                │
+ * │                                                                          │
+ * │  MEDIUM SCREEN (e.g., 768px):                                           │
+ * │  ┌─────────────────┐  ┌─────────────────┐                               │
+ * │  │     Meal 1      │  │     Meal 2      │                               │
+ * │  └─────────────────┘  └─────────────────┘                               │
+ * │                                                                          │
+ * │  NARROW SCREEN (e.g., 400px):                                           │
+ * │  ┌───────────────────────────┐                                          │
+ * │  │          Meal 1           │                                          │
+ * │  └───────────────────────────┘                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
