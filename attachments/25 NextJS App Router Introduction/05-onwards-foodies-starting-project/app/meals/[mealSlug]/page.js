@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEAL DETAILS PAGE - LESSONS 440 & 457: Dynamic Routes & Meal Details
+ * MEAL DETAILS PAGE - LESSONS 440, 457 & 458: Dynamic Routes & Not Found
  * ============================================================================
  *
  * LESSON 457 - DISPLAYING MEAL DETAILS
@@ -30,6 +30,7 @@
  */
 
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 
 import classes from './page.module.css';
 import { getMeal } from '@/lib/meals';
@@ -90,6 +91,61 @@ export default function MealDetailsPage({ params }) {
    * The function returns the meal object directly.
    */
   const meal = getMeal(params.mealSlug);
+
+  /**
+   * ================================================================
+   * LESSON 458 - HANDLING MISSING MEALS WITH notFound()
+   * ================================================================
+   *
+   * THE PROBLEM:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, it is possible that a user tries to look for a meal that doesn't
+   * exist, like great bolo. And in that case, I get this 'An error occurred'
+   * page. Now, I'm getting this error-occurred page because I'm trying to
+   * access the instructions on undefined because I wasn't able to load a meal."
+   *
+   * WHAT HAPPENS WITHOUT THIS CHECK:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  User visits: /meals/great-bolo (doesn't exist)                    │
+   * │                                                                      │
+   * │  1. getMeal('great-bolo') returns undefined                        │
+   * │  2. Code tries to access meal.instructions                         │
+   * │  3. Cannot read property 'instructions' of undefined               │
+   * │  4. Error is thrown → error.js page is shown                       │
+   * │                                                                      │
+   * │  PROBLEM: This is NOT really an "error" - the meal just doesn't    │
+   * │  exist! A 404 "Not Found" page is more appropriate.                │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * THE SOLUTION: notFound() function
+   *
+   * INSTRUCTOR QUOTE:
+   * "So a better way of handling this would be to go here and check if not
+   * meal. So if meal is undefined, if we didn't find a meal. And then show
+   * the closest not-found page available in this project."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And that can indeed be triggered by calling a special function that's
+   * provided by NextJS, the notFound function, which is imported from
+   * next/navigation."
+   *
+   * HOW notFound() WORKS:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  1. Calling notFound() immediately stops component execution        │
+   * │  2. Next.js looks for the closest not-found.js file                │
+   * │  3. If found, renders that not-found page                          │
+   * │  4. If not found in current folder, bubbles up to parent folders   │
+   * │  5. Returns a 404 HTTP status code                                 │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "Calling this function will stop this component from executing and will
+   * show the closest not-found or error page."
+   */
+  if (!meal) {
+    notFound();
+  }
 
   /**
    * FORMATTING INSTRUCTIONS WITH LINE BREAKS
@@ -295,7 +351,7 @@ export default function MealDetailsPage({ params }) {
 
 /**
  * ============================================================================
- * LESSON 457 - MEAL DETAILS PAGE SUMMARY
+ * LESSONS 457 & 458 - MEAL DETAILS PAGE SUMMARY
  * ============================================================================
  *
  * WHAT WE LEARNED:
@@ -357,6 +413,30 @@ export default function MealDetailsPage({ params }) {
  *
  *    - /\n/g regex finds all newlines
  *    - Replace with <br /> for HTML line breaks
+ *
+ * KEY CONCEPTS (LESSON 458):
+ *
+ * 7. HANDLING MISSING DATA WITH notFound()
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "So a better way of handling this would be to go here and check if not
+ *    meal... And then show the closest not-found page available."
+ *
+ *    - Import notFound from 'next/navigation'
+ *    - Check if data is undefined before using it
+ *    - Call notFound() to show the closest not-found.js page
+ *    - Stops component execution immediately
+ *
+ * 8. GRANULAR NOT-FOUND PAGES
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "But we can work around that by also adding a not-found.js file here
+ *    instead of the meals folder. And then we can also set up some
+ *    meal-specific not-found message."
+ *
+ *    - Add not-found.js in specific folders for custom 404 messages
+ *    - More specific not-found.js files override parent ones
+ *    - Provides better user experience with contextual messages
  *
  * DATABASE FIELD MAPPING:
  * ┌─────────────────────────────────────────────────────────────────────────┐
