@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS DATA MODULE - LESSON 452: Fetching Data in Server Components
+ * MEALS DATA MODULE - LESSONS 452 & 455: Data Fetching & Error Handling
  * ============================================================================
  *
  * LESSON 452 - WHY WE DON'T NEED useEffect OR fetch()
@@ -172,6 +172,30 @@ export async function getMeals() {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   /**
+   * ================================================================
+   * LESSON 455 - SIMULATED ERROR FOR TESTING error.js
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And to simulate this, let's simply go to the lib folder in the
+   * meals.js file and then here, let's throw an error, a new error
+   * where we say loading meals failed."
+   *
+   * UNCOMMENT THE LINE BELOW TO TEST ERROR HANDLING:
+   * This simulates a database failure (e.g., database offline,
+   * connection timeout, remote server unavailable).
+   *
+   * INSTRUCTOR QUOTE:
+   * "That of course could happen here if our database is offline,
+   * which is unlikely for a SQLite database, but which could happen
+   * if it would be a remote database server, or if anything else
+   * goes wrong."
+   *
+   * After testing, comment it back out to restore normal operation.
+   */
+  // throw new Error('Loading meals failed.');
+
+  /**
    * FETCHING ALL MEALS WITH SQL
    *
    * INSTRUCTOR QUOTE:
@@ -208,10 +232,10 @@ export async function getMeals() {
 
 /**
  * ============================================================================
- * LESSON 452 - DATA FETCHING SUMMARY
+ * LESSONS 452 & 455 - DATA FETCHING & ERROR HANDLING SUMMARY
  * ============================================================================
  *
- * KEY CONCEPTS:
+ * KEY CONCEPTS (LESSON 452):
  *
  * 1. SERVER COMPONENTS CAN ACCESS DATABASES DIRECTLY
  *    - No need for useEffect or fetch()
@@ -237,10 +261,24 @@ export async function getMeals() {
  *    - .get() fetches a single row
  *    - .run() executes INSERT/UPDATE/DELETE
  *
+ * KEY CONCEPTS (LESSON 455):
+ *
+ * 5. SIMULATING ERRORS FOR TESTING
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And to simulate this, let's simply go to the lib folder in the
+ *    meals.js file and then here, let's throw an error, a new error
+ *    where we say loading meals failed."
+ *
+ *    - Uncomment `throw new Error(...)` to test error handling
+ *    - Errors thrown here will be caught by error.js
+ *    - Comment it back out after testing
+ *
  * WHAT THIS MODULE EXPORTS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  getMeals()   │  Returns all meals from the database                    │
  * │               │  (with a 2-second simulated delay for demo purposes)    │
+ * │               │  Can throw error if database fails (see Lesson 455)     │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * USAGE IN PAGE COMPONENTS:
