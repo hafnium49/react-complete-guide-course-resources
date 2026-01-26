@@ -1,0 +1,265 @@
+/**
+ * ============================================================================
+ * MEAL DETAILS PAGE STYLES - LESSON 457: Displaying Meal Details
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, I also prepared some styles for this page. So attached you find a
+ * page.module.css file, which you should store next to this page.js file."
+ *
+ * This CSS Module provides styles for the individual meal detail page,
+ * including:
+ * - Flexible header layout with image and text
+ * - Slide-in animations for visual appeal
+ * - Styled instructions section
+ * - Loading state animation
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * HEADER SECTION - FLEXBOX LAYOUT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "In that header, I then want to have a couple of things. For example, I
+ * wanna have a div in there with a class of image, which will then be
+ * responsible for outputting the meal image that belongs to a meal."
+ *
+ * Creates a side-by-side layout with image on the left, text on the right.
+ */
+.header {
+  display: flex;
+  padding: 2rem 1rem;
+  gap: 3rem;
+  margin: auto;
+  max-width: 80rem;
+}
+
+/* ============================================================================
+ * IMAGE CONTAINER
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And we will output that image with help of the image component, which is
+ * provided by NextJS imported from the next/image package... The only thing
+ * I want to add already is this fill prop here, since again, I won't know
+ * the exact dimensions of the image file yet."
+ *
+ * The position:relative is required for Next.js Image with fill prop.
+ * The fixed width/height defines the container size.
+ */
+.image {
+  position: relative;
+  width: 30rem;
+  height: 20rem;
+}
+
+/* Image styling with slide-in animation from left */
+.header img {
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5);
+  animation: fade-slide-in-from-left 1s ease-out forwards;
+}
+
+/* ============================================================================
+ * HEADER TEXT SECTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Then below that, I'll add another div with a class of headerText, written
+ * like this, not with a dash, but instead camel case. That's how the CSS
+ * class name in the CSS file is named."
+ *
+ * Contains the meal title, creator info, and summary.
+ * Animates in from the right for visual effect.
+ */
+.headerText {
+  padding: 0.5rem 1rem 0 1rem;
+  color: #ddd6cb;
+  max-width: 40rem;
+  animation: fade-slide-in-from-right 1s ease-out forwards;
+}
+
+/* Large uppercase title matching the site branding */
+.headerText h1 {
+  margin: 0;
+  font-size: 3.5rem;
+  text-transform: uppercase;
+  font-family: 'Montserrat', sans-serif;
+  text-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================================
+ * CREATOR ATTRIBUTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And below that a paragraph, which receives another CSS class, a class of
+ * creator, where I want to output the text by and then the name of the
+ * creator wrapped into a link."
+ *
+ * Italic style with gradient link effect matching site branding.
+ */
+.creator {
+  font-size: 1.5rem;
+  color: #cfa69b;
+  font-style: italic;
+}
+
+/* Gradient text effect for the creator's email link */
+.creator a {
+  background: linear-gradient(90deg, #f9572a, #ff8a05);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hover effect with glowing text shadow */
+.creator a:hover,
+.creator a:active {
+  background: linear-gradient(90deg, #f9572a, #ff8a05);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 18px rgba(248, 190, 42, 0.8);
+}
+
+/* ============================================================================
+ * SUMMARY TEXT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Below that, we can add another paragraph, which also receives a class,
+ * and here the class should be the summary class, where I want to output
+ * the short summary text that summarizes a meal."
+ */
+.summary {
+  font-size: 1.5rem;
+}
+
+/* ============================================================================
+ * INSTRUCTIONS SECTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now in that main section, I simply wanna output one paragraph, which
+ * receives a CSS class name called instructions. And then here, I want to
+ * output the instructions that are stored for every meal."
+ *
+ * Styled card with contrasting background for readability.
+ * Animates in from the bottom for visual flow.
+ */
+.instructions {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  background-color: #6e6464;
+  color: #13120f;
+  border-radius: 8px;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  max-width: 60rem;
+  margin: 2rem auto;
+  animation: fade-slide-in-from-bottom 1s ease-out forwards;
+}
+
+/* ============================================================================
+ * LOADING STATE
+ * ============================================================================
+ *
+ * For potential future use with Suspense or loading states.
+ * Flashing animation draws attention to loading status.
+ */
+.loading {
+  font-size: 3rem;
+  text-align: center;
+  color: #ddd6cb;
+  font-weight: bold;
+  animation: flash 1s ease-in-out infinite alternate;
+}
+
+/* ============================================================================
+ * ANIMATIONS
+ * ============================================================================
+ *
+ * Staggered slide-in animations create visual hierarchy:
+ * - Image: slides in from left
+ * - Header text: slides in from right
+ * - Instructions: slides in from bottom
+ *
+ * This creates a "reveal" effect as elements appear from different directions.
+ */
+
+/* Image slides in from the left */
+@keyframes fade-slide-in-from-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-1rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Header text slides in from the right */
+@keyframes fade-slide-in-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Instructions slide in from the bottom */
+@keyframes fade-slide-in-from-bottom {
+  0% {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Flashing animation for loading state */
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/**
+ * ============================================================================
+ * LESSON 457 CSS SUMMARY
+ * ============================================================================
+ *
+ * CLASSES DEFINED:
+ *
+ * 1. .header       - Main header container with flexbox layout
+ * 2. .image        - Container for the meal image (with fill prop)
+ * 3. .headerText   - Container for title, creator, and summary
+ * 4. .creator      - Creator attribution with mailto link
+ * 5. .summary      - Short meal description
+ * 6. .instructions - Detailed cooking instructions card
+ * 7. .loading      - Loading state animation (for future use)
+ *
+ * ANIMATIONS:
+ * - fade-slide-in-from-left   → Image
+ * - fade-slide-in-from-right  → Header text
+ * - fade-slide-in-from-bottom → Instructions
+ * - flash                      → Loading state
+ *
+ * ============================================================================
+ */

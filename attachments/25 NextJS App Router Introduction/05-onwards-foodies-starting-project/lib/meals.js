@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS DATA MODULE - LESSONS 452 & 455: Data Fetching & Error Handling
+ * MEALS DATA MODULE - LESSONS 452, 455 & 457: Data Fetching & Meal Details
  * ============================================================================
  *
  * LESSON 452 - WHY WE DON'T NEED useEffect OR fetch()
@@ -232,7 +232,85 @@ export async function getMeals() {
 
 /**
  * ============================================================================
- * LESSONS 452 & 455 - DATA FETCHING & ERROR HANDLING SUMMARY
+ * LESSON 457 - GET A SINGLE MEAL BY SLUG
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now, in order to have some data to output on that Meal Detail screen, we
+ * should go back to the meals.js file in the lib folder, and there we can
+ * export another async function that could be called getMeal."
+ *
+ * WHY NOT async FOR THIS FUNCTION?
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now the reason for that is that getMeal actually returns a promise because
+ * I'm using this async keyword here and I added that so that we could add
+ * such a delay again if we wanted to and if we wanted to set up a dedicated
+ * loading page or handle loading in any other way. Now I actually won't do
+ * that here, and therefore, we can simply get rid of the async keyword,
+ * therefore getMeal will no longer return a promise, and therefore, now the
+ * code should work."
+ *
+ * NOTE: This function is intentionally NOT async (unlike getMeals) because:
+ * - We don't need loading states for individual meal pages
+ * - The query is fast (single row lookup by indexed column)
+ * - No artificial delay needed for demonstration
+ *
+ * @param {string} slug - The unique slug identifier for the meal
+ * @returns {Object} A single meal object from the database
+ */
+export function getMeal(slug) {
+  /**
+   * SECURE SQL QUERY WITH PARAMETERIZED VALUES
+   *
+   * INSTRUCTOR QUOTE:
+   * "Well, and then we simply wanna return db.prepare, and then SELECT all
+   * columns FROM the meals table WHERE the slug field is equal to the slug
+   * we're getting here."
+   *
+   * SQL INJECTION PROTECTION:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now you could now add it like this, but that would be insecure. That
+   * opens yourself up to SQL injection. Instead, you should use a question
+   * mark as a placeholder here."
+   *
+   * UNSAFE (DO NOT DO THIS):
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  db.prepare(`SELECT * FROM meals WHERE slug = '${slug}'`).get()         │
+   * │                                                                          │
+   * │  DANGER: If slug = "'; DROP TABLE meals; --"                            │
+   * │  This would execute: SELECT * FROM meals WHERE slug = '';               │
+   * │                      DROP TABLE meals; --'                               │
+   * │  Result: Your entire meals table is deleted!                            │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   *
+   * SAFE (THIS IS WHAT WE DO):
+   * ┌─────────────────────────────────────────────────────────────────────────┐
+   * │  db.prepare('SELECT * FROM meals WHERE slug = ?').get(slug)             │
+   * │                                                                          │
+   * │  The ? is a placeholder that gets safely escaped by better-sqlite3      │
+   * │  Any malicious input is treated as a literal string value               │
+   * └─────────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "Under the hood, this better-sqlite3 package we're using here will then
+   * protect you against SQL injection attacks. That's why you should add
+   * dynamic values into your statements like this."
+   *
+   * USING get() FOR SINGLE ROW:
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then call the get method here since I only want to get a single
+   * record, and then you pass the value that should be inserted for that
+   * placeholder to get."
+   */
+  return db.prepare('SELECT * FROM meals WHERE slug = ?').get(slug);
+}
+
+/**
+ * ============================================================================
+ * LESSONS 452, 455 & 457 - DATA FETCHING SUMMARY
  * ============================================================================
  *
  * KEY CONCEPTS (LESSON 452):
@@ -274,19 +352,42 @@ export async function getMeals() {
  *    - Errors thrown here will be caught by error.js
  *    - Comment it back out after testing
  *
+ * KEY CONCEPTS (LESSON 457):
+ *
+ * 6. FETCHING SINGLE RECORDS BY SLUG
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And here I then expect to get the slug of the meal that identifies
+ *    the meal that should be fetched."
+ *
+ *    - Use get() instead of all() for single records
+ *    - Use parameterized queries (?) to prevent SQL injection
+ *    - No async needed when loading states aren't required
+ *
  * WHAT THIS MODULE EXPORTS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  getMeals()   │  Returns all meals from the database                    │
- * │               │  (with a 2-second simulated delay for demo purposes)    │
- * │               │  Can throw error if database fails (see Lesson 455)     │
+ * │  getMeals()     │  Returns all meals from the database                  │
+ * │                 │  (with a 2-second simulated delay for demo purposes)  │
+ * │                 │  Can throw error if database fails (see Lesson 455)   │
+ * │  ───────────────│───────────────────────────────────────────────────────│
+ * │  getMeal(slug)  │  Returns a single meal by its slug identifier         │
+ * │                 │  Uses parameterized query for SQL injection safety    │
+ * │                 │  Synchronous (no delay) - Lesson 457                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * USAGE IN PAGE COMPONENTS:
- *   import { getMeals } from '@/lib/meals';
+ *   import { getMeals, getMeal } from '@/lib/meals';
  *
+ *   // Get all meals (async)
  *   export default async function MealsPage() {
  *     const meals = await getMeals();
  *     return <MealsGrid meals={meals} />;
+ *   }
+ *
+ *   // Get single meal (sync) - Lesson 457
+ *   export default function MealDetailsPage({ params }) {
+ *     const meal = getMeal(params.mealSlug);
+ *     return <MealDetails meal={meal} />;
  *   }
  *
  * ============================================================================
