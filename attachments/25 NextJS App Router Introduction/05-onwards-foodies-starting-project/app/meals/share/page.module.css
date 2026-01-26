@@ -1,0 +1,256 @@
+/**
+ * ============================================================================
+ * SHARE MEAL PAGE STYLES - LESSON 459: Setting Up The Share Meal Form
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And attached you also find the styles."
+ *
+ * This CSS Module provides styles for the meal submission form, including:
+ * - Page header with highlighted text
+ * - Form layout and input styling
+ * - Gradient submit button matching site branding
+ * - Row layout for side-by-side inputs
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * HEADER SECTION
+ * ============================================================================
+ *
+ * Styles for the page header containing the title and subtitle.
+ * Centered with max-width constraint for readability.
+ */
+.header {
+  gap: 3rem;
+  margin: 3rem auto 5rem auto;
+  width: 90%;
+  max-width: 75rem;
+  color: #ddd6cb;
+  font-size: 1.5rem;
+}
+
+/* Header title uses Montserrat font for consistency with site branding */
+.header h1 {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ============================================================================
+ * HIGHLIGHT TEXT
+ * ============================================================================
+ *
+ * Gradient text effect for "favorite meal" in the header.
+ * Uses the same orange gradient found throughout the site.
+ *
+ * TECHNIQUE:
+ * - background: Creates the gradient color
+ * - background-clip: text: Clips gradient to text shape
+ * - -webkit-text-fill-color: transparent: Makes text transparent to show gradient
+ */
+.highlight {
+  background: linear-gradient(90deg, #f9572a, #ff8a05);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================================
+ * MAIN CONTENT SECTION
+ * ============================================================================
+ *
+ * Container for the form with consistent width and centering.
+ */
+.main {
+  width: 90%;
+  max-width: 75rem;
+  margin: 3rem auto;
+  color: white;
+}
+
+/* ============================================================================
+ * FORM CONTAINER
+ * ============================================================================
+ *
+ * Constrains form width for better readability and usability.
+ */
+.form {
+  max-width: 50rem;
+}
+
+/* ============================================================================
+ * FORM LABELS
+ * ============================================================================
+ *
+ * Uppercase labels with consistent styling across all form fields.
+ * Uses Montserrat font to match site typography.
+ */
+.form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
+  color: #b3aea5;
+  font-weight: bold;
+}
+
+/* ============================================================================
+ * INPUT AND TEXTAREA STYLING
+ * ============================================================================
+ *
+ * Consistent dark-themed input styling for both single-line inputs
+ * and multi-line textareas.
+ *
+ * DESIGN NOTES:
+ * - Dark background (#1c2027) matches site theme
+ * - Light text (#ddd6cb) for readability
+ * - Subtle border that doesn't distract
+ * - Full width inputs for easy interaction
+ */
+.form input,
+.form textarea {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #454952;
+  background: #1c2027;
+  font-size: 1.25rem;
+  font-family: 'Montserrat', sans-serif;
+  color: #ddd6cb;
+}
+
+/* ============================================================================
+ * INPUT FOCUS STATES
+ * ============================================================================
+ *
+ * Visual feedback when inputs are focused:
+ * - Orange outline matches site accent color
+ * - Slightly lighter background for active field indication
+ */
+.form input:focus,
+.form textarea:focus {
+  outline-color: #f99f2a;
+  background-color: #1f252d;
+}
+
+/* ============================================================================
+ * ROW LAYOUT (SIDE-BY-SIDE INPUTS)
+ * ============================================================================
+ *
+ * Used for name and email fields to display them horizontally.
+ * Creates a compact layout that makes efficient use of space.
+ *
+ * FLEXBOX LAYOUT:
+ * - display: flex: Enables horizontal layout
+ * - gap: 1rem: Space between the two inputs
+ * - Each p child takes full available width (50% each)
+ */
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Each paragraph in a row expands to fill available space */
+.row p {
+  width: 100%;
+}
+
+/* ============================================================================
+ * FORM ACTIONS (SUBMIT BUTTON CONTAINER)
+ * ============================================================================
+ *
+ * Right-aligns the submit button for standard form conventions.
+ */
+.actions {
+  text-align: right;
+}
+
+/* ============================================================================
+ * SUBMIT BUTTON
+ * ============================================================================
+ *
+ * Gradient button matching site branding for primary actions.
+ *
+ * DESIGN NOTES:
+ * - Orange gradient consistent with site theme
+ * - No border for clean appearance
+ * - Box shadow for depth and clickability affordance
+ * - Cursor: pointer indicates interactivity
+ */
+.actions button {
+  border: 0;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(90deg, #f9572a, #ff9b05);
+  border: none;
+  color: #ffffff;
+  border-radius: 2px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+ * BUTTON HOVER/FOCUS STATES
+ * ============================================================================
+ *
+ * Lighter gradient on hover/focus for visual feedback.
+ * Creates an "active" feeling when interacting with the button.
+ */
+.actions button:hover,
+.actions button:focus {
+  background: linear-gradient(90deg, #fd4715, #f9b241);
+}
+
+/* ============================================================================
+ * DISABLED BUTTON STATE
+ * ============================================================================
+ *
+ * Styling for when the form is submitting or button is disabled.
+ * Will be used in later lessons when form submission is implemented.
+ *
+ * VISUAL INDICATORS:
+ * - Gray background removes the action color
+ * - Gray text reinforces disabled state
+ * - cursor: not-allowed: Indicates non-interactivity
+ */
+.actions button:disabled,
+.actions button:hover:disabled,
+.actions button:focus:disabled {
+  background: #ccc;
+  color: #979797;
+  cursor: not-allowed;
+}
+
+/**
+ * ============================================================================
+ * LESSON 459 CSS SUMMARY
+ * ============================================================================
+ *
+ * CLASSES DEFINED:
+ *
+ * LAYOUT CLASSES:
+ * 1. .header      - Page header container
+ * 2. .main        - Main content container
+ * 3. .form        - Form container with max-width
+ * 4. .row         - Flexbox row for side-by-side inputs
+ * 5. .actions     - Submit button container (right-aligned)
+ *
+ * STYLING CLASSES:
+ * 6. .highlight   - Gradient text effect for emphasis
+ *
+ * ELEMENT STYLES:
+ * - .form label   - Uppercase form labels
+ * - .form input   - Text input styling
+ * - .form textarea - Multi-line input styling
+ * - .actions button - Gradient submit button
+ *
+ * STATES:
+ * - :focus        - Orange outline and lighter background
+ * - :hover/:focus - Lighter gradient on button
+ * - :disabled     - Gray out button during submission
+ *
+ * ============================================================================
+ */
