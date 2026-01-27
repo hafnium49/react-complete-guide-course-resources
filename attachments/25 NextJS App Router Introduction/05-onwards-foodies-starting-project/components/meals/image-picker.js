@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * IMAGE PICKER COMPONENT - LESSON 460: Configuring the Image Picker Component
+ * IMAGE PICKER COMPONENT - LESSONS 460 & 461: Custom File Input with Preview
  * ============================================================================
  *
  * LESSON 460 - BUILDING A CUSTOM IMAGE PICKER
@@ -20,14 +20,29 @@
  * │  OUR CUSTOM SOLUTION:                                                   │
  * │  • Hide the native input completely                                     │
  * │  • Use a styled button that triggers the hidden input                   │
- * │  • Add image preview functionality                                      │
+ * │  • Add image preview functionality (Lesson 461)                         │
  * │  • Full control over appearance and behavior                            │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * ============================================================================
+ * LESSON 461 - ADDING IMAGE PREVIEW FUNCTIONALITY
+ * ============================================================================
+ *
  * INSTRUCTOR QUOTE:
- * "Now for that, I'll actually build a separate component since this image
- * picker is a bit more complex, and hence, I'll go to this components folder,
- * and then there in the meals folder, I'll add my image-picker.js file."
+ * "Now, to show a preview of the picked image, we need to handle the event
+ * that an image was picked and then store some state so that we can update
+ * this UI and show a preview as soon as we have an image."
+ *
+ * PREVIEW FEATURE OVERVIEW:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  STEP 1: User clicks "Pick an Image" button                            │
+ * │  STEP 2: File dialog opens, user selects an image                      │
+ * │  STEP 3: onChange event fires on the hidden input                      │
+ * │  STEP 4: handleImageChange reads the file with FileReader              │
+ * │  STEP 5: FileReader converts file to Data URL                          │
+ * │  STEP 6: Data URL is stored in pickedImage state                       │
+ * │  STEP 7: Component re-renders, showing the preview                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * WHY 'use client' IS REQUIRED HERE
@@ -45,23 +60,30 @@
  * │  NEEDS 'use client' WHEN:                                               │
  * │  • Using onClick, onChange, or other event handlers                     │
  * │  • Using React hooks (useState, useRef, useEffect, etc.)               │
- * │  • Accessing browser-only APIs (window, document, etc.)                │
+ * │  • Accessing browser-only APIs (window, document, FileReader, etc.)   │
  * │                                                                          │
- * │  THIS COMPONENT USES:                                                   │
+ * │  THIS COMPONENT USES (Lesson 460):                                      │
  * │  ✓ onClick handler on button                                            │
  * │  ✓ useRef hook for input reference                                      │
+ * │                                                                          │
+ * │  THIS COMPONENT ALSO USES (Lesson 461):                                 │
+ * │  ✓ onChange handler on input                                            │
+ * │  ✓ useState hook for image preview                                      │
+ * │  ✓ FileReader browser API                                               │
  * │  → Therefore it MUST be a Client Component                              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
- * "Therefore, we must mark this ImagePicker as a client component by adding
- * this use client directive at the top of this file."
+ * "So we need some state here in this component, and therefore, we need to
+ * use state hook. This would require us to turn this component into a client
+ * component, but we already did this here, so no changes are needed."
  *
  * ============================================================================
  */
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import Image from 'next/image';
 
 import classes from './image-picker.module.css';
 
@@ -70,27 +92,48 @@ import classes from './image-picker.module.css';
  * IMAGE PICKER COMPONENT
  * ============================================================================
  *
- * INSTRUCTOR QUOTE:
- * "And then here we can and should export a component function that can be
- * called ImagePicker like this. And the job of this component function is
- * to output some markup and then also handle the picking process."
- *
- * COMPONENT ARCHITECTURE:
+ * COMPONENT ARCHITECTURE (Updated for Lesson 461):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  <div.picker>                                                           │
  * │  ├── <label>               → Displays configurable label text           │
  * │  │                                                                       │
  * │  └── <div.controls>        → Container for input, button, and preview   │
  * │      ├── <input>           → Hidden file input (handles actual upload)  │
- * │      └── <button>          → Visible button that triggers the input     │
+ * │      ├── <button>          → Visible button that triggers the input     │
+ * │      └── <div.preview>     → Shows picked image or placeholder text     │
+ * │           ├── <p>          → "No image picked yet" (when no image)      │
+ * │           └── <Image>      → Preview of selected image (when picked)    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * @param {Object} props - Component props
  * @param {string} props.label - Text to display as the input label
  * @param {string} props.name - Name attribute for the input (used in FormData)
- * @returns {JSX.Element} Custom styled image picker with file input
+ * @returns {JSX.Element} Custom styled image picker with file input and preview
  */
 export default function ImagePicker({ label, name }) {
+  /**
+   * ================================================================
+   * STATE FOR IMAGE PREVIEW (LESSON 461)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now here with this state, I then wanna manage the picked image, so I'll
+   * name this picked image and have a set picked image state updating function."
+   *
+   * STATE VALUES:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  null/undefined  │  No image picked yet → show placeholder text     │
+   * │  Data URL string │  Image picked → show preview with <Image>        │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * WHAT IS A DATA URL?
+   * A Data URL is a string that embeds the file data directly. Example:
+   * "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+   *
+   * This can be used directly as the src attribute of an <img> element.
+   */
+  const [pickedImage, setPickedImage] = useState();
+
   /**
    * ================================================================
    * REF FOR TRIGGERING HIDDEN INPUT
@@ -100,11 +143,6 @@ export default function ImagePicker({ label, name }) {
    * "What I wanna do is, as mentioned, forward that click. I wanna trigger
    * a click on this input, and we can do that with help of refs, a feature
    * built into React."
-   *
-   * INSTRUCTOR QUOTE:
-   * "We can create a ref with the useRef hook, which is imported from React,
-   * so which has nothing to do with NextJS, but which instead works the way
-   * you know it from React."
    *
    * HOW REFS WORK:
    * ┌─────────────────────────────────────────────────────────────────────┐
@@ -120,10 +158,6 @@ export default function ImagePicker({ label, name }) {
    * ================================================================
    * HANDLE BUTTON CLICK TO TRIGGER FILE INPUT
    * ================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "Now to make that work, we of course need to handle clicks on this button
-   * and then forward them, so to say, to this input."
    *
    * INSTRUCTOR QUOTE:
    * "And that now allows us to use this ref to trigger the click method.
@@ -145,6 +179,151 @@ export default function ImagePicker({ label, name }) {
     imageInput.current.click();
   }
 
+  /**
+   * ================================================================
+   * HANDLE IMAGE SELECTION (LESSON 461)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And now we need a second event handler function here that could be called
+   * handle image change, which should be triggered whenever this input here
+   * has a new value, so whenever the change event on that input is emitted."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, here in handle image change, we'll then automatically get an event
+   * object, as you always do for those event handling functions in React."
+   *
+   * THIS FUNCTION:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  1. Gets the selected file from event.target.files[0]              │
+   * │  2. Validates that a file was actually selected                     │
+   * │  3. Uses FileReader API to convert file to Data URL                 │
+   * │  4. Stores the Data URL in state to trigger preview render          │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  function handleImageChange(event) {
+    /**
+     * ACCESSING THE SELECTED FILE
+     *
+     * INSTRUCTOR QUOTE:
+     * "We can get hold of that picked file by using event.target.files
+     * and then accessing the first file. This file property will exist
+     * because the target of this event is this input, and this file input
+     * object, under the hood, will have such a files property."
+     *
+     * INSTRUCTOR QUOTE:
+     * "That will be an array of all the files that have been picked, but
+     * here, it'll only be one file that can be picked. And therefore, I'll
+     * just access that first file."
+     *
+     * NOTE ON MULTIPLE FILES:
+     *
+     * INSTRUCTOR QUOTE:
+     * "You could allow the user to pick multiple files by adding the
+     * multiple prop here to this file input, but since we don't have
+     * that here and don't want it here, it'll only be one file that
+     * we can access."
+     */
+    const file = event.target.files[0];
+
+    /**
+     * VALIDATION: CHECK IF FILE EXISTS
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now, it's possible that the user actually did not pick a file for
+     * some reason, so I'll check if the file is undefined, if we got no
+     * file, and in that case, I'll just return and not continue."
+     *
+     * This can happen if the user:
+     * - Opens the file dialog but clicks Cancel
+     * - Closes the dialog without selecting a file
+     */
+    if (!file) {
+      return;
+    }
+
+    /**
+     * ================================================================
+     * FILEREADER API - CONVERTING FILE TO DATA URL
+     * ================================================================
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now, in order to show it as a preview here, I now want to convert it
+     * into a so-called data URL, which is simply a value that can be used
+     * as an input for an image element, so that can be used as a source
+     * for an image element."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And we can generate such a data URL with help of a class built into
+     * JavaScript, the file reader class. We can construct such a file reader
+     * and then do what its name implies."
+     *
+     * WHAT IS FileReader?
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  FileReader is a built-in browser API that reads File objects      │
+     * │  and converts them to various formats:                             │
+     * │                                                                     │
+     * │  • readAsDataURL()  → Base64 encoded string (for <img src>)       │
+     * │  • readAsText()     → Plain text string                            │
+     * │  • readAsArrayBuffer() → Raw binary data                          │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
+    const fileReader = new FileReader();
+
+    /**
+     * SETTING UP THE ONLOAD CALLBACK
+     *
+     * INSTRUCTOR QUOTE:
+     * "Now, this method works in a bit of a strange way, because it doesn't
+     * actually return anything, not a promise, not the read file, and it
+     * also doesn't take a callback."
+     *
+     * INSTRUCTOR QUOTE:
+     * "Instead, we get hold of that data URL that's being generated by
+     * assigning a value to the on load property of this file reader object.
+     * So we store a function as a value in on load, and this function will
+     * then be triggered by the file reader once this method here, this
+     * read as data URL method, is done."
+     *
+     * WHY THIS UNUSUAL PATTERN?
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  FileReader uses an event-based pattern instead of Promises:       │
+     * │                                                                     │
+     * │  1. Create FileReader instance                                     │
+     * │  2. Set up onload callback (called when reading completes)         │
+     * │  3. Call readAsDataURL() to start reading                          │
+     * │  4. When done, onload fires and result is in fileReader.result     │
+     * │                                                                     │
+     * │  This is an older API pattern from before Promises were standard.  │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * INSTRUCTOR QUOTE:
+     * "But here, we then won't get the generated URL as an input. Instead,
+     * we can access it by accessing fileReader.result, and that will then
+     * be that generated URL."
+     *
+     * INSTRUCTOR QUOTE:
+     * "And that's what I then wanna store in my state. So I will set my
+     * picked image to the result of accessing fileReader.result inside of
+     * this on load function."
+     */
+    fileReader.onload = () => {
+      setPickedImage(fileReader.result);
+    };
+
+    /**
+     * TRIGGER THE FILE READING PROCESS
+     *
+     * INSTRUCTOR QUOTE:
+     * "We can read our file, and we can simply call file reader read as
+     * data URL and pass that file to that method."
+     *
+     * This starts the asynchronous reading process. When complete,
+     * the onload callback above will be triggered.
+     */
+    fileReader.readAsDataURL(file);
+  }
+
   return (
     <div className={classes.picker}>
       {/**
@@ -153,15 +332,6 @@ export default function ImagePicker({ label, name }) {
        * INSTRUCTOR QUOTE:
        * "And then in that div, I wanna start by adding a label, a label with
        * a configurable text, which is expected to be received via props."
-       *
-       * INSTRUCTOR QUOTE:
-       * "Now I will add the htmlFor prop here to connect this label to some
-       * input, and I'll connect it to an input with a name of image or with
-       * an ID of image to be precise."
-       *
-       * ACCESSIBILITY NOTE:
-       * The htmlFor attribute connects this label to the input via matching id.
-       * Screen readers use this to announce what the input is for.
        */}
       <label htmlFor={name}>{label}</label>
 
@@ -169,14 +339,11 @@ export default function ImagePicker({ label, name }) {
         {/**
          * HIDDEN FILE INPUT
          *
-         * INSTRUCTOR QUOTE:
-         * "And therefore we of course also need such an input. But I will nest
-         * that input into a div here, a div to which I assign a className of
-         * controls. And then in there I wanna have an input element where the
-         * type should be set to file, because this should be an input that
-         * allows us to select a file."
+         * INSTRUCTOR QUOTE (on onChange):
+         * "And therefore, we should add the on change prop here and set
+         * handle image change as a value."
          *
-         * INPUT ATTRIBUTES EXPLAINED:
+         * INPUT ATTRIBUTES:
          * ┌───────────────────────────────────────────────────────────────────┐
          * │  ATTRIBUTE   │  PURPOSE                                           │
          * │  ───────────│───────────────────────────────────────────────────  │
@@ -186,17 +353,8 @@ export default function ImagePicker({ label, name }) {
          * │  accept      │  Limits to only PNG and JPEG images                │
          * │  name        │  Key used when extracting from FormData            │
          * │  ref         │  Allows programmatic access via useRef             │
+         * │  onChange    │  Triggers handleImageChange when file selected     │
          * └───────────────────────────────────────────────────────────────────┘
-         *
-         * INSTRUCTOR QUOTE:
-         * "And I'll add the accept prop to control which files are accepted.
-         * And here I only wanna accept files that are of type image/png or
-         * image/jpeg, so no other files can be uploaded with help of that
-         * picker."
-         *
-         * INSTRUCTOR QUOTE:
-         * "I'll also give this input a name of image, which will later be
-         * important for extracting that uploaded image."
          */}
         <input
           className={classes.input}
@@ -205,34 +363,16 @@ export default function ImagePicker({ label, name }) {
           accept="image/png, image/jpeg"
           name={name}
           ref={imageInput}
+          onChange={handleImageChange}
         />
 
         {/**
          * CUSTOM STYLED BUTTON
          *
          * INSTRUCTOR QUOTE:
-         * "So therefore here, maybe after the input, we can output a button,
-         * which should receive a class of button and which should be of type
-         * button, which is important so that it won't submit the surrounding
-         * form."
-         *
-         * WHY type="button" IS CRITICAL:
-         *
-         * INSTRUCTOR QUOTE:
          * "If you would not set the type, it would by default be type submit,
          * and it would submit the surrounding form, which I don't want to
          * happen here. So the type should be button."
-         *
-         * BUTTON TYPE BEHAVIOR:
-         * ┌───────────────────────────────────────────────────────────────────┐
-         * │  type="submit" (default)  │  Submits the parent form             │
-         * │  type="button"            │  Does nothing, only onClick fires    │
-         * │  type="reset"             │  Resets all form fields              │
-         * └───────────────────────────────────────────────────────────────────┘
-         *
-         * INSTRUCTOR QUOTE:
-         * "With that, if I now click my own button, this image picker opens
-         * up again."
          */}
         <button
           className={classes.button}
@@ -241,6 +381,71 @@ export default function ImagePicker({ label, name }) {
         >
           Pick an Image
         </button>
+
+        {/**
+         * ================================================================
+         * IMAGE PREVIEW SECTION (LESSON 461)
+         * ================================================================
+         *
+         * INSTRUCTOR QUOTE:
+         * "Well, and with that, we can then use this picked image state to
+         * show a preview. So down here, in this controls div, I'll add another
+         * div with a class name of preview."
+         *
+         * CONDITIONAL RENDERING:
+         *
+         * INSTRUCTOR QUOTE:
+         * "And in that div, I now wanna check if we don't have a picked image,
+         * in which case I'll simply output a paragraph where I say 'No image
+         * picked yet' or something like that. But if we do have a picked image,
+         * I wanna show that image."
+         *
+         * PREVIEW STATES:
+         * ┌─────────────────────────────────────────────────────────────────┐
+         * │  pickedImage is falsy (null/undefined):                        │
+         * │  └── Show <p>No image picked yet.</p>                          │
+         * │                                                                 │
+         * │  pickedImage is truthy (Data URL string):                      │
+         * │  └── Show <Image src={pickedImage} ... />                      │
+         * └─────────────────────────────────────────────────────────────────┘
+         */}
+        <div className={classes.preview}>
+          {!pickedImage && <p>No image picked yet.</p>}
+          {pickedImage && (
+            /**
+             * NEXT.JS IMAGE COMPONENT WITH FILL PROP
+             *
+             * INSTRUCTOR QUOTE:
+             * "And for that, I'll use the image component provided by next,
+             * so you should import that from next image."
+             *
+             * INSTRUCTOR QUOTE:
+             * "And then here on that image, I'll set the source to my picked
+             * image, so to that data URL, and the alt text to 'The image
+             * selected by the user,' and I'll add that fill prop because I
+             * don't know the dimensions of that image in advance."
+             *
+             * WHY USE NEXT.JS IMAGE COMPONENT?
+             * ┌─────────────────────────────────────────────────────────────┐
+             * │  NEXT.JS <Image> BENEFITS:                                  │
+             * │  • Automatic image optimization                             │
+             * │  • Lazy loading by default                                  │
+             * │  • Prevents Cumulative Layout Shift (CLS)                  │
+             * │  • fill prop: Image fills its parent container             │
+             * │                                                             │
+             * │  WHY fill PROP HERE:                                        │
+             * │  • User-selected images have unknown dimensions             │
+             * │  • fill makes image responsive to container size            │
+             * │  • Parent must have position: relative (see CSS)           │
+             * └─────────────────────────────────────────────────────────────┘
+             */
+            <Image
+              src={pickedImage}
+              alt="The image selected by the user."
+              fill
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -248,68 +453,92 @@ export default function ImagePicker({ label, name }) {
 
 /**
  * ============================================================================
- * LESSON 460 - IMAGE PICKER SUMMARY (PART 1)
+ * LESSONS 460 & 461 - IMAGE PICKER SUMMARY
  * ============================================================================
  *
- * WHAT WE LEARNED:
+ * LESSON 460 - CUSTOM FILE INPUT PATTERN:
  *
- * 1. CUSTOM FILE INPUT PATTERN
+ * 1. HIDING NATIVE FILE INPUT
  *
  *    INSTRUCTOR QUOTE:
  *    "I wanna get rid of this ugly button here, and instead display my own
  *    button over which I have full control."
  *
- *    - Hide native file input with CSS (display: none)
- *    - Create a styled button to replace it
- *    - Use useRef to connect button clicks to hidden input
+ *    - Use CSS (display: none) to hide the native input
+ *    - Create a custom styled button as replacement
+ *    - Use useRef to programmatically trigger the hidden input
  *
- * 2. CLIENT COMPONENTS FOR INTERACTIVITY
- *
- *    INSTRUCTOR QUOTE:
- *    "Event handlers like this... cannot be used in server components."
- *
- *    - onClick requires 'use client' directive
- *    - React hooks (useRef) also require client components
- *    - Interactions happen in the browser, not on the server
- *
- * 3. CONFIGURABLE COMPONENT DESIGN
+ * 2. WHY type="button" MATTERS
  *
  *    INSTRUCTOR QUOTE:
- *    "Alternatively, we can also make this image picker a bit more
- *    configurable by accepting that name as a prop."
+ *    "If you would not set the type, it would by default be type submit,
+ *    and it would submit the surrounding form."
  *
- *    PROPS ACCEPTED:
+ *    - Buttons inside forms default to type="submit"
+ *    - Set type="button" to prevent form submission
+ *
+ * LESSON 461 - IMAGE PREVIEW FUNCTIONALITY:
+ *
+ * 3. MANAGING PREVIEW STATE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "We need to handle the event that an image was picked and then store
+ *    some state so that we can update this UI and show a preview."
+ *
+ *    STATE FLOW:
  *    ┌─────────────────────────────────────────────────────────────────────┐
- *    │  PROP   │  TYPE    │  USAGE                                        │
- *    │  ──────│──────────│────────────────────────────────────────────── │
- *    │  label  │  string  │  Text displayed above the picker             │
- *    │  name   │  string  │  Input's name, id, and label's htmlFor       │
+ *    │  Initial render  →  pickedImage = undefined  →  "No image picked"  │
+ *    │  After picking   →  pickedImage = Data URL   →  Show <Image>       │
  *    └─────────────────────────────────────────────────────────────────────┘
  *
- * 4. REFS FOR DOM MANIPULATION
+ * 4. THE FileReader API
  *
  *    INSTRUCTOR QUOTE:
- *    "We can create a ref with the useRef hook, which is imported from React."
+ *    "We can generate such a data URL with help of a class built into
+ *    JavaScript, the file reader class."
  *
- *    - useRef creates a mutable reference object
- *    - .current property holds the referenced DOM element
- *    - Can call native DOM methods like .click()
+ *    KEY POINTS:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  • FileReader is a browser API (not Node.js)                       │
+ *    │  • readAsDataURL() converts files to base64 strings                │
+ *    │  • Uses onload callback pattern (not Promises)                     │
+ *    │  • Result is accessed via fileReader.result                        │
+ *    └─────────────────────────────────────────────────────────────────────┘
  *
- * 5. BUTTON TYPES IN FORMS
+ * 5. ACCESSING SELECTED FILES
  *
  *    INSTRUCTOR QUOTE:
- *    "If you would not set the type, it would by default be type submit."
+ *    "We can get hold of that picked file by using event.target.files
+ *    and then accessing the first file."
  *
- *    - Always set type="button" for non-submit buttons in forms
- *    - Prevents accidental form submission
+ *    - event.target is the input element
+ *    - .files is a FileList (array-like) of selected files
+ *    - [0] gets the first (and only) file when multiple is not set
  *
- * COMING NEXT (mentioned at end of Lesson 460):
+ * 6. NEXT.JS IMAGE WITH fill PROP
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "I'll add that fill prop because I don't know the dimensions of
+ *    that image in advance."
+ *
+ *    - fill makes the image fill its parent container
+ *    - Parent container MUST have position: relative
+ *    - Used when image dimensions are unknown at build time
+ *
+ * WHAT'S WORKING NOW:
  *
  * INSTRUCTOR QUOTE:
- * "But now as a final step, I wanna make sure that as soon as I pick an
- * image, I also show a preview of that here."
+ * "Here in this application, I now got this preview area, and if I now
+ * click this button, the file picker opens up, and if I pick an image,
+ * I can see that preview here. So that is working."
  *
- * → Image preview will be added in the next lesson
+ * COMING NEXT:
+ *
+ * INSTRUCTOR QUOTE:
+ * "And with that, we're now finally ready to also work on the submission
+ * of this form."
+ *
+ * → Next lesson will add Server Actions for form submission
  *
  * ============================================================================
  */
