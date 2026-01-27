@@ -393,6 +393,7 @@ import NavLink from './nav-link';
  * @returns {JSX.Element} The main header with logo and navigation
  */
 export default function MainHeader() {
+  console.log('[MainHeader] rendered');
   return (
     /**
      * ====================================================================
