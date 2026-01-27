@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SHARE MEAL PAGE - LESSONS 459-463: Form Setup, Image Picker & Server Actions
+ * SHARE MEAL PAGE - LESSONS 459-464: Form, Image Picker & Server Actions
  * ============================================================================
  *
  * LESSON 459 - CREATING THE MEAL SUBMISSION FORM
@@ -82,162 +82,38 @@
 
 import ImagePicker from '@/components/meals/image-picker';
 import classes from './page.module.css';
-
 /**
  * ============================================================================
- * SHARE MEAL SERVER ACTION (LESSON 463)
+ * IMPORTING SERVER ACTION (LESSON 464)
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Instead, we can create a function in the component that holds the form,
- * for example, which we could call shareMeal here, though the name is up
- * to you."
+ * "And with that server action outsourced here, we can now go back to the
+ * share meal page and still use it as an action here on the forum by simply
+ * importing it. So by adding this import."
  *
- * WHAT IS A SERVER ACTION?
- *
- * INSTRUCTOR QUOTE:
- * "'use server' inside of a function is different because this creates a
- * so-called Server Action, which is a function that's guaranteed to execute
- * on the server, and only there."
- *
- * INSTRUCTOR QUOTE:
- * "So just as components by default are server components which only execute
- * on the server, this is now a function that only executes on a server. But
- * in case of functions, you must explicitly state that it belongs to the
- * server by adding this directive inside of them if you wanna create such
- * a Server Action."
- *
- * 'use server' VS 'use client' COMPARISON:
+ * WHY IMPORT INSTEAD OF DEFINE INLINE?
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  DIRECTIVE        │  LOCATION         │  EFFECT                         │
- * │  ────────────────│───────────────────│─────────────────────────────── │
- * │  'use client'     │  Top of FILE      │  Makes component a Client Comp  │
- * │  'use server'     │  Inside FUNCTION  │  Makes function a Server Action │
+ * │  INLINE DEFINITION (Lesson 463):                                       │
+ * │  • Works in Server Components only                                     │
+ * │  • Cannot use if component needs 'use client'                          │
+ * │  • Mixes server logic with UI code                                     │
+ * │                                                                          │
+ * │  IMPORTING (Lesson 464):                                               │
+ * │  • Works in BOTH Server and Client Components                          │
+ * │  • Better code organization                                             │
+ * │  • Server Action can be reused across multiple components              │
+ * │  • Clear separation of concerns                                         │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
- * "In addition, to really turn this into a so-called Server Action, you
- * also must add the 'async' keyword in front of it."
+ * "You can absolutely import a server action from another file and then
+ * use it in such a client component."
  *
- * SERVER ACTION REQUIREMENTS:
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  1. 'use server' directive INSIDE the function body                    │
- * │  2. async keyword in front of the function                              │
- * │  3. Receives FormData object as first parameter                        │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * @param {FormData} formData - Automatically provided by the form submission
+ * NOTE: The shareMeal function is defined in lib/actions.js with 'use server'
+ * at the FILE level, making all exported functions Server Actions.
  */
-async function shareMeal(formData) {
-  /**
-   * 'use server' DIRECTIVE
-   *
-   * INSTRUCTOR QUOTE:
-   * "And we can then add a special directive in this function, so inside
-   * of this function body. And that's the 'use server' directive."
-   *
-   * THIS DIRECTIVE:
-   * - Marks this function as a Server Action
-   * - Guarantees this code ONLY runs on the server
-   * - Never exposes this code to the client/browser
-   * - Enables direct database access, file system operations, etc.
-   */
-  'use server';
-
-  /**
-   * ================================================================
-   * EXTRACTING FORM DATA (LESSON 463)
-   * ================================================================
-   *
-   * INSTRUCTOR QUOTE:
-   * "And this function will then automatically receive that formData that
-   * was submitted. So, the data that was gathered by the inputs in the form
-   * collected in a formData object, using that formData class that's
-   * available in JavaScript."
-   *
-   * HOW formData.get() WORKS:
-   *
-   * INSTRUCTOR QUOTE:
-   * "This formData object that we're getting will have a get method that
-   * allows us to get the value that was entered into a certain input field,
-   * and the input field is identified by its name."
-   *
-   * INSTRUCTOR QUOTE:
-   * "So, if I get the value of the input field with the name 'title', I am
-   * getting the value of this input field here because this input field
-   * has that name, 'title'."
-   *
-   * MAPPING OF FORM FIELDS TO FORMDATA:
-   * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  INPUT ELEMENT               │  EXTRACT WITH                        │
-   * │  ──────────────────────────│────────────────────────────────────── │
-   * │  <input name="name">        │  formData.get('name')                │
-   * │  <input name="email">       │  formData.get('email')               │
-   * │  <input name="title">       │  formData.get('title')               │
-   * │  <input name="summary">     │  formData.get('summary')             │
-   * │  <textarea name="instructions"> │ formData.get('instructions')    │
-   * │  <input name="image">       │  formData.get('image')               │
-   * └─────────────────────────────────────────────────────────────────────┘
-   */
-  const meal = {
-    title: formData.get('title'),
-    summary: formData.get('summary'),
-    instructions: formData.get('instructions'),
-    /**
-     * IMAGE FILE EXTRACTION
-     *
-     * INSTRUCTOR QUOTE:
-     * "And get the image from formData.get 'image'. Now, for this to work,
-     * we have to make sure that we pass the appropriate name to our
-     * ImagePicker component."
-     *
-     * NOTE: This returns a File object, not a string. The file will be
-     * processed and stored in a later lesson.
-     */
-    image: formData.get('image'),
-    /**
-     * CREATOR INFORMATION
-     *
-     * INSTRUCTOR QUOTE:
-     * "I'll also get the creator of that meal by accessing formData.get
-     * 'name', because I'm getting that name of the person who created
-     * that meal from that name input field, so with a name of 'name',
-     * so that's why I'm extracting it like this."
-     */
-    creator: formData.get('name'),
-    creator_email: formData.get('email'),
-  };
-
-  /**
-   * TEMPORARY: LOG TO CONSOLE (LESSON 463)
-   *
-   * INSTRUCTOR QUOTE:
-   * "But what's important to understand here is that you can use this
-   * Server Actions feature to create such a function that will be triggered
-   * when a form is submitted. And in order to see this in action, we'll not
-   * store that data yet, but instead simply log it to the console, like this."
-   *
-   * WHERE DOES THIS LOG APPEAR?
-   *
-   * INSTRUCTOR QUOTE:
-   * "If I click Share Meal, and I open the developer tools before doing that,
-   * you see no log here, but you also see that the page didn't reload...
-   * And instead, you'll see some output here on the server side in your
-   * terminal, in that terminal where you started the development server."
-   *
-   * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  SERVER ACTION OUTPUT LOCATION:                                     │
-   * │                                                                      │
-   * │  ✗ NOT in browser console (DevTools)                               │
-   * │  ✓ IN the terminal running `npm run dev`                           │
-   * │                                                                      │
-   * │  This proves the code runs on the SERVER, not the client!          │
-   * └─────────────────────────────────────────────────────────────────────┘
-   *
-   * TODO (NEXT LESSON): Replace console.log with actual database storage
-   */
-  console.log(meal);
-}
+import { shareMeal } from '@/lib/actions';
 
 /**
  * SHARE MEAL PAGE COMPONENT
@@ -437,7 +313,7 @@ export default function ShareMealPage() {
 
 /**
  * ============================================================================
- * LESSONS 459-463 - SHARE MEAL FORM SUMMARY
+ * LESSONS 459-464 - SHARE MEAL FORM SUMMARY
  * ============================================================================
  *
  * LESSON 459 - FORM STRUCTURE:
@@ -464,7 +340,7 @@ export default function ShareMealPage() {
  *    - ImagePicker is a Client Component (uses onClick, useState, useRef)
  *    - Embedded in Server Component page via "islands architecture"
  *
- * LESSON 463 - SERVER ACTIONS:
+ * LESSON 463 - SERVER ACTIONS (INLINE):
  *
  * 3. WHAT ARE SERVER ACTIONS?
  *
@@ -484,16 +360,37 @@ export default function ShareMealPage() {
  *    │  • Can directly access databases, file systems, etc.               │
  *    └─────────────────────────────────────────────────────────────────────┘
  *
- * 4. SERVER ACTION SYNTAX
+ * LESSON 464 - SERVER ACTIONS (SEPARATE FILE):
  *
- *    async function shareMeal(formData) {
- *      'use server';  // ← INSIDE the function body
- *      // ... server-side code
- *    }
+ * 4. WHY MOVE SERVER ACTIONS TO SEPARATE FILES?
  *
- *    <form action={shareMeal}>  // ← Assign as action prop
+ *    INSTRUCTOR QUOTE:
+ *    "If you had use client here at the top because somewhere else in the
+ *    component you might be using some client-only feature, you would get
+ *    an error that you are not allowed to have server actions in a client
+ *    component file."
  *
- * 5. BENEFITS OF SERVER ACTIONS
+ *    TWO MAIN REASONS:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  1. COMPATIBILITY: Can import into 'use client' files              │
+ *    │  2. ORGANIZATION: Separates server logic from UI code              │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 5. FILE-LEVEL VS FUNCTION-LEVEL 'use server'
+ *
+ *    INLINE (Lesson 463):              SEPARATE FILE (Lesson 464):
+ *    ─────────────────────             ────────────────────────────
+ *    async function action() {         'use server';  // ← At top
+ *      'use server'; // ← Inside
+ *      // ...                          export async function action() {
+ *    }                                   // No directive needed!
+ *                                      }
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "When adding it at the top of a file like this, all the functions you
+ *    might define in that file will be treated as Server Actions."
+ *
+ * 6. BENEFITS OF SERVER ACTIONS
  *
  *    ┌─────────────────────────────────────────────────────────────────────┐
  *    │  ✓ No need to create API routes                                    │
@@ -504,6 +401,16 @@ export default function ShareMealPage() {
  *    │  ✓ Page doesn't reload on submission                               │
  *    │  ✓ Works even without JavaScript (progressive enhancement)        │
  *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * ARCHITECTURE AFTER LESSON 464:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  lib/actions.js ('use server' at top)                                  │
+ * │  └── export async function shareMeal() { ... }                         │
+ * │                                                                          │
+ * │  app/meals/share/page.js (this file)                                   │
+ * │  └── import { shareMeal } from '@/lib/actions';                        │
+ * │  └── <form action={shareMeal}>                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * COMING NEXT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
