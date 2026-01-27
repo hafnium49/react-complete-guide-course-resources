@@ -129,6 +129,8 @@ async function Meals() {
  * @returns {JSX.Element} The meals listing page with Suspense boundary
  */
 export default function MealsPage() {
+  console.log('[MealsPage] rendered');
+
   return (
     <>
       <header className={classes.header}>

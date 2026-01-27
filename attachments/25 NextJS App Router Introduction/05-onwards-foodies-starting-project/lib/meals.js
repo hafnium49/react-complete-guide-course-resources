@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS DATA MODULE - LESSONS 452, 455, 457 & 465: Data Fetching & Storage
+ * MEALS DATA MODULE - LESSONS 452, 455, 457, 465 & 466: Data Fetching & Storage
  * ============================================================================
  *
  * LESSON 452 - WHY WE DON'T NEED useEffect OR fetch()
@@ -152,6 +152,41 @@ import sql from 'better-sqlite3';
  */
 import slugify from 'slugify';
 import xss from 'xss';
+/**
+ * ============================================================================
+ * LESSON 466 - NODE.JS FILE SYSTEM API
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now we need to write that to a file in that public folder. And we can do
+ * that with help of an API provided by node JS. To be precise, the file
+ * system API. And for that I'll import fs from node:fs."
+ *
+ * WHY 'node:fs' INSTEAD OF JUST 'fs'?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  The 'node:' prefix is the modern way to import Node.js built-in       │
+ * │  modules. It clearly indicates this is a Node.js core module,          │
+ * │  not an npm package. Both work, but 'node:fs' is more explicit.        │
+ * │                                                                          │
+ * │  import fs from 'fs';       // Classic way (still works)               │
+ * │  import fs from 'node:fs';  // Modern explicit way (recommended)       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHAT THE fs MODULE PROVIDES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • Read files: fs.readFile(), fs.readFileSync()                         │
+ * │  • Write files: fs.writeFile(), fs.createWriteStream()                  │
+ * │  • Delete files: fs.unlink(), fs.rm()                                   │
+ * │  • Create directories: fs.mkdir()                                       │
+ * │  • Check existence: fs.existsSync(), fs.access()                        │
+ * │  • And much more...                                                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NOTE: This module is ONLY available on the server (Node.js).
+ * It will NOT work in client-side code (browser). This is fine because
+ * saveMeal() is called from a Server Action which runs on the server.
+ */
+import fs from 'node:fs';
 
 /**
  * ============================================================================
@@ -372,7 +407,7 @@ export function getMeal(slug) {
 
 /**
  * ============================================================================
- * LESSON 465 - SAVE A NEW MEAL TO THE DATABASE
+ * LESSONS 465 & 466 - SAVE A NEW MEAL TO THE DATABASE
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
@@ -392,9 +427,11 @@ export function getMeal(slug) {
  * │    creator_email: 'john@example.com'     // From form input             │
  * │  }                                                                       │
  * │                                                                          │
- * │  WHAT THIS FUNCTION ADDS:                                               │
- * │  • slug: 'grandmas-apple-pie' (generated from title)                    │
- * │  • instructions: sanitized version (XSS protection)                     │
+ * │  WHAT THIS FUNCTION DOES:                                               │
+ * │  1. Generate slug from title (Lesson 465)                               │
+ * │  2. Sanitize instructions for XSS (Lesson 465)                          │
+ * │  3. Save image to public/images folder (Lesson 466)                     │
+ * │  4. Insert meal record into database (Lesson 466)                       │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * @param {Object} meal - The meal object to save
@@ -402,7 +439,7 @@ export function getMeal(slug) {
 export async function saveMeal(meal) {
   /**
    * ================================================================
-   * STEP 1: GENERATE SLUG FROM TITLE
+   * STEP 1: GENERATE SLUG FROM TITLE (LESSON 465)
    * ================================================================
    *
    * INSTRUCTOR QUOTE:
@@ -425,20 +462,12 @@ export async function saveMeal(meal) {
    * │  "Crème Brûlée"                  │  "creme-brulee"                  │
    * │  "Fish & Chips"                  │  "fish-and-chips"                │
    * └─────────────────────────────────────────────────────────────────────┘
-   *
-   * WHY SLUGS ARE IMPORTANT:
-   * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  1. URL-FRIENDLY: /meals/spaghetti-carbonara (not /meals/123)      │
-   * │  2. SEO-FRIENDLY: Search engines prefer descriptive URLs          │
-   * │  3. USER-FRIENDLY: Easy to read and remember                       │
-   * │  4. DATABASE KEY: Used to look up specific meals (see getMeal)    │
-   * └─────────────────────────────────────────────────────────────────────┘
    */
   meal.slug = slugify(meal.title, { lower: true });
 
   /**
    * ================================================================
-   * STEP 2: SANITIZE INSTRUCTIONS (XSS PROTECTION)
+   * STEP 2: SANITIZE INSTRUCTIONS - XSS PROTECTION (LESSON 465)
    * ================================================================
    *
    * INSTRUCTOR QUOTE:
@@ -447,70 +476,303 @@ export async function saveMeal(meal) {
    * which turns out to be a function to call it on meal.instructions,
    * so that we sanitize and clean those instructions."
    *
-   * WHAT THE XSS FUNCTION DOES:
-   * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  DANGEROUS INPUT:                                                   │
-   * │  "Mix <script>alert('hacked!')</script> ingredients together"      │
-   * │                                                                      │
-   * │  SANITIZED OUTPUT:                                                  │
-   * │  "Mix &lt;script&gt;alert('hacked!')&lt;/script&gt; ingredients"   │
-   * │                                                                      │
-   * │  The malicious script tag is escaped and becomes harmless text!    │
-   * └─────────────────────────────────────────────────────────────────────┘
-   *
-   * WHY THIS IS CRITICAL FOR OUR APP:
-   *
-   * In the meal detail page ([mealSlug]/page.js), we render instructions
-   * using dangerouslySetInnerHTML:
-   *
-   *   <p dangerouslySetInnerHTML={{ __html: meal.instructions }}></p>
-   *
-   * This renders the instructions as HTML (to preserve line breaks, etc.)
-   * But this also means any <script> tags would execute!
-   * By sanitizing BEFORE storing in the database, we ensure safety.
-   *
-   * INSTRUCTOR QUOTE:
-   * "And actually, instead of using these extra constants or variables,
-   * we can of course also add a slug property to meal on the fly like this,
-   * and overwrite instructions with the sanitized instructions like this."
+   * WHY THIS IS CRITICAL:
+   * In the meal detail page, we render instructions using dangerouslySetInnerHTML.
+   * Without sanitization, malicious <script> tags would execute!
    */
   meal.instructions = xss(meal.instructions);
 
   /**
    * ================================================================
-   * DATA PREPARED - IMAGE HANDLING COMING NEXT
+   * STEP 3: GET FILE EXTENSION FROM UPLOADED IMAGE (LESSON 466)
    * ================================================================
    *
    * INSTRUCTOR QUOTE:
-   * "Now with that done, we prepared all the data except for the image."
+   * "First, I'll start by getting the extension of the uploaded image
+   * because it could be a JPEG or PNG file. So I'll dig into the meal image."
    *
-   * AT THIS POINT, THE MEAL OBJECT HAS:
+   * INSTRUCTOR QUOTE:
+   * "And then on that I'll call split to split it on the dot and pop the
+   * last element, which will be the file extension."
+   *
+   * INSTRUCTOR QUOTE (bug fix):
+   * "By the way, one other little error I just spotted is here where I split
+   * my image name to get the extension. Here, we have to access meal.image.name.split
+   * because meal.image is simply that image which we get from the form so that
+   * image object that's automatically generated by the browser, and that object
+   * will indeed have a couple of helpful properties. One of them is the name
+   * property, which carries the name of the image file that was uploaded."
+   *
+   * HOW THIS WORKS:
    * ┌─────────────────────────────────────────────────────────────────────┐
-   * │  {                                                                  │
-   * │    title: 'Grandma\'s Apple Pie',        // Original               │
-   * │    summary: 'A delicious classic...',    // Original               │
-   * │    instructions: '<sanitized HTML>',     // XSS-protected!         │
-   * │    image: File { ... },                  // Still a File object    │
-   * │    creator: 'John Doe',                  // Original               │
-   * │    creator_email: 'john@example.com',    // Original               │
-   * │    slug: 'grandmas-apple-pie'            // NEW - Generated!       │
-   * │  }                                                                  │
+   * │  meal.image.name = "my-delicious-burger.jpg"                        │
+   * │                                                                      │
+   * │  .split('.')  → ["my-delicious-burger", "jpg"]                      │
+   * │  .pop()       → "jpg"                                               │
+   * │                                                                      │
+   * │  For "photo.backup.png":                                            │
+   * │  .split('.')  → ["photo", "backup", "png"]                          │
+   * │  .pop()       → "png"  (always gets the last part!)                 │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  const extension = meal.image.name.split('.').pop();
+
+  /**
+   * ================================================================
+   * STEP 4: GENERATE UNIQUE FILENAME (LESSON 466)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Next, I also want to generate a unique file name and not use the file
+   * name of the user. So therefore here what I'll do is I'll generate a
+   * string with those tactics using dot string template literal notation,
+   * which we can use in JavaScript to create a file name that uses .slug
+   * here. So meal.slug actually, and then a dot, and then the extension."
+   *
+   * WHY USE SLUG INSTEAD OF ORIGINAL FILENAME?
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  PROBLEMS WITH USER-PROVIDED FILENAMES:                             │
+   * │  • May contain special characters or spaces                        │
+   * │  • Could conflict with existing files                               │
+   * │  • Could be used for path traversal attacks (../../etc/passwd)     │
+   * │  • Inconsistent naming makes files hard to manage                  │
+   * │                                                                      │
+   * │  USING SLUG-BASED NAMES:                                            │
+   * │  • Predictable, URL-safe characters                                 │
+   * │  • Matches the meal's database slug                                 │
+   * │  • Easy to associate image with its meal                            │
+   * │  • Example: "grandmas-apple-pie.jpg"                               │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  const fileName = `${meal.slug}.${extension}`;
+
+  /**
+   * ================================================================
+   * STEP 5: CREATE WRITE STREAM TO PUBLIC FOLDER (LESSON 466)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "We can then use this fs module to call createWriteStream, which will
+   * create a stream that allows us to write data to a certain file."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now createWriteStream then needs a path to default, which you wanna
+   * write. And it'll then return a stream object which you can then use
+   * to write to that path."
+   *
+   * WHY STORE IN PUBLIC FOLDER?
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now the image should be stored on the file system, not in the database
+   * because storing files in databases is a bad idea. It's bad for performance
+   * because databases simply aren't built for that. Instead, I wanna store
+   * the uploaded files in that public folder because any images stored there
+   * in that images folder will be publicly available so they can be rendered
+   * on the screen without problems."
+   *
+   * FILE STORAGE ARCHITECTURE:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  PROJECT STRUCTURE:                                                 │
+   * │  public/                                                            │
+   * │  └── images/                                                        │
+   * │      ├── burger.jpg        (existing)                               │
+   * │      ├── curry.jpg         (existing)                               │
+   * │      └── grandmas-apple-pie.jpg  ← NEW! (saved by this function)   │
+   * │                                                                      │
+   * │  The public/ folder is served at the root URL:                      │
+   * │  /images/grandmas-apple-pie.jpg (NOT /public/images/...)           │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  const stream = fs.createWriteStream(`public/images/${fileName}`);
+
+  /**
+   * ================================================================
+   * STEP 6: CONVERT IMAGE TO BUFFER AND WRITE (LESSON 466)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now we can write to that stream by calling the write method on it.
+   * And this write method then wants a chunk."
+   *
+   * INSTRUCTOR QUOTE:
+   * "In case of our image here, it means that we should convert the image
+   * to a so-called buffer to a bufferedImage you could say... You can use
+   * that image object, which we have here, which we're getting from our
+   * form after all. And that object has an arrayBuffer method you can call,
+   * which will give you such a buffer."
+   *
+   * INSTRUCTOR QUOTE:
+   * "The only tricky thing here is that arrayBuffer actually will give you
+   * a promise that eventually resolves to that buffer and therefore we
+   * must await this here."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now this is of type arrayBuffer and write actually wants a regular
+   * buffer. So therefore here we have to call Buffer from and past this
+   * arrayBuffer so this bufferedImage to it, like this."
+   *
+   * THE BUFFER CONVERSION CHAIN:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  meal.image                                                         │
+   * │       │                                                             │
+   * │       ▼                                                             │
+   * │  meal.image.arrayBuffer()  → Returns Promise<ArrayBuffer>          │
+   * │       │                                                             │
+   * │       ▼  (await)                                                    │
+   * │  bufferedImage             → ArrayBuffer (raw binary data)         │
+   * │       │                                                             │
+   * │       ▼                                                             │
+   * │  Buffer.from(bufferedImage) → Node.js Buffer (writable format)     │
+   * │       │                                                             │
+   * │       ▼                                                             │
+   * │  stream.write(buffer)      → Writes to file system                 │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  const bufferedImage = await meal.image.arrayBuffer();
+
+  /**
+   * WRITING THE BUFFER TO FILE
+   *
+   * INSTRUCTOR QUOTE:
+   * "Well, and then we can call run on that statement and pass our meal
+   * object to it. And thanks to this syntax we're using here, the data
+   * for those fields will automatically be extracted."
+   *
+   * INSTRUCTOR QUOTE:
+   * "This write method now also takes a second argument. The first argument
+   * is the thing you wanna write. The second argument is a function that
+   * will be executed once it's done writing. And here we get an error
+   * argument, which is null if everything worked, but which will hold
+   * some error information if something went wrong."
+   *
+   * ERROR HANDLING:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  stream.write(data, callback)                                       │
+   * │                                                                      │
+   * │  callback receives:                                                 │
+   * │  • error = null  → Success! File was written                        │
+   * │  • error = Error → Something went wrong (disk full, permissions)   │
+   * │                                                                      │
+   * │  If error exists, we throw to stop execution and report the issue   │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  stream.write(Buffer.from(bufferedImage), (error) => {
+    if (error) {
+      throw new Error('Saving image failed!');
+    }
+  });
+
+  /**
+   * ================================================================
+   * STEP 7: STORE IMAGE PATH (NOT FILE) IN DATABASE (LESSON 466)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now we just need to store the overall data in the database. And for
+   * that I'll start by overriding the image that's stored in my meal object
+   * with a path to the image where we stored it. Because I don't wanna store
+   * the image file itself in a database, databases are not built for that,
+   * instead I just wanna store the path."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Hence I'll override the image object in my meal with that path here,
+   * though there you should actually remove this public segment because
+   * all requests for images will be sent to the public folder automatically
+   * anyways. Or put in other words, the content of the public folder will
+   * be served as if it were served on the root level of your Server anyways
+   * and therefore public shouldn't be included here."
+   *
+   * WHY NOT '/public/images/...'?
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  In Next.js, the public/ folder is special:                         │
+   * │                                                                      │
+   * │  FILE ON DISK:        public/images/burger.jpg                      │
+   * │  URL TO ACCESS IT:    /images/burger.jpg                            │
+   * │                                                                      │
+   * │  The "public" part is NOT included in the URL!                      │
+   * │  Next.js automatically serves public/ at the root.                  │
+   * │                                                                      │
+   * │  If we stored "/public/images/burger.jpg":                          │
+   * │  → Browser would request /public/images/burger.jpg                  │
+   * │  → 404 Not Found!                                                   │
+   * │                                                                      │
+   * │  By storing "/images/burger.jpg":                                   │
+   * │  → Browser requests /images/burger.jpg                              │
+   * │  → Next.js serves public/images/burger.jpg                         │
+   * │  → Image displays correctly!                                        │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  meal.image = `/images/${fileName}`;
+
+  /**
+   * ================================================================
+   * STEP 8: INSERT MEAL INTO DATABASE (LESSON 466)
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And to save it, I'll use my db object and then prepare another statement.
+   * And here I'll prepare a statement and I'll use this template literal
+   * notation to split it across multiple lines where I wanna insert some
+   * data into the meals table."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So basically into all fields that we configured when we created the
+   * table except for the id, because that will be populated automatically."
+   *
+   * NAMED PLACEHOLDERS SYNTAX:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now we must specify the values that should be inserted into those fields.
+   * And here you could directly inject those values, but this is not recommended
+   * because that approach would be vulnerable to SQL injection attacks. Instead,
+   * you should use those placeholders... you can also use another syntax here
+   * supported by better-sqlite, this syntax here. You can target specific
+   * fields by their name, like this."
+   *
+   * NAMED PLACEHOLDERS vs POSITIONAL PLACEHOLDERS:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  POSITIONAL (? placeholders):                                       │
+   * │  VALUES (?, ?, ?, ?, ?, ?, ?)                                      │
+   * │  .run(val1, val2, val3, val4, val5, val6, val7)                    │
+   * │  → Order matters! Easy to mix up values                             │
+   * │                                                                      │
+   * │  NAMED (@property placeholders):                                    │
+   * │  VALUES (@title, @summary, @instructions, ...)                      │
+   * │  .run(meal)  // Just pass the object!                               │
+   * │  → better-sqlite3 extracts meal.title, meal.summary, etc.           │
+   * │  → Order in VALUES must match order in column list                  │
    * └─────────────────────────────────────────────────────────────────────┘
    *
-   * NEXT STEPS (upcoming lessons):
-   * • Process the image File object
-   * • Save image to the file system
-   * • Store image path (not file) in database
-   * • Insert the meal record into SQLite database
+   * INSTRUCTOR QUOTE:
+   * "And then later just pass an object to the run function, which we will
+   * call on this prepared statement and better-sqlite. The package we're
+   * using to execute this command here will then look at those property
+   * names in that object you're passing to it to extract the values stored
+   * under those property names and it will then use those values to store
+   * them in those fields."
+   *
+   * INSTRUCTOR QUOTE:
+   * "However, you must make sure that the order you got here is the same
+   * as you have it here."
    */
-
-  // TODO: Handle image storage (next lesson)
-  // TODO: Insert meal into database (next lesson)
+  db.prepare(`
+    INSERT INTO meals
+      (title, summary, instructions, creator, creator_email, image, slug)
+    VALUES (
+      @title,
+      @summary,
+      @instructions,
+      @creator,
+      @creator_email,
+      @image,
+      @slug
+    )
+  `).run(meal);
 }
 
 /**
  * ============================================================================
- * LESSONS 452, 455, 457 & 465 - DATA MODULE SUMMARY
+ * LESSONS 452, 455, 457, 465 & 466 - DATA MODULE SUMMARY
  * ============================================================================
  *
  * KEY CONCEPTS (LESSON 452):
@@ -521,17 +783,12 @@ export async function saveMeal(meal) {
  *    - Database credentials stay secure
  *
  * 2. ASYNC/AWAIT IN SERVER COMPONENTS
- *
- *    INSTRUCTOR QUOTE:
- *    "And this also allows me to show you that you can use async await here,
- *    of course, because it's a regular function, but you can also use it
- *    here in this component function. And that's not something you can
- *    normally do in React, but you can do it with server components."
+ *    - Server Components can be async functions
+ *    - Not possible in traditional React components
  *
  * 3. SEPARATION OF CONCERNS
  *    - Data fetching logic in lib/meals.js
  *    - Page rendering logic in app/meals/page.js
- *    - Reusable across multiple components
  *
  * 4. better-sqlite3 QUERY METHODS
  *    - .prepare() creates a reusable SQL statement
@@ -542,102 +799,100 @@ export async function saveMeal(meal) {
  * KEY CONCEPTS (LESSON 455):
  *
  * 5. SIMULATING ERRORS FOR TESTING
- *
- *    INSTRUCTOR QUOTE:
- *    "And to simulate this, let's simply go to the lib folder in the
- *    meals.js file and then here, let's throw an error, a new error
- *    where we say loading meals failed."
- *
  *    - Uncomment `throw new Error(...)` to test error handling
  *    - Errors thrown here will be caught by error.js
- *    - Comment it back out after testing
  *
  * KEY CONCEPTS (LESSON 457):
  *
  * 6. FETCHING SINGLE RECORDS BY SLUG
- *
- *    INSTRUCTOR QUOTE:
- *    "And here I then expect to get the slug of the meal that identifies
- *    the meal that should be fetched."
- *
  *    - Use get() instead of all() for single records
  *    - Use parameterized queries (?) to prevent SQL injection
- *    - No async needed when loading states aren't required
  *
  * KEY CONCEPTS (LESSON 465):
  *
- * 7. SAVING MEALS TO THE DATABASE
+ * 7. SLUG GENERATION WITH slugify
+ *    - slugify(meal.title, { lower: true })
+ *    - Converts "Grandma's Apple Pie" → "grandmas-apple-pie"
+ *
+ * 8. XSS PROTECTION WITH xss PACKAGE
+ *    - xss(meal.instructions) sanitizes user input
+ *    - Prevents malicious script injection
+ *
+ * KEY CONCEPTS (LESSON 466):
+ *
+ * 9. FILE SYSTEM OPERATIONS WITH fs
  *
  *    INSTRUCTOR QUOTE:
- *    "Now I want to export another function here, which is there to save
- *    a meal and I expect a meal object as an input. A meal object that
- *    should have this shape here."
+ *    "Now the image should be stored on the file system, not in the database
+ *    because storing files in databases is a bad idea. It's bad for performance
+ *    because databases simply aren't built for that."
  *
- *    DATA PREPARATION STEPS:
- *    - Generate slug from title using slugify package
- *    - Sanitize instructions using xss package
- *    - Image handling (covered in next lesson)
+ *    - import fs from 'node:fs' for file operations
+ *    - fs.createWriteStream() creates a stream for writing
+ *    - stream.write() writes buffer data to file
  *
- * 8. URL-FRIENDLY SLUGS WITH slugify
- *
- *    INSTRUCTOR QUOTE:
- *    "For example, we'll need to generate a slug because in my database,
- *    I wanna store a slug for every meal and we don't get that from the form.
- *    Instead, I want to generate it based on the title."
- *
- *    slugify(meal.title, { lower: true })
- *    → Converts "Grandma's Apple Pie" to "grandmas-apple-pie"
- *
- * 9. XSS PROTECTION WITH xss PACKAGE
+ * 10. IMAGE BUFFER CONVERSION
  *
  *    INSTRUCTOR QUOTE:
- *    "Because you must not forget that we're storing user-generated content
- *    and I'm then outputting these instructions that are generated by the
- *    user as HTML... So we are vulnerable to cross-site scripting attacks."
+ *    "In case of our image here, it means that we should convert the image
+ *    to a so-called buffer... that object has an arrayBuffer method you can
+ *    call, which will give you such a buffer."
  *
- *    xss(meal.instructions)
- *    → Removes/escapes malicious <script> tags and other dangerous HTML
+ *    meal.image.arrayBuffer() → Promise<ArrayBuffer>
+ *    Buffer.from(arrayBuffer) → Node.js Buffer (writable)
+ *
+ * 11. PUBLIC FOLDER PATH HANDLING
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "You should actually remove this public segment because all requests
+ *    for images will be sent to the public folder automatically anyways."
+ *
+ *    FILE SAVED TO:     public/images/meal-slug.jpg
+ *    PATH IN DATABASE:  /images/meal-slug.jpg  (no "public")
+ *    URL TO ACCESS:     /images/meal-slug.jpg
+ *
+ * 12. NAMED PLACEHOLDERS IN SQL
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "You can target specific fields by their name, like this. And then
+ *    later just pass an object to the run function... and better-sqlite
+ *    will then look at those property names in that object."
+ *
+ *    VALUES (@title, @summary, @instructions, ...)
+ *    .run(meal)  // Properties extracted automatically!
  *
  * WHAT THIS MODULE EXPORTS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  getMeals()     │  Returns all meals from the database                  │
  * │                 │  (with a 2-second simulated delay for demo purposes)  │
- * │                 │  Can throw error if database fails (see Lesson 455)   │
  * │  ───────────────│───────────────────────────────────────────────────────│
  * │  getMeal(slug)  │  Returns a single meal by its slug identifier         │
  * │                 │  Uses parameterized query for SQL injection safety    │
- * │                 │  Synchronous (no delay) - Lesson 457                  │
  * │  ───────────────│───────────────────────────────────────────────────────│
- * │  saveMeal(meal) │  Saves a new meal to the database - Lesson 465       │
- * │                 │  Generates slug, sanitizes instructions               │
- * │                 │  Image handling coming in next lesson                 │
+ * │  saveMeal(meal) │  Saves a new meal to the database - Lessons 465 & 466│
+ * │                 │  1. Generates slug from title                         │
+ * │                 │  2. Sanitizes instructions (XSS protection)           │
+ * │                 │  3. Saves image to public/images folder               │
+ * │                 │  4. Inserts meal record into database                 │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * USAGE IN PAGE COMPONENTS:
- *   import { getMeals, getMeal, saveMeal } from '@/lib/meals';
- *
- *   // Get all meals (async)
- *   export default async function MealsPage() {
- *     const meals = await getMeals();
- *     return <MealsGrid meals={meals} />;
- *   }
- *
- *   // Get single meal (sync) - Lesson 457
- *   export default function MealDetailsPage({ params }) {
- *     const meal = getMeal(params.mealSlug);
- *     return <MealDetails meal={meal} />;
- *   }
- *
- *   // Save meal (in Server Action) - Lesson 465
- *   // Called from lib/actions.js shareMeal function
- *   await saveMeal(meal);
- *
- * COMING NEXT:
+ * saveMeal() DATA FLOW:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  • Process uploaded image File object                                  │
- * │  • Save image to the public file system                                │
- * │  • Store image path in database                                        │
- * │  • Insert complete meal record with INSERT INTO SQL                    │
+ * │  INPUT:                          OUTPUT:                                │
+ * │  ┌──────────────────────┐        ┌──────────────────────┐              │
+ * │  │ meal = {              │        │ meal = {              │              │
+ * │  │   title: "..."        │   ▶▶   │   title: "..."        │              │
+ * │  │   summary: "..."      │        │   summary: "..."      │              │
+ * │  │   instructions: "..." │        │   instructions: "..." │ (sanitized) │
+ * │  │   image: File {...}   │        │   image: "/images/..." │ (path!)    │
+ * │  │   creator: "..."      │        │   creator: "..."      │              │
+ * │  │   creator_email: "...│        │   creator_email: "..." │              │
+ * │  │ }                     │        │   slug: "..."         │ (generated) │
+ * │  └──────────────────────┘        └──────────────────────┘              │
+ * │                                                                          │
+ * │  SIDE EFFECTS:                                                          │
+ * │  • File saved to: public/images/{slug}.{ext}                            │
+ * │  • Row inserted into meals table                                        │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
