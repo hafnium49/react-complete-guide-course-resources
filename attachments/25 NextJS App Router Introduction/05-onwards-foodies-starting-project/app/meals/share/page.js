@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SHARE MEAL PAGE - LESSON 459: Setting Up The Share Meal Form
+ * SHARE MEAL PAGE - LESSONS 459 & 460: Form Setup & Image Picker Integration
  * ============================================================================
  *
  * LESSON 459 - CREATING THE MEAL SUBMISSION FORM
@@ -18,7 +18,7 @@
  * │  • Meal title                                                           │
  * │  • Short summary                                                        │
  * │  • Detailed instructions                                                │
- * │  • Meal image (to be added via ImagePicker component)                   │
+ * │  • Meal image (via ImagePicker component - Lesson 460)                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * INSTRUCTOR QUOTE:
@@ -47,6 +47,10 @@
  * │  ✗ Cannot use useState, useEffect, or other hooks                       │
  * │  ✗ Cannot add client-side event handlers (onClick, onChange)            │
  * │  ✗ Some interactive components will need 'use client'                   │
+ * │                                                                          │
+ * │  SOLUTION (Lesson 460):                                                 │
+ * │  ✓ Interactive parts (ImagePicker) are separate Client Components      │
+ * │  ✓ This page stays a Server Component for optimal performance          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
@@ -73,6 +77,7 @@
  * ============================================================================
  */
 
+import ImagePicker from '@/components/meals/image-picker';
 import classes from './page.module.css';
 
 /**
@@ -95,7 +100,7 @@ import classes from './page.module.css';
  * │          ├── Title     → Meal title input                               │
  * │          ├── Summary   → Short description input                        │
  * │          ├── Textarea  → Detailed instructions                          │
- * │          ├── Picker    → Image picker (placeholder for now)             │
+ * │          ├── ImagePicker → Custom image upload (Client Component)       │
  * │          └── Button    → Submit button                                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
@@ -196,21 +201,36 @@ export default function ShareMealPage() {
           </p>
 
           {/**
-           * IMAGE PICKER PLACEHOLDER
+           * IMAGE PICKER COMPONENT (LESSON 460)
            *
            * INSTRUCTOR QUOTE:
-           * "An image picker will be added to that form, which we must still
-           * build."
+           * "So I got this IMAGE PICKER placeholder here, and my idea here simply
+           * is to display an image picker that can be used by the user to attach
+           * an image to the form and to upload an image when the form is submitted."
            *
-           * This will be replaced with an ImagePicker component in the next
-           * lesson (Lesson 460). For now, it's just a text placeholder.
+           * INSTRUCTOR QUOTE:
+           * "Now for that, I'll actually build a separate component since this
+           * image picker is a bit more complex."
            *
-           * THE IMAGE PICKER WILL:
-           * - Allow users to select an image file
-           * - Show a preview of the selected image
-           * - Pass the file to the form submission
+           * WHY A SEPARATE COMPONENT?
+           * ┌─────────────────────────────────────────────────────────────────┐
+           * │  • ImagePicker needs onClick handlers → requires 'use client'   │
+           * │  • This page.js stays as a Server Component                     │
+           * │  • Interactive parts are isolated in their own Client Component │
+           * │  • Best of both worlds: Server Component page + Client islands  │
+           * └─────────────────────────────────────────────────────────────────┘
+           *
+           * INSTRUCTOR QUOTE (on using ImagePicker):
+           * "So back in page.js, in this form here where I have this image picker,
+           * we can output the ImagePicker using our own custom ImagePicker
+           * component. Of course, for that, you must import it from that
+           * components folder."
+           *
+           * PROPS PASSED:
+           * - label: Text shown above the picker ("Your image")
+           * - name: The input's name attribute, used when extracting from FormData
            */}
-          IMAGE PICKER
+          <ImagePicker label="Your image" name="image" />
 
           {/**
            * FORM ACTIONS (SUBMIT BUTTON)
@@ -234,10 +254,12 @@ export default function ShareMealPage() {
 
 /**
  * ============================================================================
- * LESSON 459 - SHARE MEAL FORM SUMMARY
+ * LESSONS 459 & 460 - SHARE MEAL FORM SUMMARY
  * ============================================================================
  *
  * WHAT WE LEARNED:
+ *
+ * LESSON 459 - FORM STRUCTURE:
  *
  * 1. SERVER COMPONENT FORMS
  *
@@ -250,38 +272,54 @@ export default function ShareMealPage() {
  *    - Standard HTML form behavior works without JS
  *    - Client interactivity requires separate Client Components
  *
- * 2. FORM STRUCTURE
+ * 2. FORM FIELDS
  *
- *    FORM FIELDS DEFINED:
  *    ┌─────────────────────────────────────────────────────────────────────┐
- *    │  FIELD         │  TYPE       │  PURPOSE                             │
- *    │  ─────────────│─────────────│───────────────────────────────────── │
- *    │  name          │  text       │  Creator's name for attribution      │
- *    │  email         │  email      │  Creator's email (mailto link)       │
- *    │  title         │  text       │  Meal display name                   │
- *    │  summary       │  text       │  Short description for cards         │
- *    │  instructions  │  textarea   │  Detailed cooking steps              │
- *    │  image         │  (pending)  │  ImagePicker component (next lesson) │
+ *    │  FIELD         │  TYPE          │  PURPOSE                          │
+ *    │  ─────────────│────────────────│────────────────────────────────── │
+ *    │  name          │  text          │  Creator's name for attribution   │
+ *    │  email         │  email         │  Creator's email (mailto link)    │
+ *    │  title         │  text          │  Meal display name                │
+ *    │  summary       │  text          │  Short description for cards      │
+ *    │  instructions  │  textarea      │  Detailed cooking steps           │
+ *    │  image         │  ImagePicker   │  Custom file upload (Lesson 460)  │
  *    └─────────────────────────────────────────────────────────────────────┘
  *
- * 3. ACCESSIBILITY ATTRIBUTES
- *    - htmlFor: Links label to input (React's version of "for")
- *    - id: Matches the htmlFor value
- *    - name: Identifies the field in form data
- *    - required: Browser-level validation
+ * LESSON 460 - IMAGE PICKER INTEGRATION:
  *
- * 4. PROGRESSIVE ENHANCEMENT
+ * 3. SERVER + CLIENT COMPONENT PATTERN
  *
  *    INSTRUCTOR QUOTE:
- *    "The form, once it's submitted, does send a request... it works without
- *    JavaScript."
+ *    "Now for that, I'll actually build a separate component since this
+ *    image picker is a bit more complex."
  *
- *    - Form works even with JS disabled
- *    - Server Actions will enhance this (coming soon)
+ *    THE "ISLANDS" ARCHITECTURE:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  page.js (Server Component)                                        │
+ *    │  ├── Static header content                                         │
+ *    │  ├── Static form inputs                                            │
+ *    │  └── <ImagePicker> (Client Component "island")                    │
+ *    │       └── Has onClick, useRef, and other client features          │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ *    BENEFITS:
+ *    - Page stays a Server Component (smaller JS bundle)
+ *    - Only interactive parts ship JavaScript to the client
+ *    - Best of both worlds: SSR benefits + client interactivity
+ *
+ * 4. USING CLIENT COMPONENTS IN SERVER COMPONENTS
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "So back in page.js, in this form here where I have this image picker,
+ *    we can output the ImagePicker using our own custom ImagePicker
+ *    component."
+ *
+ *    - Just import and use like any React component
+ *    - The Client Component handles its own hydration
+ *    - Props are passed normally from Server to Client
  *
  * UPCOMING LESSONS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  LESSON 460: Build the ImagePicker component                           │
  * │  LESSON 461: Introduce Server Actions for form handling                │
  * │  LESSON 462+: Handle image upload and database storage                 │
  * └─────────────────────────────────────────────────────────────────────────┘

@@ -1,0 +1,174 @@
+/**
+ * ============================================================================
+ * IMAGE PICKER STYLES - LESSON 460: Configuring the Image Picker Component
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "Attached you also find an image-picker.module.css file with some styles
+ * we'll use."
+ *
+ * This CSS Module styles the custom image picker component:
+ * - Hidden native file input (replaced with custom button)
+ * - Custom styled "Pick an Image" button
+ * - Image preview container
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * CONTROLS CONTAINER
+ * ============================================================================
+ *
+ * Flexbox container that holds the button and preview side by side.
+ *
+ * LAYOUT:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  [Pick an Image Button]    [Preview Container]                          │
+ * │       ↑                           ↑                                     │
+ * │    .button                    .preview                                  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================================
+ * HIDDEN FILE INPUT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "We can start by adding a class here to this input, and that should be
+ * the input class. And this class will essentially make sure that the
+ * input itself is hidden. So now we can't see it anymore down there
+ * because I instead now wanna render my own button."
+ *
+ * WHY HIDE THE INPUT?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • Native file inputs have inconsistent styling across browsers        │
+ * │  • They're notoriously difficult to style with CSS                      │
+ * │  • By hiding it, we can use a custom button with full control          │
+ * │  • The input still exists in the DOM and handles file selection        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NOTE: We use display:none instead of visibility:hidden because:
+ * - It removes the element from layout entirely
+ * - The input can still be triggered programmatically via ref.click()
+ */
+.picker .input {
+  display: none;
+}
+
+/* ============================================================================
+ * CUSTOM FILE PICKER BUTTON
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "So therefore here, maybe after the input, we can output a button, which
+ * should receive a class of button and which should be of type button,
+ * which is important so that it won't submit the surrounding form."
+ *
+ * WHY type="button" IS CRITICAL:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DEFAULT BEHAVIOR:                                                      │
+ * │  • Buttons inside forms default to type="submit"                       │
+ * │  • Clicking would submit the entire meal form                          │
+ * │                                                                          │
+ * │  WITH type="button":                                                    │
+ * │  • Button does NOT submit the form                                     │
+ * │  • Only triggers the onClick handler                                    │
+ * │  • We use onClick to programmatically click the hidden file input       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+.picker .button {
+  border: 0;
+  padding: 0.5rem 1.5rem;
+  background: #a4abb9;
+  border-radius: 2px;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Hover/focus state for visual feedback */
+.picker .button:hover,
+.picker .button:focus {
+  background: #b3b9c6;
+}
+
+/* ============================================================================
+ * IMAGE PREVIEW CONTAINER
+ * ============================================================================
+ *
+ * Shows either a placeholder message or the selected image preview.
+ *
+ * STATES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  NO IMAGE SELECTED:                                                     │
+ * │  ┌──────────────┐                                                       │
+ * │  │              │                                                       │
+ * │  │  No image    │  ← Centered placeholder text                         │
+ * │  │   picked     │                                                       │
+ * │  │   yet.       │                                                       │
+ * │  └──────────────┘                                                       │
+ * │                                                                          │
+ * │  IMAGE SELECTED:                                                        │
+ * │  ┌──────────────┐                                                       │
+ * │  │  ┌────────┐  │                                                       │
+ * │  │  │ IMAGE  │  │  ← Preview of selected image                         │
+ * │  │  │PREVIEW │  │                                                       │
+ * │  │  └────────┘  │                                                       │
+ * │  └──────────────┘                                                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NOTE: position:relative is needed for the Image component with fill prop
+ */
+.preview {
+  width: 10rem;
+  height: 10rem;
+  border: 2px solid #a4abb9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #a4abb9;
+  position: relative;
+}
+
+/* Placeholder text styling when no image is selected */
+.preview p {
+  margin: 0;
+  padding: 1rem;
+}
+
+/* Image fills the preview container and maintains aspect ratio */
+.preview img {
+  object-fit: cover;
+}
+
+/**
+ * ============================================================================
+ * LESSON 460 CSS SUMMARY
+ * ============================================================================
+ *
+ * CLASSES DEFINED:
+ *
+ * 1. .controls    - Flexbox container for button and preview
+ * 2. .picker .input   - Hidden native file input
+ * 3. .picker .button  - Custom styled button to trigger file selection
+ * 4. .preview     - Container for image preview or placeholder text
+ *
+ * KEY TECHNIQUE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  CUSTOM FILE INPUT PATTERN:                                             │
+ * │                                                                          │
+ * │  1. Hide the native <input type="file">                                │
+ * │  2. Create a styled button that looks how you want                      │
+ * │  3. Use a React ref to connect them                                     │
+ * │  4. On button click, programmatically trigger input.click()            │
+ * │  5. The native file dialog opens, but user sees your custom UI         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
