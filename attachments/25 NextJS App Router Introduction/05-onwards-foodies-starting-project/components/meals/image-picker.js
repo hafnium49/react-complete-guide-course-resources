@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * IMAGE PICKER COMPONENT - LESSONS 460 & 461: Custom File Input with Preview
+ * IMAGE PICKER COMPONENT - LESSONS 460, 461 & 462: Custom File Input with Preview
  * ============================================================================
  *
  * LESSON 460 - BUILDING A CUSTOM IMAGE PICKER
@@ -237,8 +237,35 @@ export default function ImagePicker({ label, name }) {
      * This can happen if the user:
      * - Opens the file dialog but clicks Cancel
      * - Closes the dialog without selecting a file
+     *
+     * ================================================================
+     * IMPROVEMENT (LESSON 462): RESET PREVIEW ON CANCEL
+     * ================================================================
+     *
+     * If the user had previously selected an image, then opens the file
+     * dialog again but clicks Cancel, we should clear the preview to
+     * reflect that no file is currently selected.
+     *
+     * WITHOUT THIS FIX:
+     * ┌─────────────────────────────────────────────────────────────────┐
+     * │  1. User selects "burger.jpg" → Preview shows burger            │
+     * │  2. User clicks "Pick an Image" again                           │
+     * │  3. User clicks Cancel in file dialog                           │
+     * │  4. Preview still shows burger (misleading!)                    │
+     * │  5. Form submission would have NO image attached                │
+     * └─────────────────────────────────────────────────────────────────┘
+     *
+     * WITH THIS FIX:
+     * ┌─────────────────────────────────────────────────────────────────┐
+     * │  1. User selects "burger.jpg" → Preview shows burger            │
+     * │  2. User clicks "Pick an Image" again                           │
+     * │  3. User clicks Cancel in file dialog                           │
+     * │  4. Preview resets to "No image picked yet."                    │
+     * │  5. User clearly sees they need to pick an image again          │
+     * └─────────────────────────────────────────────────────────────────┘
      */
     if (!file) {
+      setPickedImage(null);
       return;
     }
 
@@ -354,7 +381,30 @@ export default function ImagePicker({ label, name }) {
          * │  name        │  Key used when extracting from FormData            │
          * │  ref         │  Allows programmatic access via useRef             │
          * │  onChange    │  Triggers handleImageChange when file selected     │
+         * │  required    │  Form can't submit without image (Lesson 462)      │
          * └───────────────────────────────────────────────────────────────────┘
+         *
+         * ================================================================
+         * IMPROVEMENT (LESSON 462): REQUIRED IMAGE VALIDATION
+         * ================================================================
+         *
+         * The `required` attribute ensures the form cannot be submitted
+         * without an image being selected. Even though the input is hidden,
+         * HTML form validation still applies.
+         *
+         * BROWSER BEHAVIOR:
+         * ┌─────────────────────────────────────────────────────────────────┐
+         * │  • User clicks "Share Meal" without selecting an image         │
+         * │  • Browser prevents form submission                            │
+         * │  • Browser may show validation message (varies by browser)     │
+         * │  • User must select an image before form can submit            │
+         * └─────────────────────────────────────────────────────────────────┘
+         *
+         * WHY THIS MATTERS FOR SERVER ACTIONS:
+         * When we add Server Actions for form submission, we expect the
+         * image to be present. Client-side validation with `required`
+         * provides a first line of defense (server-side validation should
+         * also be added for security).
          */}
         <input
           className={classes.input}
@@ -364,6 +414,7 @@ export default function ImagePicker({ label, name }) {
           name={name}
           ref={imageInput}
           onChange={handleImageChange}
+          required
         />
 
         {/**
@@ -453,7 +504,7 @@ export default function ImagePicker({ label, name }) {
 
 /**
  * ============================================================================
- * LESSONS 460 & 461 - IMAGE PICKER SUMMARY
+ * LESSONS 460, 461 & 462 - IMAGE PICKER SUMMARY
  * ============================================================================
  *
  * LESSON 460 - CUSTOM FILE INPUT PATTERN:
@@ -525,6 +576,41 @@ export default function ImagePicker({ label, name }) {
  *    - Parent container MUST have position: relative
  *    - Used when image dimensions are unknown at build time
  *
+ * LESSON 462 - IMPROVING THE IMAGE PICKER:
+ *
+ * 7. RESET PREVIEW WHEN FILE DIALOG CANCELLED
+ *
+ *    PROBLEM: If user selects an image, then opens the picker again
+ *    and clicks Cancel, the preview still shows the old image even
+ *    though the form input is now empty.
+ *
+ *    SOLUTION: Add setPickedImage(null) in the if (!file) block
+ *
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  if (!file) {                                                       │
+ *    │    setPickedImage(null);  // ← Reset preview to "No image picked"  │
+ *    │    return;                                                          │
+ *    │  }                                                                  │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 8. REQUIRED ATTRIBUTE FOR FORM VALIDATION
+ *
+ *    PROBLEM: Form could be submitted without any image selected,
+ *    which would cause errors when the Server Action tries to process it.
+ *
+ *    SOLUTION: Add required prop to the hidden file input
+ *
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  <input                                                             │
+ *    │    ...                                                              │
+ *    │    required  // ← Browser prevents form submit without image       │
+ *    │  />                                                                 │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ *    NOTE: Even though the input is hidden, HTML validation still works.
+ *    This is client-side validation only - server-side validation is
+ *    still needed for security.
+ *
  * WHAT'S WORKING NOW:
  *
  * INSTRUCTOR QUOTE:
@@ -533,12 +619,7 @@ export default function ImagePicker({ label, name }) {
  * I can see that preview here. So that is working."
  *
  * COMING NEXT:
- *
- * INSTRUCTOR QUOTE:
- * "And with that, we're now finally ready to also work on the submission
- * of this form."
- *
- * → Next lesson will add Server Actions for form submission
+ * → Server Actions for form submission
  *
  * ============================================================================
  */
