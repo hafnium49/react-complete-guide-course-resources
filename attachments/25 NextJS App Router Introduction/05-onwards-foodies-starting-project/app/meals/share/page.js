@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SHARE MEAL PAGE - LESSONS 459-464 & 467: Form, Image Picker, Server Actions & Loading State
+ * SHARE MEAL PAGE - LESSONS 459-464, 467 & 469: Form, Server Actions & Form State
  * ============================================================================
  *
  * LESSON 459 - CREATING THE MEAL SUBMISSION FORM
@@ -22,23 +22,37 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * LESSON 463 - INTRODUCING SERVER ACTIONS
+ * LESSON 469 - WHY THIS PAGE IS NOW A CLIENT COMPONENT
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now when it comes to handling form submissions, we could do that as we do
- * it in most React projects. We can go to the component that contains the
- * form and then we could add the onSubmit prop and define a function that
- * should be executed when the form is submitted. There, we could then prevent
- * the browser default, manually collect all the data, and send that data to
- * a backend."
+ * "With that though, we got everything set up that needs to be set up, but
+ * we'll now get an error if we try to load the page because useFormState,
+ * since it in the end again deals with updating the client, needs to be
+ * executed in a client component and therefore we should add use client
+ * here in our shareMeal page component file."
  *
  * INSTRUCTOR QUOTE:
- * "But again, here we already are on the backend, at least kind of. We have
- * a full stack application that has both backend and frontend. And that's
- * why Next.js gives us a more powerful and convenient pattern than manually
- * handling the form submission and collecting the data and sending it to
- * a server."
+ * "We could again try to outsource this into some nested component, but
+ * here I'll stick to this component, add use client and save that."
+ *
+ * WHY 'use client' IS NOW REQUIRED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  useFormState hook requires a Client Component because:                │
+ * │  • It manages client-side state (the form response)                    │
+ * │  • It needs to re-render the component when state changes              │
+ * │  • It's about updating the UI based on Server Action responses         │
+ * │                                                                          │
+ * │  TRADE-OFF:                                                             │
+ * │  • Page is now a Client Component (more JS to browser)                 │
+ * │  • But we get inline error handling (much better UX!)                  │
+ * │  • Server Action still runs on the server (secure)                     │
+ * │  • Could outsource to nested component if needed                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * TRADITIONAL REACT VS SERVER ACTIONS (Lesson 463)
+ * ============================================================================
  *
  * TRADITIONAL REACT VS SERVER ACTIONS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -58,24 +72,42 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * SERVER COMPONENT VS CLIENT COMPONENT
+ */
+'use client';
+
+import { useFormState } from 'react-dom';
+/**
+ * ============================================================================
+ * LESSON 469 - useFormState HOOK
  * ============================================================================
  *
  * INSTRUCTOR QUOTE:
- * "Now this form here in this page component file, it's part of a server
- * component. This again is a server component because we have no use client
- * directive at the top."
+ * "Well, we can use it with help of another hook, another hook provided by
+ * React dom, the useFormState hook. So not useFormStatus, which we had before,
+ * but useFormState. Sounds similar but is a different hook."
  *
- * WHY SERVER COMPONENT FOR A FORM?
+ * useFormState vs useFormStatus:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  ✓ Forms work without JavaScript (progressive enhancement)             │
- * │  ✓ Can define Server Actions directly in the component                 │
- * │  ✓ Reduced JavaScript bundle size                                       │
+ * │  useFormStatus (Lesson 467):                                            │
+ * │  • Returns { pending, data, method, action }                           │
+ * │  • Tracks whether form is currently submitting                         │
+ * │  • Used for loading indicators / disable buttons                       │
+ * │  • Must be INSIDE the form                                              │
  * │                                                                          │
- * │  SOLUTION FOR INTERACTIVE PARTS (Lesson 460):                           │
- * │  ✓ Interactive parts (ImagePicker) are separate Client Components      │
- * │  ✓ This page stays a Server Component for optimal performance          │
+ * │  useFormState (Lesson 469):                                             │
+ * │  • Returns [state, formAction]                                          │
+ * │  • Manages state based on Server Action responses                       │
+ * │  • Used for displaying validation errors                                │
+ * │  • Wraps around the Server Action                                       │
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "This hook also must be imported from React dom like this."
+ *
+ * WHY react-dom (NOT react)?
+ * • Form handling is DOM-specific (browsers have forms)
+ * • Both useFormStatus and useFormState live in react-dom
+ * • Core React hooks (useState, useEffect) are in 'react'
  *
  * ============================================================================
  */
@@ -150,18 +182,96 @@ import { shareMeal } from '@/lib/actions';
  * │  │   └── <p>           → Subtitle text                                  │
  * │  │                                                                       │
  * │  └── <main>            → Form container                                 │
- * │      └── <form action={shareMeal}>  → Connected to Server Action        │
+ * │      └── <form action={formAction}>  → Connected via useFormState       │
  * │          ├── Row       → Name + Email (side by side)                    │
  * │          ├── Title     → Meal title input                               │
  * │          ├── Summary   → Short description input                        │
  * │          ├── Textarea  → Detailed instructions                          │
  * │          ├── ImagePicker → Custom image upload (Client Component)       │
+ * │          ├── Error     → Validation error message (if any)              │
  * │          └── Button    → Submit button                                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * @returns {JSX.Element} The share meal form page
  */
 export default function ShareMealPage() {
+  /**
+   * ================================================================
+   * LESSON 469 - useFormState HOOK USAGE
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "And then this hook here works a little bit like the useState hook that's
+   * built into React because this hook is responsible for managing the state
+   * of this page or of this component, which uses a forum that will be
+   * submitted with help of Server Actions."
+   *
+   * HOOK ARGUMENTS:
+   *
+   * INSTRUCTOR QUOTE:
+   * "useFormState needs two arguments. And the first argument is the actual
+   * Server Action that should be triggered when the form is submitted, in
+   * this case shareMeal. The second argument you pass to useFormState is the
+   * initial state of this component."
+   *
+   * ARGUMENTS EXPLAINED:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  ARGUMENT 1: shareMeal (Server Action)                              │
+   * │  • The function to execute when form is submitted                   │
+   * │  • Must accept (prevState, formData) - new signature!               │
+   * │  • Returns response objects that become the new state               │
+   * │                                                                      │
+   * │  ARGUMENT 2: { message: null } (Initial State)                      │
+   * │  • The state before any submission has occurred                     │
+   * │  • Shape should match what the Server Action returns                │
+   * │  • Used for first render before any response received               │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "So the initial value that should be used if we haven't received a response
+   * from this action yet, and that could be anything you want, for example,
+   * null or an object where you have a message field that holds a value of null.
+   * To reassemble the shape of that response, we will eventually send back."
+   *
+   * RETURN VALUE:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Then useFormState will give you an array with exactly two elements, which
+   * might sound familiar because the default useState hook provided by React
+   * also gives you two elements."
+   *
+   * INSTRUCTOR QUOTE:
+   * "We get the current state, the current response you could say, of this page
+   * here, of this component here. So the latest response returned by this Server
+   * Action in the end or this initial state if no response has been received yet.
+   * And we get another formAction here, which we should actually set as a value
+   * for this action prop on the form now."
+   *
+   * RETURN VALUE EXPLAINED:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  [state, formAction] = useFormState(shareMeal, initialState)        │
+   * │                                                                      │
+   * │  state:                                                              │
+   * │  • Current state (either initial or latest Server Action response)  │
+   * │  • In our case: { message: null } or { message: 'Invalid input.' } │
+   * │  • Updates automatically when Server Action returns                 │
+   * │                                                                      │
+   * │  formAction:                                                         │
+   * │  • A wrapped version of shareMeal                                   │
+   * │  • Must be used as the form's action prop                           │
+   * │  • Allows useFormState to intercept and manage responses            │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * WHY formAction INSTEAD OF shareMeal?
+   *
+   * INSTRUCTOR QUOTE:
+   * "And this must be done so that useFormState can basically step in and
+   * manage that state for this component. And that state depends on the
+   * execution of that Server Action and its response. And that's why
+   * useFormState kind of needs to act as a man in the middle, you could say."
+   */
+  const [state, formAction] = useFormState(shareMeal, { message: null });
+
   return (
     <>
       {/**
@@ -231,7 +341,32 @@ export default function ShareMealPage() {
        * the page was prevented."
        */}
       <main className={classes.main}>
-        <form className={classes.form} action={shareMeal}>
+        {/**
+         * ================================================================
+         * LESSON 469 - FORM ACTION CHANGE
+         * ================================================================
+         *
+         * INSTRUCTOR QUOTE:
+         * "So instead of setting share meal as a value for action down here,
+         * I'm now setting this formAction, which I'm getting back from
+         * useFormState as a value for the action down there."
+         *
+         * WHY formAction INSTEAD OF shareMeal?
+         * ┌─────────────────────────────────────────────────────────────────┐
+         * │  BEFORE (Lesson 464):                                          │
+         * │  <form action={shareMeal}>                                      │
+         * │  • Form directly calls shareMeal                               │
+         * │  • No way to get response back to component                    │
+         * │                                                                 │
+         * │  AFTER (Lesson 469):                                           │
+         * │  <form action={formAction}>                                     │
+         * │  • formAction wraps shareMeal                                  │
+         * │  • useFormState intercepts the response                        │
+         * │  • state is updated with the response                          │
+         * │  • Component re-renders with new state                         │
+         * └─────────────────────────────────────────────────────────────────┘
+         */}
+        <form className={classes.form} action={formAction}>
           {/**
            * ROW 1: NAME AND EMAIL (SIDE BY SIDE)
            *
@@ -315,6 +450,61 @@ export default function ShareMealPage() {
 
           {/**
            * ================================================================
+           * LESSON 469 - ERROR MESSAGE DISPLAY
+           * ================================================================
+           *
+           * INSTRUCTOR QUOTE:
+           * "With that, we can then use this state here, which will essentially
+           * be either this year or any response we got back from ShareMeal to
+           * output data in this component."
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now, in this case, I know that state will therefore either be an
+           * object with a message that's a string or it'll be an object with
+           * a message that's null. So we can use it down here at the end of
+           * the form right before the submit button, let's say, to output an
+           * error message."
+           *
+           * CONDITIONAL RENDERING:
+           *
+           * INSTRUCTOR QUOTE:
+           * "For that, we can check if state.message is truthy, which means we
+           * have a message. And in that case I wanna output it here between my
+           * paragraph tags."
+           *
+           * STATE VALUES AND WHAT RENDERS:
+           * ┌─────────────────────────────────────────────────────────────────┐
+           * │  STATE VALUE              │  WHAT RENDERS                       │
+           * │  ────────────────────────│────────────────────────────────── │
+           * │  { message: null }        │  Nothing (initial state)           │
+           * │  { message: 'Invalid...' }│  <p>Invalid...</p> (error!)        │
+           * └─────────────────────────────────────────────────────────────────┘
+           *
+           * USER EXPERIENCE IMPROVEMENT:
+           * ┌─────────────────────────────────────────────────────────────────┐
+           * │  BEFORE (Lesson 468 - throwing error):                         │
+           * │  • User submits invalid form                                   │
+           * │  • Entire page replaced with error.js                          │
+           * │  • All form input is LOST                                      │
+           * │  • User must start over                                        │
+           * │                                                                 │
+           * │  AFTER (Lesson 469 - useFormState):                            │
+           * │  • User submits invalid form                                   │
+           * │  • Error message appears on SAME page                          │
+           * │  • All form input is PRESERVED                                 │
+           * │  • User can fix and resubmit                                   │
+           * └─────────────────────────────────────────────────────────────────┘
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now of course we could make it pop more. We could make sure that
+           * it stands out, that it's more descriptive and you can do all these
+           * things. You can, for example, tweak that message here, which in
+           * the end is the message that's showing up on the screen."
+           */}
+          {state.message && <p>{state.message}</p>}
+
+          {/**
+           * ================================================================
            * FORM ACTIONS - SUBMIT BUTTON (LESSON 467)
            * ================================================================
            *
@@ -371,7 +561,7 @@ export default function ShareMealPage() {
 
 /**
  * ============================================================================
- * LESSONS 459-464 & 467 - SHARE MEAL FORM SUMMARY
+ * LESSONS 459-464, 467 & 469 - SHARE MEAL FORM SUMMARY
  * ============================================================================
  *
  * LESSON 459 - FORM STRUCTURE:
@@ -510,15 +700,90 @@ export default function ShareMealPage() {
  * │  └── useFormStatus() from react-dom                                    │
  * │  └── Shows "Submitting..." and disables button when pending           │
  * │                                                                          │
- * │  app/meals/share/page.js (this file - Server Component)               │
+ * │  app/meals/share/page.js (this file - was Server Component)           │
  * │  └── import MealsFormSubmit from '@/components/meals/meals-form-submit'│
  * │  └── <MealsFormSubmit /> inside the form                              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * LESSON 469 - useFormState FOR ERROR HANDLING:
+ *
+ * 9. useFormState HOOK (from react-dom)
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Well, we can use it with help of another hook, another hook provided
+ *    by React dom, the useFormState hook. So not useFormStatus, which we
+ *    had before, but useFormState. Sounds similar but is a different hook."
+ *
+ *    USAGE:
+ *    const [state, formAction] = useFormState(shareMeal, { message: null });
+ *
+ *    KEY POINTS:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  • Takes Server Action + initial state as arguments                │
+ *    │  • Returns [currentState, wrappedFormAction]                       │
+ *    │  • formAction must be used as form's action prop                   │
+ *    │  • state updates when Server Action returns a response             │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 10. SERVER ACTION SIGNATURE CHANGE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The second parameter will still be that submitted data, but the first
+ *    parameter will be the previous state."
+ *
+ *    BEFORE: shareMeal(formData)
+ *    AFTER:  shareMeal(prevState, formData)
+ *
+ * 11. RETURNING INSTEAD OF THROWING
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "In Server Actions, you are not limited to redirecting or throwing
+ *    errors. Instead, you can also return values. You can return response
+ *    objects to be precise."
+ *
+ *    return { message: 'Invalid input.' };
+ *
+ * 12. THIS PAGE IS NOW A CLIENT COMPONENT
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "We'll now get an error if we try to load the page because useFormState,
+ *    since it in the end again deals with updating the client, needs to be
+ *    executed in a client component."
+ *
+ *    'use client' added at top of file
+ *
+ * ARCHITECTURE AFTER LESSON 469:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  app/meals/share/page.js (this file - NOW Client Component!)           │
+ * │  └── 'use client' at top                                               │
+ * │  └── useFormState(shareMeal, { message: null })                        │
+ * │  └── <form action={formAction}>  ← Note: formAction, not shareMeal    │
+ * │  └── {state.message && <p>{state.message}</p>}                        │
+ * │                                                                          │
+ * │  lib/actions.js ('use server')                                         │
+ * │  └── shareMeal(prevState, formData)  ← New signature!                  │
+ * │  └── Returns { message: '...' } on error                               │
+ * │  └── redirect('/meals') on success                                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * COMPLETE useFormState FLOW:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. Component renders with initial state { message: null }             │
+ * │  2. User fills out form                                                │
+ * │  3. User clicks "Share Meal"                                           │
+ * │  4. formAction is called (wraps shareMeal)                             │
+ * │  5. shareMeal(prevState, formData) executes on server                  │
+ * │  6a. If VALID: saveMeal() → redirect('/meals')                        │
+ * │  6b. If INVALID: return { message: 'Invalid input.' }                 │
+ * │  7. useFormState receives response, updates state                      │
+ * │  8. Component re-renders with new state                                │
+ * │  9. Error message displays (form input preserved!)                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * COMING NEXT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  • Add form validation and error handling                             │
- * │  • Display validation errors to users                                  │
+ * │  • Cache revalidation (revalidatePath)                                 │
+ * │  • Image optimization with Next.js Image component                     │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================

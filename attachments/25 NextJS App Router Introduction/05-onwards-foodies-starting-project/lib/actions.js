@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SERVER ACTIONS FILE - LESSONS 464, 466 & 468: Server Actions, Data Storage & Validation
+ * SERVER ACTIONS FILE - LESSONS 464, 466, 468 & 469: Server Actions, Data Storage, Validation & Form State
  * ============================================================================
  *
  * LESSON 464 - WHY SEPARATE SERVER ACTIONS INTO THEIR OWN FILE?
@@ -269,9 +269,48 @@ function isInvalidText(text) {
  * │  }                                                                      │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * ============================================================================
+ * LESSON 469 - FUNCTION SIGNATURE CHANGE FOR useFormState
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "With that though, we also need to tweak the shareMeal action though,
+ * because when passing it as a value to useFormState, it must have a different
+ * shape than it did before. It should no longer just accept that form data.
+ * Instead, it should now actually accept two parameters."
+ *
+ * INSTRUCTOR QUOTE:
+ * "The second parameter will still be that submitted data, but the first
+ * parameter will be the previous state. So either that initial state that
+ * we set up here or any other previous responses that might have been
+ * generated. I don't care about it here, but still we need to accept it
+ * because form data is now the second argument we get, not the first."
+ *
+ * FUNCTION SIGNATURE CHANGE:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (Lesson 468):                                                   │
+ * │  export async function shareMeal(formData) {                            │
+ * │    // formData is the only parameter                                    │
+ * │  }                                                                      │
+ * │                                                                          │
+ * │  AFTER (Lesson 469 - for useFormState):                                 │
+ * │  export async function shareMeal(prevState, formData) {                 │
+ * │    // prevState: previous state/response (from useFormState)            │
+ * │    // formData: the actual form data (now SECOND parameter!)            │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHY THIS SIGNATURE CHANGE IS REQUIRED:
+ * - useFormState needs to pass the previous state to the action
+ * - This enables the action to know what was returned previously
+ * - The formData is now passed as the SECOND argument
+ * - If you forget this, you'll try to call .get() on the state object!
+ *
+ * @param {Object} prevState - Previous state from useFormState (or initial state)
  * @param {FormData} formData - Form data automatically provided by the form
+ * @returns {Object} Response object with message property (on validation error)
  */
-export async function shareMeal(formData) {
+export async function shareMeal(prevState, formData) {
   /**
    * EXTRACTING FORM DATA
    *
@@ -375,49 +414,60 @@ export async function shareMeal(formData) {
     meal.image.size === 0
   ) {
     /**
-     * THROWING AN ERROR FOR INVALID INPUT
+     * ================================================================
+     * LESSON 469 - RETURNING ERROR RESPONSE INSTEAD OF THROWING
+     * ================================================================
      *
      * INSTRUCTOR QUOTE:
-     * "And in all those cases I wanna make it into this if block, and then
-     * do what? Well, then we could throw an error. So, we could throw an
-     * error where we say invalid input."
+     * "So how can we handle validation errors like this in a more elegant
+     * way? Well, in Server Actions, as we have it here, you are not limited
+     * to redirecting or throwing errors. Instead, you can also return values.
+     * You can return response objects to be precise."
      *
-     * WHAT HAPPENS WHEN WE THROW:
+     * INSTRUCTOR QUOTE:
+     * "So here we could return an object which maybe has a message field
+     * which holds a value of invalid input."
+     *
+     * WHY RETURN INSTEAD OF THROW?
      * ┌─────────────────────────────────────────────────────────────────────┐
-     * │  1. Error is thrown from the Server Action                         │
-     * │  2. Next.js catches the error                                      │
-     * │  3. Next.js looks for nearest error.js file                        │
-     * │  4. Error boundary renders the error UI                            │
-     * │  5. User sees error page (app/meals/share/error.js)                │
-     * └─────────────────────────────────────────────────────────────────────┘
-     *
-     * TRADE-OFF - THROWING vs RETURNING ERROR STATE:
-     *
-     * INSTRUCTOR QUOTE:
-     * "Throwing an error as we do it here works, but it also means that we
-     * destroy the entire input of the user. So, we throw away everything
-     * they entered. And that's not necessarily a great user experience."
-     *
-     * INSTRUCTOR QUOTE:
-     * "It would be better if we would stay on this page and just output
-     * some error message somewhere on this page, above the form or below
-     * the form, for example. And that's therefore what we'll implement next."
-     *
-     * ┌─────────────────────────────────────────────────────────────────────┐
-     * │  CURRENT APPROACH (throw error):                                   │
+     * │  THROWING (Lesson 468):                                            │
+     * │  throw new Error('Invalid input');                                 │
      * │  ✗ User loses all form input                                       │
-     * │  ✗ Redirects to error page                                         │
-     * │  ✗ User must start over                                            │
-     * │  ✓ Simple to implement                                             │
+     * │  ✗ Redirects to error.js page                                      │
+     * │  ✗ User must start over from scratch                               │
      * │                                                                      │
-     * │  BETTER APPROACH (coming next lesson):                             │
-     * │  ✓ User keeps form input                                           │
+     * │  RETURNING (Lesson 469):                                           │
+     * │  return { message: 'Invalid input.' };                             │
+     * │  ✓ User KEEPS all form input                                       │
      * │  ✓ Stays on same page                                              │
-     * │  ✓ Shows error message inline                                      │
-     * │  → Requires useFormState (React 19) or similar                     │
+     * │  ✓ Error message shown inline                                      │
+     * │  ✓ Much better user experience!                                    │
      * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * RESPONSE OBJECT REQUIREMENTS:
+     *
+     * INSTRUCTOR QUOTE:
+     * "Though the shape of this object is totally up to you, it's just
+     * important that it's a serializable object, which means it, for example,
+     * shouldn't include any methods because those would get lost whilst being
+     * sent to the client. But any simple values like strings, numbers, nested
+     * objects or nested arrays, those values all work."
+     *
+     * SERIALIZABLE (OK):                NON-SERIALIZABLE (NOT OK):
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  ✓ Strings: "error message"     ✗ Functions: () => {}              │
+     * │  ✓ Numbers: 404                 ✗ Methods: { doThing() {} }        │
+     * │  ✓ Booleans: true/false         ✗ Classes: new MyClass()           │
+     * │  ✓ Arrays: [1, 2, 3]            ✗ Symbols: Symbol('x')             │
+     * │  ✓ Objects: { key: 'value' }    ✗ undefined (use null instead)     │
+     * │  ✓ null                                                             │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * This response will be received by useFormState in the component.
      */
-    throw new Error('Invalid input');
+    return {
+      message: 'Invalid input.',
+    };
   }
 
   /**
@@ -488,7 +538,7 @@ export async function shareMeal(formData) {
 
 /**
  * ============================================================================
- * LESSONS 464, 466 & 468 - SERVER ACTIONS SUMMARY
+ * LESSONS 464, 466, 468 & 469 - SERVER ACTIONS SUMMARY
  * ============================================================================
  *
  * LESSON 464 - SERVER ACTIONS SEPARATION:
@@ -560,7 +610,7 @@ export async function shareMeal(formData) {
  *    │  • Image: Must exist and have size > 0                             │
  *    └─────────────────────────────────────────────────────────────────────┘
  *
- * 9. THROWING ERRORS ON INVALID INPUT
+ * 9. LESSON 468: THROWING ERRORS (OLD APPROACH)
  *
  *    INSTRUCTOR QUOTE:
  *    "Throwing an error as we do it here works, but it also means that we
@@ -570,44 +620,79 @@ export async function shareMeal(formData) {
  *    → User loses all form data
  *    → Gets redirected to error page
  *    → Must start over
- *    → Better approach coming in next lesson!
  *
- * COMPLETE FLOW AFTER LESSON 468:
+ * LESSON 469 - RETURNING RESPONSES & useFormState:
+ *
+ * 10. SERVER ACTIONS CAN RETURN VALUES
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Well, in Server Actions, as we have it here, you are not limited to
+ *    redirecting or throwing errors. Instead, you can also return values.
+ *    You can return response objects to be precise."
+ *
+ *    return { message: 'Invalid input.' };
+ *    → User KEEPS form input
+ *    → Stays on same page
+ *    → Error shown inline
+ *
+ * 11. FUNCTION SIGNATURE CHANGE FOR useFormState
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The second parameter will still be that submitted data, but the first
+ *    parameter will be the previous state."
+ *
+ *    BEFORE: shareMeal(formData)
+ *    AFTER:  shareMeal(prevState, formData)
+ *
+ * 12. RESPONSE MUST BE SERIALIZABLE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "It's just important that it's a serializable object, which means it,
+ *    for example, shouldn't include any methods because those would get
+ *    lost whilst being sent to the client."
+ *
+ *    ✓ Strings, numbers, booleans, arrays, objects, null
+ *    ✗ Functions, methods, classes, symbols
+ *
+ * COMPLETE FLOW AFTER LESSON 469:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  USER ACTION:                                                           │
  * │  1. Fills out form on /meals/share                                     │
  * │  2. Clicks "Share Meal" button                                          │
  * │                                                                          │
  * │  SERVER ACTION (shareMeal):                                             │
- * │  3. Extracts form data into meal object                                 │
- * │  4. VALIDATES all fields (Lesson 468):                                  │
+ * │  3. Receives (prevState, formData) - note new signature!               │
+ * │  4. Extracts form data into meal object                                 │
+ * │  5. VALIDATES all fields:                                               │
  * │     - Text fields: not empty after trim                                 │
  * │     - Email: must include @                                             │
  * │     - Image: must exist with size > 0                                   │
- * │  5. If invalid → throws Error → shows error.js page                    │
- * │  6. Calls saveMeal(meal):                                               │
- * │     a. Generates slug from title                                        │
- * │     b. Sanitizes instructions (XSS)                                     │
- * │     c. Saves image to public/images/                                    │
- * │     d. Inserts record into SQLite                                       │
- * │  7. Calls redirect('/meals')                                            │
+ * │  6. If invalid → returns { message: '...' } (Lesson 469)               │
+ * │     → useFormState receives this response                              │
+ * │     → Error message shown inline on page                                │
+ * │     → User KEEPS their form input!                                      │
+ * │  7. If valid → saveMeal(meal) → redirect('/meals')                      │
  * │                                                                          │
  * │  RESULT:                                                                │
- * │  8. User sees /meals page with their new meal in the list!             │
- * │     (Or error page if validation failed)                               │
+ * │  • SUCCESS: User sees /meals page with their new meal                  │
+ * │  • ERROR: User stays on form with error message (input preserved)      │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * ARCHITECTURE OVERVIEW:
+ * ARCHITECTURE OVERVIEW (After Lesson 469):
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  app/meals/share/page.js                                               │
- * │  └── <form action={shareMeal}>                                          │
- * │           │                                                              │
- * │           ▼                                                              │
+ * │  app/meals/share/page.js ('use client')                                │
+ * │  └── useFormState(shareMeal, initialState)                             │
+ * │       │                                                                  │
+ * │       ├── Returns [state, formAction]                                   │
+ * │       │                                                                  │
+ * │       └── <form action={formAction}>  ← Note: formAction, not shareMeal │
+ * │                │                                                        │
+ * │                ▼                                                        │
  * │  lib/actions.js                                                         │
- * │  └── shareMeal(formData)                                                │
+ * │  └── shareMeal(prevState, formData)  ← New signature!                  │
  * │           │                                                              │
  * │      ┌────┴────┐                                                        │
- * │      │ VALIDATE │ ← Lesson 468                                          │
+ * │      │ VALIDATE │                                                       │
  * │      └────┬────┘                                                        │
  * │           │                                                              │
  * │    ┌──────┴──────┐                                                      │
@@ -615,17 +700,21 @@ export async function shareMeal(formData) {
  * │  INVALID       VALID                                                    │
  * │    │             │                                                       │
  * │    ▼             ▼                                                       │
- * │  throw Error   lib/meals.js                                             │
- * │    │           └── saveMeal(meal)                                       │
- * │    │                    │                                               │
- * │    ▼                    ▼                                               │
- * │  error.js         redirect('/meals')                                    │
- * │  (share/)         → user sees meal!                                     │
+ * │  return        saveMeal()                                               │
+ * │  {message}       │                                                      │
+ * │    │             ▼                                                       │
+ * │    │        redirect('/meals')                                          │
+ * │    │                                                                     │
+ * │    ▼                                                                     │
+ * │  useFormState receives response                                         │
+ * │  → state.message is now the error                                       │
+ * │  → Component re-renders with error displayed                            │
+ * │  → Form input is PRESERVED!                                             │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * COMING NEXT:
- * • Better error handling (stay on page, show inline errors)
- * • useFormState for returning validation errors
+ * • Cache revalidation (revalidatePath)
+ * • Image optimization with Next.js Image component
  *
  * ============================================================================
  */
