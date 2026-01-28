@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SERVER ACTIONS FILE - LESSONS 464 & 466: Server Actions & Data Storage
+ * SERVER ACTIONS FILE - LESSONS 464, 466 & 468: Server Actions, Data Storage & Validation
  * ============================================================================
  *
  * LESSON 464 - WHY SEPARATE SERVER ACTIONS INTO THEIR OWN FILE?
@@ -197,6 +197,50 @@ import { redirect } from 'next/navigation';
 
 /**
  * ============================================================================
+ * LESSON 468 - SERVER-SIDE VALIDATION HELPER FUNCTION
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And you should now probably do that for all those fields. And then over
+ * here I'll actually add a helper function, isInvalidText, could be a fitting
+ * name, where I expect to get some text and where I return the result of this
+ * check so that I return true if the text we got is either false, or it's an
+ * empty string after trimming it."
+ *
+ * WHY THIS HELPER FUNCTION?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Instead of repeating the same validation logic for each field:        │
+ * │                                                                          │
+ * │  VERBOSE (without helper):                                               │
+ * │  if (!meal.title || meal.title.trim() === '') { ... }                   │
+ * │  if (!meal.summary || meal.summary.trim() === '') { ... }               │
+ * │  if (!meal.instructions || meal.instructions.trim() === '') { ... }     │
+ * │                                                                          │
+ * │  CLEAN (with helper):                                                    │
+ * │  if (isInvalidText(meal.title) || isInvalidText(meal.summary) || ...)   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHAT THIS FUNCTION CHECKS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  INPUT                  │  RETURNS  │  REASON                           │
+ * │  ──────────────────────│──────────│─────────────────────────────────── │
+ * │  undefined              │  true     │  Field wasn't in form data        │
+ * │  null                   │  true     │  Explicitly null value            │
+ * │  ''                     │  true     │  Empty string                     │
+ * │  '   '                  │  true     │  Only whitespace (trimmed = '')   │
+ * │  'Hello'                │  false    │  Valid text input                 │
+ * │  '  Hello  '            │  false    │  Valid text (whitespace trimmed) │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @param {string} text - The text value to validate
+ * @returns {boolean} true if text is invalid (falsy or empty after trim)
+ */
+function isInvalidText(text) {
+  return !text || text.trim() === '';
+}
+
+/**
+ * ============================================================================
  * SHARE MEAL SERVER ACTION
  * ============================================================================
  *
@@ -249,6 +293,132 @@ export async function shareMeal(formData) {
     creator: formData.get('name'),
     creator_email: formData.get('email'),
   };
+
+  /**
+   * ================================================================
+   * LESSON 468 - SERVER-SIDE VALIDATION
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "One other thing you should typically do when handling user data and form
+   * submissions is validate the values you are getting. And at the moment,
+   * we're not performing any validation at all in our server action here."
+   *
+   * WHY CLIENT-SIDE VALIDATION ISN'T ENOUGH:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now, we do have some validation, because in that form, I'm using those
+   * built-in special attributes. Those required props here, to be precise,
+   * to make sure that we can't submit an empty form... But it's not enough,
+   * because I can disable that by going through the DevTools and removing
+   * that."
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now of course, many users won't know about that, but some do, and in
+   * that case, those users could submit invalid values to my backend."
+   *
+   * CLIENT-SIDE vs SERVER-SIDE VALIDATION:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  CLIENT-SIDE (required attribute in HTML):                          │
+   * │  ✗ Can be bypassed via browser DevTools                            │
+   * │  ✗ Can be bypassed by disabling JavaScript                         │
+   * │  ✗ Can be bypassed by sending direct HTTP requests                 │
+   * │  ✓ Good for UX - gives immediate feedback                          │
+   * │                                                                      │
+   * │  SERVER-SIDE (this validation):                                     │
+   * │  ✓ Cannot be bypassed by users                                     │
+   * │  ✓ Validates data before database insertion                        │
+   * │  ✓ Protects data integrity                                          │
+   * │  ✓ ESSENTIAL for security                                           │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "So, here we could, for example, check if meal.title, once we trim it
+   * to remove excess whitespace on the left and right, we could check if
+   * that's then equal to an empty string, which would mean that it's an
+   * invalid value. We could also check if meal.title maybe even doesn't
+   * exist. So if it's false, so if it wasn't part of the submitted data
+   * at all."
+   *
+   * VALIDATION RULES:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  FIELD           │  VALIDATION                                      │
+   * │  ────────────────│────────────────────────────────────────────────  │
+   * │  title           │  Must exist and not be empty after trim         │
+   * │  summary         │  Must exist and not be empty after trim         │
+   * │  instructions    │  Must exist and not be empty after trim         │
+   * │  creator         │  Must exist and not be empty after trim         │
+   * │  creator_email   │  Must exist, not empty, AND contain @           │
+   * │  image           │  Must exist AND have size > 0                   │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE (on email validation):
+   * "And we also might wanna check whether that maybe exists, but is an
+   * invalid email address, so, I'll also check if meal.creator_email does
+   * not include an @ symbol by adding an exclamation mark here at the
+   * beginning."
+   *
+   * INSTRUCTOR QUOTE (on image validation):
+   * "And last but not least, I want to check the image that we got. I wanna
+   * check if maybe we don't have an image. So, if it's undefined, or if
+   * that image here has a size that's equal to zero, which means it's some
+   * kind of invalid file."
+   */
+  if (
+    isInvalidText(meal.title) ||
+    isInvalidText(meal.summary) ||
+    isInvalidText(meal.instructions) ||
+    isInvalidText(meal.creator) ||
+    isInvalidText(meal.creator_email) ||
+    !meal.creator_email.includes('@') ||
+    !meal.image ||
+    meal.image.size === 0
+  ) {
+    /**
+     * THROWING AN ERROR FOR INVALID INPUT
+     *
+     * INSTRUCTOR QUOTE:
+     * "And in all those cases I wanna make it into this if block, and then
+     * do what? Well, then we could throw an error. So, we could throw an
+     * error where we say invalid input."
+     *
+     * WHAT HAPPENS WHEN WE THROW:
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  1. Error is thrown from the Server Action                         │
+     * │  2. Next.js catches the error                                      │
+     * │  3. Next.js looks for nearest error.js file                        │
+     * │  4. Error boundary renders the error UI                            │
+     * │  5. User sees error page (app/meals/share/error.js)                │
+     * └─────────────────────────────────────────────────────────────────────┘
+     *
+     * TRADE-OFF - THROWING vs RETURNING ERROR STATE:
+     *
+     * INSTRUCTOR QUOTE:
+     * "Throwing an error as we do it here works, but it also means that we
+     * destroy the entire input of the user. So, we throw away everything
+     * they entered. And that's not necessarily a great user experience."
+     *
+     * INSTRUCTOR QUOTE:
+     * "It would be better if we would stay on this page and just output
+     * some error message somewhere on this page, above the form or below
+     * the form, for example. And that's therefore what we'll implement next."
+     *
+     * ┌─────────────────────────────────────────────────────────────────────┐
+     * │  CURRENT APPROACH (throw error):                                   │
+     * │  ✗ User loses all form input                                       │
+     * │  ✗ Redirects to error page                                         │
+     * │  ✗ User must start over                                            │
+     * │  ✓ Simple to implement                                             │
+     * │                                                                      │
+     * │  BETTER APPROACH (coming next lesson):                             │
+     * │  ✓ User keeps form input                                           │
+     * │  ✓ Stays on same page                                              │
+     * │  ✓ Shows error message inline                                      │
+     * │  → Requires useFormState (React 19) or similar                     │
+     * └─────────────────────────────────────────────────────────────────────┘
+     */
+    throw new Error('Invalid input');
+  }
 
   /**
    * ================================================================
@@ -318,7 +488,7 @@ export async function shareMeal(formData) {
 
 /**
  * ============================================================================
- * LESSONS 464 & 466 - SERVER ACTIONS SUMMARY
+ * LESSONS 464, 466 & 468 - SERVER ACTIONS SUMMARY
  * ============================================================================
  *
  * LESSON 464 - SERVER ACTIONS SEPARATION:
@@ -355,7 +525,54 @@ export async function shareMeal(formData) {
  *    import { redirect } from 'next/navigation';
  *    redirect('/meals');  // Navigate to meals page after save
  *
- * COMPLETE FLOW AFTER LESSON 466:
+ * LESSON 468 - SERVER-SIDE VALIDATION:
+ *
+ * 6. WHY CLIENT-SIDE VALIDATION ISN'T ENOUGH
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Now, we do have some validation, because in that form, I'm using those
+ *    built-in special attributes. Those required props here, to be precise...
+ *    But it's not enough, because I can disable that by going through the
+ *    DevTools and removing that."
+ *
+ *    CLIENT-SIDE VALIDATION CAN BE BYPASSED:
+ *    • Remove 'required' attribute via DevTools
+ *    • Disable JavaScript in browser
+ *    • Send direct HTTP requests to Server Action
+ *
+ * 7. THE isInvalidText HELPER FUNCTION
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "I'll actually add a helper function, isInvalidText, could be a fitting
+ *    name, where I expect to get some text and where I return the result of
+ *    this check so that I return true if the text we got is either false, or
+ *    it's an empty string after trimming it."
+ *
+ *    function isInvalidText(text) {
+ *      return !text || text.trim() === '';
+ *    }
+ *
+ * 8. VALIDATION RULES IMPLEMENTED
+ *
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  • Text fields: Must exist and not be empty after trim             │
+ *    │  • Email: Must also include @ symbol                               │
+ *    │  • Image: Must exist and have size > 0                             │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 9. THROWING ERRORS ON INVALID INPUT
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Throwing an error as we do it here works, but it also means that we
+ *    destroy the entire input of the user. So, we throw away everything
+ *    they entered. And that's not necessarily a great user experience."
+ *
+ *    → User loses all form data
+ *    → Gets redirected to error page
+ *    → Must start over
+ *    → Better approach coming in next lesson!
+ *
+ * COMPLETE FLOW AFTER LESSON 468:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  USER ACTION:                                                           │
  * │  1. Fills out form on /meals/share                                     │
@@ -363,15 +580,21 @@ export async function shareMeal(formData) {
  * │                                                                          │
  * │  SERVER ACTION (shareMeal):                                             │
  * │  3. Extracts form data into meal object                                 │
- * │  4. Calls saveMeal(meal):                                               │
+ * │  4. VALIDATES all fields (Lesson 468):                                  │
+ * │     - Text fields: not empty after trim                                 │
+ * │     - Email: must include @                                             │
+ * │     - Image: must exist with size > 0                                   │
+ * │  5. If invalid → throws Error → shows error.js page                    │
+ * │  6. Calls saveMeal(meal):                                               │
  * │     a. Generates slug from title                                        │
  * │     b. Sanitizes instructions (XSS)                                     │
  * │     c. Saves image to public/images/                                    │
  * │     d. Inserts record into SQLite                                       │
- * │  5. Calls redirect('/meals')                                            │
+ * │  7. Calls redirect('/meals')                                            │
  * │                                                                          │
  * │  RESULT:                                                                │
- * │  6. User sees /meals page with their new meal in the list!             │
+ * │  8. User sees /meals page with their new meal in the list!             │
+ * │     (Or error page if validation failed)                               │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ARCHITECTURE OVERVIEW:
@@ -383,17 +606,26 @@ export async function shareMeal(formData) {
  * │  lib/actions.js                                                         │
  * │  └── shareMeal(formData)                                                │
  * │           │                                                              │
- * │           ▼                                                              │
- * │  lib/meals.js                                                           │
- * │  └── saveMeal(meal) → writes image + inserts DB record                 │
+ * │      ┌────┴────┐                                                        │
+ * │      │ VALIDATE │ ← Lesson 468                                          │
+ * │      └────┬────┘                                                        │
  * │           │                                                              │
- * │           ▼                                                              │
- * │  redirect('/meals') → user sees their new meal!                        │
+ * │    ┌──────┴──────┐                                                      │
+ * │    │             │                                                       │
+ * │  INVALID       VALID                                                    │
+ * │    │             │                                                       │
+ * │    ▼             ▼                                                       │
+ * │  throw Error   lib/meals.js                                             │
+ * │    │           └── saveMeal(meal)                                       │
+ * │    │                    │                                               │
+ * │    ▼                    ▼                                               │
+ * │  error.js         redirect('/meals')                                    │
+ * │  (share/)         → user sees meal!                                     │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * COMING NEXT:
- * • Add loading state during form submission
- * • Add form validation and error handling
+ * • Better error handling (stay on page, show inline errors)
+ * • useFormState for returning validation errors
  *
  * ============================================================================
  */
