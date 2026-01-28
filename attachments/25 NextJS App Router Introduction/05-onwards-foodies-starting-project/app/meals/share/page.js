@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SHARE MEAL PAGE - LESSONS 459-464: Form, Image Picker & Server Actions
+ * SHARE MEAL PAGE - LESSONS 459-464 & 467: Form, Image Picker, Server Actions & Loading State
  * ============================================================================
  *
  * LESSON 459 - CREATING THE MEAL SUBMISSION FORM
@@ -81,6 +81,30 @@
  */
 
 import ImagePicker from '@/components/meals/image-picker';
+/**
+ * ============================================================================
+ * IMPORTING FORM SUBMIT COMPONENT (LESSON 467)
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And therefore, I will not add it here, and therefore remove it, and instead
+ * add a new component, a new component here in the meals folder in the
+ * components folder, let's say that could be named meals-form-submit."
+ *
+ * WHY A SEPARATE COMPONENT?
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. useFormStatus requires 'use client' directive                      │
+ * │  2. This page remains a Server Component                               │
+ * │  3. Only the submit button becomes a Client Component                  │
+ * │  4. Minimizes JavaScript sent to browser                               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "However, if you add that hook, you'll see that you'll get an error because
+ * this hook requires a client component in order to work, which makes sense
+ * because it is about updating the client side UI based on any ongoing requests."
+ */
+import MealsFormSubmit from '@/components/meals/meals-form-submit';
 import classes from './page.module.css';
 /**
  * ============================================================================
@@ -290,20 +314,54 @@ export default function ShareMealPage() {
           <ImagePicker label="Your image" name="image" />
 
           {/**
-           * FORM ACTIONS (SUBMIT BUTTON)
+           * ================================================================
+           * FORM ACTIONS - SUBMIT BUTTON (LESSON 467)
+           * ================================================================
            *
-           * When clicked, triggers the form submission which:
-           * 1. Collects all form data
-           * 2. Calls the shareMeal Server Action
-           * 3. Does NOT reload the page
+           * INSTRUCTOR QUOTE:
+           * "So now that we're able to save meals, it's time to further enhance
+           * the user experience here. And for example, as you saw before, it
+           * takes quite some time until we are redirected after adding our data."
            *
-           * FUTURE ENHANCEMENTS (coming in later lessons):
-           * - Button will show loading state during submission
-           * - Disabled state when form is submitting
-           * - Error messages will appear if submission fails
+           * THE PROBLEM (Before Lesson 467):
+           * ┌─────────────────────────────────────────────────────────────────┐
+           * │  1. User clicks "Share Meal" button                            │
+           * │  2. Button looks the same (no visual change)                   │
+           * │  3. User waits... nothing seems to happen                      │
+           * │  4. User might click again (duplicate submissions!)            │
+           * │  5. Eventually redirected to /meals                            │
+           * │                                                                 │
+           * │  USER EXPERIENCE: "Did it work? Is it broken?"                 │
+           * └─────────────────────────────────────────────────────────────────┘
+           *
+           * THE SOLUTION (Lesson 467):
+           * ┌─────────────────────────────────────────────────────────────────┐
+           * │  MealsFormSubmit component uses useFormStatus hook to:         │
+           * │  • Show "Submitting..." text during form submission            │
+           * │  • Disable button to prevent duplicate submissions             │
+           * │  • Provide visual feedback that action is in progress          │
+           * └─────────────────────────────────────────────────────────────────┘
+           *
+           * INSTRUCTOR QUOTE:
+           * "Now therefore, we would have to add use client here and we could
+           * do that, wouldn't be a problem, everything would work. But we also
+           * might not want to turn this entire page into a client component
+           * just because we want to conditionally update this button."
+           *
+           * WHY MealsFormSubmit MUST BE INSIDE THE FORM:
+           *
+           * INSTRUCTOR QUOTE:
+           * "In addition, this hook here will actually only give us the status
+           * of a form if it's inside of that form for which it should give us
+           * the status."
+           *
+           * INSTRUCTOR QUOTE:
+           * "And with that, we can go back to our form and replace this vanilla
+           * button here with our meals-form-submit button, this component we
+           * just worked on."
            */}
           <p className={classes.actions}>
-            <button type="submit">Share Meal</button>
+            <MealsFormSubmit />
           </p>
         </form>
       </main>
@@ -313,7 +371,7 @@ export default function ShareMealPage() {
 
 /**
  * ============================================================================
- * LESSONS 459-464 - SHARE MEAL FORM SUMMARY
+ * LESSONS 459-464 & 467 - SHARE MEAL FORM SUMMARY
  * ============================================================================
  *
  * LESSON 459 - FORM STRUCTURE:
@@ -412,12 +470,55 @@ export default function ShareMealPage() {
  * │  └── <form action={shareMeal}>                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * LESSON 467 - FORM SUBMISSION LOADING STATE:
+ *
+ * 7. useFormStatus HOOK
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And to do that, we can use another special hook called useFormStatus.
+ *    And this hook must be imported, useFormStatus from react-dom, so not from
+ *    React, not from NextJS, but from react-dom."
+ *
+ *    KEY POINTS:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  • Imported from 'react-dom' (not 'react')                         │
+ *    │  • Returns { pending, data, method, action }                       │
+ *    │  • pending is true during form submission                          │
+ *    │  • MUST be used inside the form it tracks                          │
+ *    │  • Requires 'use client' directive                                 │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 8. WHY SEPARATE MealsFormSubmit COMPONENT?
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Now therefore, we would have to add use client here and we could do that,
+ *    wouldn't be a problem, everything would work. But we also might not want
+ *    to turn this entire page into a client component just because we want to
+ *    conditionally update this button."
+ *
+ *    BENEFITS:
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  • This page stays a Server Component                              │
+ *    │  • Only the submit button is a Client Component                    │
+ *    │  • Minimizes JavaScript sent to browser                            │
+ *    │  • Encapsulates loading logic for reuse                            │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * ARCHITECTURE AFTER LESSON 467:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  components/meals/meals-form-submit.js ('use client')                  │
+ * │  └── useFormStatus() from react-dom                                    │
+ * │  └── Shows "Submitting..." and disables button when pending           │
+ * │                                                                          │
+ * │  app/meals/share/page.js (this file - Server Component)               │
+ * │  └── import MealsFormSubmit from '@/components/meals/meals-form-submit'│
+ * │  └── <MealsFormSubmit /> inside the form                              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * COMING NEXT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  • Store meal data in the database                                     │
- * │  • Save uploaded image to file system                                  │
- * │  • Redirect user after successful submission                          │
  * │  • Add form validation and error handling                             │
+ * │  • Display validation errors to users                                  │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
