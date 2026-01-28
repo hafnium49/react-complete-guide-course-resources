@@ -782,8 +782,9 @@ export default function ShareMealPage() {
  *
  * COMING NEXT:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  • Cache revalidation (revalidatePath)                                 │
+ * │  ✓ Cache revalidation (revalidatePath) - DONE in Lesson 471            │
  * │  • Image optimization with Next.js Image component                     │
+ * │  • Static & Dynamic metadata                                           │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================

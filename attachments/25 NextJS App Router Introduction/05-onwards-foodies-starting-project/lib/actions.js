@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SERVER ACTIONS FILE - LESSONS 464, 466, 468 & 469: Server Actions, Data Storage, Validation & Form State
+ * SERVER ACTIONS FILE - LESSONS 464, 466, 468, 469 & 471: Server Actions, Validation & Cache Revalidation
  * ============================================================================
  *
  * LESSON 464 - WHY SEPARATE SERVER ACTIONS INTO THEIR OWN FILE?
@@ -194,6 +194,35 @@ import { saveMeal } from '@/lib/meals';
  * so no code after redirect() will run. This is intentional!
  */
 import { redirect } from 'next/navigation';
+
+/**
+ * ============================================================================
+ * LESSON 471 - CACHE REVALIDATION IMPORT
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that function is called revalidatePath. This function tells NextJS
+ * to revalidate the cache that belongs to a certain route path."
+ *
+ * revalidatePath FUNCTION (from next/cache):
+ * - Built-in Next.js function for cache invalidation
+ * - Tells Next.js to throw away cached data for specific routes
+ * - Essential for showing fresh data after mutations (add/edit/delete)
+ *
+ * WHY WE NEED THIS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  PROBLEM (Lesson 470):                                                  │
+ * │  • npm run build pre-renders and caches all pages                       │
+ * │  • New meals are saved to database but cached page shows old data       │
+ * │  • Users don't see their newly added meals!                             │
+ * │                                                                          │
+ * │  SOLUTION (Lesson 471):                                                 │
+ * │  • Call revalidatePath() after saving new data                          │
+ * │  • Next.js throws away the cached version of that page                  │
+ * │  • Next request will fetch fresh data and re-render                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+import { revalidatePath } from 'next/cache';
 
 /**
  * ============================================================================
@@ -499,6 +528,111 @@ export async function shareMeal(prevState, formData) {
 
   /**
    * ================================================================
+   * LESSON 471 - CACHE REVALIDATION
+   * ================================================================
+   *
+   * INSTRUCTOR QUOTE:
+   * "So how can we fix this problem of NextJS caching too aggressively?
+   * Well, we need to tell NextJS to throw away its cache or parts of its
+   * cache whenever we add a new meal."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And of course, this is such a common requirement that there's a
+   * built-in method for that, a built-in function provided by NextJS,
+   * a function which I wanna execute in my server action right after
+   * saving a meal before I redirect."
+   *
+   * WHY revalidatePath IS NECESSARY:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  WITHOUT revalidatePath:                                           │
+   * │  1. User adds new meal → saved to database ✓                       │
+   * │  2. User redirected to /meals                                      │
+   * │  3. Next.js serves CACHED page from build time                     │
+   * │  4. New meal is NOT visible! ✗                                     │
+   * │                                                                     │
+   * │  WITH revalidatePath:                                              │
+   * │  1. User adds new meal → saved to database ✓                       │
+   * │  2. revalidatePath('/meals') clears cache for that route           │
+   * │  3. User redirected to /meals                                      │
+   * │  4. Next.js fetches fresh data and renders                         │
+   * │  5. New meal IS visible! ✓                                         │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * revalidatePath SYNTAX:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now what's important is that, by default, only that path will be
+   * revalidated, no nested paths."
+   *
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  revalidatePath(path)                                              │
+   * │  → Revalidates only that specific page (default mode: 'page')      │
+   * │                                                                     │
+   * │  revalidatePath(path, 'page')                                      │
+   * │  → Same as above - explicit 'page' mode                           │
+   * │  → Only that one page is revalidated                               │
+   * │                                                                     │
+   * │  revalidatePath(path, 'layout')                                    │
+   * │  → Revalidates the layout AND all nested pages                    │
+   * │  → Use when nested routes depend on same data                     │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "Alternatively, you can pass a second argument to revalidate path
+   * and set this to layout. The default is page, which means that simply
+   * this one page for this one path will be revalidated. If you set it
+   * to layout, it's the layout that will be revalidated, which as you
+   * learned, also wraps nested pages, and therefore, with this, all
+   * nested pages would be revalidated as well."
+   *
+   * INSTRUCTOR QUOTE:
+   * "And revalidate simply means that NextJS throws away the cache that
+   * is associated with those pages. So, for example, the cached pages
+   * themselves."
+   *
+   * WHY '/meals' IS ENOUGH FOR THIS APP:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now here, I don't care about any nested pages because the dynamic
+   * page here isn't pre-generated anyways in our current setup and the
+   * share page doesn't depend on the meals data. So I'm fine with just
+   * revalidating /meals."
+   *
+   * ROUTE ANALYSIS:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  ROUTE              │  NEEDS REVALIDATION?  │  REASON               │
+   * │  ──────────────────│───────────────────────│─────────────────────  │
+   * │  /meals             │  ✓ YES                │  Shows meal list      │
+   * │  /meals/share       │  ✗ NO                 │  Form, no meal data   │
+   * │  /meals/[slug]      │  ✗ NO                 │  Not pre-generated    │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * REVALIDATING ENTIRE SITE (if needed):
+   *
+   * INSTRUCTOR QUOTE:
+   * "If you would want to revalidate all the pages of your entire website,
+   * you could, by the way, do that by targeting slash and then setting
+   * the mode to layout."
+   *
+   * revalidatePath('/', 'layout');  // Revalidates EVERYTHING
+   * → Use sparingly! This clears cache for all pages
+   *
+   * PROOF THAT IT WORKS:
+   *
+   * INSTRUCTOR QUOTE:
+   * "Well, and with that done, if we now run npm run build again to build
+   * all those pages again, they will still be pre-generated and cached,
+   * but now that cache should be revalidated and partially cleared once
+   * we added a new meal."
+   *
+   * INSTRUCTOR QUOTE:
+   * "In addition, we got these Fetching meals logs back here, which also
+   * proves that this is now working as intended."
+   */
+  revalidatePath('/meals');
+
+  /**
+   * ================================================================
    * LESSON 466 - REDIRECT AFTER SUCCESSFUL SUBMISSION
    * ================================================================
    *
@@ -538,7 +672,7 @@ export async function shareMeal(prevState, formData) {
 
 /**
  * ============================================================================
- * LESSONS 464, 466, 468 & 469 - SERVER ACTIONS SUMMARY
+ * LESSONS 464, 466, 468, 469 & 471 - SERVER ACTIONS SUMMARY
  * ============================================================================
  *
  * LESSON 464 - SERVER ACTIONS SEPARATION:
@@ -654,7 +788,50 @@ export async function shareMeal(prevState, formData) {
  *    ✓ Strings, numbers, booleans, arrays, objects, null
  *    ✗ Functions, methods, classes, symbols
  *
- * COMPLETE FLOW AFTER LESSON 469:
+ * LESSON 471 - CACHE REVALIDATION:
+ *
+ * 13. THE CACHING PROBLEM
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "So how can we fix this problem of NextJS caching too aggressively?
+ *    Well, we need to tell NextJS to throw away its cache or parts of its
+ *    cache whenever we add a new meal."
+ *
+ *    → In production, pages are pre-rendered and cached
+ *    → New data saved to DB doesn't appear (cache is stale)
+ *
+ * 14. revalidatePath FUNCTION
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And that function is called revalidatePath. This function tells NextJS
+ *    to revalidate the cache that belongs to a certain route path."
+ *
+ *    import { revalidatePath } from 'next/cache';
+ *    revalidatePath('/meals');  // Clears cache for /meals page
+ *
+ * 15. REVALIDATION MODES
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "By default, only that path will be revalidated, no nested paths."
+ *
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  revalidatePath('/meals')           │  Only /meals page            │
+ *    │  revalidatePath('/meals', 'page')   │  Same (explicit)             │
+ *    │  revalidatePath('/meals', 'layout') │  /meals + all nested pages   │
+ *    │  revalidatePath('/', 'layout')      │  ENTIRE site (use sparingly) │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 16. WHERE TO CALL revalidatePath
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "A function which I wanna execute in my server action right after
+ *    saving a meal before I redirect."
+ *
+ *    await saveMeal(meal);       // 1. Save the data
+ *    revalidatePath('/meals');   // 2. Clear the cache
+ *    redirect('/meals');         // 3. Redirect user
+ *
+ * COMPLETE FLOW AFTER LESSON 471:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  USER ACTION:                                                           │
  * │  1. Fills out form on /meals/share                                     │
@@ -671,14 +848,17 @@ export async function shareMeal(prevState, formData) {
  * │     → useFormState receives this response                              │
  * │     → Error message shown inline on page                                │
  * │     → User KEEPS their form input!                                      │
- * │  7. If valid → saveMeal(meal) → redirect('/meals')                      │
+ * │  7. If valid:                                                           │
+ * │     → saveMeal(meal)                                                    │
+ * │     → revalidatePath('/meals')  ← NEW in Lesson 471!                   │
+ * │     → redirect('/meals')                                                │
  * │                                                                          │
  * │  RESULT:                                                                │
- * │  • SUCCESS: User sees /meals page with their new meal                  │
+ * │  • SUCCESS: User sees /meals page with their new meal (even in prod!)  │
  * │  • ERROR: User stays on form with error message (input preserved)      │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * ARCHITECTURE OVERVIEW (After Lesson 469):
+ * ARCHITECTURE OVERVIEW (After Lesson 471):
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  app/meals/share/page.js ('use client')                                │
  * │  └── useFormState(shareMeal, initialState)                             │
@@ -689,7 +869,7 @@ export async function shareMeal(prevState, formData) {
  * │                │                                                        │
  * │                ▼                                                        │
  * │  lib/actions.js                                                         │
- * │  └── shareMeal(prevState, formData)  ← New signature!                  │
+ * │  └── shareMeal(prevState, formData)                                    │
  * │           │                                                              │
  * │      ┌────┴────┐                                                        │
  * │      │ VALIDATE │                                                       │
@@ -703,7 +883,16 @@ export async function shareMeal(prevState, formData) {
  * │  return        saveMeal()                                               │
  * │  {message}       │                                                      │
  * │    │             ▼                                                       │
+ * │    │        revalidatePath('/meals')  ← NEW! Clears cache              │
+ * │    │             │                                                       │
+ * │    │             ▼                                                       │
  * │    │        redirect('/meals')                                          │
+ * │    │             │                                                       │
+ * │    │             ▼                                                       │
+ * │    │        Fresh data fetched! (cache was cleared)                     │
+ * │    │             │                                                       │
+ * │    │             ▼                                                       │
+ * │    │        User sees new meal! ✓                                       │
  * │    │                                                                     │
  * │    ▼                                                                     │
  * │  useFormState receives response                                         │
@@ -713,8 +902,8 @@ export async function shareMeal(prevState, formData) {
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * COMING NEXT:
- * • Cache revalidation (revalidatePath)
  * • Image optimization with Next.js Image component
+ * • Static & Dynamic metadata
  *
  * ============================================================================
  */

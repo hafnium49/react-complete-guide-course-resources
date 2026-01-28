@@ -380,7 +380,8 @@ export default function MealsPage() {
  * │  ✓ Suspense for granular loading state (Lesson 454)                     │
  * │  ✓ Header shows instantly, meals load separately (Lesson 454)           │
  * │  ✓ Production caching problem identified (Lesson 470)                   │
- * │  → Next: Cache revalidation with revalidatePath (Lesson 471)            │
+ * │  ✓ Cache revalidation with revalidatePath (Lesson 471)                  │
+ * │  → Next: Image optimization with Next.js Image component                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
