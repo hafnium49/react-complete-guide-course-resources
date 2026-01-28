@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS PAGE - LESSONS 450, 452 & 454: Suspense for Granular Loading States
+ * MEALS PAGE - LESSONS 450, 452, 454 & 470: Suspense & Production Caching
  * ============================================================================
  *
  * LESSON 454 - WHY USE SUSPENSE INSTEAD OF loading.js?
@@ -87,9 +87,100 @@ import { getMeals } from '@/lib/meals';
  * "So this component here now is the one that will take a bit longer to
  * execute."
  *
+ * ============================================================================
+ * LESSON 470 - PRODUCTION CACHING PROBLEM
+ * ============================================================================
+ *
+ * INSTRUCTOR QUOTE:
+ * "And I can prove that we can simply console log, fetching meals here in
+ * that meals component that's being used by the meals page."
+ *
+ * WHAT HAPPENS IN DEVELOPMENT vs PRODUCTION:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DEVELOPMENT (npm run dev):                                             │
+ * │  • Pages are rendered on every request                                  │
+ * │  • getMeals() is called each time → you see the loading state           │
+ * │  • "Fetching meals" logs to terminal on each visit                      │
+ * │  • New data appears immediately after adding a meal                     │
+ * │                                                                          │
+ * │  PRODUCTION (npm run build + npm start):                                │
+ * │  • Pages are pre-rendered during build                                  │
+ * │  • getMeals() is called ONCE during build → cached as static HTML       │
+ * │  • "Fetching meals" only logs during build, NOT on visits               │
+ * │  • New data does NOT appear until cache is revalidated!                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * INSTRUCTOR QUOTE:
+ * "Because when you run this NPM run build command to prepare the app for
+ * production, NextJS goes ahead and actually generates, pre-renders all the
+ * pages of your app that can be pre-generated."
+ *
+ * WHY THE LOADING STATE DOESN'T SHOW IN PRODUCTION:
+ *
+ * INSTRUCTOR QUOTE:
+ * "So that's why we no longer see any loading indicator because NextJS was
+ * able to pre-render that page and therefore it can just send it to us
+ * instantly. And that's actually a great thing because it means that users
+ * visiting this page get an instant experience."
+ *
+ * THE CACHING PROBLEM (WHY NEW MEALS DON'T APPEAR):
+ *
+ * INSTRUCTOR QUOTE:
+ * "Now what's the problem then? Well, the problem is that when you update
+ * data so, for example, when I share a new meal now if I do that, this of
+ * course takes us to the meals page, but you'll notice that that new meal
+ * we just added is nowhere to be found."
+ *
+ * INSTRUCTOR QUOTE:
+ * "And that's the case because this data here was fetched during the build
+ * process when the project was prepared for production. And NextJS then
+ * caches those pre-rendered pages so that it's able to serve them to all
+ * visitors."
+ *
+ * THE CACHE VISUALIZATION:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BUILD TIME (npm run build):                                            │
+ * │  ┌─────────────────────┐      ┌──────────────────────┐                  │
+ * │  │ getMeals() called   │  →   │ meals: [A, B, C, D]  │  → Cached HTML   │
+ * │  └─────────────────────┘      └──────────────────────┘                  │
+ * │                                                                          │
+ * │  RUNTIME (user adds meal E):                                            │
+ * │  ┌─────────────────────┐      ┌──────────────────────┐                  │
+ * │  │ Database now has:   │      │ Cache STILL shows:   │                  │
+ * │  │ [A, B, C, D, E]     │      │ [A, B, C, D]         │  ← STALE!        │
+ * │  └─────────────────────┘      └──────────────────────┘                  │
+ * │                                                                          │
+ * │  The new meal E is in the database but NOT in the cached page!          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * NEXT LESSON WILL COVER:
+ * → How to use revalidatePath to invalidate the cache
+ * → Triggering cache revalidation when data changes
+ *
  * @returns {Promise<JSX.Element>} MealsGrid with fetched data
  */
 async function Meals() {
+  /**
+   * CONSOLE.LOG FOR DEMONSTRATING CACHING BEHAVIOR (LESSON 470)
+   *
+   * INSTRUCTOR QUOTE:
+   * "And I can prove that we can simply console log, fetching meals here in
+   * that meals component that's being used by the meals page."
+   *
+   * WHAT TO OBSERVE:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  WITH npm run dev:                                                  │
+   * │  • "Fetching meals" logs EVERY time you visit /meals                │
+   * │  • Loading state shows for ~2 seconds (simulated delay)             │
+   * │                                                                      │
+   * │  WITH npm run build + npm start:                                    │
+   * │  • "Fetching meals" logs ONLY ONCE during build                     │
+   * │  • Loading state NEVER shows (page served from cache)               │
+   * │  • Revisiting /meals does NOT trigger this log                      │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
+  console.log('Fetching meals');
+
   const meals = await getMeals();
 
   return <MealsGrid meals={meals} />;
@@ -185,10 +276,10 @@ export default function MealsPage() {
 
 /**
  * ============================================================================
- * LESSON 454 - SUSPENSE FOR GRANULAR LOADING SUMMARY
+ * LESSONS 454 & 470 - SUSPENSE & PRODUCTION CACHING SUMMARY
  * ============================================================================
  *
- * WHAT WE LEARNED:
+ * WHAT WE LEARNED (LESSON 454):
  *
  * 1. loading.js REPLACES THE ENTIRE PAGE
  *
@@ -234,6 +325,53 @@ export default function MealsPage() {
  * on fetched data, adding a loading.js might be the better approach because
  * it requires less code."
  *
+ * ============================================================================
+ * WHAT WE LEARNED (LESSON 470) - PRODUCTION CACHING
+ * ============================================================================
+ *
+ * 5. NEXT.JS PRE-RENDERS PAGES AT BUILD TIME
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "Because when you run this NPM run build command to prepare the app for
+ *    production, NextJS goes ahead and actually generates, pre-renders all
+ *    the pages of your app that can be pre-generated."
+ *
+ * 6. PRE-RENDERED PAGES ARE CACHED
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And NextJS then caches those pre-rendered pages so that it's able to
+ *    serve them to all visitors."
+ *
+ * 7. CACHED DATA BECOMES STALE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "And that's the case because this data here was fetched during the build
+ *    process when the project was prepared for production."
+ *
+ *    RESULT: New meals added after build don't appear on the page!
+ *
+ * 8. THE TRADE-OFF: SPEED vs FRESHNESS
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  BENEFIT: Instant page loads (pages served from cache)              │
+ *    │  PROBLEM: Stale data (new content doesn't appear)                   │
+ *    │                                                                      │
+ *    │  SOLUTION: Cache revalidation (covered in next lesson)              │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * HOW TO TEST CACHING BEHAVIOR:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. npm run build        (build for production)                         │
+ * │     → Watch terminal: "Fetching meals" logs ONCE                       │
+ * │                                                                          │
+ * │  2. npm start            (start production server)                      │
+ * │     → Visit /meals: Page loads INSTANTLY (from cache)                  │
+ * │     → Terminal: NO "Fetching meals" log                                │
+ * │                                                                          │
+ * │  3. Add a new meal via /meals/share                                    │
+ * │     → Return to /meals: NEW MEAL IS NOT VISIBLE!                       │
+ * │     → This is the caching problem!                                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * CURRENT STATE:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  ✓ Database set up with 7 dummy meals (Lesson 451)                      │
@@ -241,6 +379,8 @@ export default function MealsPage() {
  * │  ✓ loading.js renamed to loading-out.js (disabled) (Lesson 454)         │
  * │  ✓ Suspense for granular loading state (Lesson 454)                     │
  * │  ✓ Header shows instantly, meals load separately (Lesson 454)           │
+ * │  ✓ Production caching problem identified (Lesson 470)                   │
+ * │  → Next: Cache revalidation with revalidatePath (Lesson 471)            │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
