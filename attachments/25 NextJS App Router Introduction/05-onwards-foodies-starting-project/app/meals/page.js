@@ -381,6 +381,7 @@ export default function MealsPage() {
  * │  ✓ Header shows instantly, meals load separately (Lesson 454)           │
  * │  ✓ Production caching problem identified (Lesson 470)                   │
  * │  ✓ Cache revalidation with revalidatePath (Lesson 471)                  │
+ * │  ✓ Production image storage limitation explained (Lesson 472)           │
  * │  → Next: Image optimization with Next.js Image component                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *

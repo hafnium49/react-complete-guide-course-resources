@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * MEALS DATA MODULE - LESSONS 452, 455, 457, 465 & 466: Data Fetching & Storage
+ * MEALS DATA MODULE - LESSONS 452, 455, 457, 465, 466 & 472: Data Fetching & Storage
  * ============================================================================
  *
  * LESSON 452 - WHY WE DON'T NEED useEffect OR fetch()
@@ -583,6 +583,106 @@ export async function saveMeal(meal) {
    * │  /images/grandmas-apple-pie.jpg (NOT /public/images/...)           │
    * └─────────────────────────────────────────────────────────────────────┘
    */
+  /**
+   * ================================================================
+   * LESSON 472 - PRODUCTION IMAGE STORAGE LIMITATION
+   * ================================================================
+   *
+   * ⚠️  IMPORTANT: This approach works in DEVELOPMENT but has
+   *     limitations in PRODUCTION builds!
+   *
+   * INSTRUCTOR QUOTE:
+   * "The problem with this approach just is that this folder is
+   * available during development, but for production, it's actually
+   * copied into this .next folder."
+   *
+   * INSTRUCTOR QUOTE:
+   * "So when you run npm run build, that public folder with that
+   * images folder in there is essentially considered and copied
+   * over to that .next folder, and it's this .next folder that's
+   * then used by your production server."
+   *
+   * HOW NEXT.JS HANDLES THE PUBLIC FOLDER:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  DEVELOPMENT (npm run dev):                                        │
+   * │  ┌───────────────────┐                                             │
+   * │  │ public/images/    │ ← Files added here ARE immediately visible │
+   * │  │   burger.jpg      │                                             │
+   * │  │   curry.jpg       │                                             │
+   * │  │   NEW-MEAL.jpg    │ ✓ Works! Development server sees new files │
+   * │  └───────────────────┘                                             │
+   * │                                                                     │
+   * │  PRODUCTION (npm run build → npm start):                           │
+   * │  ┌───────────────────┐    BUILD    ┌───────────────────┐           │
+   * │  │ public/images/    │ ──────────▶ │ .next/            │           │
+   * │  │   burger.jpg      │   COPIES    │   static/         │           │
+   * │  │   curry.jpg       │   FILES     │     images/       │           │
+   * │  └───────────────────┘             │       burger.jpg  │           │
+   * │                                    │       curry.jpg   │           │
+   * │  After build, runtime files        └───────────────────┘           │
+   * │  added to public/ are IGNORED!     ↑ Production server             │
+   * │                                      only serves from here         │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "If you then thereafter add new images into the public folder,
+   * those will be ignored because the production server doesn't care
+   * about this public folder. It doesn't even check if new files were
+   * added there. It only looks at the .next folder."
+   *
+   * THE PRODUCTION PROBLEM:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  1. User uploads "grandmas-apple-pie.jpg" via the form              │
+   * │  2. saveMeal() writes to public/images/grandmas-apple-pie.jpg      │
+   * │  3. Database stores path: /images/grandmas-apple-pie.jpg           │
+   * │                                                                     │
+   * │  IN DEVELOPMENT: ✓ Image displays correctly                        │
+   * │                                                                     │
+   * │  IN PRODUCTION:                                                    │
+   * │  → Browser requests /images/grandmas-apple-pie.jpg                 │
+   * │  → Production server looks in .next/static/images/                 │
+   * │  → File doesn't exist there (it's in public/, not .next/)         │
+   * │  → 404 Not Found! ✗ Image is missing                               │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * THE OFFICIAL SOLUTION - EXTERNAL FILE STORAGE:
+   *
+   * INSTRUCTOR QUOTE:
+   * "The official recommendation here is to use a different file storage,
+   * for example, some cloud file storage like Amazon S3 or Cloudflare R2,
+   * where you store uploaded files on such an external storage, on such
+   * a service instead."
+   *
+   * RECOMMENDED CLOUD STORAGE OPTIONS:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  SERVICE          │  DESCRIPTION                                    │
+   * │  ─────────────────│─────────────────────────────────────────────────│
+   * │  Amazon S3        │  The most popular cloud object storage         │
+   * │  Cloudflare R2    │  S3-compatible, often cheaper                   │
+   * │  Google Cloud     │  Google's cloud storage solution                │
+   * │  Azure Blob       │  Microsoft's cloud storage                      │
+   * │  Vercel Blob      │  Integrated with Next.js on Vercel             │
+   * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * INSTRUCTOR QUOTE:
+   * "Now this is, however, a little bit beyond the scope of this course.
+   * Because even though it's nice to know and you might need it for a
+   * real application, it would go way beyond the scope of this course
+   * because it's not specific to NextJS and also not specific to React."
+   *
+   * NOTE: The instructor provides a separate text lecture with instructions
+   * on how to set up AWS S3 for production image storage.
+   *
+   * FOR THIS DEMO APPLICATION:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  We continue using the public/ folder approach because:            │
+   * │  • It works perfectly during development                           │
+   * │  • It demonstrates the file handling concepts                      │
+   * │  • Setting up cloud storage is beyond this course's scope          │
+   * │                                                                     │
+   * │  For a real production application, implement AWS S3 or similar!   │
+   * └─────────────────────────────────────────────────────────────────────┘
+   */
   const stream = fs.createWriteStream(`public/images/${fileName}`);
 
   /**
@@ -772,7 +872,7 @@ export async function saveMeal(meal) {
 
 /**
  * ============================================================================
- * LESSONS 452, 455, 457, 465 & 466 - DATA MODULE SUMMARY
+ * LESSONS 452, 455, 457, 465, 466 & 472 - DATA MODULE SUMMARY
  * ============================================================================
  *
  * KEY CONCEPTS (LESSON 452):
@@ -861,6 +961,31 @@ export async function saveMeal(meal) {
  *    VALUES (@title, @summary, @instructions, ...)
  *    .run(meal)  // Properties extracted automatically!
  *
+ * KEY CONCEPTS (LESSON 472):
+ *
+ * 13. PRODUCTION IMAGE STORAGE LIMITATION
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The problem with this approach just is that this folder is available
+ *    during development, but for production, it's actually copied into this
+ *    .next folder."
+ *
+ *    - public/ folder works during development
+ *    - At build time, public/ is copied to .next/
+ *    - Production server ONLY serves from .next/
+ *    - Runtime-added files to public/ are IGNORED in production
+ *
+ * 14. OFFICIAL SOLUTION: EXTERNAL FILE STORAGE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The official recommendation here is to use a different file storage,
+ *    for example, some cloud file storage like Amazon S3 or Cloudflare R2."
+ *
+ *    - Amazon S3 is the most common solution
+ *    - Cloudflare R2, Google Cloud Storage, Azure Blob also work
+ *    - Store uploaded files externally, not in public/ folder
+ *    - Not implemented here as it's beyond the course scope
+ *
  * WHAT THIS MODULE EXPORTS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  getMeals()     │  Returns all meals from the database                  │
@@ -893,6 +1018,10 @@ export async function saveMeal(meal) {
  * │  SIDE EFFECTS:                                                          │
  * │  • File saved to: public/images/{slug}.{ext}                            │
  * │  • Row inserted into meals table                                        │
+ * │                                                                          │
+ * │  ⚠️  PRODUCTION NOTE (LESSON 472):                                      │
+ * │  Images saved to public/ work in development but NOT in production!     │
+ * │  For production, use AWS S3 or similar cloud storage.                   │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================

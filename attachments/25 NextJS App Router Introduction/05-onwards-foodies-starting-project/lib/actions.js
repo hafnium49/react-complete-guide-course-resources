@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SERVER ACTIONS FILE - LESSONS 464, 466, 468, 469 & 471: Server Actions, Validation & Cache Revalidation
+ * SERVER ACTIONS FILE - LESSONS 464, 466, 468, 469, 471 & 472: Server Actions, Validation & Cache Revalidation
  * ============================================================================
  *
  * LESSON 464 - WHY SEPARATE SERVER ACTIONS INTO THEIR OWN FILE?
@@ -523,6 +523,15 @@ export async function shareMeal(prevState, formData) {
    * │  6. Stores image PATH (not file) in meal object                     │
    * │  7. Inserts meal record into SQLite database                        │
    * └─────────────────────────────────────────────────────────────────────┘
+   *
+   * ⚠️  LESSON 472 - PRODUCTION IMAGE LIMITATION:
+   * ┌─────────────────────────────────────────────────────────────────────┐
+   * │  The image is saved to public/images/, which works in DEVELOPMENT  │
+   * │  but NOT in PRODUCTION. In production, the public/ folder is       │
+   * │  copied to .next/ at build time, and runtime-added files are       │
+   * │  ignored. For production apps, use AWS S3 or similar cloud storage.│
+   * │  See lib/meals.js for full details.                                │
+   * └─────────────────────────────────────────────────────────────────────┘
    */
   await saveMeal(meal);
 
@@ -672,7 +681,7 @@ export async function shareMeal(prevState, formData) {
 
 /**
  * ============================================================================
- * LESSONS 464, 466, 468, 469 & 471 - SERVER ACTIONS SUMMARY
+ * LESSONS 464, 466, 468, 469, 471 & 472 - SERVER ACTIONS SUMMARY
  * ============================================================================
  *
  * LESSON 464 - SERVER ACTIONS SEPARATION:
@@ -831,6 +840,30 @@ export async function shareMeal(prevState, formData) {
  *    revalidatePath('/meals');   // 2. Clear the cache
  *    redirect('/meals');         // 3. Redirect user
  *
+ * LESSON 472 - PRODUCTION IMAGE STORAGE LIMITATION:
+ *
+ * 17. IMAGES WORK IN DEVELOPMENT BUT NOT PRODUCTION
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The problem with this approach just is that this folder is available
+ *    during development, but for production, it's actually copied into this
+ *    .next folder."
+ *
+ *    ┌─────────────────────────────────────────────────────────────────────┐
+ *    │  DEVELOPMENT: Image saved to public/images/ → Works! ✓             │
+ *    │  PRODUCTION:  public/ copied to .next/ at build time               │
+ *    │               Runtime files added to public/ are IGNORED ✗         │
+ *    └─────────────────────────────────────────────────────────────────────┘
+ *
+ * 18. OFFICIAL SOLUTION: EXTERNAL FILE STORAGE
+ *
+ *    INSTRUCTOR QUOTE:
+ *    "The official recommendation here is to use a different file storage,
+ *    for example, some cloud file storage like Amazon S3 or Cloudflare R2."
+ *
+ *    For production applications, use AWS S3 or similar cloud storage
+ *    instead of the local public/ folder. See lib/meals.js for details.
+ *
  * COMPLETE FLOW AFTER LESSON 471:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  USER ACTION:                                                           │
@@ -902,6 +935,8 @@ export async function shareMeal(prevState, formData) {
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * COMING NEXT:
+ * ✓ Production image storage limitation (Lesson 472) - Images work in dev but
+ *   not production; need AWS S3 or similar for real apps
  * • Image optimization with Next.js Image component
  * • Static & Dynamic metadata
  *
