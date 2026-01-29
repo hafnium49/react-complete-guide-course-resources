@@ -71,19 +71,20 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * STATIC vs DYNAMIC METADATA
+ * STATIC vs DYNAMIC METADATA (Lessons 474 & 475)
  * ============================================================================
  *
- * STATIC METADATA (This file):
+ * STATIC METADATA (This file - Lesson 474):
  * - Uses `export const metadata = { ... }`
  * - Values are known at build time
  * - Perfect for pages with fixed content
  *
- * DYNAMIC METADATA (covered later):
+ * DYNAMIC METADATA (Lesson 475):
  * - Uses `export async function generateMetadata({ params }) { ... }`
  * - Values depend on route parameters or fetched data
  * - Used for pages like /meals/[mealSlug] where title = meal.title
- * - See app/meals/[mealSlug]/page.js for an example
+ * - IMPORTANT: Must handle notFound() in generateMetadata too!
+ * - See app/meals/[mealSlug]/page.js for detailed implementation
  *
  * ============================================================================
  * SEO IMPORTANCE

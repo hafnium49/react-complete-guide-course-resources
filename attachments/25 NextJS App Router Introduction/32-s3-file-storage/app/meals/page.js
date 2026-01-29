@@ -65,23 +65,24 @@
  * This is called STATIC METADATA because the values are known at build time.
  *
  * ============================================================================
- * COMPARISON: STATIC vs DYNAMIC METADATA
+ * COMPARISON: STATIC vs DYNAMIC METADATA (Lessons 474 & 475)
  * ============================================================================
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  STATIC METADATA (this page)                                            │
- * │  ─────────────────────────────                                          │
+ * │  STATIC METADATA (this page - Lesson 474)                               │
+ * │  ────────────────────────────────────────                               │
  * │  • Use: export const metadata = { ... }                                 │
  * │  • When: Page content is fixed/known at build time                      │
  * │  • Example: /meals → "All Meals"                                        │
  * │  • Example: /meals/share → "Share a Meal"                               │
  * │                                                                          │
- * │  DYNAMIC METADATA (see [mealSlug]/page.js)                              │
- * │  ────────────────────────────────────────                               │
+ * │  DYNAMIC METADATA (see [mealSlug]/page.js - Lesson 475)                 │
+ * │  ──────────────────────────────────────────────────────                 │
  * │  • Use: export async function generateMetadata({ params }) { ... }      │
  * │  • When: Page content depends on route params or fetched data           │
  * │  • Example: /meals/burger → "Juicy Cheese Burger"                       │
  * │  • Example: /meals/schnitzel → "Wiener Schnitzel"                       │
+ * │  • IMPORTANT: Must handle notFound() inside generateMetadata!           │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *

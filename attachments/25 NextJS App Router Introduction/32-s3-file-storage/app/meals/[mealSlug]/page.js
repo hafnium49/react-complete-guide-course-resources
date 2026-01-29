@@ -32,69 +32,158 @@ import classes from './page.module.css';
 
 /**
  * ============================================================================
- * DYNAMIC METADATA GENERATION - LESSON 474: Dynamic Page Metadata
+ * DYNAMIC METADATA GENERATION - LESSON 475: Dynamic Page Metadata
  * ============================================================================
  *
  * For DYNAMIC ROUTES like /meals/[mealSlug], we can't use static metadata
  * because we don't know the meal title or description until we fetch the data.
  *
- * From the instructor (hinting at this pattern):
- * "If we have dynamic pages, we might need dynamic metadata that depends
- * on the route parameters or fetched data."
- *
  * ============================================================================
- * STATIC vs DYNAMIC METADATA
+ * WHY USE generateMetadata INSTEAD OF export const metadata?
  * ============================================================================
  *
- * STATIC METADATA (app/meals/page.js):
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  export const metadata = {                                              │
- * │    title: 'All Meals',        // ← Known at build time                  │
- * │    description: '...'                                                   │
- * │  };                                                                      │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * From the instructor:
+ * "For dynamic pages, you can add metadata by not exporting a constant or
+ * variable named metadata, but by instead exporting an async function called
+ * generateMetadata."
  *
- * DYNAMIC METADATA (this file):
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  export async function generateMetadata({ params }) {                   │
- * │    const meal = getMeal(params.mealSlug);                               │
- * │    return {                                                             │
- * │      title: meal.title,       // ← Depends on URL parameter!           │
- * │      description: meal.summary                                          │
- * │    };                                                                   │
- * │  }                                                                      │
+ * │  STATIC PAGES (e.g., /meals)                                            │
+ * │  → Use: export const metadata = { title: 'All Meals' }                  │
+ * │  → Title is known at build time                                         │
+ * │                                                                          │
+ * │  DYNAMIC PAGES (e.g., /meals/[mealSlug])                                │
+ * │  → Use: export async function generateMetadata({ params })              │
+ * │  → Title depends on which meal is being viewed                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * HOW generateMetadata WORKS
+ * HOW NEXT.JS DISCOVERS generateMetadata
  * ============================================================================
  *
- * 1. Next.js sees a dynamic route: /meals/burger
- * 2. It calls generateMetadata({ params: { mealSlug: 'burger' } })
- * 3. We fetch the meal data and return { title: 'Juicy Cheese Burger', ... }
- * 4. Next.js uses this to generate the <head> metadata
+ * From the instructor:
+ * "It must be called like this because NextJS is also looking for functions
+ * like this. If it doesn't find any other metadata, it's checking whether
+ * there is such a function, and if there is such a function, NextJS will
+ * execute it for you."
+ *
+ * Next.js metadata discovery order:
+ * 1. Look for `export const metadata = { ... }`
+ * 2. If not found, look for `export async function generateMetadata()`
+ * 3. Execute the function and use the returned object as metadata
+ *
+ * ============================================================================
+ * THE KEY INSIGHT: SAME PROPS AS PAGE COMPONENT
+ * ============================================================================
+ *
+ * From the instructor:
+ * "This function receives the same data our page component receives as props.
+ * So here we also get an object with a params key, and that of course allows
+ * us to get the meal for which the metadata should be generated."
+ *
+ * BOTH RECEIVE THE SAME DATA:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │   // generateMetadata receives:                                         │
+ * │   export async function generateMetadata({ params }) {                  │
+ * │     // params.mealSlug = 'burger'                                       │
+ * │   }                                                                      │
+ * │                                                                          │
+ * │   // Page component receives THE SAME:                                  │
+ * │   export default function MealDetailsPage({ params }) {                 │
+ * │     // params.mealSlug = 'burger'                                       │
+ * │   }                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * This means we can fetch the meal data in generateMetadata and use it
+ * to create dynamic titles like "Juicy Cheese Burger" instead of generic
+ * titles like "Meal Details".
+ *
+ * ============================================================================
+ * ⚠️  CRITICAL: ERROR HANDLING IN generateMetadata
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Now if we enter some invalid slug here, we now get an error though
+ * instead of the not found page because the metadata is actually generated
+ * first and this now simply fails. When I try to access title on meal,
+ * that fails because meal is undefined."
+ *
+ * THE PROBLEM:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │   URL: /meals/invalid-slug                                              │
+ * │                                                                          │
+ * │   1. Next.js calls generateMetadata({ params: { mealSlug: 'invalid' }}) │
+ * │   2. getMeal('invalid') returns undefined (meal not found)              │
+ * │   3. We try to access meal.title → ERROR! Cannot read 'title' of undef │
+ * │   4. App crashes with error instead of showing 404 page                 │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * THE SOLUTION:
+ * From the instructor:
+ * "So therefore we should actually add this if check here, where we check
+ * whether the meal is maybe not defined, and called the notFound function
+ * if it isn't, inside of generateMetadata to ensure that we show the
+ * notFound page if generating the metadata fails."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │   export async function generateMetadata({ params }) {                  │
+ * │     const meal = getMeal(params.mealSlug);                              │
+ * │                                                                          │
+ * │     if (!meal) {                                                        │
+ * │       notFound();  // ← MUST check here too, not just in page!         │
+ * │     }                                                                   │
+ * │                                                                          │
+ * │     return { title: meal.title, description: meal.summary };            │
+ * │   }                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * WHY CHECK IN BOTH PLACES?
+ * - generateMetadata runs BEFORE the page component renders
+ * - If metadata generation fails, the page component never even runs
+ * - So the notFound() check in the page component won't help if
+ *   generateMetadata crashes first
+ *
+ * ============================================================================
+ * EXECUTION ORDER
+ * ============================================================================
+ *
+ * When visiting /meals/burger:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  1. generateMetadata({ params })  ← Runs FIRST                         │
+ * │     └── Returns: { title: 'Juicy Cheese Burger', description: '...' }  │
+ * │                                                                          │
+ * │  2. MealDetailsPage({ params })   ← Runs SECOND                        │
+ * │     └── Renders the page content                                        │
+ * │                                                                          │
+ * │  3. Next.js combines metadata + page content into final HTML           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * RESULT IN BROWSER
+ * ============================================================================
+ *
+ * After implementing generateMetadata:
+ *
+ * From the instructor:
+ * "With that, if we now visit a meal, we can see its title, its name
+ * represented here in the tab title."
  *
  * EXAMPLES:
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  URL                    │  Generated Title                             │
+ * │  URL                    │  Browser Tab Title                           │
  * │─────────────────────────┼──────────────────────────────────────────────│
  * │  /meals/burger          │  "Juicy Cheese Burger"                       │
  * │  /meals/schnitzel       │  "Wiener Schnitzel"                          │
  * │  /meals/curry           │  "Spicy Curry"                               │
- * │  /meals/pizza           │  "Margherita Pizza"                          │
+ * │  /meals/invalid         │  → Shows 404 "Meal not found" page           │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * METADATA INHERITANCE WITH DYNAMIC PAGES
- * ============================================================================
- *
- * Even with generateMetadata, the cascade still applies:
- *
- *   Root Layout → Meals Layout (if any) → This Page's generateMetadata
- *
- * If generateMetadata returns only { title }, the description would still
- * be inherited from the parent layout. But here we return both, so both
- * are overridden.
  *
  * ============================================================================
  * DOCS REFERENCE:
@@ -104,6 +193,20 @@ import classes from './page.module.css';
 export async function generateMetadata({ params }) {
   const meal = getMeal(params.mealSlug);
 
+  /**
+   * CRITICAL: Check if meal exists BEFORE accessing its properties!
+   *
+   * From the instructor:
+   * "We should add this if check here... inside of generateMetadata to ensure
+   * that we show the notFound page if generating the metadata fails, which it
+   * does if we don't find that meal."
+   *
+   * Without this check:
+   *   /meals/invalid → Crashes with "Cannot read property 'title' of undefined"
+   *
+   * With this check:
+   *   /meals/invalid → Shows the custom not-found.js page
+   */
   if (!meal) {
     notFound();
   }
@@ -116,7 +219,7 @@ export async function generateMetadata({ params }) {
 
 /**
  * ============================================================================
- * MEAL DETAILS PAGE COMPONENT
+ * MEAL DETAILS PAGE COMPONENT - LESSON 475
  * ============================================================================
  *
  * Displays a single meal's full details including:
@@ -125,12 +228,44 @@ export async function generateMetadata({ params }) {
  * - Summary
  * - Full cooking instructions
  *
+ * ============================================================================
+ * WHY notFound() APPEARS IN BOTH PLACES
+ * ============================================================================
+ *
+ * You'll notice we check `if (!meal) { notFound(); }` in BOTH:
+ * 1. generateMetadata() - above
+ * 2. MealDetailsPage() - this component
+ *
+ * This might seem redundant, but it's actually intentional:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  REASON 1: generateMetadata runs FIRST                                  │
+ * │  ─────────────────────────────────────                                  │
+ * │  If meal doesn't exist, generateMetadata catches it early and shows    │
+ * │  the 404 page BEFORE the page component even tries to render.          │
+ * │                                                                          │
+ * │  REASON 2: Defense in depth                                             │
+ * │  ─────────────────────────                                              │
+ * │  The page component might be called directly in some edge cases,       │
+ * │  or the data might change between the two calls. Having the check      │
+ * │  in both places ensures we never accidentally render with undefined.   │
+ * │                                                                          │
+ * │  REASON 3: Code maintainability                                         │
+ * │  ──────────────────────────────                                         │
+ * │  If someone removes generateMetadata in the future, the page           │
+ * │  component's check will still protect against undefined meals.         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
  * @param {Object} props
  * @param {Object} props.params - Route parameters containing mealSlug
  */
 export default function MealDetailsPage({ params }) {
   const meal = getMeal(params.mealSlug);
 
+  /**
+   * This check mirrors the one in generateMetadata above.
+   * See the comment block above for why we check in both places.
+   */
   if (!meal) {
     notFound();
   }
