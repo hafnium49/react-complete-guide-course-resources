@@ -32,11 +32,74 @@ import classes from './page.module.css';
 
 /**
  * ============================================================================
- * DYNAMIC METADATA GENERATION
+ * DYNAMIC METADATA GENERATION - LESSON 474: Dynamic Page Metadata
  * ============================================================================
  *
- * This function generates page-specific metadata (title, description) based
- * on the meal data. This is unchanged from the local storage version.
+ * For DYNAMIC ROUTES like /meals/[mealSlug], we can't use static metadata
+ * because we don't know the meal title or description until we fetch the data.
+ *
+ * From the instructor (hinting at this pattern):
+ * "If we have dynamic pages, we might need dynamic metadata that depends
+ * on the route parameters or fetched data."
+ *
+ * ============================================================================
+ * STATIC vs DYNAMIC METADATA
+ * ============================================================================
+ *
+ * STATIC METADATA (app/meals/page.js):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  export const metadata = {                                              │
+ * │    title: 'All Meals',        // ← Known at build time                  │
+ * │    description: '...'                                                   │
+ * │  };                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * DYNAMIC METADATA (this file):
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  export async function generateMetadata({ params }) {                   │
+ * │    const meal = getMeal(params.mealSlug);                               │
+ * │    return {                                                             │
+ * │      title: meal.title,       // ← Depends on URL parameter!           │
+ * │      description: meal.summary                                          │
+ * │    };                                                                   │
+ * │  }                                                                      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * HOW generateMetadata WORKS
+ * ============================================================================
+ *
+ * 1. Next.js sees a dynamic route: /meals/burger
+ * 2. It calls generateMetadata({ params: { mealSlug: 'burger' } })
+ * 3. We fetch the meal data and return { title: 'Juicy Cheese Burger', ... }
+ * 4. Next.js uses this to generate the <head> metadata
+ *
+ * EXAMPLES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  URL                    │  Generated Title                             │
+ * │─────────────────────────┼──────────────────────────────────────────────│
+ * │  /meals/burger          │  "Juicy Cheese Burger"                       │
+ * │  /meals/schnitzel       │  "Wiener Schnitzel"                          │
+ * │  /meals/curry           │  "Spicy Curry"                               │
+ * │  /meals/pizza           │  "Margherita Pizza"                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * METADATA INHERITANCE WITH DYNAMIC PAGES
+ * ============================================================================
+ *
+ * Even with generateMetadata, the cascade still applies:
+ *
+ *   Root Layout → Meals Layout (if any) → This Page's generateMetadata
+ *
+ * If generateMetadata returns only { title }, the description would still
+ * be inherited from the parent layout. But here we return both, so both
+ * are overridden.
+ *
+ * ============================================================================
+ * DOCS REFERENCE:
+ * https://nextjs.org/docs/app/api-reference/functions/generate-metadata
+ * ============================================================================
  */
 export async function generateMetadata({ params }) {
   const meal = getMeal(params.mealSlug);
