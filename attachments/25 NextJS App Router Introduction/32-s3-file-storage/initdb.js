@@ -1,10 +1,80 @@
+/**
+ * ============================================================================
+ * DATABASE INITIALIZATION - BONUS LESSON 473: Updated for S3 Image Storage
+ * ============================================================================
+ *
+ * This file initializes the SQLite database with dummy meal data.
+ *
+ * KEY CHANGE FOR S3 INTEGRATION:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  BEFORE (Local Storage):        AFTER (S3 Storage):                    │
+ * │  image: '/images/burger.jpg'    image: 'burger.jpg'                    │
+ * │  image: '/images/curry.jpg'     image: 'curry.jpg'                     │
+ * │  image: '/images/pizza.jpg'     image: 'pizza.jpg'                     │
+ * │                                                                          │
+ * │  The '/images/' prefix is REMOVED because:                              │
+ * │  • Images are now stored in S3, not in public/images/                  │
+ * │  • The S3 URL is constructed when displaying the image                 │
+ * │  • We only store the filename (which becomes the S3 "Key")             │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * HOW THE IMAGE VALUE IS USED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Database stores: 'burger.jpg'                                          │
+ * │                                                                          │
+ * │  Component constructs full S3 URL:                                      │
+ * │  `https://bucket-name.s3.amazonaws.com/${image}`                        │
+ * │                                                                          │
+ * │  Result: 'https://bucket-name.s3.amazonaws.com/burger.jpg'              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * IMPORTANT: Before running this script, you must:
+ * 1. Upload these image files to your S3 bucket:
+ *    - burger.jpg
+ *    - curry.jpg
+ *    - dumplings.jpg
+ *    - macncheese.jpg
+ *    - pizza.jpg
+ *    - schnitzel.jpg
+ *    - tomato-salad.jpg
+ *
+ * 2. Configure your S3 bucket for public read access (see lib/meals.js)
+ *
+ * USAGE:
+ * node initdb.js
+ *
+ * ============================================================================
+ */
+
 const sql = require('better-sqlite3');
 const db = sql('meals.db');
 
+/**
+ * ============================================================================
+ * DUMMY MEALS DATA
+ * ============================================================================
+ *
+ * NOTE: The `image` field contains JUST THE FILENAME, not a path.
+ * This is because:
+ * 1. Images are stored in AWS S3, not locally
+ * 2. The filename serves as the S3 "Key" (object identifier)
+ * 3. The full URL is constructed in the display components
+ *
+ * BEFORE S3 MIGRATION:
+ *   image: '/images/burger.jpg'  (path to public/images/)
+ *
+ * AFTER S3 MIGRATION:
+ *   image: 'burger.jpg'  (just the filename = S3 Key)
+ */
 const dummyMeals = [
   {
     title: 'Juicy Cheese Burger',
     slug: 'juicy-cheese-burger',
+    /**
+     * S3 Key: 'burger.jpg'
+     * Full S3 URL (constructed in component):
+     * https://{bucket}.s3.amazonaws.com/burger.jpg
+     */
     image: 'burger.jpg',
     summary:
       'A mouth-watering burger with a juicy beef patty and melted cheese, served in a soft bun.',
@@ -149,13 +219,13 @@ const dummyMeals = [
     instructions: `
       1. Prepare the tomatoes:
         Slice fresh tomatoes and arrange them on a plate.
-    
+
       2. Add herbs and seasoning:
          Sprinkle chopped basil, salt, and pepper over the tomatoes.
-    
+
       3. Dress the salad:
          Drizzle with olive oil and balsamic vinegar.
-    
+
       4. Serve:
          Enjoy this simple, flavorful salad as a side dish or light meal.
     `,
@@ -164,6 +234,14 @@ const dummyMeals = [
   },
 ];
 
+/**
+ * ============================================================================
+ * CREATE THE MEALS TABLE
+ * ============================================================================
+ *
+ * The table schema is the same as the local storage version.
+ * The `image` column stores JUST THE FILENAME (S3 Key).
+ */
 db.prepare(`
    CREATE TABLE IF NOT EXISTS meals (
        id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -177,6 +255,11 @@ db.prepare(`
     )
 `).run();
 
+/**
+ * ============================================================================
+ * INSERT DUMMY DATA
+ * ============================================================================
+ */
 async function initData() {
   const stmt = db.prepare(`
       INSERT INTO meals VALUES (
@@ -197,3 +280,37 @@ async function initData() {
 }
 
 initData();
+
+/**
+ * ============================================================================
+ * LESSON 473 - DATABASE CHANGES SUMMARY
+ * ============================================================================
+ *
+ * WHAT CHANGED FOR S3:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  • image values changed from '/images/filename.jpg' to 'filename.jpg'  │
+ * │  • No schema changes needed                                             │
+ * │  • The image field now stores the S3 "Key" (object identifier)         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * TO RESET THE DATABASE:
+ * 1. Delete meals.db file
+ * 2. Run: node initdb.js
+ *
+ * PREREQUISITE:
+ * Make sure these images are uploaded to your S3 bucket:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  burger.jpg       │  Must exist in S3 bucket                           │
+ * │  curry.jpg        │  Must exist in S3 bucket                           │
+ * │  dumplings.jpg    │  Must exist in S3 bucket                           │
+ * │  macncheese.jpg   │  Must exist in S3 bucket                           │
+ * │  pizza.jpg        │  Must exist in S3 bucket                           │
+ * │  schnitzel.jpg    │  Must exist in S3 bucket                           │
+ * │  tomato-salad.jpg │  Must exist in S3 bucket                           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * You can find these images in the original project's public/images/ folder
+ * or in the assets/ folder of this project.
+ *
+ * ============================================================================
+ */
