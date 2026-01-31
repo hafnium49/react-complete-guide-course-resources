@@ -1,10 +1,105 @@
 /**
  * ============================================================================
- * ROOT LAYOUT - LESSON 476: Section Summary & Complete Reference
+ * ROOT LAYOUT - LESSONS 476 & 477: Section Summary & Router Comparison
  * ============================================================================
  *
  * This is the ROOT LAYOUT of our Next.js application. It wraps ALL pages
  * in the app and is the perfect place to define default metadata.
+ *
+ * ============================================================================
+ * 📚 LESSON 477: APP ROUTER vs PAGES ROUTER - Understanding the Difference
+ * ============================================================================
+ *
+ * This project uses the APP ROUTER, which is the modern, recommended approach.
+ * However, Next.js also has an older approach called the PAGES ROUTER.
+ *
+ * From the instructor:
+ * "In this section thus far, we used the so-called App Router, which is the
+ * more modern and recommended way of building NextJS apps. But there also is
+ * a Pages Router, which is essentially an alternative way of building NextJS
+ * apps, which was the only way in the past."
+ *
+ * ============================================================================
+ * APP ROUTER vs PAGES ROUTER COMPARISON
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                        APP ROUTER (This Project)                        │
+ * │─────────────────────────────────────────────────────────────────────────│
+ * │  Folder: /app                                                           │
+ * │  Status: Modern, recommended, the future                                │
+ * │                                                                          │
+ * │  Key Features:                                                          │
+ * │  • Server Components by default                                         │
+ * │  • Special files: page.js, layout.js, error.js, loading.js             │
+ * │  • Server Actions with 'use server'                                     │
+ * │  • Nested layouts                                                       │
+ * │  • React Suspense integration                                           │
+ * │  • Streaming and partial rendering                                      │
+ * │                                                                          │
+ * │  Route Example:                                                         │
+ * │    app/meals/page.js → /meals                                           │
+ * │    app/meals/[mealSlug]/page.js → /meals/:mealSlug                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                        PAGES ROUTER (Legacy)                            │
+ * │─────────────────────────────────────────────────────────────────────────│
+ * │  Folder: /pages                                                         │
+ * │  Status: Still supported, more stable in some regards                   │
+ * │                                                                          │
+ * │  Key Features:                                                          │
+ * │  • Client Components by default                                         │
+ * │  • Data fetching: getServerSideProps, getStaticProps                   │
+ * │  • API routes in /pages/api                                             │
+ * │  • _app.js for global layout                                            │
+ * │  • _document.js for HTML structure                                      │
+ * │                                                                          │
+ * │  Route Example:                                                         │
+ * │    pages/meals/index.js → /meals                                        │
+ * │    pages/meals/[mealSlug].js → /meals/:mealSlug                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * WHEN TO USE WHICH?
+ * ============================================================================
+ *
+ * From the instructor:
+ * "The App Router is the future, but this Pages Router approach definitely
+ * has its merits. You also might be working on a project that's still using
+ * this Pages Router."
+ *
+ * CHOOSE APP ROUTER (this project) when:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✓ Starting a NEW project                                               │
+ * │  ✓ Want Server Components and better performance                        │
+ * │  ✓ Need nested layouts and streaming                                    │
+ * │  ✓ Want to use Server Actions for forms                                 │
+ * │  ✓ Following the recommended Next.js approach                           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * CHOOSE PAGES ROUTER when:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✓ Working on an EXISTING project that uses it                          │
+ * │  ✓ Need maximum stability (more battle-tested)                          │
+ * │  ✓ Team is more familiar with the Pages Router                          │
+ * │  ✓ Using third-party libraries not yet compatible with App Router       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * OFFICIAL DOCUMENTATION
+ * ============================================================================
+ *
+ * From the instructor:
+ * "In the official documentation, you can actually switch between two
+ * versions of that documentation so that you can also learn all about
+ * NextJS based on this Pages Router approach, if you prefer using that."
+ *
+ * The Next.js docs have a toggle at the top to switch between:
+ * • "Using App Router" (default, this project)
+ * • "Using Pages Router" (legacy)
+ *
+ * URL: https://nextjs.org/docs
  *
  * ============================================================================
  * 🎓 LESSON 476: SECTION COMPLETE - NEXTJS APP ROUTER MASTERY

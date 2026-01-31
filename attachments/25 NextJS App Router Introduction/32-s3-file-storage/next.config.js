@@ -1,6 +1,38 @@
 /**
  * ============================================================================
- * NEXT.JS CONFIGURATION - BONUS LESSON 473: Allowing External Image Sources
+ * NEXT.JS CONFIGURATION - LESSONS 473 & 477
+ * ============================================================================
+ *
+ * This configuration file works with BOTH App Router and Pages Router projects.
+ *
+ * ============================================================================
+ * LESSON 477: APP ROUTER vs PAGES ROUTER
+ * ============================================================================
+ *
+ * From the instructor:
+ * "In this section thus far, we used the so-called App Router, which is the
+ * more modern and recommended way of building NextJS apps. But there also is
+ * a Pages Router, which is essentially an alternative way of building NextJS
+ * apps, which was the only way in the past."
+ *
+ * CONFIGURATION FILE DIFFERENCES:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  next.config.js - SAME for both routers                                 │
+ * │  ─────────────────────────────────────                                  │
+ * │  This file configures Next.js itself, not the routing approach.        │
+ * │  Settings like `images`, `env`, `redirects` work identically           │
+ * │  in both App Router and Pages Router projects.                         │
+ * │                                                                          │
+ * │  HOW TO TELL WHICH ROUTER A PROJECT USES:                              │
+ * │  • App Router: Has an /app folder with page.js files                   │
+ * │  • Pages Router: Has a /pages folder with index.js files               │
+ * │  • Some projects use BOTH (hybrid approach)                            │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * This project uses the APP ROUTER (see the /app folder).
+ *
+ * ============================================================================
+ * LESSON 473: Allowing External Image Sources
  * ============================================================================
  *
  * WHY THIS CONFIGURATION IS NEEDED:
