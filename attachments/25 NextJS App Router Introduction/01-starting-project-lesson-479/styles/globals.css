@@ -1,3 +1,49 @@
+/**
+ * ============================================================================
+ * GLOBAL CSS - LESSON 479: The Styles Folder
+ * ============================================================================
+ *
+ * This file is in the /styles folder - one of the three important folders.
+ *
+ * ============================================================================
+ * 🎓 LESSON 479: THE STYLES FOLDER
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Styles, as you might guess, holds some style files. We can ignore that
+ * for now. We'll work on that soon."
+ *
+ * ============================================================================
+ * THE THREE IMPORTANT FOLDERS
+ * ============================================================================
+ *
+ * From the instructor:
+ * "The three important folders for us here are pages, public, and styles,
+ * though pages is by far the most important one."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  FOLDER      │  CONTENTS                                                │
+ * │──────────────┼──────────────────────────────────────────────────────────│
+ * │  /pages      │  Page components & routing (MOST IMPORTANT)              │
+ * │  /public     │  Static files (images, fonts, icons)                     │
+ * │  /styles     │  CSS files (global and module styles)                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * GLOBAL CSS IN NEXT.JS
+ * ============================================================================
+ *
+ * This file contains styles that apply to ALL pages.
+ * It's imported in pages/_app.js (the only place global CSS can be imported).
+ *
+ * For component-specific styles, use CSS Modules (*.module.css).
+ *
+ * ============================================================================
+ */
+
+/**
+ * CSS Reset - removes default browser styling
+ */
 html,
 body {
   padding: 0;
@@ -6,11 +52,17 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+/**
+ * Global link styling
+ */
 a {
   color: inherit;
   text-decoration: none;
 }
 
+/**
+ * Universal box-sizing for predictable layouts
+ */
 * {
   box-sizing: border-box;
 }

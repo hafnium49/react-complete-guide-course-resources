@@ -1,3 +1,66 @@
+/**
+ * ============================================================================
+ * CSS MODULE - LESSON 479: The Styles Folder
+ * ============================================================================
+ *
+ * This is a CSS MODULE file (.module.css) in the /styles folder.
+ *
+ * ============================================================================
+ * 🎓 LESSON 479: THE PUBLIC FOLDER
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And public simply holds public resources our page might use. Something
+ * like images, for example."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  THE PUBLIC FOLDER                                                       │
+ * │                                                                          │
+ * │  /public/favicon.ico  →  Accessible at /favicon.ico                     │
+ * │  /public/vercel.svg   →  Accessible at /vercel.svg                      │
+ * │  /public/images/...   →  Accessible at /images/...                      │
+ * │                                                                          │
+ * │  Files in /public are served at the root URL path.                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * NO INDEX.HTML IN PUBLIC
+ * ============================================================================
+ *
+ * From the instructor:
+ * "One thing you might see here in public though, is that unlike in a
+ * regular React app, which you, for example, created with create React app
+ * with that extra tool, that there in a standard React app, you have a
+ * index HTML file in the public folder. Here in the NextJS app, you don't
+ * have that."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  CREATE REACT APP (CRA)          │  NEXT.JS                            │
+ * │──────────────────────────────────┼─────────────────────────────────────│
+ * │  /public/index.html (required)   │  No index.html                      │
+ * │  Static HTML shell               │  Dynamic pre-rendering              │
+ * │  React fills in content          │  Server generates full HTML         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * CSS MODULES vs GLOBAL CSS
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  globals.css (Global)            │  Home.module.css (Module)           │
+ * │──────────────────────────────────┼─────────────────────────────────────│
+ * │  Applies to entire app           │  Scoped to component                │
+ * │  Import only in _app.js          │  Import in any component            │
+ * │  Class names stay as written     │  Class names get hashed             │
+ * │  Risk of conflicts               │  No naming conflicts                │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/**
+ * Main container - full viewport height centered layout
+ */
 .container {
   min-height: 100vh;
   padding: 0 0.5rem;
@@ -7,6 +70,9 @@
   align-items: center;
 }
 
+/**
+ * Main content area
+ */
 .main {
   padding: 5rem 0;
   flex: 1;
@@ -16,6 +82,9 @@
   align-items: center;
 }
 
+/**
+ * Footer section
+ */
 .footer {
   width: 100%;
   height: 100px;
@@ -35,6 +104,9 @@
   align-items: center;
 }
 
+/**
+ * Title link styling - Next.js brand color
+ */
 .title a {
   color: #0070f3;
   text-decoration: none;
@@ -46,6 +118,9 @@
   text-decoration: underline;
 }
 
+/**
+ * Main title styling
+ */
 .title {
   margin: 0;
   line-height: 1.15;
@@ -57,11 +132,17 @@
   text-align: center;
 }
 
+/**
+ * Description text styling
+ */
 .description {
   line-height: 1.5;
   font-size: 1.5rem;
 }
 
+/**
+ * Code block styling
+ */
 .code {
   background: #fafafa;
   border-radius: 5px;
@@ -71,6 +152,9 @@
     Bitstream Vera Sans Mono, Courier New, monospace;
 }
 
+/**
+ * Grid layout for cards
+ */
 .grid {
   display: flex;
   align-items: center;
@@ -80,6 +164,9 @@
   margin-top: 3rem;
 }
 
+/**
+ * Card component styling
+ */
 .card {
   margin: 1rem;
   flex-basis: 45%;
@@ -110,10 +197,17 @@
   line-height: 1.5;
 }
 
+/**
+ * Logo styling - used for Vercel logo in footer
+ * The logo image is served from /public/vercel.svg
+ */
 .logo {
   height: 1em;
 }
 
+/**
+ * Responsive layout - stack cards on mobile
+ */
 @media (max-width: 600px) {
   .grid {
     width: 100%;
