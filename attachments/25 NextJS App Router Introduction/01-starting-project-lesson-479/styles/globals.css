@@ -1,48 +1,48 @@
 /**
  * ============================================================================
- * GLOBAL CSS - LESSON 479: The Styles Folder
- * ============================================================================
- *
- * This file is in the /styles folder - one of the three important folders.
- *
- * ============================================================================
- * 🎓 LESSON 479: THE STYLES FOLDER
+ * GLOBAL CSS - LESSON 480: Kept During Cleanup
  * ============================================================================
  *
  * From the instructor:
- * "Styles, as you might guess, holds some style files. We can ignore that
- * for now. We'll work on that soon."
+ * "We can keep the globals.css file if we want though."
  *
  * ============================================================================
- * THE THREE IMPORTANT FOLDERS
+ * 🎓 LESSON 480: PROJECT CLEANUP SUMMARY
  * ============================================================================
  *
- * From the instructor:
- * "The three important folders for us here are pages, public, and styles,
- * though pages is by far the most important one."
+ * During this lesson, the instructor cleaned up the starter project:
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  FOLDER      │  CONTENTS                                                │
- * │──────────────┼──────────────────────────────────────────────────────────│
- * │  /pages      │  Page components & routing (MOST IMPORTANT)              │
- * │  /public     │  Static files (images, fonts, icons)                     │
- * │  /styles     │  CSS files (global and module styles)                    │
+ * │  BEFORE CLEANUP                    │  AFTER CLEANUP                     │
+ * │────────────────────────────────────┼────────────────────────────────────│
+ * │  pages/                            │  pages/                            │
+ * │    _app.js                         │    _app.js        ← kept           │
+ * │    index.js (complex)              │    index.js       ← new simple     │
+ * │    api/                            │    news.js        ← new            │
+ * │      hello.js                      │                                    │
+ * │  styles/                           │  styles/                           │
+ * │    globals.css                     │    globals.css    ← kept           │
+ * │    Home.module.css                 │                                    │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * The goal was to start fresh with minimal files to learn file-based routing.
+ *
  * ============================================================================
- * GLOBAL CSS IN NEXT.JS
+ * WHY KEEP globals.css?
  * ============================================================================
  *
- * This file contains styles that apply to ALL pages.
- * It's imported in pages/_app.js (the only place global CSS can be imported).
+ * Global CSS provides:
+ * • CSS reset (consistent starting point)
+ * • Base typography
+ * • Default link styles
  *
- * For component-specific styles, use CSS Modules (*.module.css).
+ * This file is imported in pages/_app.js and applies to ALL pages.
  *
  * ============================================================================
  */
 
 /**
- * CSS Reset - removes default browser styling
+ * CSS Reset
  */
 html,
 body {
@@ -53,7 +53,7 @@ body {
 }
 
 /**
- * Global link styling
+ * Global link styles
  */
 a {
   color: inherit;
@@ -61,7 +61,7 @@ a {
 }
 
 /**
- * Universal box-sizing for predictable layouts
+ * Universal box-sizing
  */
 * {
   box-sizing: border-box;
