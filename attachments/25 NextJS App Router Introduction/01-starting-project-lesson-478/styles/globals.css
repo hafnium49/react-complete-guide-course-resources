@@ -1,3 +1,79 @@
+/**
+ * ============================================================================
+ * GLOBAL CSS - LESSON 478: Pages Router Styling
+ * ============================================================================
+ *
+ * This file contains GLOBAL styles that apply to ALL pages in the application.
+ *
+ * ============================================================================
+ * HOW GLOBAL CSS WORKS IN PAGES ROUTER
+ * ============================================================================
+ *
+ * In Pages Router, global CSS must be imported in _app.js:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  // pages/_app.js                                                        │
+ * │  import '../styles/globals.css'  // ← Global CSS imported here ONLY     │
+ * │                                                                          │
+ * │  function MyApp({ Component, pageProps }) {                              │
+ * │    return <Component {...pageProps} />                                   │
+ * │  }                                                                        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ⚠️  You CANNOT import global CSS anywhere else in Pages Router!
+ * Doing so will cause a build error:
+ *   "Global CSS cannot be imported from files other than your Custom <App>"
+ *
+ * ============================================================================
+ * COMPARISON: Global CSS Location
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  PAGES ROUTER (This Project)     │  APP ROUTER                          │
+ * │──────────────────────────────────┼──────────────────────────────────────│
+ * │  Import in: pages/_app.js        │  Import in: app/layout.js            │
+ * │  Location: /styles/globals.css   │  Location: /app/globals.css          │
+ * │  (or any path from _app.js)      │  (or any path from layout.js)        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * CSS MODULES vs GLOBAL CSS
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  GLOBAL CSS (this file)          │  CSS MODULES (.module.css)           │
+ * │──────────────────────────────────┼──────────────────────────────────────│
+ * │  • Regular class names           │  • Scoped class names (auto-hashed)  │
+ * │  • Applies everywhere            │  • Component-specific                │
+ * │  • Only in _app.js               │  • Can import anywhere               │
+ * │  • Risk of name collisions       │  • No name collisions                │
+ * │  • File: styles/globals.css      │  • File: Component.module.css        │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * WHAT BELONGS IN GLOBAL CSS?
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ✓ CSS resets and normalizations                                        │
+ * │  ✓ Base element styles (html, body, a, *)                               │
+ * │  ✓ CSS custom properties (variables)                                    │
+ * │  ✓ Font imports (@font-face)                                            │
+ * │  ✓ Utility classes used across many components                          │
+ * │                                                                          │
+ * │  ✗ Component-specific styles (use CSS Modules instead)                  │
+ * │  ✗ Styles that might conflict (use scoped styles)                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/**
+ * CSS Reset - Base Element Styles
+ *
+ * These styles apply to the HTML and body elements globally,
+ * removing default browser margins and padding.
+ */
 html,
 body {
   padding: 0;
@@ -6,11 +82,23 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+/**
+ * Global Link Styles
+ *
+ * Remove default link underline and inherit color from parent.
+ */
 a {
   color: inherit;
   text-decoration: none;
 }
 
+/**
+ * Box Sizing Reset
+ *
+ * Apply border-box sizing to all elements for more predictable layouts.
+ * With border-box, padding and border are included in the element's
+ * total width and height.
+ */
 * {
   box-sizing: border-box;
 }
