@@ -75,7 +75,7 @@
  */
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 /**
  * ============================================================================
  * LESSON 469 - useFormState HOOK
@@ -270,7 +270,7 @@ export default function ShareMealPage() {
    * execution of that Server Action and its response. And that's why
    * useFormState kind of needs to act as a man in the middle, you could say."
    */
-  const [state, formAction] = useFormState(shareMeal, { message: null });
+  const [state, formAction] = useActionState(shareMeal, { message: null });
 
   return (
     <>
