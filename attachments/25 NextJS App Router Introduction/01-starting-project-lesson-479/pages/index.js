@@ -16,14 +16,18 @@
  * of the box."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  CURRENT PROJECT ROUTES                                                  │
+ * │  CURRENT PROJECT ROUTES (Updated for Lesson 482)                        │
  * │                                                                          │
  * │  FILE                              │  URL                               │
  * │────────────────────────────────────┼────────────────────────────────────│
  * │  pages/index.js (THIS FILE)        │  /                                 │
  * │  pages/news/index.js               │  /news                             │
- * │  pages/news/something-important.js │  /news/something-important         │
+ * │  pages/news/[newsId].js            │  /news/:newsId (DYNAMIC!)         │
+ * │  pages/news/something-important.js │  /news/something-important (static)│
  * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * 🎓 LESSON 482 NOTE: The [newsId].js file uses square bracket syntax to
+ * create a DYNAMIC route that handles any value after /news/
  *
  * ============================================================================
  * KEY CONCEPTS LEARNED (Lessons 480-481)
@@ -56,7 +60,7 @@
  *    • SEO-friendly out of the box
  *
  * ============================================================================
- * TESTING THE ROUTES
+ * TESTING THE ROUTES (Updated for Lesson 482)
  * ============================================================================
  *
  * 1. Run: npm run dev
@@ -64,7 +68,17 @@
  *
  *    http://localhost:3000                    → "The Home Page"
  *    http://localhost:3000/news               → "The News Page"
- *    http://localhost:3000/news/something-important → "The Detail Page"
+ *    http://localhost:3000/news/something-important → "The Detail Page" (static)
+ *
+ * 🎓 LESSON 482 - Test Dynamic Routes (all show "The Detail Page"):
+ *
+ *    http://localhost:3000/news/thiscourseisgreat
+ *    http://localhost:3000/news/breaking-news
+ *    http://localhost:3000/news/any-value-works
+ *
+ * From the instructor:
+ * "If I load this page for /news/thiscourseisgreat, I see the detail page,
+ * but I also see for something else or anything else we enter after slash news."
  *
  * ============================================================================
  */

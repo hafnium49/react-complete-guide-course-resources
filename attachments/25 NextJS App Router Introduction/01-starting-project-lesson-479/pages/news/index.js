@@ -80,13 +80,42 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * CURRENT FOLDER STRUCTURE
+ * CURRENT FOLDER STRUCTURE (Updated for Lesson 482)
  * ============================================================================
  *
  * pages/
  *   news/
  *     index.js               ← THIS FILE: /news
- *     something-important.js ← /news/something-important
+ *     [newsId].js            ← DYNAMIC: /news/:newsId (any value!)
+ *     something-important.js ← STATIC: /news/something-important
+ *
+ * ============================================================================
+ * 🎓 LESSON 482: CONNECTING LIST TO DETAIL PAGES
+ * ============================================================================
+ *
+ * From the instructor:
+ * "It would be very realistic that index.js and the news folder should output
+ * a list of news items. And then we can click those individual items and then
+ * take into the detailed pages with the concrete content for the news item
+ * we selected."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  TYPICAL NEWS SITE FLOW                                                  │
+ * │                                                                          │
+ * │  THIS PAGE (/news)              DETAIL PAGE (/news/[newsId])            │
+ * │  ─────────────────              ─────────────────────────────           │
+ * │                                                                          │
+ * │  ┌─────────────────┐            ┌─────────────────────────┐             │
+ * │  │  News List      │            │  Article: "Breaking..."  │             │
+ * │  │                 │   click    │                          │             │
+ * │  │  • Breaking...  │ ─────────► │  Full article content    │             │
+ * │  │  • Sports...    │            │  fetched from database   │             │
+ * │  │  • Weather...   │            │  using the newsId param  │             │
+ * │  └─────────────────┘            └─────────────────────────┘             │
+ * │                                                                          │
+ * │  In future lessons, we'll add links from this list page to the         │
+ * │  dynamic detail pages using Next.js Link component.                    │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  */
