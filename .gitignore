@@ -4,3 +4,5 @@ node_modules
 Dockerfile
 
 *.db
+
+attachments/25 NextJS App Router Introduction/05-onwards-foodies-starting-project/public/images/title*.png
