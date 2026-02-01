@@ -22,20 +22,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /**
-   * SERVER ACTIONS CONFIGURATION
+   * EXPERIMENTAL FEATURES
    *
-   * bodySizeLimit: Maximum allowed size for the request body sent to Server Actions.
-   *
-   * SUPPORTED FORMATS:
-   * - '500kb' - 500 kilobytes
-   * - '1mb'   - 1 megabyte (default)
-   * - '5mb'   - 5 megabytes
-   * - 1048576 - bytes as number (1 MB = 1048576 bytes)
-   *
-   * We're setting it to 5 MB to comfortably handle meal images.
+   * In Next.js 15, certain configurations like serverActions must be placed
+   * under the 'experimental' key.
    */
-  serverActions: {
-    bodySizeLimit: '5mb',
+  experimental: {
+    /**
+     * SERVER ACTIONS CONFIGURATION
+     *
+     * bodySizeLimit: Maximum allowed size for the request body sent to Server Actions.
+     *
+     * SUPPORTED FORMATS:
+     * - '500kb' - 500 kilobytes
+     * - '1mb'   - 1 megabyte (default)
+     * - '5mb'   - 5 megabytes
+     * - 1048576 - bytes as number (1 MB = 1048576 bytes)
+     *
+     * We're setting it to 5 MB to comfortably handle meal images.
+     */
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
   },
 };
 
