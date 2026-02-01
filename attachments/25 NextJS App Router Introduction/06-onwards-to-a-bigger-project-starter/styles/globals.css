@@ -1,13 +1,98 @@
+/**
+ * ============================================================================
+ * globals.css - LESSON 489: GLOBAL STYLES
+ * ============================================================================
+ *
+ * This file contains global CSS that applies to ALL pages in the application.
+ * It's imported in _app.js which makes it available everywhere.
+ *
+ * ============================================================================
+ * 🎓 LESSON 489: FIXING THE WHITE BORDER
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And we've got a white border around that - for that go into your global
+ * styles and here in body, set margin to zero. That's something I forgot
+ * for the starting project. But if we add margin zero to body in the global
+ * CSS file then this white border is gone."
+ *
+ * THE FIX: Added margin: 0 to the body selector
+ *
+ * WHY THIS HAPPENS:
+ * Browsers have default styles including margin on <body>. This causes
+ * a small gap around the entire page. Setting margin: 0 removes it.
+ *
+ * ============================================================================
+ * 📁 HOW GLOBAL CSS WORKS IN NEXTJS
+ * ============================================================================
+ *
+ * 1. Global CSS files (like this one) can ONLY be imported in _app.js
+ * 2. They apply styles to ALL pages in the application
+ * 3. CSS Modules (*.module.css) are used for component-specific styles
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  GLOBAL CSS vs CSS MODULES                                               │
+ * │                                                                          │
+ * │  GLOBAL CSS (this file):                                                │
+ * │  • Import only in _app.js                                               │
+ * │  • Applies to entire application                                        │
+ * │  • Good for: resets, fonts, base styles                                 │
+ * │                                                                          │
+ * │  CSS MODULES (Component.module.css):                                    │
+ * │  • Import in individual components                                      │
+ * │  • Scoped to that component only                                        │
+ * │  • Good for: component-specific styles                                  │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ */
+
+/* Google Fonts Import
+ * Importing two font families:
+ * - Lato (weight 700) - Used for headings
+ * - Open Sans (weights 400, 700) - Used for body text
+ */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Open+Sans:wght@400;700&display=swap');
 
+/**
+ * Universal Box Sizing Reset
+ *
+ * border-box makes width/height include padding and border.
+ * This makes layout calculations much easier.
+ *
+ * Example:
+ * - Without border-box: width: 100px + padding: 10px = 120px total
+ * - With border-box: width: 100px includes padding = 100px total
+ */
 * {
   box-sizing: border-box;
 }
 
+/**
+ * Body Styles
+ *
+ * Sets the default font family and removes default browser margins.
+ *
+ * margin: 0 - ADDED IN LESSON 489
+ * From the instructor:
+ * "For that go into your global styles and here in body, set margin to zero.
+ * That's something I forgot for the starting project. But if we add margin
+ * zero to body in the global CSS file then this white border is gone."
+ *
+ * This removes the default browser margin that causes a white border
+ * around the entire page content.
+ */
 body {
   font-family: 'Open Sans', 'Lato', sans-serif;
+  margin: 0;
 }
 
+/**
+ * Heading Styles
+ *
+ * All heading elements (h1-h6) use the Lato font family.
+ * This gives headings a distinct, bold appearance compared to body text.
+ */
 h1,
 h2,
 h3,

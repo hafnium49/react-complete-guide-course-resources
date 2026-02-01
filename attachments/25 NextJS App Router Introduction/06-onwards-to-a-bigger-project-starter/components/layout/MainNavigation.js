@@ -1,37 +1,64 @@
 /**
  * ============================================================================
- * MainNavigation.js - LESSON 485: NAVIGATION HEADER COMPONENT
+ * MainNavigation.js - LESSON 485 & 489: NAVIGATION HEADER COMPONENT
  * ============================================================================
  *
- * This is a standard React navigation component. Notice that it currently
- * uses React Router's `<Link to="...">` syntax, which you'll need to update
- * to NextJS's `<Link href="...">` syntax in upcoming lessons!
+ * LESSON 485: Created as standard React component with placeholder Link syntax
+ * LESSON 489: Fixed Link import from 'next/link' and changed 'to' to 'href'
+ *
+ * ============================================================================
+ * 🎓 LESSON 489: ADDING THE LAYOUT AND NAVIGATION
+ * ============================================================================
  *
  * From the instructor:
- * "These are mostly just React components and standard React code.
- * There's nothing NextJS specific about those files."
+ * "Now I did prepare some components here in the layout folder in the
+ * Components folder that give our pages a general layout and also a main
+ * navigation bar which holds some links, some list items with links.
+ * We just need to use that."
  *
  * ============================================================================
- * ⚠️ IMPORTANT: LINK SYNTAX NEEDS TO BE UPDATED!
+ * 🔗 FIXING THE LINK COMPONENT
  * ============================================================================
  *
- * CURRENT (React Router syntax - WON'T WORK IN NEXTJS):
- * <Link to='/'>All Meetups</Link>
- * <Link to='/new-meetup'>Add New Meetup</Link>
+ * From the instructor:
+ * "We get this error because in that main navigation component, I'm using
+ * the link component but I'm not importing it deliberately because I wanted
+ * to do this together with you again. We learned about this link component
+ * and we import it from next/link."
  *
- * NEEDS TO BE CHANGED TO (NextJS syntax):
- * import Link from 'next/link';
- * <Link href='/'>All Meetups</Link>
- * <Link href='/new-meetup'>Add New Meetup</Link>
+ * THE FIX (done in this lesson):
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  KEY DIFFERENCE                                                          │
+ * │  BEFORE (React Router syntax - DOESN'T WORK):                           │
  * │                                                                          │
- * │  React Router:    <Link to="/path">...</Link>                           │
- * │  NextJS:          <Link href="/path">...</Link>                         │
+ * │  // No import                                                            │
+ * │  <Link to='/'>All Meetups</Link>                                        │
+ * │  <Link to='/new-meetup'>Add New Meetup</Link>                           │
  * │                                                                          │
- * │  Also, NextJS Link is imported from 'next/link'                         │
- * │  React Router Link is imported from 'react-router-dom'                  │
+ * │  AFTER (NextJS syntax - WORKS!):                                        │
+ * │                                                                          │
+ * │  import Link from 'next/link';                                          │
+ * │  <Link href='/'>All Meetups</Link>                                      │
+ * │  <Link href='/new-meetup'>Add New Meetup</Link>                         │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "However, the 'to' prop then should be changed to 'href' because the link
+ * component offered by NextJS wants this 'href' prop where we define the
+ * destination of that link."
+ *
+ * ============================================================================
+ * 📍 KEY DIFFERENCE: React Router vs NextJS Link
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  REACT ROUTER                        │  NEXTJS                          │
+ * │  import { Link } from                │  import Link from                │
+ * │    'react-router-dom';               │    'next/link';                  │
+ * │                                       │                                  │
+ * │  <Link to="/path">Text</Link>        │  <Link href="/path">Text</Link> │
+ * │        ^^                             │        ^^^^                      │
+ * │   Uses "to" prop                      │   Uses "href" prop              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
@@ -60,66 +87,48 @@
  * 🛤️ ROUTES THIS COMPONENT LINKS TO
  * ============================================================================
  *
- * You'll create these page files in upcoming lessons:
- *
  * 1. "/" (All Meetups)
  *    → pages/index.js (home page)
- *    → Will display MeetupList with all meetups
+ *    → Displays MeetupList with all meetups
  *
  * 2. "/new-meetup" (Add New Meetup)
- *    → pages/new-meetup.js OR pages/new-meetup/index.js
- *    → Will display NewMeetupForm
+ *    → pages/new-meetup/index.js
+ *    → Displays NewMeetupForm
  *
  * ============================================================================
- * 🎨 STYLING WITH CSS MODULES
+ * ⚡ NEXTJS LINK BENEFITS (SPA-LIKE NAVIGATION)
  * ============================================================================
  *
- * Styles are imported from MainNavigation.module.css:
+ * Using NextJS Link instead of regular <a> tags provides:
  *
- * • classes.header - Styles the header container (background, padding, etc.)
- * • classes.logo - Styles the brand/logo text
+ * 1. CLIENT-SIDE NAVIGATION
+ *    - No full page reload when clicking links
+ *    - JavaScript handles the navigation
+ *    - Much faster user experience
  *
- * CSS Modules automatically scope class names to avoid conflicts:
- * • .header in CSS becomes a unique hash like .MainNavigation_header__abc123
+ * 2. AUTOMATIC PREFETCHING
+ *    - NextJS prefetches linked pages in production
+ *    - Pages load almost instantly when clicked
  *
- * ============================================================================
- * 📂 LOCATION IN PROJECT STRUCTURE
- * ============================================================================
- *
- * From the instructor:
- * "We get components for showing meetups as a list, for showing details
- * about a meetup, for showing a form, for having a layout with a navigation,
- * and some UI components."
- *
- *   /components/
- *   └── /layout/
- *       ├── Layout.js           (imports this component)
- *       ├── Layout.module.css
- *       ├── MainNavigation.js   ← THIS FILE
- *       └── MainNavigation.module.css
- *
- * ============================================================================
- * ⚛️ REACT CONCEPTS USED
- * ============================================================================
- *
- * 1. SEMANTIC HTML
- *    - <header> - Identifies this as the page header
- *    - <nav> - Identifies this as navigation
- *    - <ul>/<li> - Proper list structure for nav links
- *
- * 2. CSS MODULES
- *    - Scoped styling with classes object
- *    - Prevents global CSS conflicts
- *
- * 3. LINK COMPONENT (Currently React Router, needs NextJS update)
- *    - Client-side navigation (no full page reload)
- *    - Enables SPA-like behavior
+ * 3. PRESERVES STATE
+ *    - React state is maintained across navigations
+ *    - No flash of white/blank page
  *
  * ============================================================================
  */
 
-// TODO: Add this import when converting to NextJS:
-// import Link from 'next/link';
+/**
+ * Import Link from NextJS
+ *
+ * From the instructor:
+ * "We learned about this link component and we import it from next/link."
+ *
+ * This is the NextJS Link component that enables:
+ * - Client-side navigation (no page reload)
+ * - Automatic prefetching in production
+ * - SPA-like user experience
+ */
+import Link from 'next/link';
 
 import classes from './MainNavigation.module.css';
 
@@ -127,19 +136,11 @@ import classes from './MainNavigation.module.css';
  * MainNavigation Component - Header with Logo and Navigation Links
  *
  * Renders the top navigation bar of the application.
+ * Uses NextJS Link component for client-side navigation.
  *
- * NOTE: This component currently uses React Router's Link syntax!
- * You'll need to:
- * 1. Import Link from 'next/link'
- * 2. Change "to" props to "href" props
- *
- * The Link component in NextJS uses "href" instead of "to":
- *
- * BEFORE (React Router):
- *   <Link to="/path">Text</Link>
- *
- * AFTER (NextJS):
- *   <Link href="/path">Text</Link>
+ * From the instructor:
+ * "With that link import added, if we now save everything and reload,
+ * we got this nice navigation bar at the top here."
  */
 function MainNavigation() {
   return (
@@ -147,7 +148,6 @@ function MainNavigation() {
       {/*
        * Logo/Brand Section
        * Just a styled div with the app name
-       * Could be replaced with an actual logo image
        */}
       <div className={classes.logo}>React Meetups</div>
 
@@ -155,15 +155,12 @@ function MainNavigation() {
        * Navigation Section
        * Contains links to the main pages of the application
        *
-       * ⚠️ CURRENT CODE USES REACT ROUTER SYNTAX!
-       * The <Link to="..."> syntax is from React Router.
+       * IMPORTANT: Using NextJS Link with "href" prop (not "to")
        *
-       * FOR NEXTJS, CHANGE TO:
-       *
-       * import Link from 'next/link';
-       *
-       * <Link href='/'>All Meetups</Link>
-       * <Link href='/new-meetup'>Add New Meetup</Link>
+       * From the instructor:
+       * "The 'to' prop then should be changed to 'href' because the link
+       * component offered by NextJS wants this 'href' prop where we define
+       * the destination of that link."
        */}
       <nav>
         <ul>
@@ -172,22 +169,22 @@ function MainNavigation() {
              * Link to Home Page (All Meetups)
              *
              * Route: / (root)
-             * File:  pages/index.js (to be created)
+             * File:  pages/index.js
              *
-             * ⚠️ Change "to" to "href" for NextJS!
+             * Uses href="/" (NextJS syntax, not to="/")
              */}
-            <Link to='/'>All Meetups</Link>
+            <Link href='/'>All Meetups</Link>
           </li>
           <li>
             {/*
              * Link to Add New Meetup Page
              *
              * Route: /new-meetup
-             * File:  pages/new-meetup.js (to be created)
+             * File:  pages/new-meetup/index.js
              *
-             * ⚠️ Change "to" to "href" for NextJS!
+             * Uses href="/new-meetup" (NextJS syntax, not to="/new-meetup")
              */}
-            <Link to='/new-meetup'>Add New Meetup</Link>
+            <Link href='/new-meetup'>Add New Meetup</Link>
           </li>
         </ul>
       </nav>
