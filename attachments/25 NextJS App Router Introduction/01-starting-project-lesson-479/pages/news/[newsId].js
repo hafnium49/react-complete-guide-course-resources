@@ -1,9 +1,10 @@
 /**
  * ============================================================================
- * DYNAMIC ROUTE PAGE - LESSON 482: Dynamic Routes with Square Brackets
+ * DYNAMIC ROUTE PAGE - LESSONS 482-483: Dynamic Routes & useRouter Hook
  * ============================================================================
  *
- * This file demonstrates DYNAMIC ROUTING in NextJS.
+ * This file demonstrates DYNAMIC ROUTING in NextJS and how to extract
+ * the dynamic URL segment value using the useRouter hook.
  * Route: /news/[ANY-VALUE-HERE]
  *
  * ============================================================================
@@ -189,33 +190,242 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🎓 LESSON 482: WHAT'S NEXT - EXTRACTING THE PATH VALUE
+ * 🎓 LESSON 483: EXTRACTING THE DYNAMIC PATH VALUE
  * ============================================================================
  *
  * From the instructor:
- * "But how can we now extract the entered path value inside of the component
- * so that we can, for example, then fetch the correct news item from a
- * database, let's say when a user visits this page?"
+ * "To extract the concrete value entered in the URL when this page is loaded
+ * Next.js gives us a special hook which we can use. A special react hook
+ * which we can use in functional components."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  COMING IN THE NEXT LESSON                                               │
+ * │  THE useRouter HOOK                                                      │
  * │                                                                          │
- * │  We'll learn how to ACCESS the dynamic value:                           │
+ * │  import { useRouter } from 'next/router';                               │
+ * │                              ───────────                                │
+ * │                                  │                                       │
+ * │                                  └── Sub-package of next                │
+ * │                                      Exposes routing functionality      │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "Here, instead we import from next to be precise from next/router which is
+ * a sub package of the next package which exposes routing specific
+ * functionality. And here we got the useRouter hook. It's a regular react
+ * hook, just not one built into react but a custom hook built by the next team."
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: THE ROUTER OBJECT
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And we can now call this hook inside of the detailed page, simply like this.
+ * If we do that, we get access to a router object and on that router object
+ * we then got certain pieces of data and certain methods which we can call."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WHAT THE ROUTER OBJECT PROVIDES                                         │
  * │                                                                          │
- * │  URL: /news/my-first-article                                            │
- * │                  ────────────────                                       │
- * │                       │                                                  │
- * │                       ▼                                                  │
- * │  In component: router.query.newsId = "my-first-article"                 │
+ * │  const router = useRouter();                                             │
  * │                                                                          │
- * │  This allows us to:                                                      │
- * │  • Fetch specific data from a database                                   │
- * │  • Display the correct content for each news item                       │
- * │  • Build truly dynamic, data-driven pages                               │
+ * │  router.query     → Object with dynamic segment values                  │
+ * │  router.pathname  → The route pattern (e.g., '/news/[newsId]')          │
+ * │  router.asPath    → Actual URL path (e.g., '/news/my-article')          │
+ * │  router.push()    → Navigate programmatically                           │
+ * │  router.replace() → Navigate without adding to history                  │
+ * │  router.back()    → Go back in history                                  │
+ * │                                                                          │
+ * │  We focus on router.query for accessing URL values.                     │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "Now, for example, we get methods for programmatic navigation but we don't
+ * need this here so we can ignore this for now but we also get access to
+ * the values encoded in the URL so, to the concrete values of these dynamic
+ * path segments."
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: ACCESSING DYNAMIC VALUES WITH router.query
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And getting access is easy on this router object we've got this query
+ * property which gives us access to a nested object and on that query object
+ * we then have the identifier which we chose between the square brackets
+ * as a property name."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  HOW router.query MAPS TO THE FILE NAME                                  │
+ * │                                                                          │
+ * │  FILE NAME: [newsId].js                                                 │
+ * │              ──────                                                     │
+ * │                 │                                                        │
+ * │                 ▼                                                        │
+ * │  ACCESS VIA: router.query.newsId                                        │
+ * │                           ──────                                        │
+ * │                                                                          │
+ * │  The identifier in brackets becomes the property name!                  │
+ * │                                                                          │
+ * │  EXAMPLES:                                                               │
+ * │  ─────────────────────────────────────────────────────                  │
+ * │  [slug].js      → router.query.slug                                     │
+ * │  [productId].js → router.query.productId                                │
+ * │  [username].js  → router.query.username                                 │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "So, in my case newsId because that's what I entered here as a file name
+ * between the square brackets. And that will then hold the concrete value
+ * in the URL for this dynamic segment for which this page was visited."
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: THE TWO-RENDER BEHAVIOR (IMPORTANT!)
+ * ============================================================================
+ *
+ * From the instructor:
+ * "If we reload we see undefined first and then something else. Now, we see
+ * two logs here because that's how useRouter works. It runs immediately when
+ * the page is first rendered and at this point it doesn't yet know what's
+ * in the URL but then once we have that information the component renders
+ * again and we got that concrete value that is just how that hook works."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  useRouter TWO-PHASE RENDERING                                           │
+ * │                                                                          │
+ * │  FIRST RENDER (during hydration):                                        │
+ * │  ─────────────────────────────────                                       │
+ * │  router.query.newsId = undefined                                         │
+ * │  (Next.js hasn't parsed the URL yet)                                    │
+ * │                                                                          │
+ * │  SECOND RENDER (after hydration):                                        │
+ * │  ──────────────────────────────────                                      │
+ * │  router.query.newsId = "this-course-is-great"                           │
+ * │  (Now the actual URL value is available)                                │
+ * │                                                                          │
+ * │  ⚠️  IMPORTANT: Always handle the undefined case!                       │
+ * │      Use: if (!router.query.newsId) return <Loading />;                 │
+ * │      Or:  const newsId = router.query.newsId ?? 'default';              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "So, the second time it executes the second time this component is evaluated
+ * we got something else which is the concrete URL value I entered here.
+ * And if I have this-course-is-great then we would see this here being logged."
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: PRACTICAL USE - FETCHING DATA
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Now, why is this helpful? Well, we could, for example use this now to get
+ * our newsId like this and then if we had a database, if we had some backend
+ * API from which we can fetch our news we could send a request to the backend
+ * API here to fetch the news item with newsId. That's what we could do here."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  REAL-WORLD DATA FETCHING PATTERN                                        │
+ * │                                                                          │
+ * │  function DetailPage() {                                                 │
+ * │    const router = useRouter();                                           │
+ * │    const newsId = router.query.newsId;                                   │
+ * │                                                                          │
+ * │    // In a real app, you would:                                          │
+ * │    // 1. Use newsId to fetch data from your API                         │
+ * │    // 2. Display loading state while fetching                           │
+ * │    // 3. Show error state if fetch fails                                │
+ * │    // 4. Render the fetched content                                     │
+ * │                                                                          │
+ * │    // Example (conceptual):                                              │
+ * │    // useEffect(() => {                                                  │
+ * │    //   fetch(`/api/news/${newsId}`)                                    │
+ * │    //     .then(res => res.json())                                       │
+ * │    //     .then(data => setNewsItem(data));                              │
+ * │    // }, [newsId]);                                                      │
+ * │  }                                                                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "I will not do it here because we'll soon dive into data fetching and data
+ * storage and we'll see different approaches we can use there with Next.js
+ * so we are going to take a look at that in detail in a couple of minutes
+ * but we could do this here if we had such a backend API."
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: CLASS COMPONENTS ALTERNATIVE
+ * ============================================================================
+ *
+ * From the instructor:
+ * "It also has an alternative for class-based components a higher order
+ * component you can wrap around your component and I do discuss this in
+ * my full Next.js course but we can ignore that here."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  FOR CLASS COMPONENTS (if needed)                                        │
+ * │                                                                          │
+ * │  import { withRouter } from 'next/router';                              │
+ * │                                                                          │
+ * │  class DetailPage extends React.Component {                              │
+ * │    render() {                                                            │
+ * │      const { router } = this.props;                                      │
+ * │      const newsId = router.query.newsId;                                │
+ * │      // ...                                                              │
+ * │    }                                                                     │
+ * │  }                                                                       │
+ * │                                                                          │
+ * │  export default withRouter(DetailPage);                                 │
+ * │                                                                          │
+ * │  Note: Functional components with hooks are the modern approach.        │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * UPDATED ROUTE MAPPING (LESSON 482)
+ * 🎓 LESSON 483: BUILDING TRULY DYNAMIC PAGES
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And that's how we can build dynamic pages which work for different pieces
+ * of data and then can do different things based on different pieces of data.
+ * Here, we could fetch different news items from a database based on the
+ * different Ids for which we visit this page."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DYNAMIC PAGES WORKFLOW                                                  │
+ * │                                                                          │
+ * │  1. User visits: /news/breaking-news-2024                               │
+ * │                         ──────────────────                              │
+ * │                               │                                          │
+ * │  2. [newsId].js loads        │                                          │
+ * │                               │                                          │
+ * │  3. useRouter() extracts:    │                                          │
+ * │     newsId = "breaking-news-2024"                                       │
+ * │                               │                                          │
+ * │  4. Fetch from database:     │                                          │
+ * │     GET /api/news/breaking-news-2024                                    │
+ * │                               │                                          │
+ * │  5. Render article content   ▼                                          │
+ * │     "Breaking News: Major Event in 2024..."                             │
+ * │                                                                          │
+ * │  Same component, different data based on URL!                           │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🎓 LESSON 483: TESTING IN BROWSER CONSOLE
+ * ============================================================================
+ *
+ * To see the useRouter behavior:
+ *
+ * 1. Run: npm run dev
+ * 2. Visit: http://localhost:3000/news/this-course-is-great
+ * 3. Open Developer Tools (F12) → Console tab
+ * 4. You'll see two console.log outputs:
+ *    - First:  undefined (initial render)
+ *    - Second: "this-course-is-great" (after hydration)
+ *
+ * Try different URLs and watch the console output change:
+ * - /news/hello-world      → logs "hello-world"
+ * - /news/my-first-article → logs "my-first-article"
+ *
+ * ============================================================================
+ * UPDATED ROUTE MAPPING (LESSONS 482-483)
  * ============================================================================
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -237,7 +447,22 @@
 // pages/news/[newsId].js serves: /news/ANY-VALUE-HERE (dynamic)
 
 /**
- * DetailPage Component - Dynamic Version
+ * ============================================================================
+ * IMPORT: useRouter from next/router
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Here, instead we import from next to be precise from next/router which is
+ * a sub package of the next package which exposes routing specific
+ * functionality."
+ *
+ * This is a CUSTOM React hook provided by the Next.js team, not built into
+ * React itself. It gives access to the router object with URL information.
+ */
+import { useRouter } from 'next/router';
+
+/**
+ * DetailPage Component - Dynamic Version with useRouter
  *
  * This is the SAME component loaded for INFINITE different URLs.
  * The path segment after /news/ can be anything, and this component handles it.
@@ -245,12 +470,63 @@
  * From the instructor:
  * "So, it's the same component technically but with different content."
  *
- * In the next lesson, we'll learn to extract the dynamic segment value
- * and use it to fetch/display the correct content.
+ * Now using useRouter to extract the dynamic segment value from the URL.
  */
 function DetailPage() {
-  // Currently displays static text - next lesson will show how to
-  // access the dynamic newsId value from the URL and use it
+  /**
+   * STEP 1: Call the useRouter hook to get the router object
+   *
+   * From the instructor:
+   * "And we can now call this hook inside of the detailed page, simply like
+   * this. If we do that, we get access to a router object."
+   */
+  const router = useRouter();
+
+  /**
+   * STEP 2: Extract the dynamic segment value from router.query
+   *
+   * From the instructor:
+   * "On this router object we've got this query property which gives us access
+   * to a nested object and on that query object we then have the identifier
+   * which we chose between the square brackets as a property name."
+   *
+   * The property name "newsId" matches the file name: [newsId].js
+   * If file was [slug].js, we'd use router.query.slug instead.
+   */
+  const newsId = router.query.newsId;
+
+  /**
+   * STEP 3: Console.log to observe the two-render behavior
+   *
+   * From the instructor:
+   * "So, if we now just console log this for the moment to see what's in there.
+   * If I save that and go back and open the developer tools if we reload we
+   * see undefined first and then something else."
+   *
+   * Open your browser's Developer Tools (F12) → Console tab to see this!
+   */
+  console.log(newsId);
+
+  /**
+   * OPTIONAL: In a real application, you would use newsId to fetch data
+   *
+   * From the instructor:
+   * "Well, we could, for example use this now to get our newsId like this and
+   * then if we had a database, if we had some backend API from which we can
+   * fetch our news we could send a request to the backend API here to fetch
+   * the news item with newsId."
+   *
+   * Example (not implemented - just for illustration):
+   *
+   * useEffect(() => {
+   *   if (newsId) {
+   *     fetch(`/api/news/${newsId}`)
+   *       .then(res => res.json())
+   *       .then(data => setNewsItem(data));
+   *   }
+   * }, [newsId]);
+   */
+
   return <h1>The Detail Page</h1>;
 }
 
