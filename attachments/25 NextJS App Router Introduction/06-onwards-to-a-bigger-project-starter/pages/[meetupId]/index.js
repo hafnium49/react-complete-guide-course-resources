@@ -1,11 +1,12 @@
 /**
  * ============================================================================
- * pages/[meetupId]/index.js - LESSONS 486, 491 & 496: DYNAMIC MEETUP DETAIL
+ * pages/[meetupId]/index.js - LESSONS 486, 491, 496 & 497: DYNAMIC MEETUP DETAIL
  * ============================================================================
  *
  * LESSON 486: Created this dynamic page file using the folder approach
  * LESSON 491: Added MeetupDetail component for presenting meetup information
  * LESSON 496: Added getStaticProps with context.params for dynamic data
+ * LESSON 497: Added getStaticPaths to define which dynamic pages to pre-generate
  *
  * ============================================================================
  * 🎓 LESSON 496: getStaticProps ON DYNAMIC PAGES
@@ -383,39 +384,339 @@ export async function getStaticProps(context) {
 
 /**
  * ============================================================================
- * 🚨 NEXT LESSON: getStaticPaths IS REQUIRED!
+ * 🎓 LESSON 497: getStaticPaths - TELLING NEXTJS WHICH PAGES TO PRE-GENERATE
  * ============================================================================
  *
- * If you run this code now, you'll get an error:
- * "Error: getStaticPaths is required for dynamic SSG pages"
+ * From the instructor:
+ * "Now what is that function about? We learned that getStaticProps is a function
+ * which NextJS calls on your behalf, before it actually calls a component function,
+ * to prepare the data, the props for that component."
  *
  * From the instructor:
- * "With that if we saved this and visit the detailed page of a single meetup,
- * we get an error though, getStaticPaths is required."
+ * "And this function is executed during the build process. That's the key thing.
+ * It's not executed on the fly on the server, at least not by default. It's
+ * executed during build time. That's why it's called static, that's why this
+ * pre-generation approach is called static site generation."
  *
- * WHAT'S MISSING:
- * For dynamic pages using getStaticProps, NextJS needs to know WHICH
- * pages to pre-generate at build time.
+ * ============================================================================
+ * 🤔 THE PROBLEM: WHICH PAGES TO PRE-GENERATE?
+ * ============================================================================
  *
- * SOLUTION (Next Lesson):
- * We need to add getStaticPaths() to tell NextJS:
- * "Here are all the valid meetupId values you should generate pages for"
+ * From the instructor:
+ * "And for the regular page, this is fine. For the index.js page, the homepage,
+ * NextJS knows that there is this page because there is that file. But what
+ * about that dynamic page here?"
  *
+ * From the instructor:
+ * "How would NextJS know for which meetup ID values it should pre-generate
+ * that page?"
+ *
+ * THE DILEMMA:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DYNAMIC PAGE = INFINITE POSSIBLE URLS                                  │
+ * │                                                                          │
+ * │  [meetupId]/index.js could match:                                       │
+ * │                                                                          │
+ * │  /m1                                                                     │
+ * │  /m2                                                                     │
+ * │  /abc123                                                                 │
+ * │  /my-awesome-meetup                                                      │
+ * │  /literally-anything                                                     │
+ * │                                                                          │
+ * │  ❓ How does NextJS know which ones to pre-generate at build time?      │
+ * │                                                                          │
+ * │  From the instructor:                                                    │
+ * │  "Of course, we could have any value here and by default NextJS doesn't │
+ * │  know for which IDs it should pre-generate this page."                   │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * ✅ THE SOLUTION: getStaticPaths
+ * ============================================================================
+ *
+ * From the instructor:
+ * "So that's why you need another function, getStaticPaths. Just as
+ * getStaticProps, it's a function you need to export in a page component file."
+ *
+ * From the instructor:
+ * "Now the difference is that in getStaticProps you prepare the props, the
+ * data for a component. In getStaticPaths you tell NextJS which dynamic
+ * parameter values this page should be pre-generated for."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  getStaticProps vs getStaticPaths                                       │
+ * │                                                                          │
+ * │  getStaticProps                    getStaticPaths                       │
+ * │  ────────────────                  ────────────────                     │
+ * │  • Prepares DATA (props)           • Defines which PAGES to generate   │
+ * │  • Runs once per page              • Runs once during build            │
+ * │  • Returns { props: {...} }        • Returns { paths: [...] }          │
+ * │  • Required for pre-rendering      • Required for DYNAMIC pages only   │
+ * │    with data                         using getStaticProps              │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 📋 THE paths ARRAY STRUCTURE
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And here we need to return an object. And this object should have a
+ * paths key. And that must be an array."
+ *
+ * From the instructor:
+ * "And this paths array must have multiple objects, one object per version
+ * of this dynamic page that should be pre-generated."
+ *
+ * STRUCTURE EXPLAINED:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  return {                                                                │
+ * │    paths: [                      ← Array of pages to pre-generate       │
+ * │      {                                                                   │
+ * │        params: {                 ← Must have 'params' key               │
+ * │          meetupId: 'm1'          ← Key matches [meetupId] folder name   │
+ * │        }                                                                 │
+ * │      },                                                                  │
+ * │      {                                                                   │
+ * │        params: {                                                         │
+ * │          meetupId: 'm2'                                                  │
+ * │        }                                                                 │
+ * │      }                                                                   │
+ * │    ],                                                                    │
+ * │    fallback: false               ← What to do for unlisted paths        │
+ * │  };                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "So if we have two dynamic meetups with the IDs m1 and m2, we would
+ * have two objects in the paths array with the params key holding another
+ * nested object, and then the keys in that nested object would be the same
+ * key, which you use between the square brackets in your folder name."
+ *
+ * ============================================================================
+ * 🔑 THE params KEY NAME MUST MATCH THE FOLDER NAME
+ * ============================================================================
+ *
+ * From the instructor:
+ * "So meetup ID is my identifier. And then the value would be the concrete
+ * value for which this page should be pre-generated."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  FOLDER NAME → params KEY NAME                                          │
+ * │                                                                          │
+ * │  [meetupId]/index.js   →  params: { meetupId: 'value' }                 │
+ * │  [slug]/index.js       →  params: { slug: 'value' }                     │
+ * │  [postId]/index.js     →  params: { postId: 'value' }                   │
+ * │                                                                          │
+ * │  The key in params MUST match what's between the square brackets!       │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🚫 THE fallback OPTION
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Besides the paths, we also need to specify a fallback key here. And
+ * that should be a Boolean."
+ *
+ * WHAT IS FALLBACK?
+ *
+ * From the instructor:
+ * "The fallback key tells NextJS whether your paths array contains all
+ * supported parameter values or just some of them."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  fallback: false                                                        │
+ * │  ─────────────────                                                      │
+ * │                                                                          │
+ * │  From the instructor:                                                    │
+ * │  "If you set fallback to false, you're saying that your paths contains  │
+ * │  all supported meetupId values. That means that if the user enters      │
+ * │  anything that's not supported here, for example, m3, they would see a  │
+ * │  404 error."                                                             │
+ * │                                                                          │
+ * │  User visits /m1  → Shows pre-generated page                            │
+ * │  User visits /m2  → Shows pre-generated page                            │
+ * │  User visits /m3  → 404 ERROR (not in paths array)                      │
+ * │                                                                          │
+ * │  USE WHEN:                                                               │
+ * │  • You have a small, known set of pages                                  │
+ * │  • All possible values are listed in paths                              │
+ * │  • You want unlisted paths to show 404                                   │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  fallback: true (or 'blocking')                                         │
+ * │  ──────────────────────────────                                         │
+ * │                                                                          │
+ * │  From the instructor:                                                    │
+ * │  "If you set it to true, NextJS would try to create a page for this     │
+ * │  meetup ID dynamically on the server for an incoming request."          │
+ * │                                                                          │
+ * │  User visits /m1  → Shows pre-generated page                            │
+ * │  User visits /m2  → Shows pre-generated page                            │
+ * │  User visits /m3  → NextJS generates page on-demand                     │
+ * │                                                                          │
+ * │  USE WHEN:                                                               │
+ * │  • You have many pages (can't pre-generate all)                          │
+ * │  • New content is added frequently                                       │
+ * │  • Pre-generate popular pages, generate rest on-demand                  │
+ * │                                                                          │
+ * │  DIFFERENCE:                                                             │
+ * │  • true: Shows loading state, then renders page                         │
+ * │  • 'blocking': Waits until page is ready (no loading state)             │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🔄 HOW IT ALL WORKS TOGETHER
+ * ============================================================================
+ *
+ * AT BUILD TIME:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  1. NextJS runs getStaticPaths()                                        │
+ * │     └── Gets: paths = [{ params: { meetupId: 'm1' } },                  │
+ * │                        { params: { meetupId: 'm2' } }]                  │
+ * │                                                                          │
+ * │  2. For EACH path, NextJS runs getStaticProps(context)                  │
+ * │                                                                          │
+ * │     For /m1:                                                             │
+ * │     └── getStaticProps({ params: { meetupId: 'm1' } })                  │
+ * │         └── Returns props for m1 page                                    │
+ * │         └── Pre-renders HTML for /m1                                     │
+ * │                                                                          │
+ * │     For /m2:                                                             │
+ * │     └── getStaticProps({ params: { meetupId: 'm2' } })                  │
+ * │         └── Returns props for m2 page                                    │
+ * │         └── Pre-renders HTML for /m2                                     │
+ * │                                                                          │
+ * │  3. Result: Two static HTML pages ready to serve                        │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * AT RUNTIME (User visits site):
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  User visits /m1                                                         │
+ * │  └── Server returns pre-generated HTML immediately                      │
+ * │  └── Super fast! No server-side computation needed                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 💡 IN A REAL APP: FETCH DATA FOR PATHS
+ * ============================================================================
+ *
+ * From the instructor:
+ * "Now, of course, in reality, you wouldn't hardcode this here. You would
+ * fetch this from a database or from an API."
+ *
+ * EXAMPLE WITH DATABASE:
  * ```javascript
  * export async function getStaticPaths() {
+ *   // 1. Connect to database
+ *   const client = await MongoClient.connect('mongodb://...');
+ *   const db = client.db();
+ *
+ *   // 2. Fetch all meetup IDs (not full documents, just IDs)
+ *   const meetupsCollection = db.collection('meetups');
+ *   const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+ *
+ *   // 3. Close connection
+ *   client.close();
+ *
+ *   // 4. Transform to paths format
  *   return {
- *     paths: [
- *       { params: { meetupId: 'm1' } },
- *       { params: { meetupId: 'm2' } },
- *     ],
- *     fallback: false
+ *     paths: meetups.map(meetup => ({
+ *       params: { meetupId: meetup._id.toString() }
+ *     })),
+ *     fallback: false,
  *   };
  * }
  * ```
  *
- * This will be covered in the next lesson!
+ * This will be covered in later lessons when we add MongoDB!
  *
  * ============================================================================
  */
+
+/**
+ * getStaticPaths - LESSON 497: DEFINE WHICH PAGES TO PRE-GENERATE
+ *
+ * From the instructor:
+ * "So that's why you need another function, getStaticPaths. Just as
+ * getStaticProps, it's a function you need to export in a page component file."
+ *
+ * This function tells NextJS:
+ * "Here are all the meetupId values you should pre-generate pages for"
+ *
+ * @returns {Object} Object containing paths array and fallback setting
+ * @returns {Array} return.paths - Array of path objects to pre-generate
+ * @returns {boolean} return.fallback - Whether to handle unlisted paths
+ */
+export async function getStaticPaths() {
+  /**
+   * THE PATHS ARRAY
+   *
+   * From the instructor:
+   * "And this paths array must have multiple objects, one object per version
+   * of this dynamic page that should be pre-generated."
+   *
+   * Each object represents one page that will be pre-generated:
+   * - { params: { meetupId: 'm1' } }  →  Pre-generate /m1 page
+   * - { params: { meetupId: 'm2' } }  →  Pre-generate /m2 page
+   *
+   * In a real app, you would fetch this from your database!
+   */
+  return {
+    paths: [
+      /**
+       * PRE-GENERATE PAGE FOR meetupId = 'm1'
+       *
+       * From the instructor:
+       * "So meetup ID is my identifier. And then the value would be the concrete
+       * value for which this page should be pre-generated."
+       */
+      {
+        params: {
+          meetupId: 'm1',
+        },
+      },
+      /**
+       * PRE-GENERATE PAGE FOR meetupId = 'm2'
+       *
+       * Adding another meetup to demonstrate multiple paths.
+       */
+      {
+        params: {
+          meetupId: 'm2',
+        },
+      },
+    ],
+
+    /**
+     * FALLBACK SETTING
+     *
+     * From the instructor:
+     * "If you set fallback to false, you're saying that your paths contains
+     * all supported meetupId values. That means that if the user enters
+     * anything that's not supported here, for example, m3, they would see a
+     * 404 error."
+     *
+     * false = paths array is complete, show 404 for anything else
+     * true = try to generate pages on-demand for unlisted paths
+     * 'blocking' = like true, but wait for page to be ready before showing
+     */
+    fallback: false,
+  };
+}
 
 export default MeetupDetails;
