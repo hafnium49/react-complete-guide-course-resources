@@ -1,241 +1,421 @@
 /**
  * ============================================================================
- * pages/[meetupId]/index.js - LESSON 486 & 491: DYNAMIC MEETUP DETAIL PAGE
+ * pages/[meetupId]/index.js - LESSONS 486, 491 & 496: DYNAMIC MEETUP DETAIL
  * ============================================================================
  *
  * LESSON 486: Created this dynamic page file using the folder approach
  * LESSON 491: Added MeetupDetail component for presenting meetup information
+ * LESSON 496: Added getStaticProps with context.params for dynamic data
  *
  * ============================================================================
- * 🎓 LESSON 486: DYNAMIC PAGES AND DYNAMIC FOLDERS
- * ============================================================================
- *
- * From the instructor:
- * "And for this, we need a dynamic page because of course we'll have multiple
- * meetups with different IDs and the ID should be part of the URL, and then
- * when we load the page we want to use that ID to fetch and to display the
- * appropriate data."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  DYNAMIC URL EXAMPLES                                                    │
- * │                                                                          │
- * │  /m1              →  meetupId = "m1"                                    │
- * │  /m2              →  meetupId = "m2"                                    │
- * │  /first-meetup    →  meetupId = "first-meetup"                          │
- * │  /abc123          →  meetupId = "abc123"                                │
- * │                                                                          │
- * │  ALL these URLs are handled by THIS SINGLE FILE!                        │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 📁 DYNAMIC FOLDER NAMES
+ * 🎓 LESSON 496: getStaticProps ON DYNAMIC PAGES
  * ============================================================================
  *
  * From the instructor:
- * "We can create a dynamic page with square brackets and then .js, and then
- * simply use any identifier name of our choice between the square brackets.
- * For example, meetupId."
- *
- * TWO WAYS TO CREATE DYNAMIC PAGES:
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  OPTION 1: DYNAMIC FILE                                                  │
- * │  pages/[meetupId].js    →  Route: /:meetupId                           │
- * │                                                                          │
- * │  OPTION 2: DYNAMIC FOLDER (USED HERE)                                    │
- * │  pages/[meetupId]/index.js  →  Route: /:meetupId                       │
- * │                                                                          │
- * │  The FOLDER name uses square brackets!                                  │
- * └─────────────────────────────────────────────────────────────────────────┘
+ * "Now that was a lot of talking about getStaticProps and getServerSideProps.
+ * But these are two key concepts, two key functions built into NextJS, which
+ * you need all the time."
  *
  * From the instructor:
- * "Here we could also use the sub-folder approach. It also is available for
- * dynamic pages. We could also create a folder named meetupId between square
- * brackets, and move that file in there and then it index.js."
+ * "And hence, let's also use them for the MeetupDetail page now."
  *
  * ============================================================================
- * 🎓 LESSON 491: KEEPING PAGE COMPONENTS LEAN
+ * ❓ WHY DOESN'T new-meetup PAGE NEED getStaticProps?
  * ============================================================================
  *
  * From the instructor:
- * "Now for that, we can of course start outputting that content here in that
- * MeetupDetails function. But I actually wanna outsource that into a separate
- * component, because it is a good practice to keep your page component files
- * pretty lean and outsource the actual JSX code, the actual markup, into
- * separate standalone component files."
- *
- * KEY PRINCIPLE:
+ * "For the new Meetup page, as explained earlier we don't need them because
+ * here we don't need any data and therefore there is no need to add
+ * getStaticProps. It's really only there to fetch data for the pre-generated
+ * page if that page needs any data and therefore we don't need it here."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  PAGE COMPONENTS VS PRESENTATIONAL COMPONENTS                            │
+ * │  WHEN TO USE getStaticProps                                              │
  * │                                                                          │
- * │  PAGE COMPONENT (this file):                                            │
- * │  • Lives in /pages folder                                                │
- * │  • Handles data fetching (getStaticProps, etc.)                         │
- * │  • Defines routes                                                        │
- * │  • Should be LEAN - minimal JSX                                         │
- * │  • Passes data to presentational components                             │
+ * │  ✅ USE getStaticProps:                                                  │
+ * │     • Page displays data that needs to be fetched                       │
+ * │     • Data comes from database, API, or file system                     │
+ * │     • Want SEO-friendly pre-rendered content                            │
  * │                                                                          │
- * │  PRESENTATIONAL COMPONENT (MeetupDetail.js):                            │
- * │  • Lives in /components folder                                          │
- * │  • Contains the actual markup/JSX                                       │
- * │  • Receives data via props                                              │
- * │  • Has its own styling (CSS Module)                                     │
- * │  • Reusable across multiple pages                                       │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🔗 DATA FLOW ARCHITECTURE
- * ============================================================================
- *
- * In the final implementation, data flows like this:
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │                                                                          │
- * │  [URL Parameter]                                                        │
- * │       │                                                                  │
- * │       │  meetupId from URL (e.g., "m1")                                 │
- * │       ▼                                                                  │
- * │  [getStaticProps / getServerSideProps]                                  │
- * │       │                                                                  │
- * │       │  Fetches meetup data from database                              │
- * │       ▼                                                                  │
- * │  [MeetupDetails Page Component] (this file)                             │
- * │       │                                                                  │
- * │       │  Passes data as props                                           │
- * │       ▼                                                                  │
- * │  [MeetupDetail Presentational Component]                                │
- * │       │                                                                  │
- * │       │  Renders the markup with styling                                │
- * │       ▼                                                                  │
- * │  [User sees the meetup details]                                         │
+ * │  ❌ DON'T NEED getStaticProps:                                          │
+ * │     • Page only contains a form (new-meetup page)                       │
+ * │     • Page is purely static with no dynamic data                        │
+ * │     • Data is fetched client-side only (not SEO critical)               │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 📝 CURRENT STATUS (DUMMY DATA)
+ * 🤔 getStaticProps vs getServerSideProps FOR THIS PAGE
  * ============================================================================
  *
- * Currently, this page uses DUMMY DATA for demonstration.
- * In upcoming lessons, we will:
+ * From the instructor:
+ * "Now, which one is better? It depends on how often your data changes and
+ * if you need access to the request object."
  *
- * 1. Add getStaticProps() to fetch real data from database
- * 2. Add getStaticPaths() to define which paths to pre-generate
- * 3. Connect to MongoDB for persistent storage
- * 4. Use the meetupId from URL to fetch specific meetup
+ * From the instructor:
+ * "And here it's probably fair to assume that the meetupData does not change
+ * very often. Indeed this app doesn't even have a feature for changing the
+ * meetupData. We can only add Meetups but even if it would have a change
+ * feature, it would probably not be the case that a Meetup changes multiple
+ * times every second."
  *
- * For now, we just display hardcoded data to verify the component works.
+ * From the instructor:
+ * "And therefore, for the MeetupDetails I would argue that again,
+ * getStaticProps is better than getServerSideProps."
+ *
+ * OUR ANALYSIS:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WHY getStaticProps IS BETTER HERE                                       │
+ * │                                                                          │
+ * │  1. Meetup data doesn't change frequently                               │
+ * │     • No edit feature in this app                                        │
+ * │     • Even with editing, wouldn't change every second                   │
+ * │                                                                          │
+ * │  2. No need for request/response objects                                │
+ * │     • Not doing authentication                                           │
+ * │     • Not checking cookies                                               │
+ * │                                                                          │
+ * │  3. Better performance                                                   │
+ * │     • Page can be cached on CDN                                          │
+ * │     • Faster response times                                              │
+ * │                                                                          │
+ * │  → USE getStaticProps ✓                                                 │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🔜 FUTURE IMPLEMENTATION (UPCOMING LESSONS)
+ * 🔑 THE CHALLENGE: GETTING THE meetupId FROM URL
  * ============================================================================
  *
- * The page will eventually look like this:
+ * From the instructor:
+ * "Keep in mind that this is a dynamic page. So when we reach out to an API
+ * to fetch the data for a single meetup, we need a way of identifying that
+ * meetup. We need its ID for example."
  *
- * ```javascript
- * export async function getStaticPaths() {
- *   // Fetch all meetup IDs from database
- *   const meetups = await getAllMeetups();
- *   return {
- *     paths: meetups.map(m => ({ params: { meetupId: m.id } })),
- *     fallback: false
- *   };
- * }
+ * From the instructor:
+ * "Now the ID thankfully is encoded into URL."
  *
- * export async function getStaticProps(context) {
- *   const meetupId = context.params.meetupId;
- *   const meetup = await getMeetupById(meetupId);
- *   return {
- *     props: { meetupData: meetup }
- *   };
- * }
- * ```
+ * THE PROBLEM:
+ * How do we get the meetupId (from URL like /m1) inside getStaticProps?
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  ❌ CAN'T USE useRouter IN getStaticProps                               │
+ * │                                                                          │
+ * │  From the instructor:                                                    │
+ * │  "And therefore, we did learn that we can use the useRouter hook to     │
+ * │  get access to this router object and then use the query property there.│
+ * │  That's what we did earlier in this course."                            │
+ * │                                                                          │
+ * │  From the instructor:                                                    │
+ * │  "But the problem with that is that the useRouter hook can only be used │
+ * │  in the component function, not in getStaticProps. That's not a function│
+ * │  where you can use react hooks."                                        │
+ * │                                                                          │
+ * │  REASON:                                                                 │
+ * │  • React hooks can ONLY be used inside React component functions        │
+ * │  • getStaticProps is NOT a React component                              │
+ * │  • It runs at BUILD TIME (or on server), not in browser                 │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 📂 RELATED FILES
+ * ✅ THE SOLUTION: context.params
  * ============================================================================
  *
- *   /components/meetups/
- *   ├── MeetupDetail.js         ← Presentational component (used here)
- *   └── MeetupDetail.module.css ← Scoped styles for MeetupDetail
+ * From the instructor:
+ * "So we can't get to the meetup ID from the URL with help of useRouter in
+ * here. But we also don't need to."
+ *
+ * From the instructor:
+ * "Because you might remember this context parameter, which I mentioned. I
+ * showed it to you on getServerSideProps, but I mentioned that it also
+ * actually exists on getStaticProps."
+ *
+ * From the instructor:
+ * "Now, when we accept it on getStaticProps, context will not hold request
+ * and response, but it will, for example, have a params key."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  context OBJECT IN getStaticProps                                        │
+ * │                                                                          │
+ * │  export async function getStaticProps(context) {                        │
+ * │                                                                          │
+ * │    context.params   →  Dynamic route parameters                         │
+ * │                        { meetupId: 'm1' }                                │
+ * │                                                                          │
+ * │    context.preview  →  Preview mode enabled?                            │
+ * │    context.previewData → Preview mode data                              │
+ * │    context.locale   →  Current locale (i18n)                            │
+ * │                                                                          │
+ * │    ❌ NO context.req or context.res (only in getServerSideProps)        │
+ * │                                                                          │
+ * │  }                                                                       │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🔗 context.params EXPLAINED
+ * ============================================================================
+ *
+ * From the instructor:
+ * "So there will be context.params, and that will be an object where our
+ * identifiers between the square brackets will be properties and the values
+ * will be the actual values encoded in the URL."
+ *
+ * From the instructor:
+ * "So our meetup ID, for example, could be accessed with context.params.meetupId.
+ * meetupId because that's the identifier I have between the square brackets."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  HOW params KEYS ARE DETERMINED                                          │
+ * │                                                                          │
+ * │  FOLDER/FILE NAME           URL              context.params              │
+ * │  ─────────────────────────────────────────────────────────────          │
+ * │  [meetupId]/index.js        /m1              { meetupId: 'm1' }          │
+ * │  [meetupId]/index.js        /abc123          { meetupId: 'abc123' }      │
+ * │  [slug].js                  /hello           { slug: 'hello' }           │
+ * │  [category]/[id].js         /tech/42         { category: 'tech',         │
+ * │                                                 id: '42' }               │
+ * │                                                                          │
+ * │  The KEY name matches what's between the square brackets!               │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * ⚠️ ERROR: getStaticPaths IS REQUIRED
+ * ============================================================================
+ *
+ * From the instructor:
+ * "With that if we saved this and visit the detailed page of a single meetup,
+ * we get an error though, getStaticPaths is required."
+ *
+ * This error occurs because:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WHY getStaticPaths IS REQUIRED                                          │
+ * │                                                                          │
+ * │  DYNAMIC PAGES + getStaticProps = NEED getStaticPaths                   │
+ * │                                                                          │
+ * │  The problem:                                                            │
+ * │  • getStaticProps generates pages at BUILD TIME                         │
+ * │  • This is a DYNAMIC page - infinite possible URLs                       │
+ * │  • How does NextJS know which pages to pre-generate?                    │
+ * │    - /m1?                                                                │
+ * │    - /m2?                                                                │
+ * │    - /abc123?                                                            │
+ * │    - /literally-any-string?                                             │
+ * │                                                                          │
+ * │  The solution:                                                           │
+ * │  • getStaticPaths tells NextJS WHICH paths to pre-generate              │
+ * │  • You define the list of valid meetupId values                         │
+ * │  • NextJS generates a page for each one                                 │
+ * │                                                                          │
+ * │  This will be covered in the NEXT LESSON!                               │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 📁 FOLDER STRUCTURE REMINDER
+ * ============================================================================
  *
  *   /pages/
+ *   ├── index.js              ← Home page (has getStaticProps)
+ *   ├── new-meetup/
+ *   │   └── index.js          ← Form page (NO getStaticProps needed)
  *   └── [meetupId]/
- *       └── index.js            ← THIS FILE (page component)
+ *       └── index.js          ← THIS FILE (has getStaticProps)
+ *                               → Also needs getStaticPaths (next lesson)
  *
  * ============================================================================
  */
 
-/**
- * Import the MeetupDetail presentational component
- *
- * From the instructor:
- * "So therefore I will add a new component in the Meetups folder, and that
- * will be the MeetupDetail component."
- *
- * This component handles all the JSX/markup for displaying meetup details.
- * We keep this page file lean by outsourcing the presentation to MeetupDetail.
- *
- * Path breakdown:
- * - We're in: /pages/[meetupId]/index.js
- * - Go up 2 levels: ../../ (to project root)
- * - Then: components/meetups/MeetupDetail
- */
 import MeetupDetail from '../../components/meetups/MeetupDetail';
 
 /**
  * MeetupDetails - Page Component for Individual Meetup
  *
- * This is a PAGE COMPONENT (in the pages folder), responsible for:
- * - Being the route handler for /:meetupId URLs
- * - Eventually fetching data (getStaticProps)
- * - Passing data to presentational components
+ * Now receives data via props from getStaticProps!
  *
- * From the instructor:
- * "But I actually wanna outsource that into a separate component, because
- * it is a good practice to keep your page component files pretty lean and
- * outsource the actual JSX code, the actual markup, into separate standalone
- * component files."
- *
- * URL: http://localhost:3000/[meetupId]
- * Examples:
- *   - http://localhost:3000/m1
- *   - http://localhost:3000/first-meetup
+ * @param {Object} props - Props provided by getStaticProps
+ * @param {Object} props.meetupData - The meetup data object
+ * @param {string} props.meetupData.id - Meetup ID
+ * @param {string} props.meetupData.image - Image URL
+ * @param {string} props.meetupData.title - Meetup title
+ * @param {string} props.meetupData.address - Physical address
+ * @param {string} props.meetupData.description - Meetup description
  */
-function MeetupDetails() {
+function MeetupDetails(props) {
   /**
-   * RENDER THE MEETUP DETAIL COMPONENT
+   * RENDER WITH DATA FROM getStaticProps
    *
-   * From the instructor:
-   * "Now for that, we can of course start outputting that content here in that
-   * MeetupDetails function. But I actually wanna outsource that into a separate
-   * component..."
+   * The data now comes from props (which comes from getStaticProps)
+   * instead of being hardcoded in this component.
    *
-   * We pass the meetup data as individual props to MeetupDetail.
-   *
-   * CURRENT: Using dummy/hardcoded data
-   * FUTURE: Data will come from getStaticProps, fetched from database
-   *
-   * The MeetupDetail component receives:
-   * - image: URL of the meetup image
-   * - title: Name of the meetup
-   * - address: Physical location
-   * - description: What the meetup is about
+   * Data flow:
+   * 1. User visits /m1
+   * 2. getStaticProps runs with context.params.meetupId = 'm1'
+   * 3. getStaticProps returns { props: { meetupData: {...} } }
+   * 4. This component receives props.meetupData
+   * 5. We pass that data to MeetupDetail for rendering
    */
   return (
     <MeetupDetail
-      image='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg'
-      title='A First Meetup'
-      address='Some Street 5, Some City'
-      description='This is a first meetup!'
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 }
 
 /**
- * Export the page component
+ * ============================================================================
+ * getStaticProps - LESSON 496: DATA FETCHING FOR DYNAMIC PAGE
+ * ============================================================================
  *
- * Default export is REQUIRED for NextJS page components.
- * NextJS uses the default export to render the page.
+ * From the instructor:
+ * "So here we export getStaticProps and we can turn it into an async function
+ * if we want to use async await."
+ *
+ * From the instructor:
+ * "And then here we could fetch the data for a single meetup."
+ *
+ * @param {Object} context - The context object (different from getServerSideProps!)
+ * @param {Object} context.params - Dynamic route parameters from the URL
+ * @returns {Object} Object containing props for the page component
  */
+export async function getStaticProps(context) {
+  /**
+   * ACCESSING THE DYNAMIC ROUTE PARAMETER
+   *
+   * From the instructor:
+   * "So our meetup ID, for example, could be accessed with context.params.meetupId.
+   * meetupId because that's the identifier I have between the square brackets."
+   *
+   * Our folder is named [meetupId], so we access context.params.meetupId
+   *
+   * Examples:
+   * - URL: /m1       → context.params.meetupId = 'm1'
+   * - URL: /m2       → context.params.meetupId = 'm2'
+   * - URL: /abc123   → context.params.meetupId = 'abc123'
+   */
+  const meetupId = context.params.meetupId;
+
+  /**
+   * CONSOLE.LOG FOR DEBUGGING
+   *
+   * From the instructor:
+   * "I can console log this here inside of getStaticProps so that we can see
+   * that this really works."
+   *
+   * NOTE: This logs on the SERVER (or during build), not in browser console!
+   * Check your terminal where `npm run dev` is running.
+   */
+  console.log(meetupId);
+
+  /**
+   * FETCH DATA FOR THIS SPECIFIC MEETUP
+   *
+   * From the instructor:
+   * "And then here we could fetch the data for a single meetup."
+   *
+   * In a real app, you would:
+   * - Query your database: await db.collection('meetups').findOne({ _id: meetupId })
+   * - Call an API: await fetch(`/api/meetups/${meetupId}`)
+   * - Read from file system: fs.readFileSync(`data/${meetupId}.json`)
+   *
+   * For now, we're using dummy data.
+   */
+
+  /**
+   * RETURN PROPS FOR THE PAGE COMPONENT
+   *
+   * From the instructor:
+   * "And then we can of course return as object with the props. And here we
+   * could have our meetupData prop or however you want to name it, which could
+   * again be a nested object where we then have this data here."
+   *
+   * From the instructor:
+   * "And then it's this meetup ID, which we could set as ID here if we want
+   * to expose it to the component function."
+   */
+  return {
+    props: {
+      meetupData: {
+        /**
+         * Include the ID in the props
+         *
+         * From the instructor:
+         * "Where we have ID if we needed, M1."
+         *
+         * We use the dynamic meetupId from the URL here.
+         */
+        id: meetupId,
+
+        /**
+         * From the instructor:
+         * "So we have image set to the string..."
+         */
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg',
+
+        /**
+         * From the instructor:
+         * "Where we have the title, First Meetup here."
+         */
+        title: 'First Meetup',
+
+        /**
+         * From the instructor:
+         * "Where we have the address and that's this address"
+         */
+        address: 'Some Street 5, Some City',
+
+        /**
+         * From the instructor:
+         * "And where we then also have the description here, this description."
+         */
+        description: 'This is a first meetup!',
+      },
+    },
+  };
+}
+
+/**
+ * ============================================================================
+ * 🚨 NEXT LESSON: getStaticPaths IS REQUIRED!
+ * ============================================================================
+ *
+ * If you run this code now, you'll get an error:
+ * "Error: getStaticPaths is required for dynamic SSG pages"
+ *
+ * From the instructor:
+ * "With that if we saved this and visit the detailed page of a single meetup,
+ * we get an error though, getStaticPaths is required."
+ *
+ * WHAT'S MISSING:
+ * For dynamic pages using getStaticProps, NextJS needs to know WHICH
+ * pages to pre-generate at build time.
+ *
+ * SOLUTION (Next Lesson):
+ * We need to add getStaticPaths() to tell NextJS:
+ * "Here are all the valid meetupId values you should generate pages for"
+ *
+ * ```javascript
+ * export async function getStaticPaths() {
+ *   return {
+ *     paths: [
+ *       { params: { meetupId: 'm1' } },
+ *       { params: { meetupId: 'm2' } },
+ *     ],
+ *     fallback: false
+ *   };
+ * }
+ * ```
+ *
+ * This will be covered in the next lesson!
+ *
+ * ============================================================================
+ */
+
 export default MeetupDetails;
