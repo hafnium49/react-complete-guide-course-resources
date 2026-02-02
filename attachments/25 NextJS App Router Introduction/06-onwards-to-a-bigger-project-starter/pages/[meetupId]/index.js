@@ -1,17 +1,14 @@
 /**
  * ============================================================================
- * pages/[meetupId]/index.js - LESSON 486: DYNAMIC MEETUP DETAIL PAGE
+ * pages/[meetupId]/index.js - LESSON 486 & 491: DYNAMIC MEETUP DETAIL PAGE
  * ============================================================================
  *
- * From the instructor:
- * "And then we also need this detail page which we load if a specific meetup
- * was clicked, and we want to view the details of that meetup."
+ * LESSON 486: Created this dynamic page file using the folder approach
+ * LESSON 491: Added MeetupDetail component for presenting meetup information
  *
  * ============================================================================
  * 🎓 LESSON 486: DYNAMIC PAGES AND DYNAMIC FOLDERS
  * ============================================================================
- *
- * This is a DYNAMIC page - the URL contains a variable segment (the meetup ID).
  *
  * From the instructor:
  * "And for this, we need a dynamic page because of course we'll have multiple
@@ -31,7 +28,7 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 📁 DYNAMIC FOLDER NAMES (NEW CONCEPT!)
+ * 📁 DYNAMIC FOLDER NAMES
  * ============================================================================
  *
  * From the instructor:
@@ -43,183 +40,202 @@
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  OPTION 1: DYNAMIC FILE                                                  │
+ * │  pages/[meetupId].js    →  Route: /:meetupId                           │
  * │                                                                          │
- * │  pages/                                                                  │
- * │  └── [meetupId].js    →  Route: /:meetupId                              │
- * │                                                                          │
- * │  The filename uses square brackets.                                     │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  OPTION 2: DYNAMIC FOLDER (USED HERE)                                    │
- * │                                                                          │
- * │  pages/                                                                  │
- * │  └── [meetupId]/                                                        │
- * │      └── index.js     →  Route: /:meetupId                              │
+ * │  pages/[meetupId]/index.js  →  Route: /:meetupId                       │
  * │                                                                          │
  * │  The FOLDER name uses square brackets!                                  │
- * │  This allows for nested routes within the dynamic segment.              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * From the instructor:
  * "Here we could also use the sub-folder approach. It also is available for
  * dynamic pages. We could also create a folder named meetupId between square
- * brackets, and move that file in there and then it index.js. And that also
- * works. That's something we haven't seen before, and that's why I'm showing
- * it to you here because it is always important to be aware of the fact that
- * you can also have dynamic folder names here, and then create dynamic nested
- * pages if you need them. Or, like in this case, one single dynamic page."
+ * brackets, and move that file in there and then it index.js."
  *
  * ============================================================================
- * 🆕 DYNAMIC FOLDERS - WHY THIS IS IMPORTANT
+ * 🎓 LESSON 491: KEEPING PAGE COMPONENTS LEAN
  * ============================================================================
  *
- * With a dynamic FOLDER, you could create nested routes like:
+ * From the instructor:
+ * "Now for that, we can of course start outputting that content here in that
+ * MeetupDetails function. But I actually wanna outsource that into a separate
+ * component, because it is a good practice to keep your page component files
+ * pretty lean and outsource the actual JSX code, the actual markup, into
+ * separate standalone component files."
  *
- *   pages/[meetupId]/
- *   ├── index.js        →  /:meetupId          (meetup details)
- *   ├── edit.js         →  /:meetupId/edit     (edit this meetup)
- *   ├── attendees.js    →  /:meetupId/attendees (list of attendees)
- *   └── comments/
- *       └── index.js    →  /:meetupId/comments (comments section)
+ * KEY PRINCIPLE:
  *
- * Example URLs:
- * • /m1           - View meetup m1 details
- * • /m1/edit      - Edit meetup m1
- * • /m1/attendees - See who's attending m1
- * • /m1/comments  - View comments on m1
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  PAGE COMPONENTS VS PRESENTATIONAL COMPONENTS                            │
+ * │                                                                          │
+ * │  PAGE COMPONENT (this file):                                            │
+ * │  • Lives in /pages folder                                                │
+ * │  • Handles data fetching (getStaticProps, etc.)                         │
+ * │  • Defines routes                                                        │
+ * │  • Should be LEAN - minimal JSX                                         │
+ * │  • Passes data to presentational components                             │
+ * │                                                                          │
+ * │  PRESENTATIONAL COMPONENT (MeetupDetail.js):                            │
+ * │  • Lives in /components folder                                          │
+ * │  • Contains the actual markup/JSX                                       │
+ * │  • Receives data via props                                              │
+ * │  • Has its own styling (CSS Module)                                     │
+ * │  • Reusable across multiple pages                                       │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🔑 ACCESSING THE DYNAMIC VALUE
+ * 🔗 DATA FLOW ARCHITECTURE
  * ============================================================================
  *
- * To access the meetupId value in this component:
+ * In the final implementation, data flows like this:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  [URL Parameter]                                                        │
+ * │       │                                                                  │
+ * │       │  meetupId from URL (e.g., "m1")                                 │
+ * │       ▼                                                                  │
+ * │  [getStaticProps / getServerSideProps]                                  │
+ * │       │                                                                  │
+ * │       │  Fetches meetup data from database                              │
+ * │       ▼                                                                  │
+ * │  [MeetupDetails Page Component] (this file)                             │
+ * │       │                                                                  │
+ * │       │  Passes data as props                                           │
+ * │       ▼                                                                  │
+ * │  [MeetupDetail Presentational Component]                                │
+ * │       │                                                                  │
+ * │       │  Renders the markup with styling                                │
+ * │       ▼                                                                  │
+ * │  [User sees the meetup details]                                         │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 📝 CURRENT STATUS (DUMMY DATA)
+ * ============================================================================
+ *
+ * Currently, this page uses DUMMY DATA for demonstration.
+ * In upcoming lessons, we will:
+ *
+ * 1. Add getStaticProps() to fetch real data from database
+ * 2. Add getStaticPaths() to define which paths to pre-generate
+ * 3. Connect to MongoDB for persistent storage
+ * 4. Use the meetupId from URL to fetch specific meetup
+ *
+ * For now, we just display hardcoded data to verify the component works.
+ *
+ * ============================================================================
+ * 🔜 FUTURE IMPLEMENTATION (UPCOMING LESSONS)
+ * ============================================================================
+ *
+ * The page will eventually look like this:
  *
  * ```javascript
- * import { useRouter } from 'next/router';
- *
- * function MeetupDetails() {
- *   const router = useRouter();
- *   const meetupId = router.query.meetupId;
- *   // meetupId will be "m1", "m2", "abc123", etc.
- * }
- * ```
- *
- * The property name (meetupId) matches the folder/file name in brackets.
- *
- * ============================================================================
- * 📝 WHAT THIS PAGE WILL DO
- * ============================================================================
- *
- * This page will:
- * • Extract the meetupId from the URL
- * • Fetch the specific meetup data from the database
- * • Display the meetup details using MeetupDetail component
- *
- * ============================================================================
- * 🔜 FUTURE IMPLEMENTATION
- * ============================================================================
- *
- * In upcoming lessons, this page will look like:
- *
- * ```javascript
- * import Layout from '../../components/layout/Layout';
- * import MeetupDetail from '../../components/meetups/MeetupDetail';
- *
- * function MeetupDetails(props) {
- *   return (
- *     <Layout>
- *       <MeetupDetail
- *         image={props.meetupData.image}
- *         title={props.meetupData.title}
- *         address={props.meetupData.address}
- *         description={props.meetupData.description}
- *       />
- *     </Layout>
- *   );
- * }
- *
  * export async function getStaticPaths() {
- *   // Define which dynamic paths to pre-generate
+ *   // Fetch all meetup IDs from database
+ *   const meetups = await getAllMeetups();
  *   return {
- *     paths: [
- *       { params: { meetupId: 'm1' } },
- *       { params: { meetupId: 'm2' } }
- *     ],
+ *     paths: meetups.map(m => ({ params: { meetupId: m.id } })),
  *     fallback: false
  *   };
  * }
  *
  * export async function getStaticProps(context) {
  *   const meetupId = context.params.meetupId;
- *   // Fetch meetup data from database
- *   return { props: { meetupData: {...} } };
+ *   const meetup = await getMeetupById(meetupId);
+ *   return {
+ *     props: { meetupData: meetup }
+ *   };
  * }
  * ```
  *
  * ============================================================================
- * 📂 FINAL PAGE STRUCTURE (LESSON 486)
+ * 📂 RELATED FILES
  * ============================================================================
  *
- * From the instructor:
- * "And with that we got the page structure we want with those three pages."
+ *   /components/meetups/
+ *   ├── MeetupDetail.js         ← Presentational component (used here)
+ *   └── MeetupDetail.module.css ← Scoped styles for MeetupDetail
  *
  *   /pages/
- *   ├── _app.js                    (root app component)
- *   │
- *   ├── index.js                   (home page)
- *   │   └── Route: /
- *   │   └── Shows: List of all meetups
- *   │
- *   ├── /new-meetup/
- *   │   └── index.js               (add meetup page)
- *   │       └── Route: /new-meetup
- *   │       └── Shows: Form to create meetup
- *   │
- *   └── /[meetupId]/
- *       └── index.js               ← THIS FILE (detail page)
- *           └── Route: /:meetupId (dynamic)
- *           └── Shows: Single meetup details
- *
- * ============================================================================
- * 🎯 WHAT'S NEXT?
- * ============================================================================
- *
- * From the instructor:
- * "And hence we can now get started working on those pages. We can fill those
- * components with some life, and then also step-by-step add data fetching
- * and learn how NextJS helps us with that."
- *
- * Upcoming lessons will cover:
- * 1. Filling these pages with actual components
- * 2. Adding data fetching (getStaticProps, getStaticPaths)
- * 3. Creating API routes for backend functionality
- * 4. Connecting to a database (MongoDB)
+ *   └── [meetupId]/
+ *       └── index.js            ← THIS FILE (page component)
  *
  * ============================================================================
  */
 
 /**
- * MeetupDetails Component - Dynamic Page for Individual Meetup
+ * Import the MeetupDetail presentational component
  *
- * This component displays the details of a specific meetup.
- * The meetup is identified by the URL parameter (meetupId).
+ * From the instructor:
+ * "So therefore I will add a new component in the Meetups folder, and that
+ * will be the MeetupDetail component."
+ *
+ * This component handles all the JSX/markup for displaying meetup details.
+ * We keep this page file lean by outsourcing the presentation to MeetupDetail.
+ *
+ * Path breakdown:
+ * - We're in: /pages/[meetupId]/index.js
+ * - Go up 2 levels: ../../ (to project root)
+ * - Then: components/meetups/MeetupDetail
+ */
+import MeetupDetail from '../../components/meetups/MeetupDetail';
+
+/**
+ * MeetupDetails - Page Component for Individual Meetup
+ *
+ * This is a PAGE COMPONENT (in the pages folder), responsible for:
+ * - Being the route handler for /:meetupId URLs
+ * - Eventually fetching data (getStaticProps)
+ * - Passing data to presentational components
+ *
+ * From the instructor:
+ * "But I actually wanna outsource that into a separate component, because
+ * it is a good practice to keep your page component files pretty lean and
+ * outsource the actual JSX code, the actual markup, into separate standalone
+ * component files."
  *
  * URL: http://localhost:3000/[meetupId]
  * Examples:
  *   - http://localhost:3000/m1
  *   - http://localhost:3000/first-meetup
- *   - http://localhost:3000/abc123
- *
- * NOTE: This is a placeholder. The actual implementation will be
- * added in upcoming lessons where we'll:
- * 1. Use useRouter to get the meetupId from URL
- * 2. Fetch meetup data using getStaticProps
- * 3. Define pre-generated paths using getStaticPaths
- * 4. Render the MeetupDetail component with fetched data
  */
 function MeetupDetails() {
-  return <h1>The Meetup Detail Page</h1>;
+  /**
+   * RENDER THE MEETUP DETAIL COMPONENT
+   *
+   * From the instructor:
+   * "Now for that, we can of course start outputting that content here in that
+   * MeetupDetails function. But I actually wanna outsource that into a separate
+   * component..."
+   *
+   * We pass the meetup data as individual props to MeetupDetail.
+   *
+   * CURRENT: Using dummy/hardcoded data
+   * FUTURE: Data will come from getStaticProps, fetched from database
+   *
+   * The MeetupDetail component receives:
+   * - image: URL of the meetup image
+   * - title: Name of the meetup
+   * - address: Physical location
+   * - description: What the meetup is about
+   */
+  return (
+    <MeetupDetail
+      image='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg'
+      title='A First Meetup'
+      address='Some Street 5, Some City'
+      description='This is a first meetup!'
+    />
+  );
 }
 
+/**
+ * Export the page component
+ *
+ * Default export is REQUIRED for NextJS page components.
+ * NextJS uses the default export to render the page.
+ */
 export default MeetupDetails;

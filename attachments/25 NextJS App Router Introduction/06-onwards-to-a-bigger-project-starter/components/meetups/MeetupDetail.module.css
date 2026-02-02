@@ -1,0 +1,165 @@
+/**
+ * ============================================================================
+ * MeetupDetail.module.css - LESSON 491: CSS MODULE FOR MEETUP DETAILS
+ * ============================================================================
+ *
+ * LESSON 491: Styling the MeetupDetail component with CSS Modules
+ *
+ * ============================================================================
+ * 🎓 LESSON 491: CSS MODULES IN NEXTJS
+ * ============================================================================
+ *
+ * From the instructor:
+ * "...and I will also use a CSS module for styling. Therefore, I will add a
+ * MeetupDetail.module.css file next to this JavaScript file."
+ *
+ * From the instructor:
+ * "Now, we already saw in an earlier module that NextJS supports CSS modules
+ * out of the box. We can create files with that .module.css extension without
+ * any extra configuration, and then we can import them into our JavaScript
+ * files and use the classes defined in them."
+ *
+ * ============================================================================
+ * 📁 FILE NAMING CONVENTION
+ * ============================================================================
+ *
+ * The file MUST follow this naming pattern:
+ *
+ *   [ComponentName].module.css
+ *
+ * Examples:
+ *   - MeetupDetail.module.css    ✅
+ *   - MeetupItem.module.css      ✅
+ *   - Card.module.css            ✅
+ *   - styles.css                 ❌ (not a module)
+ *   - MeetupDetail.css           ❌ (missing .module)
+ *
+ * The ".module" part is REQUIRED for NextJS to process it as a CSS Module.
+ *
+ * ============================================================================
+ * ⚙️ HOW CSS MODULES WORK
+ * ============================================================================
+ *
+ * 1. You write normal CSS with class names:
+ *    .detail { text-align: center; }
+ *
+ * 2. Import in your JavaScript:
+ *    import classes from './MeetupDetail.module.css';
+ *
+ * 3. Use via the classes object:
+ *    className={classes.detail}
+ *
+ * 4. NextJS transforms the class name to be unique:
+ *    .MeetupDetail_detail__x7h2k
+ *
+ * BENEFIT: Your styles are automatically scoped to this component!
+ * No risk of accidentally affecting other components with the same class name.
+ *
+ * ============================================================================
+ * 🔄 CSS MODULES vs GLOBAL CSS
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  CSS MODULES (this file)                                                │
+ * │  • File: *.module.css                                                   │
+ * │  • Import: import classes from './file.module.css'                     │
+ * │  • Scoped: YES - class names are unique                                 │
+ * │  • Import in: Any component file                                        │
+ * │  • Use case: Component-specific styles                                  │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │  GLOBAL CSS                                                             │
+ * │  • File: *.css (without .module)                                        │
+ * │  • Import: import './globals.css'                                       │
+ * │  • Scoped: NO - affects entire application                              │
+ * │  • Import in: ONLY _app.js                                              │
+ * │  • Use case: Global styles, resets, fonts                               │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🎨 STYLES IN THIS FILE
+ * ============================================================================
+ *
+ * .detail - Main wrapper for the meetup detail section
+ *   - Centers content
+ *   - Constrains width
+ *
+ * .detail img - Image styling
+ *   - Full width of container
+ *   - Rounded corners (not shown here, placeholder)
+ *
+ * .detail address - Address styling
+ *   - Removes default italic
+ *   - Custom font styling
+ *
+ * ============================================================================
+ */
+
+/**
+ * MAIN DETAIL SECTION WRAPPER
+ *
+ * This class wraps the entire meetup detail content.
+ * Used in MeetupDetail.js: <section className={classes.detail}>
+ *
+ * Styling approach:
+ * - Centers all text content
+ * - Sets a maximum width so it doesn't stretch too wide on large screens
+ * - Uses auto margins for horizontal centering
+ */
+.detail {
+  text-align: center;
+}
+
+/**
+ * IMAGE STYLING
+ *
+ * Styles for the meetup image within the detail section.
+ *
+ * Using descendant selector (.detail img) to target
+ * any <img> inside an element with .detail class.
+ *
+ * Styling approach:
+ * - Full width of the container
+ * - Slightly rounded corners for modern look (optional)
+ */
+.detail img {
+  width: 100%;
+}
+
+/**
+ * ADDRESS STYLING
+ *
+ * Styles for the <address> semantic HTML element.
+ *
+ * From the instructor:
+ * "...the address with a special address HTML element..."
+ *
+ * By default, browsers render <address> in italics.
+ * We reset to normal and apply custom styling.
+ *
+ * Styling approach:
+ * - Reset font-style to normal (removes default italic)
+ * - Color uses a light gray for visual hierarchy
+ * - The title (h1) should stand out more, address is secondary info
+ */
+.detail address {
+  font-size: 1.25rem;
+  color: #666666;
+  font-style: normal;
+}
+
+/**
+ * DESCRIPTION PARAGRAPH STYLING
+ *
+ * Styles for the meetup description paragraph.
+ *
+ * Styling approach:
+ * - Larger font size for readability
+ * - Constrained width for comfortable reading (45-75 characters per line)
+ * - Centered with auto margins
+ */
+.detail p {
+  font-size: 1.25rem;
+  width: 90%;
+  max-width: 40rem;
+  margin: 1rem auto;
+}
