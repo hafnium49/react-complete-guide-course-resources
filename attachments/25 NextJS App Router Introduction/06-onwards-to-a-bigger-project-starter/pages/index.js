@@ -1,271 +1,437 @@
 /**
  * ============================================================================
- * pages/index.js - LESSONS 486, 487 & 492: THE STARTING PAGE (HOME PAGE)
+ * pages/index.js - LESSONS 486, 487, 492 & 493: THE STARTING PAGE (HOME PAGE)
  * ============================================================================
  *
  * LESSON 486: Created this page file
  * LESSON 487: Filled this page with actual content (MeetupList + dummy data)
- * LESSON 492: Demonstrating the PROBLEM with client-side data fetching
+ * LESSON 492: Demonstrated the PROBLEM with client-side data fetching
+ * LESSON 493: THE SOLUTION - getStaticProps for Static Generation
  *
  * ============================================================================
- * ⚠️ LESSON 492: THE DATA FETCHING PROBLEM IN NEXTJS
+ * 🎓 LESSON 493: STATIC GENERATION WITH getStaticProps
  * ============================================================================
- *
- * This lesson demonstrates a CRITICAL PROBLEM with the traditional React
- * approach to data fetching when used in NextJS.
  *
  * From the instructor:
- * "Now at the moment, we are using this dummy meetups array for rendering our
- * list of meetups. And on the meetup detailed page, we just have some hard
- * coded dummy data and that's not realistic. In reality, we would have a
- * backend, some database which holds that data."
+ * "NextJS has this built-in page pre-rendering but this built-in process has
+ * a flaw if you wanna call it like this. As I showed you a couple of seconds
+ * ago, the page that is pre-rendered has basically the snapshot after the
+ * first component render cycle as its content and that might be missing
+ * crucial data."
+ *
+ * ============================================================================
+ * 🔄 RECAP: THE HYDRATION PROCESS
+ * ============================================================================
+ *
+ * From the instructor:
+ * "After this HTML page was received, React will actually take over, the page
+ * is hydrated as this process is called, which means that now React will turn
+ * this into a single page application and take over control."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  🎯 GOAL OF THIS LESSON                                                 │
+ * │  WHAT IS HYDRATION?                                                      │
  * │                                                                          │
- * │  We're SIMULATING what would happen if we fetched data from a backend   │
- * │  using the traditional React approach (useEffect + useState).           │
+ * │  1. Server sends pre-rendered HTML to browser                           │
+ * │  2. Browser displays the HTML immediately (fast!)                       │
+ * │  3. JavaScript bundles load                                              │
+ * │  4. React "hydrates" the page:                                          │
+ * │     - Attaches event listeners                                          │
+ * │     - Makes components interactive                                       │
+ * │     - Takes over DOM management                                          │
+ * │  5. Page becomes a fully interactive SPA                                │
  * │                                                                          │
- * │  This reveals a fundamental problem with SEO and pre-rendering!         │
+ * │  Problem: If data is fetched client-side (useEffect), the initial       │
+ * │  HTML is empty of that data - bad for SEO!                              │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🔄 THE TRADITIONAL REACT APPROACH
+ * ⚡ TWO FORMS OF PRE-RENDERING IN NEXTJS
  * ============================================================================
  *
  * From the instructor:
- * "And how would we typically do this in React? Well, if we wanna send a HTTP
- * request once this page is rendered, we would typically use the useEffect
- * hook to control this."
- *
- * Traditional React data fetching pattern:
- * 1. Component renders with initial/empty state
- * 2. useEffect runs AFTER the render
- * 3. Fetch data from API/backend
- * 4. Update state with fetched data
- * 5. Component re-renders with actual data
- *
- * From the instructor:
- * "So we would import useEffect from React and then execute useEffect here
- * and have an empty dependencies array, probably, which means that this
- * effect function runs whenever the component is first rendered, but never
- * thereafter."
- *
- * ============================================================================
- * 🐛 THE PROBLEM: TWO RENDER CYCLES
- * ============================================================================
- *
- * From the instructor:
- * "But technically there is a difference because it is important to note that
- * useEffect works such that it executes this function after important, AFTER
- * the component function was executed."
+ * "NextJS gives us two forms of pre-rendering, which we can use for controlling
+ * how the pages should be rendered. It has something which is called Static
+ * Generation and it has an alternative, which is called Server-side Rendering.
+ * And the two might sound similar but they run or the code runs at different
+ * points of time."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  HOW useEffect TIMING WORKS                                             │
+ * │  NEXTJS PRE-RENDERING OPTIONS                                            │
  * │                                                                          │
- * │  RENDER CYCLE 1:                                                        │
- * │  ┌──────────────────────────────────────────────┐                       │
- * │  │ 1. Component function executes               │                       │
- * │  │ 2. loadedMeetups = [] (empty array)          │                       │
- * │  │ 3. JSX renders with EMPTY list               │                       │
- * │  │ 4. React commits to DOM                      │                       │
- * │  │ 5. useEffect runs (schedules state update)   │                       │
- * │  └──────────────────────────────────────────────┘                       │
+ * │  ┌───────────────────────────────────────────────────────────────────┐  │
+ * │  │  1. STATIC GENERATION (getStaticProps) ← THIS LESSON              │  │
+ * │  │     • Page is pre-rendered at BUILD TIME                          │  │
+ * │  │     • HTML is generated when you run `npm run build`              │  │
+ * │  │     • Same HTML is served to ALL users                            │  │
+ * │  │     • FASTEST option - HTML is cached on CDN                      │  │
+ * │  │     • Use when: Data doesn't change frequently                    │  │
+ * │  └───────────────────────────────────────────────────────────────────┘  │
  * │                                                                          │
- * │  RENDER CYCLE 2:                                                        │
- * │  ┌──────────────────────────────────────────────┐                       │
- * │  │ 1. State changed → component re-renders      │                       │
- * │  │ 2. loadedMeetups = [meetup1, meetup2]        │                       │
- * │  │ 3. JSX renders with ACTUAL data              │                       │
- * │  │ 4. User finally sees the meetups             │                       │
- * │  └──────────────────────────────────────────────┘                       │
+ * │  ┌───────────────────────────────────────────────────────────────────┐  │
+ * │  │  2. SERVER-SIDE RENDERING (getServerSideProps)                    │  │
+ * │  │     • Page is pre-rendered on EVERY REQUEST                       │  │
+ * │  │     • HTML is generated for each user request                     │  │
+ * │  │     • Can access request/response objects                         │  │
+ * │  │     • Use when: Data changes frequently or is user-specific       │  │
+ * │  └───────────────────────────────────────────────────────────────────┘  │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * From the instructor:
- * "So that means that, the first time this homepage component is rendered,
- * loadedMeetups will be an empty array. Then this effect function will
- * execute, it will then update the state and then this component function
- * will execute again because the state changed and it will then re-render
- * the list with the actual data but we'll have two component render cycles."
+ * "We're going to start with Static Generation because that is the approach
+ * which you typically should use."
  *
  * ============================================================================
- * 🔍 THE SEO PROBLEM - VIEW PAGE SOURCE
+ * 🏗️ STATIC GENERATION - WHEN DOES IT RUN?
  * ============================================================================
  *
  * From the instructor:
- * "Because of these two render cycles, we have a problem with search engine
- * optimization. If I viewed a page source, you will notice that in there,
- * the actual meetup data is missing. I got my unordered list here and this
- * unordered list is EMPTY."
+ * "When using Static Generation, a page component is pre-rendered when you
+ * build your application, when you build the next project. So when you build
+ * it for production. And that's important."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  WHAT YOU SEE ON SCREEN vs WHAT'S IN THE HTML SOURCE                    │
+ * │  STATIC GENERATION TIMELINE                                              │
  * │                                                                          │
- * │  ON SCREEN (after JavaScript runs):                                     │
- * │  ┌────────────────────────────────┐                                     │
- * │  │  [Image]                       │                                     │
- * │  │  A First Meetup                │                                     │
- * │  │  Some address 5, 12345...      │                                     │
- * │  │  [Show Details]                │                                     │
- * │  │                                │                                     │
- * │  │  [Image]                       │                                     │
- * │  │  A Second Meetup               │                                     │
- * │  │  ...                           │                                     │
- * │  └────────────────────────────────┘                                     │
+ * │  DEVELOPMENT:                                                            │
+ * │  ┌─────────────────────────────────────────────────────────────────┐    │
+ * │  │  npm run dev → getStaticProps runs on each request              │    │
+ * │  │  (for easier development/testing)                                │    │
+ * │  └─────────────────────────────────────────────────────────────────┘    │
  * │                                                                          │
- * │  IN HTML SOURCE (View Page Source):                                     │
- * │  ┌────────────────────────────────┐                                     │
- * │  │  <ul class="list">             │                                     │
- * │  │  </ul>                         │  ← EMPTY! No list items!            │
- * │  └────────────────────────────────┘                                     │
+ * │  PRODUCTION BUILD:                                                       │
+ * │  ┌─────────────────────────────────────────────────────────────────┐    │
+ * │  │  npm run build → getStaticProps runs ONCE                       │    │
+ * │  │                 → HTML files are generated                       │    │
+ * │  │                 → These files are STATIC                        │    │
+ * │  └─────────────────────────────────────────────────────────────────┘    │
+ * │                                                                          │
+ * │  DEPLOYMENT:                                                             │
+ * │  ┌─────────────────────────────────────────────────────────────────┐    │
+ * │  │  npm start → Serves the pre-built HTML files                    │    │
+ * │  │            → No data fetching happens                            │    │
+ * │  │            → Super fast response times!                          │    │
+ * │  └─────────────────────────────────────────────────────────────────┘    │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "With Static Generation, by default, your page is not pre-rendered on the
+ * fly on the server when a request reaches the server but instead, it is
+ * pre-rendered when you as a developer build your site for production."
+ *
+ * ============================================================================
+ * 🔄 WHAT ABOUT DATA UPDATES?
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And that means that after it was deployed, that pre-rendered page does not
+ * change. At least not by default. If you then updated the data and you know
+ * that the pre-rendered page needs to change, you need to start that build
+ * process again and redeploy again."
+ *
+ * IMPORTANT: This might sound limiting, but:
+ *
+ * From the instructor:
+ * "But that might sound worse than it actually is because for a lot of
+ * applications, pages don't change all the time. Page content doesn't change
+ * all the time and if it should change frequently, there are alternatives,
+ * which I will also show you in a couple of minutes."
+ *
+ * Alternatives for frequently changing data:
+ * • Incremental Static Regeneration (ISR) - revalidate prop
+ * • Server-Side Rendering (getServerSideProps)
+ * • Client-side fetching (for non-SEO critical data)
+ *
+ * ============================================================================
+ * 📦 THE getStaticProps FUNCTION
+ * ============================================================================
+ *
+ * From the instructor:
+ * "If you need to wait for data, if you need to add data fetching to a page
+ * component, you can do so by exporting a special function from inside your
+ * page component file."
+ *
+ * CRITICAL RULES:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  getStaticProps REQUIREMENTS                                             │
+ * │                                                                          │
+ * │  ✅ Must be EXPORTED (export function or export async function)         │
+ * │  ✅ Must be named EXACTLY "getStaticProps" (reserved name)              │
+ * │  ✅ Only works in PAGE component files (pages/ folder)                  │
+ * │  ❌ Does NOT work in regular component files                            │
+ * │  ❌ Does NOT work in components/ folder                                 │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * From the instructor:
+ * "This now only works in your page component files, not in other component
+ * files. Only in component files inside of the pages folder."
+ *
+ * From the instructor:
+ * "In there, you can export a function, a function called getStaticProps and
+ * it has to be called getStaticProps. This is a reserved name so to say.
+ * NextJS will look for a function with that name and if it finds it, it
+ * executes this function during this pre-rendering process."
+ *
+ * ============================================================================
+ * ⚙️ HOW getStaticProps CHANGES THE RENDERING FLOW
+ * ============================================================================
+ *
+ * From the instructor:
+ * "So it will then not directly call your component function and use the
+ * returned JSX snapshot as HTML content but it will, first of all, call
+ * getStaticProps before it calls the component function."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  WITHOUT getStaticProps (Lesson 492)                                     │
+ * │                                                                          │
+ * │  1. Component function runs                                              │
+ * │  2. JSX is rendered (with empty state)                                  │
+ * │  3. HTML snapshot is taken ← DATA MISSING!                              │
+ * │  4. useEffect runs client-side (too late for SEO)                       │
+ * │                                                                          │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │  WITH getStaticProps (This Lesson)                                       │
+ * │                                                                          │
+ * │  1. getStaticProps() runs FIRST                                         │
+ * │  2. Data is fetched (can be async)                                      │
+ * │  3. Props are returned                                                   │
+ * │  4. Component function runs WITH props                                  │
+ * │  5. JSX is rendered with ACTUAL DATA                                    │
+ * │  6. HTML snapshot is taken ← DATA INCLUDED!                             │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🤖 WHY SEARCH ENGINES CAN'T SEE THE DATA
+ * ⏳ ASYNC SUPPORT - WAITING FOR DATA
  * ============================================================================
  *
  * From the instructor:
- * "So the items which we see on the screen here, these items are MISSING in
- * the HTML content. In the HTML page we fetched from the server and they are
- * missing because they are only rendered in the second component execution
- * cycle."
+ * "And getStaticProps has this name because indeed, its job is to prepare
+ * props for this page. And these props could then contain the data this page
+ * needs. And that's useful because getStaticProps is allowed to be asynchronous."
  *
- * The problem explained:
+ * From the instructor:
+ * "You can return a promise there and then, and that's the key thing, NextJS
+ * will wait for this promise to resolve, which means it waits until your data
+ * is loaded and then you return the props for this component function."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  NEXTJS PRE-RENDERING BEHAVIOR                                          │
+ * │  ASYNC DATA FETCHING EXAMPLE                                             │
  * │                                                                          │
- * │  NextJS pre-renders pages on the server to send HTML to the browser.    │
+ * │  export async function getStaticProps() {                               │
+ * │    // Fetch from API                                                     │
+ * │    const response = await fetch('https://api.example.com/meetups');     │
+ * │    const data = await response.json();                                   │
  * │                                                                          │
- * │  BUT: NextJS only takes the result of the FIRST render cycle!           │
+ * │    // Or query a database                                                │
+ * │    const meetups = await db.collection('meetups').find().toArray();     │
  * │                                                                          │
- * │  It does NOT wait for:                                                  │
- * │  • useEffect to complete                                                 │
- * │  • State updates                                                         │
- * │  • Async operations                                                      │
- * │  • Second render cycle                                                   │
+ * │    // NextJS WAITS for all this to complete!                            │
+ * │    return {                                                              │
+ * │      props: { meetups: data }                                           │
+ * │    };                                                                    │
+ * │  }                                                                       │
  * │                                                                          │
- * │  Result: The pre-rendered HTML is EMPTY of dynamic data!                │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
- * From the instructor:
- * "But the pre-rendered HTML page generated by NextJS automatically does not
- * wait for this second cycle. It always takes the result of the first render
- * cycle and return stat as the pre-rendered HTML code. And there, this data
- * is missing."
- *
  * ============================================================================
- * 😟 WHY THIS MATTERS
+ * 🔒 SECURITY: SERVER-SIDE ONLY CODE
  * ============================================================================
  *
  * From the instructor:
- * "Now, why am I emphasizing this? Because if we would fetch this from a
- * backend, our users might see a loading spinner briefly, which could or
- * could not be the user experience we wanna offer."
- *
- * TWO MAIN ISSUES:
- *
- * 1. USER EXPERIENCE
- *    - Users see empty page/loading spinner first
- *    - Then content pops in
- *    - Can feel slow and janky
- *
- * 2. SEO (Search Engine Optimization)
- *    - Search engine bots crawl the HTML
- *    - They see an EMPTY page
- *    - Your content won't be indexed properly
- *    - Bad for search rankings
- *
- * ============================================================================
- * 💡 SOLUTION PREVIEW
- * ============================================================================
- *
- * From the instructor:
- * "But thankfully, NextJS also has solutions to this problem. It has more
- * core features built into NextJS that help us with precisely this problem
- * that we wanna pre-render a page with data, but with data for which we
- * have to wait."
- *
- * NextJS provides special functions:
+ * "Now, here in getStaticProps, you can also execute any code that would
+ * normally only run on a server. You could access a file system here or
+ * securely connect to a database because any code you write in here will
+ * never end up on the client side and it will never execute on the client
+ * side simply because this code is executed during the build process, not
+ * on the server and especially not on the clients of your visitors."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  UPCOMING: DATA FETCHING SOLUTIONS                                       │
+ * │  🔐 WHAT YOU CAN SAFELY DO IN getStaticProps                            │
  * │                                                                          │
- * │  getStaticProps()                                                        │
- * │  • Runs at BUILD TIME                                                    │
- * │  • Fetches data BEFORE page is pre-rendered                             │
- * │  • Data is included in the initial HTML                                 │
- * │  • Perfect for SEO!                                                      │
+ * │  ✅ Access the file system (fs module)                                  │
+ * │  ✅ Connect to databases directly                                       │
+ * │  ✅ Use API keys and secrets                                            │
+ * │  ✅ Query internal services                                              │
+ * │  ✅ Read environment variables                                          │
  * │                                                                          │
- * │  getServerSideProps()                                                    │
- * │  • Runs on EVERY REQUEST                                                 │
- * │  • Fetches fresh data server-side                                       │
- * │  • Data is included in the initial HTML                                 │
+ * │  WHY IS THIS SAFE?                                                       │
  * │                                                                          │
- * │  These will be covered in the next lessons!                             │
+ * │  From the instructor:                                                    │
+ * │  "So the code in here will never reach the machines of your visitors.  │
+ * │  It will never execute on their machines."                              │
+ * │                                                                          │
+ * │  The code is:                                                            │
+ * │  • Executed during build (npm run build)                                │
+ * │  • Stripped from the client-side JavaScript bundle                      │
+ * │  • Never sent to the browser                                             │
+ * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
+ * ============================================================================
+ * 📤 THE RETURN VALUE
+ * ============================================================================
+ *
  * From the instructor:
- * "And we need to tell NextJS, once we're done waiting and therefore that's
- * now what we're going to explore next, how we can fetch data for pre-rendering."
+ * "But then once you're done with whatever you did to get the data you need,
+ * you need to return an object here in getStaticProps. You always need to
+ * return an object here."
+ *
+ * From the instructor:
+ * "Now, in this object, you can configure various things but most importantly,
+ * you typically set a props property here and it has to be named props."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  getStaticProps RETURN OBJECT                                            │
+ * │                                                                          │
+ * │  return {                                                                │
+ * │    props: {                    // REQUIRED: Props for the component     │
+ * │      meetups: [...],          // Your data                              │
+ * │      // any other props...                                               │
+ * │    },                                                                    │
+ * │    revalidate: 10,            // OPTIONAL: ISR - regenerate every 10s  │
+ * │    notFound: true,            // OPTIONAL: Return 404 page              │
+ * │    redirect: {                // OPTIONAL: Redirect to another page    │
+ * │      destination: '/other'                                              │
+ * │    }                                                                     │
+ * │  };                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🧪 TRY IT YOURSELF
+ * 🔗 THE PROPS CONNECTION
  * ============================================================================
  *
- * To see the problem in action:
+ * From the instructor:
+ * "And that then holds another object, which will be the props object you
+ * receive in your component function here in this page component function.
+ * This now receives a props object and the object will be the object you
+ * set as props here in getStaticProps."
  *
- * 1. Start the development server:
- *    npm run dev
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  DATA FLOW                                                               │
+ * │                                                                          │
+ * │  getStaticProps()                      HomePage(props)                  │
+ * │  ┌────────────────────┐                ┌────────────────────┐           │
+ * │  │ return {           │                │ function HomePage  │           │
+ * │  │   props: {         │  ─────────►    │   (props) {        │           │
+ * │  │     meetups: [...]│                │   props.meetups    │           │
+ * │  │   }                │                │   ...              │           │
+ * │  │ }                  │                │ }                  │           │
+ * │  └────────────────────┘                └────────────────────┘           │
+ * │                                                                          │
+ * │  The "props" object from getStaticProps becomes the props parameter!   │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
- * 2. Visit http://localhost:3000
+ * ============================================================================
+ * 🧹 NO MORE useState/useEffect NEEDED!
+ * ============================================================================
  *
- * 3. You'll see the meetups appear (JavaScript runs, second cycle completes)
+ * From the instructor:
+ * "Therefore, in this page component, we no longer need to manage state, we
+ * no longer need useEffect and we can therefore get rid of those imports
+ * here because now we get the data through props."
  *
- * 4. Right-click and select "View Page Source" (NOT Developer Tools!)
+ * BEFORE (Lesson 492):
+ * ```javascript
+ * import { useEffect, useState } from 'react';
  *
- * 5. Look for <ul class="list">...</ul>
+ * function HomePage() {
+ *   const [loadedMeetups, setLoadedMeetups] = useState([]);
+ *   useEffect(() => {
+ *     setLoadedMeetups(DUMMY_MEETUPS);
+ *   }, []);
+ *   return <MeetupList meetups={loadedMeetups} />;
+ * }
+ * ```
  *
- * 6. Notice: The <ul> is EMPTY - no <li> items!
+ * AFTER (This Lesson):
+ * ```javascript
+ * function HomePage(props) {
+ *   return <MeetupList meetups={props.meetups} />;
+ * }
  *
- * This proves that the server-rendered HTML doesn't contain the meetup data.
+ * export async function getStaticProps() {
+ *   return { props: { meetups: DUMMY_MEETUPS } };
+ * }
+ * ```
+ *
+ * Much cleaner! Data fetching is separated from rendering.
+ *
+ * ============================================================================
+ * ✅ THE RESULT - SEO FRIENDLY HTML
+ * ============================================================================
+ *
+ * From the instructor:
+ * "If I now save everything, if we reload our page, we still see our meetups
+ * here but if I now view the page source, we see that we no longer have an
+ * empty unordered list, instead we have an unordered list, which has list
+ * items with the images and the title and so on."
+ *
+ * From the instructor:
+ * "So now this is pre-rendered and it now contains the full HTML code and
+ * that's, of course, also great for search engines then because now, data
+ * is not fetched in a second component render cycle on the client but
+ * initially, before this page is pre-rendered, during the build process."
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  VIEW PAGE SOURCE COMPARISON                                             │
+ * │                                                                          │
+ * │  BEFORE (useEffect):                  AFTER (getStaticProps):           │
+ * │  ┌─────────────────────┐              ┌─────────────────────┐           │
+ * │  │ <ul class="list">   │              │ <ul class="list">   │           │
+ * │  │ </ul>               │              │   <li>              │           │
+ * │  │                     │              │     <img src="..."> │           │
+ * │  │ ← EMPTY!            │              │     <h3>A First...  │           │
+ * │  │                     │              │     ...             │           │
+ * │  │                     │              │   </li>             │           │
+ * │  │                     │              │   <li>              │           │
+ * │  │                     │              │     ...             │           │
+ * │  │                     │              │   </li>             │           │
+ * │  │                     │              │ </ul>               │           │
+ * │  └─────────────────────┘              └─────────────────────┘           │
+ * │                                                                          │
+ * │  Search engines can now see and index all the meetup data!              │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🎯 KEY TAKEAWAYS
+ * ============================================================================
+ *
+ * From the instructor:
+ * "And that's a great plus and one of the main features of NextJS, this data
+ * fetching for pre-rendering. And getStaticProps will be a function you use
+ * a lot when working with NextJS."
+ *
+ * 1. Use getStaticProps for data that doesn't change frequently
+ * 2. It runs at BUILD TIME (not on every request)
+ * 3. Code is secure - never sent to client
+ * 4. Must be exported from page component files only
+ * 5. Must return an object with a props property
+ * 6. The component receives props as a parameter
  *
  * ============================================================================
  */
-
-/**
- * Import React hooks for the traditional data fetching pattern
- *
- * From the instructor:
- * "Well, if we wanna send a HTTP request once this page is rendered, we would
- * typically use the useEffect hook to control this... And then we could manage
- * some state for this component with the useState hook."
- *
- * useState: Manages the list of meetups (starts empty, gets populated)
- * useEffect: Runs the "fetch" logic after component mounts
- */
-import { useEffect, useState } from 'react';
 
 import MeetupList from '../components/meetups/MeetupList';
 
 /**
  * DUMMY_MEETUPS - Simulating Data from a Backend
  *
- * From the instructor:
- * "And for the moment, let's just simulate that we fetched the dummy meetups.
- * Of course, they are available right from the start here, but let's assume
- * we just fetched them from a server."
- *
- * In a real application, this data would come from:
+ * In a real application, this data would be fetched from:
+ * - A database (MongoDB, PostgreSQL, etc.)
  * - A REST API endpoint
- * - A GraphQL query
- * - A database query
- * - A third-party service
+ * - A CMS (Content Management System)
+ * - Files on the file system
  *
- * We're using local data to SIMULATE the fetch behavior without needing
- * an actual backend. The TIMING behavior is what matters here.
+ * From the instructor:
+ * "Here in getStaticProps, you can do whatever you want, for example, fetch
+ * data from an API or from a database or read data from some files in the
+ * file system."
  */
 const DUMMY_MEETUPS = [
   {
@@ -287,117 +453,142 @@ const DUMMY_MEETUPS = [
 ];
 
 /**
- * HomePage Component - Demonstrating the Data Fetching Problem
+ * HomePage Component - Now Receives Data via Props
  *
- * This component uses the TRADITIONAL React pattern for data fetching,
- * which works fine for client-side React apps, but has problems in NextJS.
+ * IMPORTANT CHANGE FROM LESSON 492:
+ * - No more useState for managing meetups
+ * - No more useEffect for "fetching" data
+ * - Data comes through props from getStaticProps
  *
  * From the instructor:
- * "Let's change this component to behave the way it would behave if we would
- * reach out to a backend."
+ * "Therefore, in this page component, we no longer need to manage state,
+ * we no longer need useEffect and we can therefore get rid of those imports
+ * here because now we get the data through props."
+ *
+ * @param {Object} props - Props provided by getStaticProps
+ * @param {Array} props.meetups - Array of meetup objects
  */
-function HomePage() {
+function HomePage(props) {
   /**
-   * STATE: Managing the loaded meetups
+   * RENDERING WITH PROPS
    *
    * From the instructor:
-   * "And then here, we could manage our list of meetups. Let's say the
-   * loadedMeetups and we have our setLoadedMeetups state updating function."
+   * "And our meetups for the MeetupList component are props.meetups.
+   * .meetups because I'm adding a meetups prop down there."
    *
-   * IMPORTANT: Initial state is an EMPTY ARRAY!
-   *
-   * This means on the FIRST render cycle:
-   * - loadedMeetups = []
-   * - MeetupList receives an empty array
-   * - No meetups are rendered
-   * - This is what gets pre-rendered by NextJS!
+   * The meetups data is:
+   * 1. Loaded in getStaticProps (at build time)
+   * 2. Passed as props to this component
+   * 3. Available immediately - no waiting!
+   * 4. Already in the pre-rendered HTML
    */
-  const [loadedMeetups, setLoadedMeetups] = useState([]);
+  return <MeetupList meetups={props.meetups} />;
+}
+
+/**
+ * ============================================================================
+ * getStaticProps - THE STAR OF LESSON 493
+ * ============================================================================
+ *
+ * This is a special NextJS function for Static Generation.
+ *
+ * From the instructor:
+ * "NextJS will look for a function with that name and if it finds it, it
+ * executes this function during this pre-rendering process."
+ *
+ * WHEN THIS RUNS:
+ * • Development (npm run dev): On each page request
+ * • Production build (npm run build): Once, during build
+ * • Production (npm start): Never - uses cached result
+ *
+ * From the instructor:
+ * "And with that, you're able to load data before this component function
+ * is executed so that this component can be rendered with the required data."
+ *
+ * @returns {Object} Object containing props for the page component
+ */
+export async function getStaticProps() {
+  /**
+   * DATA FETCHING HAPPENS HERE
+   *
+   * From the instructor:
+   * "Here in getStaticProps, you can do whatever you want, for example,
+   * fetch data from an API or from a database or read data from some
+   * files in the file system."
+   *
+   * This is where you would typically:
+   *
+   * 1. Fetch from an API:
+   *    const response = await fetch('https://api.example.com/meetups');
+   *    const data = await response.json();
+   *
+   * 2. Query a database directly:
+   *    const client = await MongoClient.connect(process.env.MONGODB_URI);
+   *    const meetups = await client.db().collection('meetups').find().toArray();
+   *
+   * 3. Read from the file system:
+   *    const filePath = path.join(process.cwd(), 'data', 'meetups.json');
+   *    const fileData = fs.readFileSync(filePath);
+   *    const meetups = JSON.parse(fileData);
+   *
+   * SECURITY NOTE:
+   * From the instructor:
+   * "Any code you write in here will never end up on the client side and
+   * it will never execute on the client side simply because this code is
+   * executed during the build process."
+   *
+   * For now, we're using DUMMY_MEETUPS to simulate fetched data.
+   */
 
   /**
-   * EFFECT: Simulating a data fetch from a backend
+   * RETURN THE PROPS OBJECT
    *
    * From the instructor:
-   * "And then execute useEffect here and have an empty dependencies array,
-   * probably, which means that this effect function runs whenever the
-   * component is first rendered, but never thereafter."
+   * "But then once you're done with whatever you did to get the data you need,
+   * you need to return an object here in getStaticProps. You always need to
+   * return an object here."
    *
-   * CRITICAL TIMING:
-   * useEffect runs AFTER the component renders, not before!
-   *
-   * Timeline:
-   * 1. Component function runs
-   * 2. useState returns [] (initial state)
-   * 3. JSX renders with empty array
-   * 4. React commits to DOM
-   * 5. useEffect callback runs ← DATA IS FETCHED HERE
-   * 6. setLoadedMeetups triggers re-render
-   * 7. Component function runs again with actual data
+   * The returned object MUST have a 'props' property:
    *
    * From the instructor:
-   * "And in useEffect, we would send that HTTP request and fetch data.
-   * And then once that's done, it would be an asynchronous task, of course,
-   * but once that's done, we would call setLoadedMeetups like this and set
-   * the meetups that we fetched from a server as the meetups for this component."
+   * "You typically set a props property here and it has to be named props.
+   * And that then holds another object, which will be the props object you
+   * receive in your component function."
    */
-  useEffect(() => {
+  return {
     /**
-     * SIMULATING AN API FETCH
-     *
-     * In a real application, this would look like:
-     *
-     * ```javascript
-     * fetch('/api/meetups')
-     *   .then(response => response.json())
-     *   .then(data => {
-     *     setLoadedMeetups(data.meetups);
-     *   });
-     * ```
-     *
-     * Or with async/await:
-     *
-     * ```javascript
-     * const fetchMeetups = async () => {
-     *   const response = await fetch('/api/meetups');
-     *   const data = await response.json();
-     *   setLoadedMeetups(data.meetups);
-     * };
-     * fetchMeetups();
-     * ```
+     * PROPS - Data for the Page Component
      *
      * From the instructor:
-     * "And for the moment, let's just simulate that we fetched the dummy meetups.
-     * Of course, they are available right from the start here, but let's assume
-     * we just fetched them from a server. So some promise completed here and we
-     * got back the response."
+     * "And there we could have our meetups key in there. The structure of
+     * this props object is totally up to you, which holds our DUMMY_MEETUPS."
+     *
+     * This object becomes available as `props` in HomePage(props).
+     * So props.meetups will contain the DUMMY_MEETUPS array.
+     *
+     * From the instructor:
+     * "With that, those DUMMY_MEETUPS would be loaded and prepared in
+     * getStaticProps and then they would be set as props for this page component."
      */
-    setLoadedMeetups(DUMMY_MEETUPS);
-  }, []); // Empty dependency array = runs once on mount
+    props: {
+      meetups: DUMMY_MEETUPS,
+    },
 
-  /**
-   * RENDER: Passing state to MeetupList
-   *
-   * From the instructor:
-   * "And now I set my dummy meetups as the loaded meetups and here in the JSX
-   * code, we pass the loaded meetups, so our state into meetup list."
-   *
-   * FIRST RENDER: loadedMeetups = [] → Empty list displayed
-   * SECOND RENDER: loadedMeetups = [m1, m2] → Meetups displayed
-   *
-   * THE PROBLEM:
-   * NextJS pre-renders the FIRST render result (empty list)!
-   * View Page Source will show an empty <ul></ul>
-   *
-   * From the instructor:
-   * "If we do all of that, if we visit the starting page with all the meetups,
-   * we don't see any difference there. When I reload, all the meetups are there,
-   * right from the start because we never really send a HTTP request."
-   *
-   * The user sees meetups because JavaScript runs in the browser
-   * and completes the second render cycle. But search engines
-   * and the initial HTML only get the first (empty) render.
-   */
-  return <MeetupList meetups={loadedMeetups} />;
+    /**
+     * OPTIONAL: revalidate (Incremental Static Regeneration)
+     *
+     * Uncomment this to enable ISR - the page will be regenerated
+     * at most once every X seconds when a request comes in.
+     *
+     * Example: revalidate: 10 means:
+     * - Serve cached page immediately
+     * - If 10+ seconds have passed, regenerate in background
+     * - Next request gets the new page
+     *
+     * This is covered in later lessons!
+     */
+    // revalidate: 10,
+  };
 }
 
 export default HomePage;
