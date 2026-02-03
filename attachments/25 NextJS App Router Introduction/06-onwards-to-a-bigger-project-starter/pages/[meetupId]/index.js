@@ -8,6 +8,7 @@
  * LESSON 496: Added getStaticProps with context.params for dynamic data
  * LESSON 497: Added getStaticPaths to define which dynamic pages to pre-generate
  * LESSON 502: Connected both getStaticPaths and getStaticProps to MongoDB
+ * LESSON 503: Added dynamic Head metadata (title + description) for SEO
  *
  * ============================================================================
  * 🎓 LESSON 502: FETCHING REAL DATA FOR DYNAMIC PAGES
@@ -194,6 +195,34 @@ import MeetupDetail from '../../components/meetups/MeetupDetail';
 import { MongoClient, ObjectId } from 'mongodb';
 
 /**
+ * LESSON 503: IMPORT Head AND Fragment FOR DYNAMIC PAGE METADATA
+ *
+ * Head: NextJS component for injecting elements into the HTML <head> section
+ * Fragment: React wrapper for returning multiple adjacent JSX elements
+ *
+ * On this page, the metadata is DYNAMIC - each meetup gets its own
+ * unique title and description based on its data from the database.
+ * This is important because different meetup detail pages will appear
+ * as different search results with their own titles and descriptions.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  STATIC METADATA (other pages):                                         │
+ * │  <title>React Meetups</title>       ← Always the same text             │
+ * │                                                                          │
+ * │  DYNAMIC METADATA (this page):                                          │
+ * │  <title>{props.meetupData.title}</title>  ← Different per meetup       │
+ * │                                                                          │
+ * │  This works because Head is rendered inside JSX, where you can use      │
+ * │  curly braces {} for dynamic expressions just like anywhere else        │
+ * │  in React components.                                                    │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+import Head from 'next/head';
+import { Fragment } from 'react';
+
+/**
  * MeetupDetails - Page Component for Individual Meetup
  *
  * Receives the full meetup data via props from getStaticProps.
@@ -210,25 +239,42 @@ import { MongoClient, ObjectId } from 'mongodb';
  */
 function MeetupDetails(props) {
   /**
-   * RENDER USING REAL DATABASE DATA
+   * RENDER USING REAL DATABASE DATA WITH DYNAMIC METADATA
    *
-   * Previously this had hardcoded values. Now the data flows from MongoDB:
-   *
-   * MongoDB document
-   *   → getStaticProps fetches and transforms it
-   *   → passes as props.meetupData
-   *   → we extract each field here for MeetupDetail component
-   *
+   * The data flows from MongoDB through getStaticProps into props.meetupData.
    * We drill into props.meetupData because getStaticProps returns:
    * { props: { meetupData: { id, title, image, address, description } } }
+   *
+   * LESSON 503: The Head section uses DYNAMIC values from props.
+   * Unlike the home page and new-meetup page where metadata is hardcoded,
+   * here each meetup gets its own unique title and description.
+   *
+   * This is possible because Head is just a regular React component -
+   * you can use dynamic expressions with curly braces {} inside it,
+   * just like in any other JSX code.
+   *
+   * For example, if the meetup title is "React Conference 2024":
+   *   <title>{props.meetupData.title}</title>
+   *   renders as: <title>React Conference 2024</title>
+   *
+   * This means each meetup page will show up differently in:
+   * - Browser tabs (unique title per meetup)
+   * - Search engine results (unique title and description)
+   * - Social media link previews
    */
   return (
-    <MeetupDetail
-      image={props.meetupData.image}
-      title={props.meetupData.title}
-      address={props.meetupData.address}
-      description={props.meetupData.description}
-    />
+    <Fragment>
+      <Head>
+        <title>{props.meetupData.title}</title>
+        <meta name="description" content={props.meetupData.description} />
+      </Head>
+      <MeetupDetail
+        image={props.meetupData.image}
+        title={props.meetupData.title}
+        address={props.meetupData.address}
+        description={props.meetupData.description}
+      />
+    </Fragment>
   );
 }
 

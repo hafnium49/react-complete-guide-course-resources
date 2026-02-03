@@ -10,6 +10,7 @@
  * LESSON 494: Incremental Static Regeneration (ISR) with revalidate
  * LESSON 495: getServerSideProps - Server-Side Rendering alternative
  * LESSON 501: Replaced dummy data with real MongoDB queries in getStaticProps
+ * LESSON 503: Added Head metadata (title + description) for SEO
  *
  * ============================================================================
  * 🎓 LESSON 501: FETCHING DATA FROM MONGODB IN getStaticProps
@@ -199,17 +200,117 @@ import MeetupList from '../components/meetups/MeetupList';
 import { MongoClient } from 'mongodb';
 
 /**
+ * LESSON 503: IMPORT Head FROM next/head FOR PAGE METADATA
+ *
+ * The Head component is a built-in NextJS component that allows you to
+ * inject elements into the HTML <head> section of your page.
+ *
+ * This is how you add metadata like:
+ * - <title> - The page title (shows in browser tab and search results)
+ * - <meta name="description"> - Page description (used by search engines)
+ * - <meta name="viewport"> - Responsive design settings
+ * - <link rel="icon"> - Favicon
+ * - Any other valid HTML head element
+ *
+ * WHY THIS MATTERS:
+ * Without proper metadata, your pages will:
+ * - Show the URL as the tab title (looks unprofessional)
+ * - Have no description in search engine results
+ * - Score poorly on SEO (Search Engine Optimization)
+ */
+import Head from 'next/head';
+
+/**
+ * LESSON 503: IMPORT Fragment FROM React
+ *
+ * Fragment is needed because React components can only return a single
+ * root element. Since we now want to return BOTH the Head component
+ * AND the MeetupList component, we need a wrapper.
+ *
+ * Fragment is an invisible wrapper - it groups elements without adding
+ * any extra DOM nodes (unlike wrapping in a <div>).
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  WITHOUT Fragment (ERROR - adjacent JSX elements):                      │
+ * │  return (                                                                │
+ * │    <Head>...</Head>                                                      │
+ * │    <MeetupList />        ← Error! Two root elements!                    │
+ * │  );                                                                      │
+ * │                                                                          │
+ * │  WITH Fragment (WORKS):                                                  │
+ * │  return (                                                                │
+ * │    <Fragment>                                                            │
+ * │      <Head>...</Head>                                                    │
+ * │      <MeetupList />      ← Both wrapped in invisible container          │
+ * │    </Fragment>                                                           │
+ * │  );                                                                      │
+ * │                                                                          │
+ * │  ALTERNATIVE SHORTHAND: <> ... </>                                      │
+ * │  return (                                                                │
+ * │    <>                                                                    │
+ * │      <Head>...</Head>                                                    │
+ * │      <MeetupList />                                                      │
+ * │    </>                                                                   │
+ * │  );                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ */
+import { Fragment } from 'react';
+
+/**
  * HomePage Component - Receives Pre-fetched Data via Props
  *
  * This component receives meetup data from getStaticProps.
  * It doesn't know or care WHERE the data comes from - it just renders it.
  * Previously it used dummy data; now it receives real data from MongoDB.
  *
+ * LESSON 503: Now also includes Head metadata for SEO.
+ *
  * @param {Object} props - Props provided by getStaticProps
  * @param {Array} props.meetups - Array of meetup objects from MongoDB
  */
 function HomePage(props) {
-  return <MeetupList meetups={props.meetups} />;
+  return (
+    <Fragment>
+      {/**
+       * LESSON 503: HEAD SECTION - PAGE METADATA
+       *
+       * Everything placed between <Head> and </Head> gets injected into
+       * the HTML <head> section of the rendered page.
+       *
+       * This works because NextJS's Head component uses React portals
+       * to move its children into the document's <head> element,
+       * regardless of where in the component tree it's rendered.
+       *
+       * The metadata defined here:
+       * - Shows "React Meetups" in the browser tab
+       * - Provides a description for search engines like Google
+       * - Both are critical for SEO and user experience
+       *
+       * WHAT APPEARS IN THE RENDERED HTML:
+       *
+       * <html>
+       *   <head>
+       *     <title>React Meetups</title>
+       *     <meta name="description" content="Browse a huge list..." />
+       *     ... (other head elements)
+       *   </head>
+       *   <body>
+       *     ... (page content)
+       *   </body>
+       * </html>
+       */}
+      <Head>
+        <title>React Meetups</title>
+        <meta
+          name="description"
+          content="Browse a huge list of highly active React meetups!"
+        />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </Fragment>
+  );
 }
 
 /**

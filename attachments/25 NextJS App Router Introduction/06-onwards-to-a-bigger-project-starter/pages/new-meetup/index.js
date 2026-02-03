@@ -6,6 +6,7 @@
  * LESSON 486: Created this page file using the folder approach
  * LESSON 488: Filled this page with the NewMeetupForm component
  * LESSON 500: Added API request to save meetup data and navigation after success
+ * LESSON 503: Added Head metadata (title + description) for SEO
  *
  * ============================================================================
  * 🎓 LESSON 500: SENDING REQUESTS TO API ROUTES
@@ -237,12 +238,26 @@ import NewMeetupForm from '../../components/meetups/NewMeetupForm';
 import { useRouter } from 'next/router';
 
 /**
+ * LESSON 503: IMPORT Head AND Fragment FOR PAGE METADATA
+ *
+ * Head: NextJS component for injecting elements into the HTML <head> section
+ * Fragment: React wrapper for returning multiple adjacent JSX elements
+ *
+ * Every page in a NextJS application should have appropriate metadata
+ * to ensure good SEO and a professional user experience.
+ */
+import Head from 'next/head';
+import { Fragment } from 'react';
+
+/**
  * NewMeetupPage Component - Page for Adding New Meetups
  *
  * This page component:
  * 1. Renders the NewMeetupForm for user input
  * 2. Handles form submission by sending data to our API route
  * 3. Redirects to the home page after successful submission
+ *
+ * LESSON 503: Now also includes Head metadata for SEO.
  *
  * URL: http://localhost:3000/new-meetup
  */
@@ -384,7 +399,14 @@ function NewMeetupPage() {
   }
 
   /**
-   * RENDER THE FORM COMPONENT
+   * RENDER THE FORM COMPONENT WITH HEAD METADATA
+   *
+   * LESSON 503: Wrapped in Fragment to include both Head and form.
+   *
+   * The Head component adds a static title and description for this page.
+   * Unlike the detail page (where metadata is dynamic based on the meetup),
+   * here the title and description are hardcoded since this form page
+   * always serves the same purpose.
    *
    * Pass addMeetupHandler as the onAddMeetup prop.
    * When the form is submitted, NewMeetupForm will call this function
@@ -392,11 +414,19 @@ function NewMeetupPage() {
    *
    * IMPORTANT: Pass the function reference (addMeetupHandler), NOT the result
    * of calling it (addMeetupHandler()). No parentheses!
-   *
-   * ✅ Correct: onAddMeetup={addMeetupHandler}
-   * ❌ Wrong:   onAddMeetup={addMeetupHandler()}
    */
-  return <NewMeetupForm onAddMeetup={addMeetupHandler} />;
+  return (
+    <Fragment>
+      <Head>
+        <title>Add a New Meetup</title>
+        <meta
+          name="description"
+          content="Add your own meetups and create amazing networking opportunities."
+        />
+      </Head>
+      <NewMeetupForm onAddMeetup={addMeetupHandler} />
+    </Fragment>
+  );
 }
 
 /**
