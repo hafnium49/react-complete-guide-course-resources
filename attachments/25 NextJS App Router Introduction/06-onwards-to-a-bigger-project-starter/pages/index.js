@@ -345,7 +345,7 @@ export async function getStaticProps() {
    * never sent to the client.
    */
   const client = await MongoClient.connect(
-    'mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/meetups?retryWrites=true&w=majority'
+    process.env.MONGODB_URI
   );
 
   /**

@@ -417,7 +417,7 @@ async function handler(req, res) {
      * don't need to try to connect to my cluster."
      */
     const client = await MongoClient.connect(
-      'mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/meetups?retryWrites=true&w=majority'
+      process.env.MONGODB_URI
     );
 
     /**

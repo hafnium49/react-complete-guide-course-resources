@@ -302,7 +302,7 @@ export async function getStaticPaths() {
    * IMPORTANT: Replace with YOUR MongoDB Atlas connection string.
    */
   const client = await MongoClient.connect(
-    'mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/meetups?retryWrites=true&w=majority'
+    process.env.MONGODB_URI
   );
   const db = client.db();
   const meetupsCollection = db.collection('meetups');
@@ -400,7 +400,7 @@ export async function getStaticProps(context) {
    * Each function establishes its own connection independently.
    */
   const client = await MongoClient.connect(
-    'mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/meetups?retryWrites=true&w=majority'
+    process.env.MONGODB_URI
   );
   const db = client.db();
   const meetupsCollection = db.collection('meetups');
