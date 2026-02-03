@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * pages/index.js - LESSONS 486-495: THE STARTING PAGE (HOME PAGE)
+ * pages/index.js - LESSONS 486-495 & 501: THE STARTING PAGE (HOME PAGE)
  * ============================================================================
  *
  * LESSON 486: Created this page file
@@ -9,347 +9,173 @@
  * LESSON 493: THE SOLUTION - getStaticProps for Static Generation
  * LESSON 494: Incremental Static Regeneration (ISR) with revalidate
  * LESSON 495: getServerSideProps - Server-Side Rendering alternative
+ * LESSON 501: Replaced dummy data with real MongoDB queries in getStaticProps
  *
  * ============================================================================
- * 🎓 LESSON 495: getServerSideProps - SERVER-SIDE RENDERING
+ * 🎓 LESSON 501: FETCHING DATA FROM MONGODB IN getStaticProps
  * ============================================================================
  *
- * From the instructor:
- * "So getStaticProps is a very useful function which you can export in your
- * page components to ensure that your pre-rendered pages contain data you
- * might need to wait for. Now with revalidate, you can ensure that this page
- * is also updated regularly after deployment."
- *
- * But sometimes that's not enough...
- *
- * From the instructor:
- * "But sometimes even a regular update is not enough. Sometimes you really
- * want to regenerate this page for every incoming request."
+ * This lesson demonstrates how to fetch real data from MongoDB directly
+ * inside getStaticProps, rather than using dummy data or calling an
+ * API route.
  *
  * ============================================================================
- * ⚡ WHEN getStaticProps + revalidate ISN'T ENOUGH
+ * ❌ THE WRONG APPROACH: CALLING YOUR OWN API ROUTE
  * ============================================================================
  *
- * From the instructor:
- * "So you want to pre-generate the page dynamically on the fly after
- * deployment on the server. Not during the build process and not every
- * couple of seconds, but for every request."
+ * You might think the right approach is to:
+ *   1. Create an API route (e.g., /api/meetups) that fetches data from MongoDB
+ *   2. Use fetch('/api/meetups') inside getStaticProps to get that data
  *
- * USE CASES WHERE YOU NEED EVERY-REQUEST RENDERING:
+ * This WORKS, but is REDUNDANT. Here's why:
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  SCENARIOS REQUIRING getServerSideProps                                  │
  * │                                                                          │
- * │  1. AUTHENTICATION REQUIRED                                              │
- * │     • Check session cookies on each request                              │
- * │     • Verify user tokens                                                 │
- * │     • Show user-specific data                                            │
+ * │  THE REDUNDANT APPROACH (don't do this):                                │
  * │                                                                          │
- * │  2. DATA CHANGES MULTIPLE TIMES PER SECOND                               │
- * │     • Live stock prices                                                  │
- * │     • Real-time auction bids                                             │
- * │     • Live sports scores                                                 │
+ * │  getStaticProps                                                          │
+ * │    │                                                                     │
+ * │    │  fetch('/api/meetups')  ← Sends HTTP request to yourself           │
+ * │    ▼                                                                     │
+ * │  API Route (/api/meetups)                                               │
+ * │    │                                                                     │
+ * │    │  MongoClient.connect(...)  ← Connects to MongoDB                   │
+ * │    │  collection.find()         ← Fetches data                          │
+ * │    ▼                                                                     │
+ * │  Returns JSON response                                                  │
+ * │    │                                                                     │
+ * │    ▼                                                                     │
+ * │  getStaticProps receives data                                           │
  * │                                                                          │
- * │  3. NEED REQUEST/RESPONSE OBJECTS                                        │
- * │     • Access headers                                                     │
- * │     • Read cookies directly                                              │
- * │     • Custom server logic                                                │
+ * │  ⚠️ This creates an UNNECESSARY extra HTTP request!                     │
+ * │  The server is sending a request to itself!                              │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  THE BETTER APPROACH (what we do here):                                 │
+ * │                                                                          │
+ * │  getStaticProps                                                          │
+ * │    │                                                                     │
+ * │    │  MongoClient.connect(...)  ← Connect directly to MongoDB           │
+ * │    │  collection.find()         ← Fetch data directly                   │
+ * │    ▼                                                                     │
+ * │  Use data as props                                                      │
+ * │                                                                          │
+ * │  ✅ No unnecessary HTTP request!                                         │
+ * │  ✅ Direct database access - faster and simpler!                         │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * Both getStaticProps and getServerSideProps run ONLY on the server,
+ * so it's perfectly safe and efficient to access the database directly.
+ *
+ * ============================================================================
+ * 🔒 SMART IMPORT SPLITTING: CLIENT VS SERVER BUNDLES
+ * ============================================================================
+ *
+ * When you import a package in a page component file, NextJS analyzes
+ * WHERE that import is used:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  import { MongoClient } from 'mongodb';  // Imported at top of file     │
+ * │  import SomeComponent from '../components/X';                            │
+ * │                                                                          │
+ * │  function HomePage(props) {                                              │
+ * │    return <SomeComponent />;  ← Uses SomeComponent                      │
+ * │  }                            ← SomeComponent → CLIENT bundle           │
+ * │                                                                          │
+ * │  export async function getStaticProps() {                                │
+ * │    MongoClient.connect(...)   ← Uses MongoClient                        │
+ * │  }                            ← MongoClient → SERVER bundle only        │
+ * │                                                                          │
+ * │  RESULT:                                                                 │
+ * │  • MongoClient is NOT included in the JavaScript sent to browsers       │
+ * │  • SomeComponent IS included in the client-side bundle                  │
+ * │  • NextJS automatically separates them!                                 │
+ * │                                                                          │
+ * │  This is great for:                                                      │
+ * │  • Bundle size: No server-only code bloating client downloads           │
+ * │  • Security: Database credentials never reach the browser               │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🔄 getServerSideProps - THE ALTERNATIVE
+ * 🔍 MONGODB find() AND toArray()
  * ============================================================================
  *
- * From the instructor:
- * "And if that's your goal, then there is an alternative to getStaticProps.
- * And that would be another function which you can export. A function that
- * can also be async if you want to. And that's the getServerSideProps function."
+ * The find() method on a MongoDB collection returns a cursor, not an array.
+ * A cursor is a pointer to the result set that you can iterate over.
  *
- * From the instructor:
- * "Just like getStaticProps, that is a reserved name, which NextJS will be
- * looking for."
+ * To get all documents as a standard JavaScript array, chain toArray():
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  getServerSideProps BASICS                                               │
  * │                                                                          │
- * │  export async function getServerSideProps(context) {                    │
- * │    // This runs on EVERY request, on the server                         │
- * │    return {                                                              │
- * │      props: { ... }                                                      │
- * │    };                                                                    │
+ * │  // Returns a cursor (not directly usable as array)                     │
+ * │  const cursor = collection.find();                                      │
+ * │                                                                          │
+ * │  // Converts cursor to an array of documents                            │
+ * │  const documents = await collection.find().toArray();                   │
+ * │                                                                          │
+ * │  // With a filter (find specific documents):                            │
+ * │  const filtered = await collection.find({ title: 'X' }).toArray();     │
+ * │                                                                          │
+ * │  // With no filter, find() returns ALL documents in the collection      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * ⚠️ THE _id PROBLEM: ObjectId IS NOT SERIALIZABLE
+ * ============================================================================
+ *
+ * MongoDB automatically assigns an _id field to every document.
+ * This _id is an ObjectId, which is a special BSON type - NOT a simple string.
+ *
+ * NextJS requires all props to be serializable (convertible to JSON).
+ * ObjectId objects are NOT serializable, so passing them directly causes
+ * an error.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  RAW DOCUMENT FROM MONGODB:                                             │
+ * │  {                                                                       │
+ * │    _id: ObjectId("64a7b2c3d4e5f6a7b8c9d0e1"),  ← NOT a string!        │
+ * │    title: "My Meetup",                                                   │
+ * │    image: "https://...",                                                 │
+ * │    address: "123 Street",                                                │
+ * │    description: "Great meetup"                                          │
  * │  }                                                                       │
  * │                                                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🕐 WHEN DOES getServerSideProps RUN?
- * ============================================================================
- *
- * From the instructor:
- * "And the difference to getStaticProps is that this function will now not
- * run during the build process, but instead always on the server after
- * deployment."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  COMPARISON: WHEN CODE RUNS                                              │
+ * │  ❌ Passing this directly to props causes an error:                     │
+ * │     "SerializableError: Error serializing props"                        │
  * │                                                                          │
- * │  getStaticProps:                                                         │
- * │  ┌───────────────────────────────────────────────────────────────────┐  │
- * │  │  BUILD TIME: npm run build → Runs ONCE                            │  │
- * │  │  WITH ISR:   After revalidate seconds → Runs in background        │  │
- * │  │  DEV MODE:   npm run dev → Runs on each request (for testing)     │  │
- * │  └───────────────────────────────────────────────────────────────────┘  │
- * │                                                                          │
- * │  getServerSideProps:                                                     │
- * │  ┌───────────────────────────────────────────────────────────────────┐  │
- * │  │  ALWAYS: Runs on EVERY incoming request                           │  │
- * │  │          User visits page → Server runs function → Returns HTML   │  │
- * │  │          No caching, no build-time generation                     │  │
- * │  └───────────────────────────────────────────────────────────────────┘  │
- * │                                                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🔒 SECURITY: SERVER-SIDE ONLY (SAME AS getStaticProps)
- * ============================================================================
- *
- * From the instructor:
- * "Any code you write in here will always run on the server, never in the
- * client. So you can run server side code in here, you can also perform
- * operations that use credentials that should not be exposed to your users,
- * because this code only runs on the server."
- *
- * Both getStaticProps and getServerSideProps:
- * ✅ Run only on the server
- * ✅ Can use credentials/secrets
- * ✅ Can access databases directly
- * ✅ Code is never sent to client
- *
- * ============================================================================
- * ❌ NO revalidate IN getServerSideProps
- * ============================================================================
- *
- * From the instructor:
- * "Now you can't set revalidate here, because it doesn't make any sense here.
- * This getServerSideProps function runs for every incoming request anyways,
- * so there is no need to revalidate every x seconds."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  RETURN VALUE COMPARISON                                                 │
- * │                                                                          │
- * │  getStaticProps returns:           getServerSideProps returns:          │
- * │  ┌─────────────────────────┐       ┌─────────────────────────┐          │
- * │  │ {                       │       │ {                       │          │
- * │  │   props: { ... },       │       │   props: { ... },       │          │
- * │  │   revalidate: 10, ✅    │       │   // NO revalidate! ❌  │          │
- * │  │   notFound: true,       │       │   notFound: true,       │          │
- * │  │   redirect: {...}       │       │   redirect: {...}       │          │
- * │  │ }                       │       │ }                       │          │
- * │  └─────────────────────────┘       └─────────────────────────┘          │
- * │                                                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 📨 THE context PARAMETER - ACCESS TO REQUEST/RESPONSE
- * ============================================================================
- *
- * From the instructor:
- * "Now what you can do in here, is you can work with a parameter, which you'll
- * receive. The context parameter. You actually also get this in getStaticProps,
- * but I will come back to it there, later."
- *
- * From the instructor:
- * "You do get it here and getServerSideProps as well. And there in this context
- * argument, in this context parameter, you also get access to the request object
- * under the req key, and the response object that will be sent back."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  THE context OBJECT IN getServerSideProps                                │
- * │                                                                          │
- * │  export async function getServerSideProps(context) {                    │
- * │                                                                          │
- * │    context.req    →  Incoming request object                            │
- * │                      • headers                                           │
- * │                      • cookies                                           │
- * │                      • body                                              │
- * │                      • method                                            │
- * │                                                                          │
- * │    context.res    →  Response object                                    │
- * │                      • Can set headers                                   │
- * │                      • Can set cookies                                   │
- * │                                                                          │
- * │    context.params →  Dynamic route parameters                           │
- * │                      • e.g., { meetupId: 'm1' }                          │
- * │                                                                          │
- * │    context.query  →  Query string parameters                            │
- * │                      • e.g., ?sort=date → { sort: 'date' }              │
- * │                                                                          │
+ * │  ✅ SOLUTION: Transform data with .map()                                │
+ * │  {                                                                       │
+ * │    id: "64a7b2c3d4e5f6a7b8c9d0e1",     ← Converted to string!         │
+ * │    title: "My Meetup",                                                   │
+ * │    image: "https://...",                                                 │
+ * │    address: "123 Street"                                                │
  * │  }                                                                       │
  * │                                                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🔐 AUTHENTICATION USE CASE
- * ============================================================================
- *
- * From the instructor:
- * "And if you worked with NodeJS and Express before, this might look familiar
- * to you. There, you also get request and response objects in your middleware
- * to then work with those."
- *
- * From the instructor:
- * "And especially having access to the concrete request object can be helpful.
- * For example, when you're working with authentication, and you need to check
- * some session cookie or anything like this."
- *
- * AUTHENTICATION EXAMPLE:
- *
- * ```javascript
- * export async function getServerSideProps(context) {
- *   const { req, res } = context;
- *
- *   // Check session cookie
- *   const sessionToken = req.cookies.session;
- *
- *   if (!sessionToken) {
- *     // Redirect to login if no session
- *     return {
- *       redirect: {
- *         destination: '/login',
- *         permanent: false,
- *       },
- *     };
- *   }
- *
- *   // Verify token and get user data
- *   const user = await verifySession(sessionToken);
- *
- *   return {
- *     props: { user },
- *   };
- * }
- * ```
- *
- * From the instructor:
- * "This is something which I show in my full NextJS course, it's a little
- * too advanced here. But you do have access to the incoming request and all
- * its headers and the request body if you need to."
- *
- * ============================================================================
- * 🤔 WHICH ONE SHOULD YOU USE?
- * ============================================================================
- *
- * From the instructor:
- * "Now, which one of the two should you use? Is getServerSideProps better
- * or getStaticProps?"
- *
- * From the instructor:
- * "getServerSideProps might sound better because it's guaranteed to run for
- * every request. But that actually can be a disadvantage, because that means
- * that you need to wait for your page to be generated on every incoming request."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  🏆 DECISION GUIDE                                                       │
- * │                                                                          │
- * │  USE getStaticProps WHEN:                                               │
- * │  ✅ Data doesn't change every second                                    │
- * │  ✅ Don't need request/response objects                                 │
- * │  ✅ Want maximum performance (CDN caching)                              │
- * │  ✅ Page can be pre-built                                               │
- * │  ✅ ISR (revalidate) is sufficient for freshness                        │
- * │                                                                          │
- * │  USE getServerSideProps WHEN:                                           │
- * │  ✅ Need access to req/res objects                                      │
- * │  ✅ Working with authentication/sessions                                │
- * │  ✅ Data changes multiple times per second                              │
- * │  ✅ Data is user-specific                                               │
- * │  ✅ Need to check cookies/headers on every request                      │
+ * │  Note: We use 'id' (not '_id') to match our frontend component props   │
+ * │  Note: We omit 'description' since the list page doesn't display it    │
  * │                                                                          │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * ⚡ PERFORMANCE COMPARISON
- * ============================================================================
- *
- * From the instructor:
- * "Now if you don't have data that changes all the time, and with that, I
- * really mean that it changes multiple times every second. And if you don't
- * need access to the request object, let's say for authentication,
- * getStaticProps is actually better."
- *
- * From the instructor:
- * "Because there you pre-generate an HTML file, that file can then be stored
- * and served by a CDN. And that simply is faster than regenerating and
- * fetching that data for every incoming request."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  PERFORMANCE COMPARISON                                                  │
- * │                                                                          │
- * │  getStaticProps:                                                         │
- * │  ┌───────────────────────────────────────────────────────────────────┐  │
- * │  │  User Request → CDN serves cached HTML → FAST! (~50ms)            │  │
- * │  │                                                                    │  │
- * │  │  [User] ──→ [CDN Cache] ──→ [User sees page]                      │  │
- * │  │               ↑                                                    │  │
- * │  │         Pre-built HTML                                             │  │
- * │  └───────────────────────────────────────────────────────────────────┘  │
- * │                                                                          │
- * │  getServerSideProps:                                                     │
- * │  ┌───────────────────────────────────────────────────────────────────┐  │
- * │  │  User Request → Server runs code → Generates HTML → SLOWER        │  │
- * │  │                                                                    │  │
- * │  │  [User] ──→ [Server] ──→ [Fetch Data] ──→ [Generate] ──→ [User]  │  │
- * │  │                              ~200-500ms+                           │  │
- * │  └───────────────────────────────────────────────────────────────────┘  │
- * │                                                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * From the instructor:
- * "So your page will be faster when working with getStaticProps, because
- * then it can be cached and reused, instead of regenerated all the time."
- *
- * ============================================================================
- * 🎯 OUR DECISION FOR THIS APP
- * ============================================================================
- *
- * From the instructor:
- * "Hence, you should really only use getServerSideProps if you need access
- * to that concrete request object, because you don't have access to request
- * and response in getStaticProps. Or if you really have data that changes
- * multiple times every second, then therefore even revalidate won't help
- * you, then getServerSideProps is a great choice."
- *
- * From the instructor:
- * "Now here for our meetup list, though, it's not a great choice, because
- * that is not data which changes frequently. And here I also don't need to
- * work with the incoming request."
- *
- * From the instructor:
- * "And therefore I will comment getServerSideProps out again, and comment
- * getStaticProps in. Because with that, we can take advantage of the caching
- * and we're not regenerating the page multiple times, unnecessarily."
- *
- * FOR OUR MEETUPS APP:
- * • Meetups don't change multiple times per second ✓
- * • No authentication needed on homepage ✓
- * • ISR with revalidate: 10 is sufficient ✓
- * • → USE getStaticProps! ✓
- *
- * ============================================================================
- * 📊 FINAL COMPARISON TABLE
+ * 📊 FINAL COMPARISON TABLE (From Lesson 495)
  * ============================================================================
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  Feature              │ getStaticProps      │ getServerSideProps        │
  * │  ─────────────────────┼─────────────────────┼────────────────────────── │
  * │  Runs at              │ Build time          │ Every request             │
- * │  Can use revalidate   │ ✅ Yes              │ ❌ No                      │
- * │  Access to req/res    │ ❌ No               │ ✅ Yes                     │
- * │  CDN Cacheable        │ ✅ Yes              │ ❌ No                      │
- * │  Performance          │ ⭐⭐⭐⭐⭐            │ ⭐⭐⭐                       │
+ * │  Can use revalidate   │ Yes                 │ No                        │
+ * │  Access to req/res    │ No                  │ Yes                       │
+ * │  CDN Cacheable        │ Yes                 │ No                        │
  * │  Data Freshness       │ Periodic (ISR)      │ Always fresh              │
- * │  Build output icon    │ ● (SSG)             │ λ (Lambda/SSR)            │
  * │  Best for             │ Most pages          │ Auth, real-time data      │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
@@ -359,35 +185,28 @@
 import MeetupList from '../components/meetups/MeetupList';
 
 /**
- * DUMMY_MEETUPS - Simulating Data from a Backend
+ * IMPORT MONGOCLIENT FOR DIRECT DATABASE ACCESS
+ *
+ * We import MongoClient here at the top of the page component file.
+ * Since we only use it inside getStaticProps (server-side code),
+ * NextJS will NOT include the mongodb package in the client-side bundle.
+ *
+ * This is safe because:
+ * - getStaticProps runs only on the server / at build time
+ * - The import is automatically excluded from client-side JavaScript
+ * - Database credentials in getStaticProps never reach the browser
  */
-const DUMMY_MEETUPS = [
-  {
-    id: 'm1',
-    title: 'A First Meetup',
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg',
-    address: 'Some address 5, 12345 Some City',
-    description: 'This is a first meetup!',
-  },
-  {
-    id: 'm2',
-    title: 'A Second Meetup',
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg',
-    address: 'Some address 10, 12345 Some City',
-    description: 'This is a second meetup!',
-  },
-];
+import { MongoClient } from 'mongodb';
 
 /**
  * HomePage Component - Receives Pre-fetched Data via Props
  *
- * This component works the same whether data comes from
- * getStaticProps or getServerSideProps - it just receives props!
+ * This component receives meetup data from getStaticProps.
+ * It doesn't know or care WHERE the data comes from - it just renders it.
+ * Previously it used dummy data; now it receives real data from MongoDB.
  *
- * @param {Object} props - Props provided by getStaticProps/getServerSideProps
- * @param {Array} props.meetups - Array of meetup objects
+ * @param {Object} props - Props provided by getStaticProps
+ * @param {Array} props.meetups - Array of meetup objects from MongoDB
  */
 function HomePage(props) {
   return <MeetupList meetups={props.meetups} />;
@@ -395,30 +214,105 @@ function HomePage(props) {
 
 /**
  * ============================================================================
- * getStaticProps - STATIC GENERATION (RECOMMENDED FOR THIS APP)
+ * getStaticProps - NOW FETCHING REAL DATA FROM MONGODB (Lesson 501)
  * ============================================================================
  *
- * This is the ACTIVE data fetching method for our homepage.
+ * Previously, this function returned dummy data from a hardcoded array.
+ * Now it connects directly to MongoDB Atlas and fetches real meetup data.
  *
- * From the instructor:
- * "Because with that, we can take advantage of the caching and we're not
- * regenerating the page multiple times, unnecessarily."
+ * WHY DIRECT DATABASE ACCESS (not through an API route):
+ * - getStaticProps already runs on the server, so there's no security risk
+ * - Calling your own API route would add an unnecessary HTTP round-trip
+ * - Direct access is simpler and more efficient
  *
- * WHY WE USE THIS:
- * 1. Meetups don't change every second
- * 2. No authentication needed
- * 3. ISR with revalidate: 10 keeps data fresh enough
- * 4. Better performance (CDN caching)
+ * WHEN THIS CODE RUNS:
+ * - During `npm run build` (build time)
+ * - Every 10 seconds after a request (ISR with revalidate: 10)
+ * - On every request in dev mode (npm run dev)
  */
 export async function getStaticProps() {
-  // Fetch data here (from API, database, file system, etc.)
-  // This code runs at build time + every 10 seconds (ISR)
+  /**
+   * CONNECT TO MONGODB
+   *
+   * This is the same connection code used in our API route.
+   * We could extract this into a shared helper function to avoid
+   * duplication, but keeping it explicit here shows clearly what
+   * code runs where.
+   *
+   * IMPORTANT: Replace the connection string with YOUR MongoDB Atlas
+   * credentials. This is safe here because getStaticProps code is
+   * never sent to the client.
+   */
+  const client = await MongoClient.connect(
+    'mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/meetups?retryWrites=true&w=majority'
+  );
+
+  /**
+   * GET DATABASE AND COLLECTION REFERENCES
+   *
+   * db() returns the database specified in the connection string.
+   * collection('meetups') returns the "meetups" collection.
+   *
+   * Both are created automatically if they don't exist yet.
+   */
+  const db = client.db();
+  const meetupsCollection = db.collection('meetups');
+
+  /**
+   * FETCH ALL MEETUPS FROM THE COLLECTION
+   *
+   * find() with no arguments returns ALL documents in the collection.
+   * It returns a cursor (a pointer to results), not an array.
+   *
+   * toArray() converts the cursor into a standard JavaScript array
+   * of document objects. This is an async operation, so we await it.
+   *
+   * COMMON find() PATTERNS:
+   * - find()                    → All documents
+   * - find({ title: 'X' })     → Documents where title is 'X'
+   * - find({}, { title: 1 })   → All documents, only return title field
+   */
+  const meetups = await meetupsCollection.find().toArray();
+
+  /**
+   * CLOSE THE DATABASE CONNECTION
+   *
+   * Always close the connection when done to free up resources.
+   * This is especially important in getStaticProps since it runs
+   * periodically (with revalidate) and you don't want connection leaks.
+   */
+  client.close();
 
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      /**
+       * TRANSFORM MONGODB DOCUMENTS FOR SERIALIZATION
+       *
+       * We cannot pass raw MongoDB documents as props because:
+       * 1. The _id field is an ObjectId (not serializable to JSON)
+       * 2. Our frontend components expect 'id', not '_id'
+       * 3. The list page doesn't need 'description', so we omit it
+       *
+       * The .map() transforms each document:
+       * - meetup._id.toString() converts ObjectId to a plain string
+       * - We rename '_id' to 'id' to match our component prop names
+       * - We only include fields the MeetupList component needs
+       */
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
     },
-    revalidate: 10, // ISR: Regenerate page at most every 10 seconds
+    /**
+     * INCREMENTAL STATIC REGENERATION (ISR)
+     *
+     * With revalidate: 10, NextJS will re-run this function at most
+     * once every 10 seconds when requests come in, keeping the
+     * pre-rendered page reasonably up-to-date with database changes.
+     */
+    revalidate: 10,
   };
 }
 
@@ -430,81 +324,25 @@ export async function getStaticProps() {
  * LESSON 495: This is an alternative to getStaticProps that runs on
  * EVERY incoming request instead of at build time.
  *
- * From the instructor:
- * "Now, I will comment out getStaticProps, because it is the better choice
- * here and I wanna use it later again. But I want to show you this
- * alternative as well."
- *
- * From the instructor:
- * "The difference to getStaticProps is that this function will now not run
- * during the build process, but instead always on the server after deployment."
- *
  * UNCOMMENT THIS (and comment out getStaticProps above) IF:
  * - You need access to req/res objects
  * - You're implementing authentication
  * - Your data changes multiple times per second
  *
+ * For our meetups app, getStaticProps with revalidate is the better choice
+ * because meetup data doesn't change every second, and we don't need
+ * access to the request object.
+ *
  * @param {Object} context - The context object with request/response
  * @param {Object} context.req - Incoming request object
  * @param {Object} context.res - Response object
- * @param {Object} context.params - Dynamic route parameters
- * @param {Object} context.query - Query string parameters
  */
 // export async function getServerSideProps(context) {
-//   /**
-//    * ACCESS TO REQUEST AND RESPONSE OBJECTS
-//    *
-//    * From the instructor:
-//    * "You also get access to the request object under the req key, and the
-//    * response object that will be sent back."
-//    *
-//    * From the instructor:
-//    * "And if you worked with NodeJS and Express before, this might look
-//    * familiar to you. There, you also get request and response objects in
-//    * your middleware to then work with those."
-//    */
-//   const req = context.req; // Incoming request
-//   const res = context.res; // Outgoing response
+//   const req = context.req;
+//   const res = context.res;
 //
-//   /**
-//    * EXAMPLE: AUTHENTICATION CHECK
-//    *
-//    * From the instructor:
-//    * "And especially having access to the concrete request object can be
-//    * helpful. For example, when you're working with authentication, and you
-//    * need to check some session cookie or anything like this."
-//    *
-//    * Example authentication code:
-//    * const session = req.cookies.session;
-//    * if (!session) {
-//    *   return { redirect: { destination: '/login', permanent: false } };
-//    * }
-//    */
+//   // Fetch data here...
 //
-//   /**
-//    * FETCH DATA
-//    *
-//    * From the instructor:
-//    * "And you can still then fetch data from an API here, or from the file
-//    * system, whatever you want to do."
-//    *
-//    * This code runs on EVERY request, so data is always fresh.
-//    * But it also means no caching - slower than getStaticProps!
-//    */
-//
-//   /**
-//    * RETURN PROPS (NO revalidate!)
-//    *
-//    * From the instructor:
-//    * "Now you can't set revalidate here, because it doesn't make any sense
-//    * here. This getServerSideProps function runs for every incoming request
-//    * anyways, so there is no need to revalidate every x seconds."
-//    *
-//    * From the instructor:
-//    * "Ultimately, you then don't return a response by working on that
-//    * response object here, but instead, you return this object with the
-//    * props key, which holds the props for this page component function."
-//    */
 //   return {
 //     props: {
 //       meetups: DUMMY_MEETUPS,
