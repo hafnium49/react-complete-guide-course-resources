@@ -1,32 +1,177 @@
 /**
  * ============================================================================
- * pages/new-meetup/index.js - LESSON 486 & 488: THE NEW MEETUP PAGE
+ * pages/new-meetup/index.js - LESSONS 486, 488 & 500: NEW MEETUP PAGE WITH API
  * ============================================================================
  *
  * LESSON 486: Created this page file using the folder approach
  * LESSON 488: Filled this page with the NewMeetupForm component
+ * LESSON 500: Added API request to save meetup data and navigation after success
  *
  * ============================================================================
- * 🎓 LESSON 488: ADDING THE NEW MEETUP FORM
+ * 🎓 LESSON 500: SENDING REQUESTS TO API ROUTES
  * ============================================================================
  *
- * From the instructor:
- * "So for this NewMeetup component we again create a function here, a component
- * function like the NewMeetupPage function. And of course, as before we need
- * to export this so that NextJS is able to find this and then we can render
- * our content here."
+ * This lesson demonstrates how to connect the frontend form to our backend
+ * API route. Key concepts covered:
  *
- * In this lesson we:
- * 1. Import the pre-built NewMeetupForm component
- * 2. Create a handler function to receive form data
- * 3. Pass the handler to NewMeetupForm via the onAddMeetup prop
- * 4. (For now) Console.log the submitted data
+ * 1. Using the fetch() API to send HTTP requests
+ * 2. Configuring POST requests with method, body, and headers
+ * 3. Converting JavaScript objects to JSON with JSON.stringify()
+ * 4. Using useRouter hook for programmatic navigation
+ * 5. Redirecting users after successful form submission
+ *
+ * ============================================================================
+ * 🔄 DATA FLOW: FRONTEND → API ROUTE → DATABASE
+ * ============================================================================
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  [User]                                                                  │
+ * │    │                                                                     │
+ * │    │ fills form and clicks "Add Meetup"                                 │
+ * │    ▼                                                                     │
+ * │  [NewMeetupForm Component]                                              │
+ * │    │                                                                     │
+ * │    │ calls props.onAddMeetup(meetupData)                                │
+ * │    ▼                                                                     │
+ * │  [NewMeetupPage - addMeetupHandler]                                     │
+ * │    │                                                                     │
+ * │    │ sends POST request via fetch()                                     │
+ * │    ▼                                                                     │
+ * │  [/api/new-meetup - API Route]                                          │
+ * │    │                                                                     │
+ * │    │ receives request, extracts data from req.body                      │
+ * │    │ connects to MongoDB                                                 │
+ * │    │ inserts document into collection                                   │
+ * │    ▼                                                                     │
+ * │  [MongoDB Atlas - Database]                                             │
+ * │    │                                                                     │
+ * │    │ stores the meetup data                                             │
+ * │    ▼                                                                     │
+ * │  [API Route Response]                                                   │
+ * │    │                                                                     │
+ * │    │ returns { message: 'Meetup inserted!' }                            │
+ * │    ▼                                                                     │
+ * │  [NewMeetupPage - after await]                                          │
+ * │    │                                                                     │
+ * │    │ receives response, navigates to home page                          │
+ * │    ▼                                                                     │
+ * │  [Home Page /]                                                          │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🌐 INTERNAL VS EXTERNAL API REQUESTS
+ * ============================================================================
+ *
+ * When making API requests, you typically need a full URL like:
+ *   https://someapi.com/endpoint
+ *
+ * However, since our API route is part of the SAME NextJS application,
+ * we can use a relative/absolute path instead:
+ *   /api/new-meetup
+ *
+ * This works because:
+ * - Both the page and API route are served by the same server
+ * - NextJS handles routing internally
+ * - No need to specify domain or port
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  EXTERNAL API:                                                          │
+ * │  fetch('https://api.example.com/users')                                 │
+ * │                                                                          │
+ * │  INTERNAL API (same NextJS app):                                        │
+ * │  fetch('/api/new-meetup')    ← We use this!                             │
+ * │                                                                          │
+ * │  The path matches the file structure:                                   │
+ * │  /api/new-meetup  →  pages/api/new-meetup.js                            │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 📤 CONFIGURING THE FETCH REQUEST
+ * ============================================================================
+ *
+ * The fetch() function accepts two arguments:
+ * 1. URL - where to send the request
+ * 2. Options object - how to configure the request
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  fetch('/api/new-meetup', {                                             │
+ * │                                                                          │
+ * │    method: 'POST',                                                       │
+ * │    // ↑ HTTP method - must match what API route expects                 │
+ * │    //   Our API checks: if (req.method === 'POST')                      │
+ * │                                                                          │
+ * │    body: JSON.stringify(data),                                          │
+ * │    // ↑ The data payload - MUST be a string, not an object!             │
+ * │    //   JSON.stringify() converts { title: 'x' } to '{"title":"x"}'     │
+ * │                                                                          │
+ * │    headers: {                                                            │
+ * │      'Content-Type': 'application/json'                                 │
+ * │    }                                                                     │
+ * │    // ↑ Tells the server what format the body is in                     │
+ * │    //   Without this, server might not parse JSON correctly             │
+ * │                                                                          │
+ * │  })                                                                      │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * 🧭 PROGRAMMATIC NAVIGATION WITH useRouter
+ * ============================================================================
+ *
+ * After successfully submitting data, we want to redirect the user.
+ * NextJS provides the useRouter hook for programmatic navigation.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  import { useRouter } from 'next/router';                               │
+ * │                                                                          │
+ * │  function MyComponent() {                                                │
+ * │    const router = useRouter();                                          │
+ * │                                                                          │
+ * │    // Navigate methods:                                                  │
+ * │    router.push('/path')     // Navigate, add to history                 │
+ * │    router.replace('/path')  // Navigate, replace current history entry │
+ * │    router.back()            // Go back to previous page                 │
+ * │                                                                          │
+ * │    // push vs replace:                                                   │
+ * │    // push: User CAN go back with browser back button                   │
+ * │    // replace: User CANNOT go back (history entry replaced)             │
+ * │  }                                                                       │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * ============================================================================
+ * ⚡ ASYNC/AWAIT WITH FETCH
+ * ============================================================================
+ *
+ * fetch() returns a Promise, so we can use async/await for cleaner code:
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  // Without async/await (callback style):                               │
+ * │  function handler(data) {                                               │
+ * │    fetch('/api/...')                                                    │
+ * │      .then(response => response.json())                                 │
+ * │      .then(data => console.log(data));                                  │
+ * │  }                                                                       │
+ * │                                                                          │
+ * │  // With async/await (cleaner):                                         │
+ * │  async function handler(data) {                                         │
+ * │    const response = await fetch('/api/...');                            │
+ * │    const result = await response.json();                                │
+ * │    console.log(result);                                                 │
+ * │  }                                                                       │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * 📁 LESSON 486 RECAP: FOLDER APPROACH
  * ============================================================================
- *
- * TWO WAYS TO CREATE THIS PAGE:
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  OPTION 1: FILE APPROACH                                                 │
@@ -37,44 +182,8 @@
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
- * 🎨 CSS MODULES (MENTIONED IN THIS LESSON)
- * ============================================================================
- *
- * From the instructor:
- * "...which renders a form with some controls, with some styles attached
- * using CSS modules here for styling. I'll come back to that in a second,
- * that is supported by NextJS out of the box, which is really convenient."
- *
- * CSS Modules are a styling approach where:
- * • CSS class names are automatically scoped to the component
- * • Prevents global CSS conflicts
- * • Files are named: ComponentName.module.css
- * • NextJS supports this out of the box - no configuration needed!
- *
- * ============================================================================
- * ⚛️ THE NewMeetupForm COMPONENT (QUICK RECAP)
- * ============================================================================
- *
- * From the instructor:
- * "Now our content in this case should be the NewMeetupForm component
- * which I prepared in advance, which renders a form with some controls..."
- *
- * The NewMeetupForm component:
- * • Renders input fields for title, image URL, address, description
- * • Uses useRef hooks to collect input values (not useState)
- * • Expects an onAddMeetup prop (a callback function)
- * • Calls onAddMeetup(meetupData) when form is submitted
- *
- * ============================================================================
  * 🔗 PROPS AND CALLBACKS (COMMUNICATION PATTERN)
  * ============================================================================
- *
- * From the instructor:
- * "And then here we get that data. We extract that data, the user entered,
- * with help of Refs which is a built-in React feature, has nothing to do
- * with NextJS. And then we basically call a function which we expect to get
- * on the onAddMeetup prop. And to that function we then pass the collected
- * meetup data."
  *
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  DATA FLOW: CHILD → PARENT COMMUNICATION                                 │
@@ -86,94 +195,16 @@
  * │  [NewMeetupForm]                                                        │
  * │       │                                                                  │
  * │       │  User fills form and clicks submit                              │
- * │       │                                                                  │
  * │       │  calls: props.onAddMeetup(meetupData)                           │
  * │       ▼                                                                  │
  * │  [NewMeetupPage.addMeetupHandler]                                       │
  * │       │                                                                  │
  * │       │  receives: enteredMeetupData                                    │
- * │       │  currently: logs to console                                     │
- * │       │  later: sends to API, redirects, etc.                           │
+ * │       │  sends to API route                                              │
+ * │       │  navigates to home page                                          │
  * │       ▼                                                                  │
- * │  [Future: API Route / Database]                                         │
+ * │  [Database stored, User redirected]                                     │
  * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🔑 FUNCTION POINTER vs FUNCTION CALL
- * ============================================================================
- *
- * From the instructor:
- * "We can add our addMeetupHandler function or however you want to name it
- * and then pass a pointer to this function to the onAddMeetup prop - a pointer
- * and not the result of executing it. So no parentheses here, because this
- * function should be executed eventually from inside that component, when
- * the form is submitted as it turns out."
- *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  CORRECT vs INCORRECT                                                    │
- * │                                                                          │
- * │  ✅ CORRECT (function pointer):                                         │
- * │  <NewMeetupForm onAddMeetup={addMeetupHandler} />                       │
- * │  → Passes the function itself                                           │
- * │  → Will be called LATER when form submits                               │
- * │                                                                          │
- * │  ❌ INCORRECT (function call):                                          │
- * │  <NewMeetupForm onAddMeetup={addMeetupHandler()} />                     │
- * │  → Calls the function IMMEDIATELY during render                         │
- * │  → Passes the RESULT (undefined) to the prop                            │
- * │  → Form submission won't work!                                          │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * ============================================================================
- * 🧪 TESTING THE FORM
- * ============================================================================
- *
- * From the instructor:
- * "And with that out of the way, if we go back again we can visit
- * localhost:3000/new-meetup and we see this form again... If we enter this
- * data and we click Add Meetup we see this object logged to the console.
- * So handling form submission works."
- *
- * To test:
- * 1. Run: npm run dev
- * 2. Visit: http://localhost:3000/new-meetup
- * 3. Fill in the form fields
- * 4. Open browser DevTools (F12) → Console tab
- * 5. Click "Add Meetup" button
- * 6. See the meetup data object logged
- *
- * ============================================================================
- * ⚠️ CURRENT LIMITATIONS (TO BE FIXED IN LATER LESSONS)
- * ============================================================================
- *
- * From the instructor:
- * "Obviously we're not doing anything with that data. At this point, we're
- * not navigating away and we are going to do all these things later but this
- * again just shows us how we can use pages and also mix regular React
- * components into those pages."
- *
- * Current limitations:
- * • Data is only logged, not saved to database
- * • No navigation after form submission
- * • No header/layout around the page
- * • Page takes up entire width (no proper styling)
- *
- * From the instructor:
- * "And then, with that, that's a great start but now we're already facing
- * a couple of issues here. We've got a lot of missing functionality, of course.
- * And for example, we also have no way for navigating between pages and we
- * have no general layout around our pages. Every page takes up the entire width.
- * We get no header above them. And that is probably something we want to change."
- *
- * ============================================================================
- * 🔜 FUTURE IMPROVEMENTS (UPCOMING LESSONS)
- * ============================================================================
- *
- * • Add navigation between pages (Link component)
- * • Add layout with header (Layout component)
- * • Send data to API route for database storage
- * • Redirect to home page after successful submission
- * • Add MongoDB database connection
  *
  * ============================================================================
  */
@@ -181,10 +212,8 @@
 /**
  * Import the NewMeetupForm component
  *
- * From the instructor:
- * "And hence now in this newMeetup index.js file here we can use that component
- * and we can import NewMeetupForm from going up two levels to leave the pages
- * folder, diving into the components folder, Meetups, and then NewMeetupForm."
+ * This pre-built component handles the form UI and data collection.
+ * It expects an onAddMeetup prop (callback function).
  *
  * Path breakdown:
  * - We're in: /pages/new-meetup/index.js
@@ -194,77 +223,178 @@
 import NewMeetupForm from '../../components/meetups/NewMeetupForm';
 
 /**
+ * IMPORT useRouter FOR PROGRAMMATIC NAVIGATION
+ *
+ * The useRouter hook from next/router provides access to the router object,
+ * which allows us to navigate programmatically (without clicking links).
+ *
+ * This is useful when you need to redirect after an action completes,
+ * like after successfully submitting a form or logging in.
+ *
+ * IMPORTANT: Import from 'next/router', NOT 'react-router-dom'!
+ * NextJS has its own routing system separate from React Router.
+ */
+import { useRouter } from 'next/router';
+
+/**
  * NewMeetupPage Component - Page for Adding New Meetups
  *
- * This page component renders the NewMeetupForm and handles
- * the form submission via a callback function.
+ * This page component:
+ * 1. Renders the NewMeetupForm for user input
+ * 2. Handles form submission by sending data to our API route
+ * 3. Redirects to the home page after successful submission
  *
  * URL: http://localhost:3000/new-meetup
- *
- * From the instructor:
- * "So for this NewMeetup component we again create a function here,
- * a component function like the NewMeetupPage function."
  */
 function NewMeetupPage() {
   /**
-   * FORM SUBMISSION HANDLER
+   * GET THE ROUTER OBJECT
    *
-   * This function is called when the user submits the form in NewMeetupForm.
-   * The form component passes the collected data as an argument.
+   * useRouter() returns a router object with methods for navigation:
+   * - router.push(url) - Navigate to url, adds to browser history
+   * - router.replace(url) - Navigate to url, replaces current history entry
+   * - router.back() - Go back to the previous page
+   * - router.query - Access URL query parameters
+   * - router.pathname - Current route pathname
    *
-   * From the instructor:
-   * "We can add our addMeetupHandler function or however you want to name it."
+   * We use this to redirect the user after successful form submission.
+   */
+  const router = useRouter();
+
+  /**
+   * FORM SUBMISSION HANDLER - SENDS DATA TO API ROUTE
    *
-   * @param {Object} enteredMeetupData - The data collected from the form
+   * This async function is called when the user submits the form.
+   * It sends the collected meetup data to our API endpoint.
+   *
+   * Steps performed:
+   * 1. Send POST request to /api/new-meetup with the form data
+   * 2. Wait for the response
+   * 3. Log the response data (for debugging)
+   * 4. Navigate to the home page
+   *
+   * @param {Object} enteredMeetupData - Data collected from the form
    * @param {string} enteredMeetupData.title - Meetup title
    * @param {string} enteredMeetupData.image - Image URL
    * @param {string} enteredMeetupData.address - Physical address
    * @param {string} enteredMeetupData.description - Meetup description
-   *
-   * FUTURE IMPLEMENTATION:
-   * This function will eventually:
-   * 1. Send data to an API route (POST /api/new-meetup)
-   * 2. Wait for the response
-   * 3. Redirect to the home page using router.push('/')
    */
-  function addMeetupHandler(enteredMeetupData) {
+  async function addMeetupHandler(enteredMeetupData) {
     /**
-     * FOR NOW: Just log the data to console
+     * SEND POST REQUEST TO API ROUTE
      *
-     * From the instructor:
-     * "Here, we then get our enteredMeetupData. And we can, for example,
-     * for the moment simply log this to the console."
+     * We use the built-in fetch() function to send HTTP requests.
+     * This works the same way as in regular React applications.
      *
-     * Check the browser's Developer Tools console to see this output
-     * when you submit the form.
+     * URL: '/api/new-meetup'
+     * - Starts with '/' making it an absolute path on the same server
+     * - Matches file path: pages/api/new-meetup.js
+     * - NextJS routes this to our API handler function
      *
-     * Expected console output:
-     * {
-     *   title: "...",
-     *   image: "https://...",
-     *   address: "...",
-     *   description: "..."
-     * }
+     * The second argument configures the request:
      */
-    console.log(enteredMeetupData);
+    const response = await fetch('/api/new-meetup', {
+      /**
+       * HTTP METHOD
+       *
+       * Set to 'POST' because we're creating a new resource.
+       * This matches the check in our API route: if (req.method === 'POST')
+       *
+       * Common HTTP methods:
+       * - GET: Retrieve data (default for fetch)
+       * - POST: Create new data
+       * - PUT: Update existing data (full replacement)
+       * - PATCH: Update existing data (partial)
+       * - DELETE: Remove data
+       */
+      method: 'POST',
+
+      /**
+       * REQUEST BODY
+       *
+       * The data we want to send to the server.
+       *
+       * IMPORTANT: The body must be a STRING, not an object!
+       * JSON.stringify() converts a JavaScript object to a JSON string.
+       *
+       * Input:  { title: 'My Meetup', image: 'https://...' }
+       * Output: '{"title":"My Meetup","image":"https://..."}'
+       *
+       * Since enteredMeetupData already has the exact structure our API
+       * expects (title, image, address, description), we can pass it directly.
+       */
+      body: JSON.stringify(enteredMeetupData),
+
+      /**
+       * REQUEST HEADERS
+       *
+       * Headers provide metadata about the request.
+       *
+       * 'Content-Type': 'application/json' tells the server:
+       * "The body of this request contains JSON-formatted data"
+       *
+       * This helps NextJS/the server parse req.body correctly.
+       * Without this header, the server might not understand the format.
+       */
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    /**
+     * PARSE THE RESPONSE
+     *
+     * The response object from fetch contains the server's response.
+     * To get the actual data, we need to parse it.
+     *
+     * response.json() parses the JSON response body into a JavaScript object.
+     * This also returns a Promise, so we await it.
+     *
+     * Our API returns: { message: 'Meetup inserted!' }
+     * So data will be: { message: 'Meetup inserted!' }
+     */
+    const data = await response.json();
+
+    /**
+     * LOG THE RESPONSE (for debugging)
+     *
+     * Check the browser console to see the server's response.
+     * This helps verify that the API call was successful.
+     *
+     * Expected output: { message: 'Meetup inserted!' }
+     */
+    console.log(data);
+
+    /**
+     * NAVIGATE TO HOME PAGE
+     *
+     * After successfully adding the meetup, redirect the user.
+     *
+     * router.push('/') navigates to the home page and adds an entry
+     * to the browser history (user can click back to return).
+     *
+     * Alternative: router.replace('/')
+     * - Navigates to home but REPLACES the current history entry
+     * - User cannot navigate back to this page with the back button
+     * - Use this if you don't want users returning to the form after submit
+     *
+     * We use push() here to allow users to go back if needed.
+     */
+    router.push('/');
   }
 
   /**
    * RENDER THE FORM COMPONENT
    *
-   * From the instructor:
-   * "And then we can return NewMeetupForm, this component like this if we want to."
-   *
-   * We pass addMeetupHandler as the onAddMeetup prop.
-   *
-   * From the instructor:
-   * "Now as I just mentioned, in this component we do expect that there will
-   * be an onAddMeetup prop which holds a function that we can call. And hence
-   * we might want to prepare this function here as well... and then pass a
-   * pointer to this function to the onAddMeetup prop."
+   * Pass addMeetupHandler as the onAddMeetup prop.
+   * When the form is submitted, NewMeetupForm will call this function
+   * with the collected data.
    *
    * IMPORTANT: Pass the function reference (addMeetupHandler), NOT the result
    * of calling it (addMeetupHandler()). No parentheses!
+   *
+   * ✅ Correct: onAddMeetup={addMeetupHandler}
+   * ❌ Wrong:   onAddMeetup={addMeetupHandler()}
    */
   return <NewMeetupForm onAddMeetup={addMeetupHandler} />;
 }
@@ -272,10 +402,7 @@ function NewMeetupPage() {
 /**
  * EXPORT THE PAGE COMPONENT
  *
- * From the instructor:
- * "And of course, as before we need to export this so that NextJS is able
- * to find this and then we can render our content here."
- *
  * Default export is required for NextJS page components.
+ * NextJS uses this to render the page when users visit /new-meetup.
  */
 export default NewMeetupPage;
