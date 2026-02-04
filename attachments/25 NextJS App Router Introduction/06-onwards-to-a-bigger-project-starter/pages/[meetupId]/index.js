@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * pages/[meetupId]/index.js - LESSONS 486, 491, 496, 497, 502 & 504
+ * pages/[meetupId]/index.js - LESSONS 486, 491, 496, 497, 502, 504 & 505
  * ============================================================================
  *
  * LESSON 486: Created this dynamic page file using the folder approach
@@ -10,6 +10,7 @@
  * LESSON 502: Connected both getStaticPaths and getStaticProps to MongoDB
  * LESSON 503: Added dynamic Head metadata (title + description) for SEO
  * LESSON 504: Deployment to Vercel - explains fallback: false 404 issue
+ * LESSON 505: Fixed fallback from false to 'blocking' for on-demand page generation
  *
  * ============================================================================
  * 🎓 LESSON 502: FETCHING REAL DATA FOR DYNAMIC PAGES
@@ -353,21 +354,23 @@ export async function getStaticPaths() {
     })),
 
     /**
-     * FALLBACK SETTING
-     *
-     * false: Only the paths listed above are valid.
-     * Any meetupId NOT in the database will result in a 404 page.
-     *
-     * Alternatives:
-     * - 'blocking': Generate unlisted pages on-demand (wait for result)
-     * - true: Generate on-demand (show loading state first)
-     *
      * =====================================================================
-     * LESSON 504: THE DEPLOYMENT 404 PROBLEM
+     * FALLBACK SETTING (LESSONS 504 & 505)
      * =====================================================================
      *
-     * With fallback: false, NextJS only pre-generates pages for the
-     * paths that exist at BUILD TIME. When the app is deployed:
+     * This setting tells NextJS what to do when a user requests a page
+     * whose path was NOT included in the paths array above.
+     *
+     * =====================================================================
+     * LESSON 504: THE PROBLEM WITH fallback: false
+     * =====================================================================
+     *
+     * With fallback: false (the original setting), NextJS only serves
+     * pages for paths that exist at BUILD TIME. Any path not in the
+     * pre-generated list immediately returns a 404.
+     *
+     * This works fine during development because getStaticPaths runs
+     * on every request. But in production, it only runs at build time.
      *
      * ┌─────────────────────────────────────────────────────────────────┐
      * │                                                                  │
@@ -378,22 +381,78 @@ export async function getStaticPaths() {
      * │  AFTER DEPLOYMENT: User adds "Meetup C" via the form            │
      * │    → Meetup C is inserted into MongoDB  ✅                     │
      * │    → User clicks "Show Details" on Meetup C                    │
-     * │    → /meetupC page was NOT pre-generated → 404 ERROR  ❌       │
+     * │    → /meetupC page was NOT pre-generated at build time          │
      * │                                                                  │
-     * │  WHY? Because fallback: false tells NextJS to reject any        │
-     * │  path that wasn't in the original paths array from build time.  │
+     * │  WITH fallback: false    → 404 ERROR  ❌                       │
+     * │  WITH fallback: 'blocking' → Page generated on demand  ✅     │
      * │                                                                  │
      * │  The home page (pages/index.js) DOES show the new meetup       │
-     * │  because it uses revalidate: 10 which re-fetches data.         │
-     * │  But clicking through to the detail page fails because          │
-     * │  no HTML was ever generated for that new meetup's ID.          │
-     * │                                                                  │
-     * │  SOLUTION: Change fallback to 'blocking' or true               │
-     * │  (covered in the next lesson)                                   │
+     * │  thanks to revalidate: 10. But the detail page fails with      │
+     * │  fallback: false because no HTML exists for the new ID.        │
      * │                                                                  │
      * └─────────────────────────────────────────────────────────────────┘
+     *
+     * =====================================================================
+     * LESSON 505: THE FIX - fallback: 'blocking'
+     * =====================================================================
+     *
+     * Setting fallback to 'blocking' tells NextJS that the paths
+     * array may not be exhaustive -- there could be valid pages
+     * beyond what was listed. When a user requests an unlisted path:
+     *
+     * 1. NextJS calls getStaticProps for that path on demand
+     * 2. It generates the page server-side
+     * 3. It serves the finished page to the user
+     * 4. It CACHES the generated page for future visitors
+     *
+     * After the first visitor triggers generation, all subsequent
+     * visitors get the cached version instantly.
+     *
+     * THE THREE fallback OPTIONS COMPARED:
+     *
+     * ┌─────────────────────────────────────────────────────────────────┐
+     * │                                                                  │
+     * │  false:                                                          │
+     * │    → Unlisted paths return 404 immediately                      │
+     * │    → Use when you know ALL paths at build time                  │
+     * │    → Simplest option, no extra handling needed                  │
+     * │                                                                  │
+     * │  true:                                                           │
+     * │    → Unlisted paths return an EMPTY page immediately            │
+     * │    → Page content loads in the background                       │
+     * │    → You MUST handle the loading state in your component:       │
+     * │                                                                  │
+     * │      import { useRouter } from 'next/router';                   │
+     * │      function MeetupDetails(props) {                            │
+     * │        const router = useRouter();                              │
+     * │        if (router.isFallback) {                                 │
+     * │          return <p>Loading...</p>;                              │
+     * │        }                                                        │
+     * │        return <MeetupDetail ... />;                             │
+     * │      }                                                          │
+     * │                                                                  │
+     * │  'blocking':  ← WHAT WE USE                                    │
+     * │    → User sees NOTHING until the page is fully generated        │
+     * │    → The server holds the request until getStaticProps finishes │
+     * │    → The finished page is then served directly                  │
+     * │    → No loading state handling needed in the component          │
+     * │    → Simplest fix for the 404 problem                          │
+     * │                                                                  │
+     * └─────────────────────────────────────────────────────────────────┘
+     *
+     * REDEPLOYMENT NOTE:
+     *
+     * After making this change, you commit and push to GitHub:
+     *   git add .
+     *   git commit -m "fixed fallback"
+     *   git push
+     *
+     * Vercel watches your connected branch and automatically triggers
+     * a new build and deployment when it detects a push. The old site
+     * remains live until the new deployment finishes, ensuring zero
+     * downtime for your users.
      */
-    fallback: false,
+    fallback: 'blocking',
   };
 }
 
