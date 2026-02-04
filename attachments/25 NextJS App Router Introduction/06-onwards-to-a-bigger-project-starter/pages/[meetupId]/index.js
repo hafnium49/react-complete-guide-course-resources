@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * pages/[meetupId]/index.js - LESSONS 486, 491, 496, 497 & 502
+ * pages/[meetupId]/index.js - LESSONS 486, 491, 496, 497, 502 & 504
  * ============================================================================
  *
  * LESSON 486: Created this dynamic page file using the folder approach
@@ -9,6 +9,7 @@
  * LESSON 497: Added getStaticPaths to define which dynamic pages to pre-generate
  * LESSON 502: Connected both getStaticPaths and getStaticProps to MongoDB
  * LESSON 503: Added dynamic Head metadata (title + description) for SEO
+ * LESSON 504: Deployment to Vercel - explains fallback: false 404 issue
  *
  * ============================================================================
  * 🎓 LESSON 502: FETCHING REAL DATA FOR DYNAMIC PAGES
@@ -360,6 +361,37 @@ export async function getStaticPaths() {
      * Alternatives:
      * - 'blocking': Generate unlisted pages on-demand (wait for result)
      * - true: Generate on-demand (show loading state first)
+     *
+     * =====================================================================
+     * LESSON 504: THE DEPLOYMENT 404 PROBLEM
+     * =====================================================================
+     *
+     * With fallback: false, NextJS only pre-generates pages for the
+     * paths that exist at BUILD TIME. When the app is deployed:
+     *
+     * ┌─────────────────────────────────────────────────────────────────┐
+     * │                                                                  │
+     * │  BUILD TIME: getStaticPaths fetches IDs from MongoDB            │
+     * │    → Meetup A exists → /meetupA page is pre-generated  ✅      │
+     * │    → Meetup B exists → /meetupB page is pre-generated  ✅      │
+     * │                                                                  │
+     * │  AFTER DEPLOYMENT: User adds "Meetup C" via the form            │
+     * │    → Meetup C is inserted into MongoDB  ✅                     │
+     * │    → User clicks "Show Details" on Meetup C                    │
+     * │    → /meetupC page was NOT pre-generated → 404 ERROR  ❌       │
+     * │                                                                  │
+     * │  WHY? Because fallback: false tells NextJS to reject any        │
+     * │  path that wasn't in the original paths array from build time.  │
+     * │                                                                  │
+     * │  The home page (pages/index.js) DOES show the new meetup       │
+     * │  because it uses revalidate: 10 which re-fetches data.         │
+     * │  But clicking through to the detail page fails because          │
+     * │  no HTML was ever generated for that new meetup's ID.          │
+     * │                                                                  │
+     * │  SOLUTION: Change fallback to 'blocking' or true               │
+     * │  (covered in the next lesson)                                   │
+     * │                                                                  │
+     * └─────────────────────────────────────────────────────────────────┘
      */
     fallback: false,
   };

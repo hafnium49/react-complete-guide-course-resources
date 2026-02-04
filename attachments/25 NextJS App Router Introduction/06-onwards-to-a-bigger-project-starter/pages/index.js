@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * pages/index.js - LESSONS 486-495 & 501: THE STARTING PAGE (HOME PAGE)
+ * pages/index.js - LESSONS 486-495, 501 & 504: THE STARTING PAGE (HOME PAGE)
  * ============================================================================
  *
  * LESSON 486: Created this page file
@@ -11,6 +11,7 @@
  * LESSON 495: getServerSideProps - Server-Side Rendering alternative
  * LESSON 501: Replaced dummy data with real MongoDB queries in getStaticProps
  * LESSON 503: Added Head metadata (title + description) for SEO
+ * LESSON 504: Deployment - how build process and ISR work in production
  *
  * ============================================================================
  * 🎓 LESSON 501: FETCHING DATA FROM MONGODB IN getStaticProps
@@ -412,6 +413,48 @@ export async function getStaticProps() {
      * With revalidate: 10, NextJS will re-run this function at most
      * once every 10 seconds when requests come in, keeping the
      * pre-rendered page reasonably up-to-date with database changes.
+     *
+     * =====================================================================
+     * LESSON 504: HOW revalidate BEHAVES IN PRODUCTION
+     * =====================================================================
+     *
+     * During local development (npm run dev), getStaticProps runs on
+     * EVERY request, so changes appear immediately. But in production,
+     * the behavior is different:
+     *
+     * ┌─────────────────────────────────────────────────────────────────┐
+     * │                                                                  │
+     * │  npm run build                                                   │
+     * │    → getStaticProps runs ONCE                                   │
+     * │    → HTML file for this page is generated in .next/ folder      │
+     * │    → This pre-built HTML is served to ALL visitors initially    │
+     * │                                                                  │
+     * │  npm start (production server)                                   │
+     * │    → Serves the pre-built HTML from .next/                      │
+     * │    → After a request, if 10+ seconds have passed:               │
+     * │      → NextJS re-runs getStaticProps in the background          │
+     * │      → Generates a NEW version of the page                      │
+     * │      → The NEXT visitor sees the updated page                   │
+     * │    → The visitor who triggered revalidation still sees the      │
+     * │      OLD page (the new one is ready for the next visitor)       │
+     * │                                                                  │
+     * │  This means: after adding a new meetup via the form, it may    │
+     * │  NOT appear immediately on the home page. It shows up after    │
+     * │  a subsequent visit triggers revalidation.                      │
+     * │                                                                  │
+     * └─────────────────────────────────────────────────────────────────┘
+     *
+     * THE BUILD PROCESS (npm run build):
+     *
+     * Running `npm run build` creates the .next/ folder containing:
+     * - Optimized and minified JavaScript bundles
+     * - Pre-rendered HTML files for all static pages
+     * - Server-side code for API routes and SSR pages
+     *
+     * Hosting providers like Vercel run this command automatically
+     * when you push code to your GitHub repository. You only need
+     * to run it manually if you're self-hosting on your own server.
+     * After building, `npm start` launches the production server.
      */
     revalidate: 10,
   };

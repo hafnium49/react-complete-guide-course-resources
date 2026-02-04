@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * pages/api/new-meetup.js - LESSONS 498 & 499: API ROUTES WITH MONGODB
+ * pages/api/new-meetup.js - LESSONS 498, 499 & 504: API ROUTES WITH MONGODB
  * ============================================================================
  *
  * LESSON 498: Introduction to API Routes - Building a Backend API
  * LESSON 499: Connecting to MongoDB Atlas and Storing Data
+ * LESSON 504: Deployment considerations (MongoDB network access, env vars)
  *
  * ============================================================================
  * 🎓 LESSON 498: API ROUTES - A MAJOR NEXTJS FEATURE
@@ -578,6 +579,73 @@ async function handler(req, res) {
  *   }
  * }
  * ```
+ *
+ * ============================================================================
+ * 🚀 LESSON 504: DEPLOYMENT TO VERCEL
+ * ============================================================================
+ *
+ * When deploying a NextJS app to a hosting provider like Vercel, this
+ * API route runs on Vercel's servers rather than on your local machine.
+ * This has two important implications:
+ *
+ * 1. MONGODB ATLAS NETWORK ACCESS
+ *
+ *    By default, MongoDB Atlas only allows connections from IP addresses
+ *    you explicitly whitelist (e.g., your local machine's IP). Since
+ *    Vercel's servers have different (and changing) IP addresses, you
+ *    must open access to "Allow Access from Anywhere" (0.0.0.0/0)
+ *    in your Atlas dashboard under Network Access.
+ *
+ *    This is still secure because authentication (username + password
+ *    in the connection string) is still required to actually read or
+ *    write data. You're just opening the network layer, not removing
+ *    database authentication.
+ *
+ * 2. ENVIRONMENT VARIABLES
+ *
+ *    In production, credentials should be stored in environment variables
+ *    rather than hardcoded in source files. Vercel provides a settings
+ *    panel where you can define environment variables (like MONGODB_URI)
+ *    that are injected at runtime. This keeps secrets out of your Git
+ *    repository and allows using different databases for development
+ *    vs production.
+ *
+ * 3. HOW VERCEL DEPLOYS
+ *
+ *    Vercel connects directly to your GitHub repository. When you push
+ *    code, Vercel automatically:
+ *      a) Pulls the latest code from GitHub
+ *      b) Runs `npm run build` to create optimized production files
+ *      c) Starts the production server (`npm start`)
+ *      d) Serves your app from their global CDN
+ *
+ *    You never need to run build commands yourself -- Vercel handles
+ *    the entire build-and-deploy pipeline.
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │                                                                          │
+ * │  DEPLOYMENT WORKFLOW:                                                    │
+ * │                                                                          │
+ * │  Local Code                                                              │
+ * │    │  git add . && git commit -m "..."                                  │
+ * │    │  git push                                                           │
+ * │    ▼                                                                     │
+ * │  GitHub Repository                                                       │
+ * │    │  Vercel detects the push                                            │
+ * │    ▼                                                                     │
+ * │  Vercel Build Server                                                     │
+ * │    │  npm install                                                        │
+ * │    │  npm run build                                                      │
+ * │    │   └── Generates .next/ folder with optimized files                 │
+ * │    │   └── Pre-renders static pages (HTML files)                        │
+ * │    │   └── Bundles API routes for serverless functions                   │
+ * │    ▼                                                                     │
+ * │  Vercel CDN (Live!)                                                      │
+ * │    │  Static pages served from CDN edge nodes                           │
+ * │    │  API routes run as serverless functions                             │
+ * │    │  ISR pages revalidate on schedule                                  │
+ * │                                                                          │
+ * └─────────────────────────────────────────────────────────────────────────┘
  *
  * ============================================================================
  * 🚀 NEXT STEP: SEND REQUEST FROM FRONTEND
