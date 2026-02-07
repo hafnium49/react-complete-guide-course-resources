@@ -1,9 +1,10 @@
 /**
  * ============================================================================
- * app/page.js - LESSON 508: SECTION INTRODUCTION
+ * app/page.js - LESSONS 508 & 509: SECTION INTRODUCTION
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
+ * LESSON 509: Why these features require special project setups
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -43,19 +44,80 @@
  *    works in combination with Suspense in certain project setups.
  *
  * ============================================================================
- * WHY THESE FEATURES AREN'T AVAILABLE IN EVERY PROJECT
+ * 🎓 LESSON 509: WHY THESE FEATURES REQUIRE SPECIAL PROJECT SETUPS
  * ============================================================================
  *
- * These features -- server components, server actions, and promise-based
- * use() -- require a framework that supports server-side rendering and
- * server-side execution. A plain client-side React app (e.g., one created
- * with Vite alone) has no server runtime, so these features simply cannot
- * work there.
+ * React server components, server actions, and the use() hook with promises
+ * are all part of React itself, yet they cannot be used in a standard
+ * "vanilla" React project (like one scaffolded with Vite). This sounds
+ * paradoxical, but the reason is architectural:
  *
- * Frameworks like NextJS provide the server infrastructure needed to run
- * components on the server, handle server actions, and stream Suspense
- * boundaries. That's why this section uses a NextJS project as its
- * starting point.
+ * THE CORE PROBLEM: SERVER-SIDE CODE EXECUTION
+ *
+ * These features involve code that must run on a server, not in the
+ * browser. A standard React project only targets the browser -- there is
+ * no server environment for React code to execute in. So features that
+ * depend on server-side execution simply have nowhere to run.
+ *
+ * THE SOLUTION: AUTOMATIC CODE SPLITTING
+ *
+ * A framework like NextJS solves this by automatically splitting your
+ * code into two separate bundles:
+ *
+ * ┌─────────────────────────────────────────────────────────────────┐
+ * │                                                                  │
+ * │  YOUR NEXTJS PROJECT CODE                                        │
+ * │    │                                                             │
+ * │    ├── SERVER BUNDLE                                             │
+ * │    │     Code that runs ONLY on the server.                     │
+ * │    │     Never sent to the browser.                             │
+ * │    │     Includes: server components, server actions,           │
+ * │    │     database queries, file system access, etc.             │
+ * │    │                                                             │
+ * │    └── CLIENT BUNDLE                                             │
+ * │          Code that runs in the browser.                         │
+ * │          Includes: client components (marked with               │
+ * │          'use client'), event handlers, browser APIs, etc.      │
+ * │                                                                  │
+ * │  The framework decides which code goes where based on           │
+ * │  directives like 'use client' and 'use server'.                 │
+ * │                                                                  │
+ * └─────────────────────────────────────────────────────────────────┘
+ *
+ * In addition to splitting the code, the framework must also provide
+ * an actual server environment where the server bundle can execute.
+ * NextJS does this automatically -- its development server and its
+ * production server both handle server-side React execution.
+ *
+ * WHY VANILLA REACT (VITE) PROJECTS CAN'T DO THIS
+ *
+ * A Vite-based React project produces a single client-side bundle.
+ * There is no code splitting between server and browser, no server
+ * runtime provided, and no mechanism to mark code as server-only or
+ * client-only. Since most React projects in the wild are still
+ * vanilla client-side apps, this means most React projects cannot
+ * use these features -- even though they are technically part of React.
+ *
+ * WHY NEXTJS WORKS
+ *
+ * NextJS is a full-stack React framework. It builds on top of React
+ * and provides:
+ *   - Automatic code splitting between server and client
+ *   - A server environment for executing server components and actions
+ *   - File-based routing via page.js files in the app/ directory
+ *   - Built-in support for streaming and Suspense boundaries
+ *
+ * That is why this section uses a NextJS project. Understanding the
+ * NextJS App Router structure (from the previous section) is helpful
+ * but not strictly required, since we only work with a single page
+ * throughout this section.
+ *
+ * GETTING STARTED
+ *
+ * After downloading the attached project:
+ *   1. Run `npm install` to install all dependencies
+ *   2. Run `npm run dev` to start the NextJS development server
+ *   3. Open the URL shown in the terminal (usually http://localhost:3000)
  *
  * ============================================================================
  * THIS STARTING PROJECT
