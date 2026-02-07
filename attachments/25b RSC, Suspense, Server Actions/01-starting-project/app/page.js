@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509, 510 & 512
+ * app/page.js - LESSONS 508, 509, 510, 512 & 513
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
  * LESSON 509: Why these features require special project setups
  * LESSON 510: React Server Components vs Client Components in practice
  * LESSON 512: Composition rules for mixing server and client components
+ * LESSON 513: Data fetching in server components with async/await
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -236,19 +237,50 @@
  * ============================================================================
  */
 
-import ClientDemo from '@/components/ClientDemo';
-import RSCDemo from '@/components/RSCDemo';
+/**
+ * ============================================================================
+ * 🎓 LESSON 513: REPLACING THE DEMO COMPONENTS WITH DataFetchingDemo
+ * ============================================================================
+ *
+ * In this lesson, the RSCDemo and ClientDemo components are removed from
+ * this page. They served their purpose in demonstrating server vs. client
+ * components and the {children} composition pattern.
+ *
+ * Now we render DataFetchingDemo instead, which showcases the real power
+ * of server components: fetching data directly inside a component using
+ * Node.js APIs (like fs.readFile) and async/await, without needing a
+ * separate backend API or useEffect.
+ *
+ * The entire data fetching and rendering happens on the server. The
+ * browser receives finished HTML that already contains the loaded data.
+ * No loading spinner, no extra network request, no useEffect needed.
+ *
+ * FILE STRUCTURE AFTER THIS LESSON:
+ *
+ *   01-starting-project/
+ *   ├── app/
+ *   │   ├── page.js              ← this file
+ *   │   ├── layout.js
+ *   │   └── globals.css
+ *   ├── components/
+ *   │   ├── RSCDemo.js           ← still available (lessons 510/512)
+ *   │   ├── ClientDemo.js        ← still available (lessons 511/512)
+ *   │   └── DataFetchingDemo.js  ← NEW: server component with data fetching
+ *   └── dummy-db.json            ← NEW: simulated database file
+ *
+ * ============================================================================
+ */
+
+import DataFetchingDemo from '@/components/DataFetchingDemo';
 
 export default function Home() {
   return (
     <main>
-      {/* LESSON 512: RSCDemo is passed as children to ClientDemo.
-          Home (this server component) renders RSCDemo on the server,
-          and its output is injected into ClientDemo via {children}.
-          RSCDemo stays server-only; ClientDemo stays interactive. */}
-      <ClientDemo>
-        <RSCDemo />
-      </ClientDemo>
+      {/* LESSON 513: This server component reads dummy-db.json on the
+          server using Node.js fs module, then renders the data directly.
+          The browser receives the finished HTML with data included --
+          no client-side fetching or loading states involved. */}
+      <DataFetchingDemo />
     </main>
   );
 }
