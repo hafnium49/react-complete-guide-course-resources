@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509, 510, 512 & 513
+ * app/page.js - LESSONS 508, 509, 510, 512, 513 & 514
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
@@ -8,6 +8,7 @@
  * LESSON 510: React Server Components vs Client Components in practice
  * LESSON 512: Composition rules for mixing server and client components
  * LESSON 513: Data fetching in server components with async/await
+ * LESSON 514: Server actions -- form actions that execute on the server
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -255,32 +256,54 @@
  * browser receives finished HTML that already contains the loaded data.
  * No loading spinner, no extra network request, no useEffect needed.
  *
+ * ============================================================================
+ */
+
+/**
+ * ============================================================================
+ * 🎓 LESSON 514: ADDING ServerActionsDemo
+ * ============================================================================
+ *
+ * ServerActionsDemo demonstrates the counterpart to data fetching: data
+ * SUBMISSION via server actions. While DataFetchingDemo reads from
+ * dummy-db.json, ServerActionsDemo writes to it through a form submission
+ * that triggers a server action.
+ *
+ * ServerActionsDemo is a CLIENT component ('use client') that imports
+ * a server action from actions/users.js. When the form is submitted,
+ * React sends the FormData to the server, where saveUserAction writes
+ * the new user to dummy-db.json.
+ *
  * FILE STRUCTURE AFTER THIS LESSON:
  *
  *   01-starting-project/
  *   ├── app/
- *   │   ├── page.js              ← this file
+ *   │   ├── page.js                ← this file
  *   │   ├── layout.js
  *   │   └── globals.css
+ *   ├── actions/
+ *   │   └── users.js               ← NEW: server action file ('use server')
  *   ├── components/
- *   │   ├── RSCDemo.js           ← still available (lessons 510/512)
- *   │   ├── ClientDemo.js        ← still available (lessons 511/512)
- *   │   └── DataFetchingDemo.js  ← NEW: server component with data fetching
- *   └── dummy-db.json            ← NEW: simulated database file
+ *   │   ├── RSCDemo.js             ← lessons 510/512
+ *   │   ├── ClientDemo.js          ← lessons 511/512
+ *   │   ├── DataFetchingDemo.js    ← lesson 513 (server-side data reading)
+ *   │   └── ServerActionsDemo.js   ← NEW: client component using server action
+ *   └── dummy-db.json              ← read by DataFetchingDemo, written by
+ *                                     saveUserAction
  *
  * ============================================================================
  */
 
-import DataFetchingDemo from '@/components/DataFetchingDemo';
+import ServerActionsDemo from '@/components/ServerActionsDemo';
 
 export default function Home() {
   return (
     <main>
-      {/* LESSON 513: This server component reads dummy-db.json on the
-          server using Node.js fs module, then renders the data directly.
-          The browser receives the finished HTML with data included --
-          no client-side fetching or loading states involved. */}
-      <DataFetchingDemo />
+      {/* LESSON 514: This client component contains a form that submits
+          data via a server action (saveUserAction from actions/users.js).
+          The action executes on the server, writing to dummy-db.json.
+          Verify server execution: console.log appears in terminal only. */}
+      <ServerActionsDemo />
     </main>
   );
 }
