@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509, 510, 512, 513, 514, 515, 516 & 517
+ * app/page.js - LESSONS 508, 509, 510, 512, 513, 514, 515, 516, 517 & 518
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
@@ -12,6 +12,7 @@
  * LESSON 515: Suspense with async server components for loading fallbacks
  * LESSON 516: The use() hook for unwrapping promises in client components
  * LESSON 517: Error handling with ErrorBoundary around Suspense
+ * LESSON 518: Section summary and wrap-up
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -444,6 +445,53 @@
  *   │   ├── UsePromisesDemo.js    ← lessons 515/516
  *   │   └── ErrorBoundary.js      ← NEW: class component for error catching
  *   └── dummy-db.json
+ *
+ * ============================================================================
+ */
+
+/**
+ * ============================================================================
+ * 🎓 LESSON 518: SECTION SUMMARY
+ * ============================================================================
+ *
+ * This lesson wraps up the "RSC, Suspense & Server Actions" theory section.
+ * No new code is introduced. Instead, it recaps the key takeaways:
+ *
+ * 1. REACT SERVER COMPONENTS, SERVER ACTIONS, AND THE use() HOOK WITH
+ *    PROMISES are all part of React itself, but they require a server-side
+ *    environment and automatic code splitting between server and client
+ *    bundles. That is why they cannot be used in every React project --
+ *    only in frameworks like NextJS that provide both a server runtime
+ *    and the build infrastructure to split code based on directives like
+ *    'use client' and 'use server'.
+ *
+ * 2. WHAT EACH FEATURE DOES:
+ *    - Server components execute only on the server, never shipping JS
+ *      to the browser (Lessons 510, 512, 513)
+ *    - Client components run on both server (pre-render) and client
+ *      (hydration), and support interactivity like useState (Lesson 511)
+ *    - Server actions let you execute server-side logic (database writes,
+ *      file system operations) triggered from client-side forms or
+ *      event handlers (Lesson 514)
+ *    - Suspense shows fallback UI while async operations are pending,
+ *      preventing the page from blocking on slow data fetches (Lesson 515)
+ *    - The use() hook unwraps promises in client components, bridging
+ *      server-created data with client-side interactivity (Lesson 516)
+ *    - ErrorBoundary catches errors from rejected promises or failed
+ *      renders, completing the loading/success/error trifecta (Lesson 517)
+ *
+ * 3. THESE FEATURES WORK TOGETHER as a cohesive system. In this project,
+ *    the final pattern combines all of them:
+ *    - page.js (server component) creates a data-fetching promise
+ *    - The promise is passed to a client component as a prop
+ *    - The client component uses use() to unwrap it
+ *    - Suspense handles the loading state
+ *    - ErrorBoundary handles the error state
+ *    - The component itself handles the success state
+ *
+ * If you are working in a React project that supports these features
+ * (such as a NextJS project), you now have the knowledge to use them
+ * effectively together.
  *
  * ============================================================================
  */
