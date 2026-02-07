@@ -1,11 +1,12 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509 & 510
+ * app/page.js - LESSONS 508, 509, 510 & 512
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
  * LESSON 509: Why these features require special project setups
  * LESSON 510: React Server Components vs Client Components in practice
+ * LESSON 512: Composition rules for mixing server and client components
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -192,17 +193,62 @@
  * ============================================================================
  */
 
-import RSCDemo from '@/components/RSCDemo';
+/**
+ * ============================================================================
+ * 🎓 LESSON 512: THE {children} COMPOSITION PATTERN IN ACTION
+ * ============================================================================
+ *
+ * Below, RSCDemo (a server component) is placed BETWEEN the opening and
+ * closing tags of ClientDemo (a client component). This is the {children}
+ * pattern -- the correct way to nest a server component inside a client
+ * component.
+ *
+ * WHY THIS WORKS:
+ *
+ * This Home component is itself a server component (no 'use client'
+ * directive). When it renders, it executes RSCDemo on the server and
+ * produces its HTML output. That pre-rendered output is then passed as
+ * the {children} prop to ClientDemo. ClientDemo never imports or knows
+ * about RSCDemo -- it just receives already-rendered content.
+ *
+ * This means RSCDemo remains a true server component:
+ *   - Its console.log appears ONLY in the terminal (not in the browser)
+ *   - Its JavaScript is never sent to the client
+ *   - It can safely use async/await and server-only resources
+ *
+ * WHAT WOULD NOT WORK:
+ *
+ * If ClientDemo tried to import RSCDemo directly and render <RSCDemo />
+ * in its own JSX, NextJS would attempt to auto-convert RSCDemo to a
+ * client component. Since RSCDemo is an async function (which is only
+ * valid for server components), this conversion would fail with an error.
+ *
+ * VISUAL SUMMARY OF THE COMPONENT TREE:
+ *
+ *   Home (SERVER) ──────────────────────────────────
+ *   │                                                │
+ *   └── ClientDemo (CLIENT) ── via {children} ──┐   │
+ *       │                                        │   │
+ *       └── RSCDemo (SERVER) ◄── rendered here ──┘   │
+ *           by Home, NOT by ClientDemo                │
+ *   ──────────────────────────────────────────────────
+ *
+ * ============================================================================
+ */
+
 import ClientDemo from '@/components/ClientDemo';
+import RSCDemo from '@/components/RSCDemo';
 
 export default function Home() {
   return (
     <main>
-      {/* LESSON 510: Both components render on the server at this stage.
-          Check your terminal (not browser console) for the console.log
-          messages from each component -- that proves server execution. */}
-      <RSCDemo />
-      <ClientDemo />
+      {/* LESSON 512: RSCDemo is passed as children to ClientDemo.
+          Home (this server component) renders RSCDemo on the server,
+          and its output is injected into ClientDemo via {children}.
+          RSCDemo stays server-only; ClientDemo stays interactive. */}
+      <ClientDemo>
+        <RSCDemo />
+      </ClientDemo>
     </main>
   );
 }

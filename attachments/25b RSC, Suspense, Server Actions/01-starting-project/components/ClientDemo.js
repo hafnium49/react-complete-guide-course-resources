@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * components/ClientDemo.js - LESSONS 510 & 511
+ * components/ClientDemo.js - LESSONS 510, 511 & 512
  * ============================================================================
  *
  * LESSON 510: Initially this component was a server component (see RSCDemo.js
@@ -99,6 +99,51 @@
  *     so no directive is needed
  *
  * ============================================================================
+ * 🎓 LESSON 512: COMPOSITION RULES - CLIENT COMPONENTS & SERVER COMPONENTS
+ * ============================================================================
+ *
+ * CLIENT COMPONENTS CANNOT DIRECTLY RENDER SERVER COMPONENTS
+ *
+ * If this client component were to import RSCDemo (a server component)
+ * and render <RSCDemo /> in its JSX, NextJS would automatically try to
+ * convert RSCDemo into a client component. This might appear to work at
+ * first, but the RSCDemo would no longer be a true server component --
+ * its code would now be shipped to the browser and executed there too.
+ *
+ * You can prove this by making RSCDemo an async function (which only
+ * server components support). If you then try to render it directly in
+ * this client component, you get an error because async components
+ * cannot be converted to client components.
+ *
+ * THE {children} PATTERN: THE CORRECT WAY TO COMBINE THEM
+ *
+ * The solution is to use the {children} prop. Instead of importing and
+ * rendering a server component directly inside this client component,
+ * you pass the server component BETWEEN the opening and closing tags
+ * of this client component in a PARENT server component (like page.js):
+ *
+ *   // In page.js (a server component):
+ *   <ClientDemo>
+ *     <RSCDemo />         ← rendered by the server component (page.js)
+ *   </ClientDemo>
+ *
+ * This works because RSCDemo is technically rendered by the parent
+ * server component (page.js), not by ClientDemo. The server renders
+ * RSCDemo into HTML on the server side, and that pre-rendered output
+ * is then injected into ClientDemo via {children}. RSCDemo stays a
+ * true server component -- its console.log only appears in the
+ * terminal, never in the browser console.
+ *
+ * COMPOSITION RULES SUMMARY:
+ *
+ *   ✓  Server component renders Client component       → always works
+ *   ✗  Client component renders Server component (JSX)  → auto-converts
+ *       to client (or errors if the component is async)
+ *   ✓  Client component receives Server component via   → works correctly,
+ *      {children} from a server parent                    server component
+ *                                                         stays server-only
+ *
+ * ============================================================================
  */
 
 'use client';
@@ -119,6 +164,11 @@ export default function ClientDemo({ children }) {
       <p>
         Will be rendered on the client <strong>AND</strong> the server.
       </p>
+      {/* LESSON 512: The {children} prop is the key to the composition
+          pattern. Server components passed as children from a server
+          parent (page.js) are rendered on the server and their output
+          is injected here. The server component stays server-only --
+          its code is never shipped to the browser. */}
       {children}
     </div>
   );

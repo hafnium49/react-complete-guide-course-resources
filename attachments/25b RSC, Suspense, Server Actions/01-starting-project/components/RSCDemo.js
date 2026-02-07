@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * components/RSCDemo.js - LESSON 510: REACT SERVER COMPONENTS
+ * components/RSCDemo.js - LESSONS 510 & 512: REACT SERVER COMPONENTS
  * ============================================================================
  *
  * This component demonstrates a React Server Component (RSC). At first
@@ -52,7 +52,50 @@
  * code never reaches the browser at all.
  *
  * ============================================================================
+ * 🎓 LESSON 512: SERVER COMPONENT CAN INCLUDE CLIENT COMPONENTS
+ * ============================================================================
+ *
+ * A server component is allowed to import and render a client component
+ * directly in its JSX. This works without any issues because the server
+ * component renders on the server, and the client component is sent to
+ * the browser as part of the client bundle.
+ *
+ * For example, importing ClientDemo and rendering <ClientDemo /> inside
+ * this RSCDemo's JSX would work perfectly. This was tested during the
+ * lesson (see the commented-out import and usage below).
+ *
+ * The rule is:
+ *   SERVER component → can render CLIENT components ✓
+ *   CLIENT component → CANNOT render SERVER components directly ✗
+ *     (unless via the {children} prop pattern -- see page.js)
+ *
+ * ============================================================================
+ * THE async KEYWORD AS A SERVER COMPONENT SIGNAL
+ * ============================================================================
+ *
+ * This component uses the `async` keyword on its function declaration.
+ * Only server components are allowed to be async functions in React.
+ * Client components cannot be async because they need to render
+ * synchronously during hydration in the browser.
+ *
+ * This means `async` effectively forces a component to remain a server
+ * component. If another client component tries to import and render this
+ * component directly in its JSX, NextJS would normally auto-convert it
+ * to a client component. But since async is not allowed for client
+ * components, that auto-conversion fails and produces an error. This
+ * proves the component truly stays server-only.
+ *
+ * The `async` keyword will become practically useful once we add data
+ * fetching with `await` in later lessons.
+ *
+ * ============================================================================
  */
+
+// LESSON 512: This import was tested to prove that a server component
+// CAN render a client component directly in its JSX. It works fine.
+// It is commented out because the final arrangement uses the {children}
+// pattern in page.js instead (see page.js for details).
+// import ClientDemo from './ClientDemo';
 
 export default async function RSCDemo() {
   console.log('RSCDemo rendered');
@@ -65,6 +108,10 @@ export default async function RSCDemo() {
       <p>
         <strong>NEVER</strong> on the client-side!
       </p>
+      {/* LESSON 512: Tested rendering <ClientDemo /> here to prove
+          server components CAN include client components. Commented
+          out because the final pattern uses {children} in page.js. */}
+      {/* <ClientDemo /> */}
     </div>
   );
 }
