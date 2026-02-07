@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509, 510, 512, 513 & 514
+ * app/page.js - LESSONS 508, 509, 510, 512, 513, 514 & 515
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
@@ -9,6 +9,7 @@
  * LESSON 512: Composition rules for mixing server and client components
  * LESSON 513: Data fetching in server components with async/await
  * LESSON 514: Server actions -- form actions that execute on the server
+ * LESSON 515: Suspense with async server components for loading fallbacks
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -294,16 +295,66 @@
  * ============================================================================
  */
 
-import ServerActionsDemo from '@/components/ServerActionsDemo';
+/**
+ * ============================================================================
+ * 🎓 LESSON 515: USING <Suspense> WITH ASYNC SERVER COMPONENTS
+ * ============================================================================
+ *
+ * THE PROBLEM: BLOCKING DATA FETCHES
+ *
+ * In Lesson 513, data was fetched in a server component using async/await.
+ * This works great, but if the data fetch is slow (e.g., a slow database),
+ * the entire page is blocked -- the user sees nothing until the data
+ * arrives. This is a poor user experience.
+ *
+ * The problem gets worse when data is fetched in page.js itself, because
+ * page.js is the root of the page. If page.js awaits data, NOTHING on
+ * the page can render until the await resolves.
+ *
+ * THE SOLUTION: ISOLATE + SUSPENSE
+ *
+ * Step 1: Move the data fetching INTO the child component (UsePromiseDemo)
+ *   so it's no longer blocking page.js. The child component becomes an
+ *   async server component that fetches its own data.
+ *
+ * Step 2: Wrap that child component with React's <Suspense>. Suspense
+ *   tells React: "If this child is still loading, show the fallback
+ *   instead of blocking the entire page."
+ *
+ * THE RESULT:
+ *
+ *   - The page loads INSTANTLY (the rest of the UI renders immediately)
+ *   - The Suspense fallback ("Loading users...") appears in place of
+ *     the slow component
+ *   - When the data resolves (after 2 seconds in our simulation), React
+ *     streams the finished component to the browser, replacing the fallback
+ *
+ * WHERE SUSPENSE CAN BE USED:
+ *
+ *   ✓ Async server components (like UsePromiseDemo)
+ *   ✓ Lazy-loaded components (React.lazy -- covered earlier in the course)
+ *   ✓ Components using Suspense-aware libraries
+ *   ✗ Regular useEffect + fetch() in client components (NOT Suspense-aware)
+ *
+ * ============================================================================
+ */
+
+import { Suspense } from 'react';
+
+import UsePromiseDemo from '@/components/UsePromisesDemo';
 
 export default function Home() {
   return (
     <main>
-      {/* LESSON 514: This client component contains a form that submits
-          data via a server action (saveUserAction from actions/users.js).
-          The action executes on the server, writing to dummy-db.json.
-          Verify server execution: console.log appears in terminal only. */}
-      <ServerActionsDemo />
+      {/* LESSON 515: <Suspense> wraps UsePromiseDemo so the page loads
+          instantly. The fallback prop defines what to show while the
+          async server component is still fetching data. Once the data
+          resolves, React replaces the fallback with the actual content.
+          Without this Suspense wrapper, the entire page would be blank
+          for 2 seconds (the simulated fetch delay in UsePromiseDemo). */}
+      <Suspense fallback={<p>Loading users...</p>}>
+        <UsePromiseDemo />
+      </Suspense>
     </main>
   );
 }
