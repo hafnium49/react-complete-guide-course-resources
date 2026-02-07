@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508, 509, 510, 512, 513, 514 & 515
+ * app/page.js - LESSONS 508, 509, 510, 512, 513, 514, 515, 516 & 517
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
@@ -11,6 +11,7 @@
  * LESSON 514: Server actions -- form actions that execute on the server
  * LESSON 515: Suspense with async server components for loading fallbacks
  * LESSON 516: The use() hook for unwrapping promises in client components
+ * LESSON 517: Error handling with ErrorBoundary around Suspense
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -381,11 +382,78 @@
  * ============================================================================
  */
 
+/**
+ * ============================================================================
+ * 🎓 LESSON 517: WRAPPING SUSPENSE WITH ErrorBoundary
+ * ============================================================================
+ *
+ * THE MISSING PIECE: ERROR HANDLING
+ *
+ * So far we have two states covered for async data:
+ *   - LOADING: handled by <Suspense> (shows fallback while promise is pending)
+ *   - SUCCESS: handled by the component itself (renders the resolved data)
+ *
+ * But what if the promise REJECTS? What if the data fetch fails? Without
+ * error handling, the whole page would crash. We need a third piece:
+ *   - ERROR: handled by <ErrorBoundary> (catches the rejection and shows
+ *     an error message)
+ *
+ * THE ErrorBoundary COMPONENT
+ *
+ * ErrorBoundary is a class component (the only React pattern that can catch
+ * render errors) that wraps around <Suspense>. If anything inside its tree
+ * throws an error -- including a rejected promise unwrapped by use() -- it
+ * catches that error and renders a fallback UI instead.
+ *
+ * THE WRAPPING ORDER MATTERS:
+ *
+ *   <ErrorBoundary>      ← outermost: catches errors
+ *     <Suspense>          ← middle: shows loading state
+ *       <Component />     ← innermost: fetches and renders data
+ *     </Suspense>
+ *   </ErrorBoundary>
+ *
+ * ErrorBoundary must wrap Suspense, not the other way around. If Suspense
+ * wrapped ErrorBoundary, the error would bubble past Suspense (which does
+ * not catch errors) and crash the page.
+ *
+ * TESTING ERROR HANDLING
+ *
+ * To see the ErrorBoundary in action, the promise below is set to REJECT
+ * instead of resolve. After the 2-second delay, the promise throws an
+ * Error, which use() in UsePromiseDemo re-throws during rendering,
+ * which ErrorBoundary catches and displays.
+ *
+ * To restore normal behavior, uncomment the resolve() call and comment
+ * out the reject() call.
+ *
+ * FILE STRUCTURE AFTER THIS LESSON:
+ *
+ *   01-starting-project/
+ *   ├── app/
+ *   │   ├── page.js               ← this file
+ *   │   ├── layout.js
+ *   │   └── globals.css
+ *   ├── actions/
+ *   │   └── users.js              ← server action
+ *   ├── components/
+ *   │   ├── RSCDemo.js            ← lessons 510/512
+ *   │   ├── ClientDemo.js         ← lessons 511/512
+ *   │   ├── DataFetchingDemo.js   ← lesson 513
+ *   │   ├── ServerActionsDemo.js  ← lesson 514
+ *   │   ├── UsePromisesDemo.js    ← lessons 515/516
+ *   │   └── ErrorBoundary.js      ← NEW: class component for error catching
+ *   └── dummy-db.json
+ *
+ * ============================================================================
+ */
+
 import fs from 'node:fs/promises';
 
 import { Suspense } from 'react';
 
 import UsePromiseDemo from '@/components/UsePromisesDemo';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // This is an async server component. The `async` keyword is needed
 // because we use `await` inside the promise's setTimeout callback
@@ -396,25 +464,30 @@ export default async function Home() {
   // IMPORTANT: We do NOT await this promise here. Instead, we pass it
   // as a prop to UsePromiseDemo, which will unwrap it using use().
   // This is what prevents the page from blocking.
-  const fetchUsersPromise = new Promise((resolve) =>
+  // LESSON 517: The promise now receives both resolve AND reject callbacks.
+  // To test error handling, resolve is commented out and reject is called
+  // instead. This simulates a failed data fetch. Swap the comments to
+  // restore normal behavior.
+  const fetchUsersPromise = new Promise((resolve, reject) =>
     setTimeout(async () => {
       const data = await fs.readFile('dummy-db.json', 'utf-8');
       const users = JSON.parse(data);
-      resolve(users);
+      // resolve(users);
+      reject(new Error('Error!'));
     }, 2000)
   );
 
   return (
     <main>
-      {/* LESSON 516: The promise is passed as a prop (usersPromise) to
-          UsePromiseDemo, which is now a CLIENT component. Inside that
-          component, use(usersPromise) unwraps the promise. While it's
-          pending, Suspense shows "Loading users...". When it resolves,
-          the component renders the data AND interactive client features
-          (like the useState counter). */}
-      <Suspense fallback={<p>Loading users...</p>}>
-        <UsePromiseDemo usersPromise={fetchUsersPromise} />
-      </Suspense>
+      {/* LESSON 517: ErrorBoundary wraps Suspense. If the promise rejects,
+          the error propagates up from use() through Suspense to
+          ErrorBoundary, which catches it and renders its error UI plus
+          the fallback prop. The fallback prop is JSX passed from here. */}
+      <ErrorBoundary fallback={<p>Something went wrong!</p>}>
+        <Suspense fallback={<p>Loading users...</p>}>
+          <UsePromiseDemo usersPromise={fetchUsersPromise} />
+        </Suspense>
+      </ErrorBoundary>
     </main>
   );
 }
