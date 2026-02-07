@@ -10,6 +10,7 @@
  * LESSON 513: Data fetching in server components with async/await
  * LESSON 514: Server actions -- form actions that execute on the server
  * LESSON 515: Suspense with async server components for loading fallbacks
+ * LESSON 516: The use() hook for unwrapping promises in client components
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -339,21 +340,80 @@
  * ============================================================================
  */
 
+/**
+ * ============================================================================
+ * 🎓 LESSON 516: THE use() HOOK -- PROMISE CREATION IN SERVER COMPONENT
+ * ============================================================================
+ *
+ * WHY THE DATA FETCHING MOVED BACK TO page.js
+ *
+ * In Lesson 515, data fetching lived inside UsePromiseDemo (an async
+ * server component). That worked perfectly with Suspense. But what if
+ * UsePromiseDemo needs to be a CLIENT component -- for example, to use
+ * useState for an interactive counter?
+ *
+ * Client components cannot be async and cannot use Node.js APIs, so the
+ * data fetching MUST live in a server component. But if we fetch the
+ * data and await it here in page.js (as in Lesson 515 iteration 1),
+ * the entire page blocks again, defeating the purpose of Suspense.
+ *
+ * THE SOLUTION: CREATE A PROMISE, DON'T AWAIT IT
+ *
+ * Instead of awaiting the data, we create a Promise (fetchUsersPromise)
+ * and pass it as a prop to UsePromiseDemo WITHOUT awaiting it. This
+ * means page.js renders immediately -- it just hands off a not-yet-
+ * resolved promise to the child component.
+ *
+ * The child component then uses the use() hook to unwrap that promise.
+ * While the promise is pending, React suspends the child and shows the
+ * <Suspense> fallback. When the promise resolves, React re-renders the
+ * child with the resolved data. The page loads instantly, just like
+ * with the async server component approach.
+ *
+ * KEY INSIGHT: PASSING PROMISES AS PROPS
+ *
+ * Yes, you can pass a promise as a prop from a server component to a
+ * client component. The framework handles the serialization. This is
+ * what makes the use() hook pattern possible -- the promise is created
+ * on the server (where Node.js APIs are available) but consumed on
+ * the client (where useState and onClick are available).
+ *
+ * ============================================================================
+ */
+
+import fs from 'node:fs/promises';
+
 import { Suspense } from 'react';
 
 import UsePromiseDemo from '@/components/UsePromisesDemo';
 
-export default function Home() {
+// This is an async server component. The `async` keyword is needed
+// because we use `await` inside the promise's setTimeout callback
+// (for fs.readFile), but we do NOT await the promise itself here.
+// This means page.js renders immediately without blocking.
+export default async function Home() {
+  // Create a promise that simulates a slow data fetch (2-second delay).
+  // IMPORTANT: We do NOT await this promise here. Instead, we pass it
+  // as a prop to UsePromiseDemo, which will unwrap it using use().
+  // This is what prevents the page from blocking.
+  const fetchUsersPromise = new Promise((resolve) =>
+    setTimeout(async () => {
+      const data = await fs.readFile('dummy-db.json', 'utf-8');
+      const users = JSON.parse(data);
+      resolve(users);
+    }, 2000)
+  );
+
   return (
     <main>
-      {/* LESSON 515: <Suspense> wraps UsePromiseDemo so the page loads
-          instantly. The fallback prop defines what to show while the
-          async server component is still fetching data. Once the data
-          resolves, React replaces the fallback with the actual content.
-          Without this Suspense wrapper, the entire page would be blank
-          for 2 seconds (the simulated fetch delay in UsePromiseDemo). */}
+      {/* LESSON 516: The promise is passed as a prop (usersPromise) to
+          UsePromiseDemo, which is now a CLIENT component. Inside that
+          component, use(usersPromise) unwraps the promise. While it's
+          pending, Suspense shows "Loading users...". When it resolves,
+          the component renders the data AND interactive client features
+          (like the useState counter). */}
       <Suspense fallback={<p>Loading users...</p>}>
-        <UsePromiseDemo />
+        <UsePromiseDemo usersPromise={fetchUsersPromise} />
       </Suspense>
     </main>
   );

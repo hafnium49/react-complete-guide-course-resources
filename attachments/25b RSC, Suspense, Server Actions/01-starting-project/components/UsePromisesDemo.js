@@ -1,116 +1,129 @@
 /**
  * ============================================================================
- * components/UsePromisesDemo.js - LESSON 515: SUSPENSE & DATA FETCHING
+ * components/UsePromisesDemo.js - LESSONS 515 & 516
  * ============================================================================
  *
- * This component demonstrates how React's <Suspense> component integrates
- * with async server components to provide a loading fallback while data
- * is being fetched on the server.
+ * LESSON 515: This component started as an async server component that
+ *             fetched data internally and worked with <Suspense>.
+ * LESSON 516: Converted to a CLIENT component using the use() hook to
+ *             unwrap a promise received as a prop from a server component.
  *
  * ============================================================================
- * 🎓 LESSON 515: THE PROBLEM WITH BLOCKING DATA FETCHING
+ * 🎓 LESSON 515: THE PROBLEM WITH BLOCKING DATA FETCHING (recap)
  * ============================================================================
  *
- * This component went through several iterations during the lesson:
- *
- * ITERATION 1 - DATA FETCHED IN page.js, PASSED AS PROP:
- *
- *   Initially this component was a simple presentational component that
- *   received a `users` prop from page.js. The data fetching happened in
- *   page.js (which is also a server component), and the users were passed
- *   down. This worked, but had a major UX problem: if the data fetch was
- *   slow, the ENTIRE page was blocked. Nothing appeared on screen until
- *   the data arrived, because page.js couldn't finish rendering without it.
- *
- * ITERATION 2 - DATA FETCHED IN THIS COMPONENT (current):
- *
- *   The data fetching code was moved INTO this component, making it an
- *   async server component. This alone doesn't fix the blocking problem,
- *   but it makes the component self-contained -- the slow data fetch is
- *   now isolated to this one component rather than blocking the parent.
- *
- *   This isolation is what enables the use of <Suspense>.
+ * In Lesson 515, this was an async server component that fetched data
+ * directly (using Node.js fs.readFile) with a 2-second simulated delay.
+ * When wrapped in <Suspense>, the page loaded instantly with a fallback
+ * while this component awaited its data on the server. That worked well.
  *
  * ============================================================================
- * HOW SUSPENSE SOLVES THE BLOCKING PROBLEM
+ * 🎓 LESSON 516: WHY CONVERT TO A CLIENT COMPONENT?
  * ============================================================================
  *
- * In page.js, this component is wrapped with React's <Suspense> component:
+ * The problem arises when you need client-side features (like useState)
+ * in the same component that displays fetched data. For example, if you
+ * need an interactive counter alongside the user list, you need useState,
+ * which requires 'use client'. But client components:
  *
- *   <Suspense fallback={<p>Loading users...</p>}>
- *     <UsePromiseDemo />
- *   </Suspense>
+ *   - Cannot be async functions
+ *   - Cannot use Node.js APIs like fs.readFile
+ *   - Cannot fetch data directly on the server
  *
- * When Suspense wraps an async server component:
- *
- *   1. React begins rendering this component on the server
- *   2. When it hits the `await` (the 2-second delay here), React
- *      "suspends" -- it pauses rendering this component
- *   3. Instead of blocking the entire page, React sends the fallback
- *      content (<p>Loading users...</p>) to the browser immediately
- *   4. The rest of the page loads instantly -- only this component waits
- *   5. When the data finally resolves, React renders this component
- *      and streams the result to the browser, replacing the fallback
- *
- * WITHOUT Suspense: the entire page is blank for 2 seconds
- * WITH Suspense: the page loads instantly with "Loading users..." shown,
- *   then the actual data appears after 2 seconds
+ * So the data fetching must move back to the parent server component
+ * (page.js), and we need a way to receive and wait for that data in
+ * this client component. That's where the use() hook comes in.
  *
  * ============================================================================
- * WHY SUSPENSE WORKS WITH SERVER COMPONENTS
+ * THE use() HOOK WITH PROMISES
  * ============================================================================
  *
- * Suspense does not work with just any component that fetches data.
- * It works with:
- *   - Async React server components (like this one)
- *   - Components using libraries that integrate with React's Suspense
- *     protocol (sending special signals to React behind the scenes)
- *   - Lazy-loaded components (React.lazy, which you saw earlier in
- *     the course for code splitting)
+ * The use() hook is imported from 'react' (added in React 19). You may
+ * have seen it earlier in the course for consuming context (as an
+ * alternative to useContext). But it has a second purpose: it can
+ * unwrap/resolve promises in a Suspense-compatible way.
  *
- * A plain useEffect + fetch() call in a client component does NOT
- * integrate with Suspense. This is an important distinction.
+ * HOW IT WORKS:
+ *
+ *   1. A server component (page.js) creates a promise that will
+ *      eventually resolve with data (e.g., fetchUsersPromise)
+ *   2. That promise is passed as a prop to this client component
+ *   3. This component calls use(usersPromise) to unwrap the promise
+ *   4. While the promise is pending, React "suspends" this component
+ *      and shows the <Suspense> fallback from the parent
+ *   5. When the promise resolves, React re-renders this component
+ *      with the resolved data (the users array)
+ *
+ * This gives us the best of both worlds:
+ *   - The component is a client component (can use useState, onClick, etc.)
+ *   - It still integrates with Suspense for loading fallbacks
+ *   - The data fetching remains on the server (in page.js)
  *
  * ============================================================================
- * THE SIMULATED DELAY
+ * IMPORTANT LIMITATIONS OF use() WITH PROMISES
  * ============================================================================
  *
- * The 2-second delay below simulates a slow database query or network
- * request. In a real application, you would replace this with an actual
- * database call or API request. The delay makes it easy to observe the
- * difference between blocking (no Suspense) and streaming (with Suspense).
+ * The use() hook does NOT work with any arbitrary promise you create in
+ * client-side code. It only works with:
+ *
+ *   1. Promises created in a SERVER component and passed as props
+ *      (like in this example -- the promise is created in page.js)
+ *
+ *   2. Promises created by libraries that integrate with React's
+ *      Suspense protocol (e.g., frameworks like NextJS, data fetching
+ *      libraries that implement Suspense-aware caching)
+ *
+ * This is because Suspense requires special coordination between the
+ * promise and React's rendering lifecycle. Regular promises don't
+ * provide this coordination, so use() would not work properly with them.
  *
  * ============================================================================
- * WHAT'S NEXT: THE use() HOOK
+ * THE PATTERN: SERVER CREATES PROMISE → CLIENT UNWRAPS WITH use()
  * ============================================================================
  *
- * This lesson sets the stage for the use() hook, which is explored in
- * the next lesson. The use() hook allows CLIENT components to consume
- * promises in a Suspense-compatible way -- without needing async/await
- * (which isn't allowed in client components). This will enable a pattern
- * where the promise is created in a server component (page.js) and
- * passed as a prop to a client component that unwraps it with use().
+ *   page.js (SERVER)                    UsePromiseDemo (CLIENT)
+ *   ─────────────────                   ────────────────────────
+ *   1. Create promise                   4. Receive promise as prop
+ *      (fetchUsersPromise)
+ *   2. Pass promise as prop ──────────► 5. Call use(usersPromise)
+ *   3. Render <Suspense>                6. Suspense shows fallback
+ *      with fallback                       while pending
+ *                                       7. When resolved, render
+ *                                          data + interactive UI
  *
  * ============================================================================
  */
 
-import fs from 'node:fs/promises';
+'use client';
 
-export default async function UsePromiseDemo() {
-  // Simulate a slow server / database query with a 2-second delay.
-  // Without <Suspense> in page.js, this would block the entire page
-  // from loading. With <Suspense>, the page loads immediately and
-  // shows a fallback message until this data resolves.
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+import { useState, use } from 'react';
 
-  const data = await fs.readFile('dummy-db.json', 'utf-8');
-  const users = JSON.parse(data);
+export default function UsePromiseDemo({ usersPromise }) {
+  // use() unwraps the promise received from the server component.
+  // While the promise is pending, React suspends this component and
+  // the parent <Suspense> shows its fallback. Once resolved, `users`
+  // contains the resolved value (the array of user objects).
+  const users = use(usersPromise);
+
+  // useState is why this MUST be a client component. Server components
+  // cannot manage state. This counter demonstrates that the component
+  // is fully interactive on the client side, alongside server-fetched data.
+  const [count, setCount] = useState(0);
 
   return (
-    <div className='rsc'>
+    <div className="rsc">
       <h2>RSC with Data Fetching</h2>
       <p>
         Uses <strong>async / await</strong> for data fetching.
+      </p>
+      {/* Interactive UI: this button and counter prove that this is a
+          client component with full interactivity, while the user list
+          below comes from a promise created on the server. */}
+      <p>
+        <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+          Increment
+        </button>
+        <span>{count}</span>
       </p>
       <ul>
         {users.map((user) => (
