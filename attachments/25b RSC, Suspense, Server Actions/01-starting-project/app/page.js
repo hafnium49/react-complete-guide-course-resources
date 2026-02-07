@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * app/page.js - LESSONS 508 & 509: SECTION INTRODUCTION
+ * app/page.js - LESSONS 508, 509 & 510
  * ============================================================================
  *
  * LESSON 508: Overview of the "RSC, Suspense & Server Actions" section
  * LESSON 509: Why these features require special project setups
+ * LESSON 510: React Server Components vs Client Components in practice
  *
  * ============================================================================
  * WHAT THIS SECTION COVERS
@@ -145,10 +146,63 @@
  * ============================================================================
  */
 
+/**
+ * ============================================================================
+ * 🎓 LESSON 510: USING RSCDemo AND ClientDemo IN THIS PAGE
+ * ============================================================================
+ *
+ * IMPORTING COMPONENTS WITH THE @ ALIAS
+ *
+ * The @ symbol in the import paths below is a special path alias configured
+ * by NextJS. It resolves to the root project directory, so
+ * '@/components/RSCDemo' means "the RSCDemo file inside the components
+ * folder at the project root." This avoids fragile relative paths like
+ * '../components/RSCDemo'.
+ *
+ * FILE STRUCTURE AFTER THIS LESSON:
+ *
+ *   01-starting-project/
+ *   ├── app/
+ *   │   ├── page.js          ← this file (the home page component)
+ *   │   ├── layout.js        ← root layout wrapping all pages
+ *   │   └── globals.css      ← global styles
+ *   └── components/
+ *       ├── RSCDemo.js       ← server component demo (added in this lesson)
+ *       └── ClientDemo.js    ← will become a client component (next lesson)
+ *
+ * WHY BOTH COMPONENTS ARE CURRENTLY SERVER COMPONENTS
+ *
+ * Even though one file is named "RSCDemo" and the other "ClientDemo",
+ * BOTH are server components right now. The file name has no effect on
+ * component type. In NextJS, the default is server component. Only adding
+ * a 'use client' directive at the top of a file switches it to a client
+ * component.
+ *
+ * HOW THIS page.js FILE WORKS IN NEXTJS
+ *
+ * In the NextJS App Router, any file named page.js inside the app/
+ * directory automatically becomes a routable page. This page.js in app/
+ * maps to the root URL ("/"). The component it exports is rendered inside
+ * the RootLayout defined in layout.js.
+ *
+ * This page component is itself a server component (no 'use client'
+ * directive), so it executes on the server. It can freely import and
+ * render other server components like RSCDemo and ClientDemo.
+ *
+ * ============================================================================
+ */
+
+import RSCDemo from '@/components/RSCDemo';
+import ClientDemo from '@/components/ClientDemo';
+
 export default function Home() {
   return (
     <main>
-      <p>Let's go!</p>
+      {/* LESSON 510: Both components render on the server at this stage.
+          Check your terminal (not browser console) for the console.log
+          messages from each component -- that proves server execution. */}
+      <RSCDemo />
+      <ClientDemo />
     </main>
   );
 }
