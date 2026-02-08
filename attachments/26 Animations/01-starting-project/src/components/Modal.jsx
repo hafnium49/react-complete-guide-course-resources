@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Modal.jsx - LESSONS 519, 520, 526 & 527
+ * src/components/Modal.jsx - LESSONS 519, 520, 526, 527 & 529
  * ============================================================================
  *
  * A portal-based modal dialog. It renders a backdrop overlay and a <dialog>
@@ -117,6 +117,60 @@
  *   7. After exit animation completes, element is actually removed from DOM
  *
  * ============================================================================
+ * 🎓 LESSON 529: VARIANTS -- NAMED, REUSABLE ANIMATION STATES
+ * ============================================================================
+ *
+ * THE DUPLICATION PROBLEM:
+ *
+ * In the previous lesson, the initial and exit props both received the
+ * same inline object: { opacity: 0, y: 30 }. If we ever need to change
+ * the hidden state (e.g., adjust the y offset), we'd have to update it
+ * in two places. One quick fix is extracting the object into a constant
+ * and referencing it in both props. But Framer Motion offers a more
+ * structured approach: variants.
+ *
+ * WHAT ARE VARIANTS?
+ *
+ * The `variants` prop accepts an object whose keys are custom identifiers
+ * (any names you choose) and whose values are animation state objects:
+ *
+ *   variants={{
+ *     hidden:  { opacity: 0, y: 30 },
+ *     visible: { opacity: 1, y: 0 },
+ *   }}
+ *
+ * Once defined, you reference these variants BY NAME (as strings) in the
+ * `initial`, `animate`, `exit`, `whileHover`, `whileTap`, etc. props:
+ *
+ *   initial="hidden"    → applies the "hidden" variant on mount
+ *   animate="visible"   → animates to the "visible" variant
+ *   exit="hidden"       → animates to "hidden" on removal
+ *
+ * BENEFITS OF VARIANTS:
+ *
+ * 1. SINGLE SOURCE OF TRUTH: Each animation state is defined once in
+ *    the variants object. Changing { opacity: 0, y: 30 } to
+ *    { opacity: 0, y: 50 } only requires one edit.
+ *
+ * 2. SEMANTIC NAMING: "hidden" and "visible" communicate intent more
+ *    clearly than inline objects. The animation lifecycle reads like
+ *    a sentence: starts "hidden", animates to "visible", exits to "hidden".
+ *
+ * 3. REUSABILITY ACROSS PROPS: The same variant name can be used for
+ *    initial, exit, whileHover, or any other animation prop, without
+ *    duplicating the animation object.
+ *
+ * 4. PROPAGATION (next lesson): Variants have a powerful feature where
+ *    parent variant names automatically propagate to child motion
+ *    components, enabling coordinated multi-element animations. This
+ *    is explored in the next lesson.
+ *
+ * NOTE: The variant names ("hidden", "visible") are entirely up to you.
+ * You could use "start"/"end", "closed"/"open", "inactive"/"active",
+ * etc. Just make sure the string values in initial/animate/exit match
+ * the keys in the variants object exactly (typos cause silent failures).
+ *
+ * ============================================================================
  */
 
 import { createPortal } from 'react-dom';
@@ -126,18 +180,21 @@ export default function Modal({ title, children, onClose }) {
   return createPortal(
     <>
       <div className="backdrop" onClick={onClose} />
-      {/* LESSON 526: <dialog> replaced with <motion.dialog>.
-          initial → animate plays a spring slide-up + fade-in on mount.
-          LESSON 527: exit prop added -- mirrors the initial state so
-          the modal slides back down and fades out when removed. This
-          exit animation only plays if AnimatePresence wraps the
-          conditional rendering in the parent (Header.jsx). */}
+      {/* LESSONS 526-527: <dialog> → <motion.dialog> with entry/exit animations.
+          LESSON 529: Inline animation objects replaced with named variants.
+          The variants prop defines "hidden" and "visible" states once, then
+          initial, animate, and exit reference them by name as strings.
+          "hidden" is reused by both initial and exit -- no duplication. */}
       <motion.dialog
         open
         className="modal"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 30 }}
+        variants={{
+          hidden: { opacity: 0, y: 30 },
+          visible: { opacity: 1, y: 0 },
+        }}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
       >
         <h2>{title}</h2>
         {children}
