@@ -327,6 +327,76 @@ main {
   background-color: #0f3cef;
 }
 
+/*
+ * ============================================================================
+ * LESSON 522: CSS ANIMATIONS (@keyframes) FOR THE MODAL
+ * ============================================================================
+ *
+ * CSS TRANSITIONS vs CSS ANIMATIONS -- WHEN EACH IS APPROPRIATE
+ *
+ * In Lesson 521, we used a CSS transition to animate the arrow icon. That
+ * worked because the icon element was ALREADY in the DOM -- we just toggled
+ * a class to change its transform value, and the transition animated between
+ * the old and new values.
+ *
+ * The modal is different. It is NOT always in the DOM. In Header.jsx, the
+ * <NewChallenge> component (which renders the Modal) is conditionally
+ * rendered with {isCreatingNewChallenge && <NewChallenge />}. When the
+ * modal is closed, the element is completely removed from the DOM. When
+ * opened, it is freshly added to the DOM.
+ *
+ * A CSS transition cannot animate an element that didn't exist a moment
+ * ago -- there is no "old value" to transition FROM. The element simply
+ * appears with whatever CSS properties it has, with no animation.
+ *
+ * CSS ANIMATIONS solve this problem. Using @keyframes, you define a
+ * named sequence of states (from/to or 0%/100%) that the browser plays
+ * automatically whenever the element appears in the DOM. This means
+ * the animation plays even when the element is freshly added.
+ *
+ * @KEYFRAMES SYNTAX:
+ *
+ *   @keyframes <animation-name> {
+ *     0%   { ... initial CSS properties ... }
+ *     100% { ... final CSS properties ... }
+ *   }
+ *
+ * You can also use "from" and "to" instead of 0% and 100%, and you can
+ * add any number of intermediate steps (e.g., 50%) for more complex
+ * multi-step animations.
+ *
+ * The `animation` shorthand property attaches the keyframes to an element:
+ *
+ *   animation: <name> <duration> <easing> <fill-mode>;
+ *
+ * - name:      references the @keyframes name
+ * - duration:  how long the animation takes (e.g., 0.3s)
+ * - easing:    acceleration curve (ease-out, ease-in, linear, etc.)
+ * - forwards:  a fill-mode keyword that tells the browser to keep the
+ *              FINAL state of the animation after it finishes. Without
+ *              this, the element would snap back to its pre-animation
+ *              state once the duration is over.
+ *
+ * ============================================================================
+ */
+
+/* Define the animation: start pushed down and invisible, end at normal
+   position and fully visible. This creates a "slide up + fade in" effect. */
+@keyframes slide-up-fade-in {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* The `animation` property triggers slide-up-fade-in automatically whenever
+   this .modal element is added to the DOM (i.e., when the user clicks
+   "Add Challenge"). The `forwards` keyword ensures the modal stays at
+   opacity: 1 and translateY(0) after the animation completes. */
 .modal {
   top: 10%;
   border-radius: 6px;
@@ -334,6 +404,7 @@ main {
   width: 30rem;
   max-width: 90%;
   z-index: 10;
+  animation: slide-up-fade-in 0.3s ease-out forwards;
 }
 
 .modal h2 {
