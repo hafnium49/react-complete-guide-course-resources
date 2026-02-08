@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/NewChallenge.jsx - LESSONS 530 & 531
+ * src/components/NewChallenge.jsx - LESSONS 530, 531 & 532
  * ============================================================================
  *
  * The form for creating a new challenge. It is rendered as a child of the
@@ -117,6 +117,34 @@
  * objects to control timing for specific animation phases.
  *
  * ============================================================================
+ * 🎓 LESSON 532: KEYFRAME ARRAYS -- MULTI-STEP ANIMATIONS
+ * ============================================================================
+ *
+ * Instead of animating from a single starting value to a single ending
+ * value, Framer Motion supports KEYFRAME ARRAYS: you provide an array
+ * of values for an animation property, and Framer Motion will animate
+ * through each value in sequence, creating a multi-step animation.
+ *
+ * For example, instead of:
+ *   visible: { scale: 1 }          → single target (from hidden's 0.5 → 1)
+ *
+ * You can write:
+ *   visible: { scale: [0.8, 1.3, 1] }   → three-step animation:
+ *     step 1: scale to 0.8 (80% of final size)
+ *     step 2: overshoot to 1.3 (130% -- bigger than final)
+ *     step 3: settle to 1.0 (final size)
+ *
+ * This creates a custom bounce effect defined by your exact values,
+ * rather than relying on spring physics to produce the overshoot.
+ * You have full control over exactly how much overshoot occurs and
+ * through which intermediate sizes the element passes.
+ *
+ * Keyframe arrays work for ANY animatable property -- scale, opacity,
+ * x, y, rotate, colors, etc. The array can have any number of steps.
+ * Framer Motion distributes the steps evenly across the animation
+ * duration by default.
+ *
+ * ============================================================================
  */
 
 import { useContext, useRef, useState } from 'react';
@@ -198,9 +226,13 @@ export default function NewChallenge({ onDone }) {
               key={image.alt}
               onClick={() => handleSelectImage(image)}
               className={selectedImage === image ? 'selected' : undefined}
+              /* LESSON 532: The scale property in the "visible" variant
+                 uses a keyframe array instead of a single number. The
+                 animation goes through three steps: 80% → 130% → 100%,
+                 creating a custom bounce effect as each image appears. */
               variants={{
                 hidden: { opacity: 0, scale: 0.5 },
-                visible: { opacity: 1, scale: 1 },
+                visible: { opacity: 1, scale: [0.8, 1.3, 1] },
               }}
               exit={{ opacity: 1, scale: 1 }}
               transition={{ type: 'spring' }}

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Header.jsx - LESSONS 519, 520, 527 & 528
+ * src/components/Header.jsx - LESSONS 519, 520, 527, 528 & 532
  * ============================================================================
  *
  * The header bar for the challenges page, showing the title and an
@@ -85,6 +85,33 @@
  * TRANSITION SCOPE: The transition prop on a motion component controls
  * ALL animations on that element -- animate, exit, whileHover, whileTap,
  * etc. You do not need separate transition configurations for each.
+ *
+ * ============================================================================
+ * 🎓 LESSON 532: ANIMATING NON-NUMERIC VALUES (colors, strings)
+ * ============================================================================
+ *
+ * Framer Motion is not limited to animating numeric properties like
+ * opacity, scale, x, y, or rotate. It can also animate properties
+ * that accept string values, such as:
+ *
+ *   - backgroundColor: hex codes (e.g., '#8b11f0'), rgb(), hsl()
+ *   - color: same string formats
+ *   - borderColor, boxShadow, etc.
+ *
+ * To animate a color, just include it in the animation object:
+ *
+ *   whileHover={{ scale: 1.1, backgroundColor: '#8b11f0' }}
+ *
+ * Framer Motion will interpolate between the current color and the
+ * target color, producing a smooth color transition. The same
+ * transition settings (spring type, stiffness, etc.) apply to the
+ * color animation as well -- so a spring transition will cause the
+ * color to "bounce" through intermediate hues before settling.
+ *
+ * NOTE: In this component, a backgroundColor animation was tested
+ * on the button's whileHover but ultimately removed -- it's not
+ * needed for the final look. The key takeaway is that Framer Motion
+ * supports animating virtually any CSS property, not just transforms.
  *
  * ============================================================================
  */
