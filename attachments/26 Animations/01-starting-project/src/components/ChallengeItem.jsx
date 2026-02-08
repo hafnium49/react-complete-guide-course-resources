@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/ChallengeItem.jsx - LESSONS 519, 520, 521, 525, 534 & 535
+ * src/components/ChallengeItem.jsx - LESSONS 519, 520, 521, 525, 534, 535 & 536
  * ============================================================================
  *
  * LESSON 519 & 520: Project overview -- individual challenge card component
@@ -138,10 +138,55 @@
  * remaining items smoothly shift to fill the gap via layout animation.
  *
  * ============================================================================
+ * 🎓 LESSON 536: FIXING THE LAYOUT WOBBLE ON DETAILS EXPAND/COLLAPSE
+ * ============================================================================
+ *
+ * THE PROBLEM:
+ *
+ * With the `layout` prop on motion.li (Lesson 534), Framer Motion
+ * animates ALL layout changes on this element -- not just position
+ * changes when siblings are removed, but also HEIGHT changes. When the
+ * details section is expanded, the list item's height increases. The
+ * layout prop detects this height change and tries to animate it,
+ * which causes a strange wobbling/distortion effect: the image gets
+ * briefly stretched and the content looks broken.
+ *
+ * Removing the layout prop would fix the wobble but would also remove
+ * the smooth position animation when siblings are removed -- so that
+ * is not an acceptable solution.
+ *
+ * THE FIX: EXPLICITLY ANIMATE THE DETAILS CONTENT
+ *
+ * If the height change is handled by an explicit Framer Motion
+ * animation (rather than happening suddenly), the layout system does
+ * not get confused by an abrupt height jump. The trick is to convert
+ * the details wrapper <div> to <motion.div> and animate its height
+ * from 0 to "auto" on entry:
+ *
+ *   initial={{ height: 0, opacity: 0 }}
+ *   animate={{ height: 'auto', opacity: 1 }}
+ *
+ * The value "auto" is special: Framer Motion can animate TO auto even
+ * though the final pixel height is unknown. This means you don't need
+ * to hard-code a specific height value for the expanded content.
+ *
+ * For the collapse direction, the same problem that affects all exit
+ * animations applies: React removes the element instantly when
+ * isExpanded becomes false. To play a closing animation, we wrap the
+ * conditional block with AnimatePresence and add an exit prop:
+ *
+ *   exit={{ height: 0, opacity: 0 }}
+ *
+ * This mirrors the initial state, so collapsing is the reverse of
+ * expanding. With both entry and exit handled by Framer Motion, the
+ * height change is smooth in both directions and the layout prop no
+ * longer triggers the wobbling distortion.
+ *
+ * ============================================================================
  */
 
 import { useContext } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';
 
@@ -212,13 +257,29 @@ export default function ChallengeItem({
             </button>
           </p>
 
-          {isExpanded && (
-            <div>
-              <p className="challenge-item-description">
-                {challenge.description}
-              </p>
-            </div>
-          )}
+          {/* LESSON 536: AnimatePresence wraps the conditional details
+              content so that a closing (exit) animation can play before
+              React removes it from the DOM. Without this, collapsing
+              would be instant since the element is removed the moment
+              isExpanded becomes false. */}
+          <AnimatePresence>
+            {isExpanded && (
+              // LESSON 536: <div> → <motion.div> with explicit height
+              // animation. Animating from height 0 → "auto" prevents the
+              // layout prop on the parent motion.li from wobbling when the
+              // content expands. The exit prop reverses the animation on
+              // collapse, shrinking the height back to 0 with a fade-out.
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+              >
+                <p className="challenge-item-description">
+                  {challenge.description}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </article>
     </motion.li>
