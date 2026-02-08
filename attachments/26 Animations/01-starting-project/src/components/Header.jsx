@@ -117,7 +117,7 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import NewChallenge from './NewChallenge.jsx';
 
@@ -134,13 +134,12 @@ export default function Header() {
 
   return (
     <>
-      {/* LESSON 527: AnimatePresence wraps the conditional rendering.
-          When isCreatingNewChallenge becomes false, AnimatePresence delays
-          removal of NewChallenge (and its Modal) until the exit animation
-          on the motion.dialog inside Modal.jsx has finished playing. */}
-      <AnimatePresence>
-        {isCreatingNewChallenge && <NewChallenge onDone={handleDone} />}
-      </AnimatePresence>
+      {/* BUGFIX: AnimatePresence was moved inside Modal.jsx (at the portal
+          level) to fix a bug where the backdrop remained in the DOM after
+          the modal closed, blocking all interaction with the dashboard.
+          NewChallenge is now always rendered, with an isOpen prop controlling
+          visibility via the AnimatePresence inside Modal. */}
+      <NewChallenge isOpen={isCreatingNewChallenge} onDone={handleDone} />
 
       <header id="main-header">
         <h1>Your Challenges</h1>

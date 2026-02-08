@@ -215,7 +215,7 @@ import { ChallengesContext } from '../store/challenges-context.jsx';
 import Modal from './Modal.jsx';
 import images from '../assets/images.js';
 
-export default function NewChallenge({ onDone }) {
+export default function NewChallenge({ onDone, isOpen }) {
   const title = useRef();
   const description = useRef();
   const deadline = useRef();
@@ -264,7 +264,7 @@ export default function NewChallenge({ onDone }) {
   }
 
   return (
-    <Modal title="New Challenge" onClose={onDone}>
+    <Modal title="New Challenge" onClose={onDone} open={isOpen}>
       {/* LESSON 533: ref={scope} scopes the imperative animate() calls
           to only select elements within this form, preventing selectors
           like 'input, textarea' from matching elements elsewhere on the page. */}

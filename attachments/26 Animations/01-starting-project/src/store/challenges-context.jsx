@@ -22,7 +22,7 @@
  * ============================================================================
  */
 
-import { createContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 
 export const ChallengesContext = createContext({
   challenges: [],
@@ -31,7 +31,17 @@ export const ChallengesContext = createContext({
 });
 
 export default function ChallengesContextProvider({ children }) {
-  const [challenges, setChallenges] = useState([]);
+  // BUGFIX: Initialize from localStorage so challenges persist across
+  // page refreshes. The lazy initializer function runs only once on mount.
+  const [challenges, setChallenges] = useState(() => {
+    const saved = localStorage.getItem('challenges');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // BUGFIX: Sync challenges to localStorage whenever the array changes.
+  useEffect(() => {
+    localStorage.setItem('challenges', JSON.stringify(challenges));
+  }, [challenges]);
 
   function addChallenge(challenge) {
     setChallenges((prevChallenges) => [

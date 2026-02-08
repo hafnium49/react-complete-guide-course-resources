@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Modal.jsx - LESSONS 519, 520, 526, 527 & 529
+ * src/components/Modal.jsx - LESSONS 519, 520, 526, 527, 529 & BUGFIX
  * ============================================================================
  *
  * A portal-based modal dialog. It renders a backdrop overlay and a <dialog>
@@ -102,19 +102,21 @@
  * keeps it in the DOM long enough for its exit animation to play, then
  * removes it after the animation completes.
  *
- * AnimatePresence must be used in the PARENT component -- the one that
- * controls the conditional rendering. In this app, that is Header.jsx,
- * which renders {isCreatingNewChallenge && <NewChallenge />}. The
- * AnimatePresence wrapper goes around that conditional expression.
+ * IMPORTANT -- AnimatePresence AND createPortal:
  *
- * HOW IT WORKS TOGETHER:
- *   1. User clicks "Add Challenge" → isCreatingNewChallenge becomes true
- *   2. NewChallenge (which includes Modal) mounts in the DOM
- *   3. motion.dialog plays initial → animate (slide up + fade in)
- *   4. User closes modal → isCreatingNewChallenge becomes false
- *   5. AnimatePresence intercepts removal, finds exit prop on motion.dialog
- *   6. motion.dialog plays animate → exit (slide down + fade out)
- *   7. After exit animation completes, element is actually removed from DOM
+ * Originally (Lesson 527), AnimatePresence was placed in Header.jsx
+ * (the parent that controls conditional rendering). This works for
+ * non-portalled content, but creates a problem with createPortal:
+ * the motion components (motion.dialog) are rendered into a separate
+ * DOM subtree (#modal), disconnected from where AnimatePresence lives
+ * in the React tree. AnimatePresence may fail to detect when portalled
+ * exit animations complete, leaving the backdrop stuck in the DOM and
+ * blocking all interaction with the page.
+ *
+ * The fix is to place AnimatePresence INSIDE the portal, wrapping
+ * the conditionally rendered content at the same DOM level as the
+ * animated elements. The modal's visibility is then driven by an
+ * `open` prop rather than conditional rendering from the parent.
  *
  * ============================================================================
  * 🎓 LESSON 529: VARIANTS -- NAMED, REUSABLE ANIMATION STATES
@@ -174,32 +176,46 @@
  */
 
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export default function Modal({ title, children, onClose }) {
+export default function Modal({ title, children, onClose, open }) {
+  // BUGFIX: AnimatePresence is placed INSIDE the portal so it is at the
+  // same DOM level as the animated elements. The `open` prop drives the
+  // conditional rendering, replacing the parent-level conditional that
+  // previously failed to clean up portalled content reliably.
   return createPortal(
-    <>
-      <div className="backdrop" onClick={onClose} />
-      {/* LESSONS 526-527: <dialog> → <motion.dialog> with entry/exit animations.
-          LESSON 529: Inline animation objects replaced with named variants.
-          The variants prop defines "hidden" and "visible" states once, then
-          initial, animate, and exit reference them by name as strings.
-          "hidden" is reused by both initial and exit -- no duplication. */}
-      <motion.dialog
-        open
-        className="modal"
-        variants={{
-          hidden: { opacity: 0, y: 30 },
-          visible: { opacity: 1, y: 0 },
-        }}
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-      >
-        <h2>{title}</h2>
-        {children}
-      </motion.dialog>
-    </>,
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* BUGFIX: Backdrop converted from plain <div> to <motion.div>
+              with its own fade animation, so it participates in the exit
+              lifecycle and is properly removed when the modal closes. */}
+          <motion.div
+            className="backdrop"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+          {/* LESSONS 526-527: <dialog> → <motion.dialog> with entry/exit
+              animations. LESSON 529: Named variants for "hidden"/"visible". */}
+          <motion.dialog
+            open
+            className="modal"
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <h2>{title}</h2>
+            {children}
+          </motion.dialog>
+        </>
+      )}
+    </AnimatePresence>,
     document.getElementById('modal')
   );
 }
