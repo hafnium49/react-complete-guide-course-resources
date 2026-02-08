@@ -1,3 +1,29 @@
+/**
+ * ============================================================================
+ * src/components/Challenges.jsx - LESSONS 519 & 520
+ * ============================================================================
+ *
+ * The main challenge list component. It reads all challenges from context,
+ * filters them into three categories (active, completed, failed), and
+ * displays the currently selected category via ChallengeTabs.
+ *
+ * The selectedType state controls which tab is active. The expanded state
+ * tracks which challenge (if any) has its details expanded (only one at
+ * a time -- clicking the same one again collapses it).
+ *
+ * The challenge list is passed as {children} to ChallengeTabs, which
+ * renders the tab bar above and the children below.
+ *
+ * ANIMATION OPPORTUNITIES:
+ *   - Challenge items appearing when added and disappearing when their
+ *     status changes (moving between tabs) -- list animations
+ *   - The details section expanding/collapsing with a smooth height
+ *     transition instead of an abrupt show/hide
+ *   - Tab indicator animating between tabs (sliding underline)
+ *
+ * ============================================================================
+ */
+
 import { useContext, useState } from 'react';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';

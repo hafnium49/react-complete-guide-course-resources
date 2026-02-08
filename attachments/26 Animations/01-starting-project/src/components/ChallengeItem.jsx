@@ -1,3 +1,26 @@
+/**
+ * ============================================================================
+ * src/components/ChallengeItem.jsx - LESSONS 519 & 520
+ * ============================================================================
+ *
+ * An individual challenge card. Each item shows the challenge image, title,
+ * deadline, and action buttons to mark it as failed or completed. There is
+ * also an expandable details section that reveals the full description.
+ *
+ * When "Mark as failed" or "Mark as completed" is clicked, the challenge
+ * status is updated in context, which causes it to move to the
+ * corresponding tab (failed/completed). Currently this transition is
+ * instant -- the item disappears from the current list and appears in
+ * the other tab with no visual feedback.
+ *
+ * ANIMATION OPPORTUNITIES:
+ *   - Exit animation when the item leaves the current tab's list
+ *   - Enter animation when it appears in the new tab
+ *   - The details section expanding/collapsing smoothly
+ *
+ * ============================================================================
+ */
+
 import { useContext } from 'react';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';

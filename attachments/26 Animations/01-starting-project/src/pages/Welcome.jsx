@@ -1,3 +1,26 @@
+/**
+ * ============================================================================
+ * src/pages/Welcome.jsx - LESSONS 519 & 520
+ * ============================================================================
+ *
+ * The landing page at the root URL ("/"). It contains a full-viewport hero
+ * header with a city background image, a superhero image, and a call-to-action
+ * link that navigates to the "/challenges" route.
+ *
+ * Below the hero header, there are several content sections describing the
+ * app's purpose, features, and testimonials.
+ *
+ * ANIMATION OPPORTUNITIES (to be added in later lessons):
+ *
+ * This page is a prime candidate for scroll-based animations. The content
+ * sections below the hero could fade or slide in as the user scrolls down.
+ * The hero images could also have entrance animations when the page loads.
+ * These are exactly the kinds of enhancements this course section will add
+ * using CSS transitions and later Framer Motion.
+ *
+ * ============================================================================
+ */
+
 import { Link } from 'react-router-dom';
 
 import cityImg from '../assets/city.jpg';
