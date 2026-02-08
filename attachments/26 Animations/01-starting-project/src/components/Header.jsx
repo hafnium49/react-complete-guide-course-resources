@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Header.jsx - LESSONS 519, 520 & 527
+ * src/components/Header.jsx - LESSONS 519, 520, 527 & 528
  * ============================================================================
  *
  * The header bar for the challenges page, showing the title and an
@@ -42,10 +42,55 @@
  *   - exit prop (in Modal.jsx) controls WHAT the exit animation looks like
  *
  * ============================================================================
+ * 🎓 LESSON 528: GESTURE ANIMATIONS -- whileHover & whileTap
+ * ============================================================================
+ *
+ * GESTURE PROPS vs animate PROP:
+ *
+ * The `animate` prop is great for state-driven animations, but for common
+ * user interactions like hovering or clicking, using `animate` would
+ * require manually tracking mouse enter/leave events and toggling state.
+ * That's a lot of boilerplate for something very common.
+ *
+ * Framer Motion provides dedicated gesture props that handle this
+ * automatically:
+ *
+ *   whileHover  → animation state applied while the mouse is over the element
+ *   whileTap    → animation state applied while the element is being clicked
+ *   whileInView → animation state applied while the element is visible in
+ *                  the viewport (useful for scroll-triggered animations)
+ *
+ * These props accept the same animation object format as `animate`.
+ * Framer Motion automatically applies the animation when the gesture
+ * starts and reverses it when the gesture ends -- no state management
+ * needed.
+ *
+ * SPRING PHYSICS CONFIGURATION:
+ *
+ * By default, gesture animations may not use spring physics. To get a
+ * bouncy, physically realistic feel, we add a `transition` prop with
+ * spring configuration:
+ *
+ *   type: 'spring'       → use spring physics
+ *   stiffness: number    → how "rigid" the spring is (higher = snappier,
+ *                           lower = slower/softer). Default ~100.
+ *   mass: number         → the "weight" of the element in the spring
+ *                           simulation (higher = more inertia, slower to
+ *                           start/stop). Default 1.
+ *
+ * stiffness and mass work together: high stiffness + low mass = quick
+ * snappy bounce; low stiffness + high mass = slow heavy oscillation.
+ * Experiment with different values to find the right feel.
+ *
+ * TRANSITION SCOPE: The transition prop on a motion component controls
+ * ALL animations on that element -- animate, exit, whileHover, whileTap,
+ * etc. You do not need separate transition configurations for each.
+ *
+ * ============================================================================
  */
 
 import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import NewChallenge from './NewChallenge.jsx';
 
@@ -72,9 +117,18 @@ export default function Header() {
 
       <header id="main-header">
         <h1>Your Challenges</h1>
-        <button onClick={handleStartAddNewChallenge} className="button">
+        {/* LESSON 528: <button> replaced with <motion.button> to enable
+            gesture animations. whileHover scales the button up by 10% while
+            the mouse is over it (and reverses on mouse leave). The spring
+            transition with high stiffness produces a snappy bounce effect. */}
+        <motion.button
+          onClick={handleStartAddNewChallenge}
+          className="button"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: 'spring', stiffness: 500 }}
+        >
           Add Challenge
-        </button>
+        </motion.button>
       </header>
     </>
   );
