@@ -1,7 +1,10 @@
 /**
  * ============================================================================
- * src/components/ChallengeItem.jsx - LESSONS 519 & 520
+ * src/components/ChallengeItem.jsx - LESSONS 519, 520 & 521
  * ============================================================================
+ *
+ * LESSON 519 & 520: Project overview -- individual challenge card component
+ * LESSON 521: CSS Transitions for animating the details toggle icon
  *
  * An individual challenge card. Each item shows the challenge image, title,
  * deadline, and action buttons to mark it as failed or completed. There is
@@ -13,10 +16,69 @@
  * instant -- the item disappears from the current list and appears in
  * the other tab with no visual feedback.
  *
- * ANIMATION OPPORTUNITIES:
- *   - Exit animation when the item leaves the current tab's list
- *   - Enter animation when it appears in the new tab
- *   - The details section expanding/collapsing smoothly
+ * ============================================================================
+ * 🎓 LESSON 521: CSS TRANSITIONS -- ANIMATING THE DETAILS ARROW ICON
+ * ============================================================================
+ *
+ * STARTING WITH CSS BEFORE REACHING FOR A LIBRARY
+ *
+ * Before diving into Framer Motion, this lesson demonstrates that CSS
+ * alone has powerful built-in animation features that may be sufficient
+ * for many use cases. You do not always need an animation library.
+ *
+ * THE PROBLEM:
+ *
+ * The "View Details" button has a small arrow icon (▲) next to it. When
+ * the details are expanded, the arrow should point downward (rotated
+ * 180 degrees). When collapsed, it should point upward. The CSS already
+ * has a rule for this rotation (see index.css), but it only activates
+ * when the parent div has the class "expanded" alongside
+ * "challenge-item-details". Without that class, the rotation never
+ * happens.
+ *
+ * THE FIX (two parts):
+ *
+ * 1. DYNAMIC CLASS IN JSX (this file):
+ *    The challenge-item-details div now gets the "expanded" class
+ *    conditionally, based on the isExpanded prop. We use a template
+ *    literal to build the className string dynamically:
+ *
+ *      className={`challenge-item-details${isExpanded ? ' expanded' : ''}`}
+ *
+ *    This is a common React pattern for conditionally appending CSS
+ *    classes. When isExpanded is true, the div gets both classes:
+ *    "challenge-item-details expanded". When false, just
+ *    "challenge-item-details".
+ *
+ * 2. CSS TRANSITION (in index.css):
+ *    Adding the class alone makes the rotation happen, but it would be
+ *    instantaneous -- the arrow would just jump to its new position.
+ *    To animate it smoothly, we add a CSS `transition` property to the
+ *    base icon rule in index.css. This tells the browser to animate
+ *    changes to the `transform` property over a duration (0.3s) with
+ *    an easing function (ease-out).
+ *
+ * CSS TRANSITIONS IN BRIEF:
+ *
+ * The `transition` CSS property tells the browser: "whenever this
+ * property changes, don't apply the change instantly -- instead,
+ * animate from the old value to the new value." The syntax is:
+ *
+ *   transition: <property> <duration> <easing>;
+ *
+ * For example:
+ *   transition: transform 0.3s ease-out;
+ *
+ * - property:  which CSS property to animate (e.g., transform, opacity,
+ *              background-color, or "all" for everything)
+ * - duration:  how long the animation takes (e.g., 0.3s or 300ms)
+ * - easing:    the acceleration curve (ease-out starts fast and slows
+ *              down; ease-in starts slow and speeds up; linear is
+ *              constant speed)
+ *
+ * The transition must be placed on the BASE rule (the one that's always
+ * active), not on the conditional rule. The browser watches for changes
+ * to the specified property and animates them whenever they occur.
  *
  * ============================================================================
  */
@@ -65,7 +127,11 @@ export default function ChallengeItem({
             </p>
           </div>
         </header>
-        <div className="challenge-item-details">
+        {/* LESSON 521: Dynamically add the "expanded" class when details
+            are visible. This activates the CSS rule that rotates the arrow
+            icon 180 degrees. Combined with the CSS transition on the icon,
+            the rotation is smoothly animated instead of instant. */}
+        <div className={`challenge-item-details${isExpanded ? ' expanded' : ''}`}>
           <p>
             <button onClick={onViewDetails}>
               View Details{' '}

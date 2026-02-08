@@ -276,12 +276,33 @@ main {
   padding: 0;
 }
 
+/*
+ * LESSON 521: CSS TRANSITIONS
+ *
+ * The `transition` property below tells the browser to animate any change
+ * to the `transform` property on this icon element. When the parent div
+ * gains the "expanded" class (toggled dynamically in ChallengeItem.jsx),
+ * the next rule applies `transform: rotate(180deg)`. Instead of the
+ * rotation happening instantly, the browser smoothly animates it over
+ * 0.3 seconds with an ease-out curve (fast start, gentle deceleration).
+ *
+ * The transition is placed on the BASE rule (always active), not on the
+ * conditional .expanded rule. This ensures the animation plays in BOTH
+ * directions: when expanding (0 → 180deg) AND when collapsing
+ * (180deg → 0). If it were only on the .expanded rule, the reverse
+ * animation would not play because the transition would no longer apply
+ * once the expanded class is removed.
+ */
 .challenge-item-details-icon {
   display: inline-block;
   font-size: 0.85rem;
   margin-left: 0.25rem;
+  transition: transform 0.3s ease-out;
 }
 
+/* This rule activates when the parent div has BOTH "challenge-item-details"
+   and "expanded" classes. It rotates the arrow icon 180 degrees (pointing
+   downward). The transition defined above animates this rotation smoothly. */
 .challenge-item-details.expanded .challenge-item-details-icon {
   transform: rotate(180deg);
 }
