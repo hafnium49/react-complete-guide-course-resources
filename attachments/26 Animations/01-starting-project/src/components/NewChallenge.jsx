@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/NewChallenge.jsx - LESSONS 530, 531 & 532
+ * src/components/NewChallenge.jsx - LESSONS 530, 531, 532 & 533
  * ============================================================================
  *
  * The form for creating a new challenge. It is rendered as a child of the
@@ -145,10 +145,71 @@
  * duration by default.
  *
  * ============================================================================
+ * 🎓 LESSON 533: IMPERATIVE ANIMATIONS WITH useAnimate
+ * ============================================================================
+ *
+ * DECLARATIVE vs IMPERATIVE ANIMATIONS:
+ *
+ * Everything we've done so far has been DECLARATIVE: we define animation
+ * states via props (animate, initial, exit, whileHover, variants) and
+ * Framer Motion decides when to play them based on component state,
+ * mounting/unmounting, or user gestures.
+ *
+ * But sometimes you need to trigger an animation from CODE -- for
+ * example, shaking input fields when form validation fails. There is
+ * no prop change or mount event to hook into; you want to say "play
+ * this animation NOW" in response to a specific condition in your logic.
+ *
+ * THE useAnimate HOOK:
+ *
+ * Framer Motion provides the useAnimate hook for imperative animations.
+ * It returns an array with two elements:
+ *
+ *   const [scope, animate] = useAnimate();
+ *
+ *   scope   → a ref that should be attached to a container element
+ *             (e.g., a form). This SCOPES the CSS selectors used in
+ *             the animate function, so they only match elements INSIDE
+ *             the scoped container -- not anywhere else on the page.
+ *
+ *   animate → a function you call to trigger animations imperatively.
+ *
+ * THE animate() FUNCTION -- THREE ARGUMENTS:
+ *
+ *   animate(selector, animationObject, transitionObject)
+ *
+ *   1. selector (string):  A CSS selector targeting which elements to
+ *      animate within the scope. E.g., 'input, textarea' selects all
+ *      input and textarea elements inside the scoped container. You
+ *      can use any valid CSS selector: tag names, class names, IDs, etc.
+ *
+ *   2. animationObject:  Same format as the animate prop or variant
+ *      values -- an object describing what to animate. Supports
+ *      keyframe arrays: { x: [-10, 0, 10, 0] } shakes elements left
+ *      and right by alternating x position through four keyframes.
+ *
+ *   3. transitionObject (optional):  Same format as the transition
+ *      prop -- controls how the animation plays (type, duration, etc.).
+ *
+ * THE stagger() FUNCTION:
+ *
+ * For imperative animations, you cannot use staggerChildren (that only
+ * works with variants on parent motion components). Instead, Framer
+ * Motion provides a `stagger` function that you pass as the `delay`
+ * value in the transition object:
+ *
+ *   { type: 'spring', duration: 0.2, delay: stagger(0.05) }
+ *
+ * This adds an incremental delay between each targeted element's
+ * animation start, just like staggerChildren does for declarative
+ * variant animations. With stagger(0.05), the first input shakes
+ * immediately, the second after 50ms, the third after 100ms, etc.
+ *
+ * ============================================================================
  */
 
 import { useContext, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useAnimate, stagger } from 'framer-motion';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';
 import Modal from './Modal.jsx';
@@ -158,6 +219,11 @@ export default function NewChallenge({ onDone }) {
   const title = useRef();
   const description = useRef();
   const deadline = useRef();
+
+  // LESSON 533: useAnimate returns a scope ref and an animate function.
+  // The scope ref is attached to the form below to limit CSS selectors
+  // to only match elements within this form.
+  const [scope, animate] = useAnimate();
 
   const [selectedImage, setSelectedImage] = useState(null);
   const { addChallenge } = useContext(ChallengesContext);
@@ -181,6 +247,15 @@ export default function NewChallenge({ onDone }) {
       !challenge.deadline.trim() ||
       !challenge.image
     ) {
+      // LESSON 533: Imperatively trigger a shake animation on all input
+      // and textarea elements within the scoped form. The keyframe array
+      // moves each element left → center → right → center along the x axis.
+      // stagger(0.05) adds a 50ms delay between each element's shake start.
+      animate(
+        'input, textarea',
+        { x: [-10, 0, 10, 0] },
+        { type: 'spring', duration: 0.2, delay: stagger(0.05) }
+      );
       return;
     }
 
@@ -190,7 +265,10 @@ export default function NewChallenge({ onDone }) {
 
   return (
     <Modal title="New Challenge" onClose={onDone}>
-      <form id="new-challenge" onSubmit={handleSubmit}>
+      {/* LESSON 533: ref={scope} scopes the imperative animate() calls
+          to only select elements within this form, preventing selectors
+          like 'input, textarea' from matching elements elsewhere on the page. */}
+      <form id="new-challenge" onSubmit={handleSubmit} ref={scope}>
         <p>
           <label htmlFor="title">Title</label>
           <input ref={title} type="text" name="title" id="title" />
