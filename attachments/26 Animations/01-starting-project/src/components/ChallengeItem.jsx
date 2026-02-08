@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * src/components/ChallengeItem.jsx - LESSONS 519, 520 & 521
+ * src/components/ChallengeItem.jsx - LESSONS 519, 520, 521 & 525
  * ============================================================================
  *
  * LESSON 519 & 520: Project overview -- individual challenge card component
  * LESSON 521: CSS Transitions for animating the details toggle icon
+ * LESSON 525: Replacing CSS transition with Framer Motion
  *
  * An individual challenge card. Each item shows the challenge image, title,
  * deadline, and action buttons to mark it as failed or completed. There is
@@ -17,73 +18,62 @@
  * the other tab with no visual feedback.
  *
  * ============================================================================
- * 🎓 LESSON 521: CSS TRANSITIONS -- ANIMATING THE DETAILS ARROW ICON
+ * 🎓 LESSON 521: CSS TRANSITIONS (now superseded by Lesson 525)
  * ============================================================================
  *
- * STARTING WITH CSS BEFORE REACHING FOR A LIBRARY
+ * Originally, the arrow icon rotation was animated using two CSS features:
+ *   1. A dynamic "expanded" class on the parent div in JSX
+ *   2. A CSS `transition: transform 0.3s ease-out` on the icon in index.css
  *
- * Before diving into Framer Motion, this lesson demonstrates that CSS
- * alone has powerful built-in animation features that may be sufficient
- * for many use cases. You do not always need an animation library.
+ * This approach worked but produced a simple ease-out animation -- the
+ * icon rotated smoothly but without any physical character. The motion
+ * felt mechanical: constant deceleration, no overshoot, no springiness.
  *
- * THE PROBLEM:
+ * ============================================================================
+ * 🎓 LESSON 525: REPLACING CSS TRANSITION WITH FRAMER MOTION
+ * ============================================================================
  *
- * The "View Details" button has a small arrow icon (▲) next to it. When
- * the details are expanded, the arrow should point downward (rotated
- * 180 degrees). When collapsed, it should point upward. The CSS already
- * has a rule for this rotation (see index.css), but it only activates
- * when the parent div has the class "expanded" alongside
- * "challenge-item-details". Without that class, the rotation never
- * happens.
+ * WHY SWITCH FROM CSS TO FRAMER MOTION FOR THIS ANIMATION?
  *
- * THE FIX (two parts):
+ * The CSS transition (Lesson 521) animated the icon rotation correctly,
+ * but the result felt flat. Framer Motion's default spring-based physics
+ * produce a subtle overshoot and settle that makes the rotation feel
+ * like a physical object with mass -- more natural and satisfying.
  *
- * 1. DYNAMIC CLASS IN JSX (this file):
- *    The challenge-item-details div now gets the "expanded" class
- *    conditionally, based on the isExpanded prop. We use a template
- *    literal to build the className string dynamically:
+ * WHAT CHANGED:
  *
- *      className={`challenge-item-details${isExpanded ? ' expanded' : ''}`}
+ * 1. REMOVED the dynamic "expanded" class from the parent div.
+ *    Previously: className={`challenge-item-details${isExpanded ? ' expanded' : ''}`}
+ *    Now:        className="challenge-item-details" (static, no toggling needed)
  *
- *    This is a common React pattern for conditionally appending CSS
- *    classes. When isExpanded is true, the div gets both classes:
- *    "challenge-item-details expanded". When false, just
- *    "challenge-item-details".
+ * 2. REMOVED the CSS transition and the .expanded rotation rule from
+ *    index.css. Those are no longer needed since the animation is now
+ *    handled entirely in JSX via Framer Motion.
  *
- * 2. CSS TRANSITION (in index.css):
- *    Adding the class alone makes the rotation happen, but it would be
- *    instantaneous -- the arrow would just jump to its new position.
- *    To animate it smoothly, we add a CSS `transition` property to the
- *    base icon rule in index.css. This tells the browser to animate
- *    changes to the `transform` property over a duration (0.3s) with
- *    an easing function (ease-out).
+ * 3. REPLACED the <span> icon element with <motion.span>.
+ *    This is a Framer Motion component that renders a normal <span>
+ *    but accepts animation props like `animate`.
  *
- * CSS TRANSITIONS IN BRIEF:
+ * 4. ADDED the `animate` prop to the <motion.span> with a conditional
+ *    rotate value driven by the isExpanded prop:
  *
- * The `transition` CSS property tells the browser: "whenever this
- * property changes, don't apply the change instantly -- instead,
- * animate from the old value to the new value." The syntax is:
+ *      animate={{ rotate: isExpanded ? 180 : 0 }}
  *
- *   transition: <property> <duration> <easing>;
+ *    When isExpanded is true, Framer Motion smoothly animates the icon
+ *    from its current rotation to 180 degrees. When false, it animates
+ *    back to 0. The default spring transition provides the natural,
+ *    bouncy feel automatically -- no transition configuration needed.
  *
- * For example:
- *   transition: transform 0.3s ease-out;
- *
- * - property:  which CSS property to animate (e.g., transform, opacity,
- *              background-color, or "all" for everything)
- * - duration:  how long the animation takes (e.g., 0.3s or 300ms)
- * - easing:    the acceleration curve (ease-out starts fast and slows
- *              down; ease-in starts slow and speeds up; linear is
- *              constant speed)
- *
- * The transition must be placed on the BASE rule (the one that's always
- * active), not on the conditional rule. The browser watches for changes
- * to the specified property and animates them whenever they occur.
+ * KEY INSIGHT: The animation is now entirely declarative in JSX. There
+ * is no CSS class toggling, no CSS transition property, and no separate
+ * CSS rule for the rotated state. Framer Motion handles the "how" of
+ * the animation; the component just declares the target state.
  *
  * ============================================================================
  */
 
 import { useContext } from 'react';
+import { motion } from 'framer-motion';
 
 import { ChallengesContext } from '../store/challenges-context.jsx';
 
@@ -127,15 +117,24 @@ export default function ChallengeItem({
             </p>
           </div>
         </header>
-        {/* LESSON 521: Dynamically add the "expanded" class when details
-            are visible. This activates the CSS rule that rotates the arrow
-            icon 180 degrees. Combined with the CSS transition on the icon,
-            the rotation is smoothly animated instead of instant. */}
-        <div className={`challenge-item-details${isExpanded ? ' expanded' : ''}`}>
+        {/* LESSON 525: The dynamic "expanded" class is no longer needed.
+            The rotation is now handled by Framer Motion on the icon itself,
+            so the parent div goes back to a plain static className. */}
+        <div className="challenge-item-details">
           <p>
             <button onClick={onViewDetails}>
               View Details{' '}
-              <span className="challenge-item-details-icon">&#9650;</span>
+              {/* LESSON 525: <span> replaced with <motion.span> to enable
+                  Framer Motion animation. The animate prop sets the target
+                  rotation based on isExpanded: 180 degrees when open, 0 when
+                  closed. Framer Motion's default spring transition gives
+                  the rotation a natural, slightly bouncy feel. */}
+              <motion.span
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                className="challenge-item-details-icon"
+              >
+                &#9650;
+              </motion.span>
             </button>
           </p>
 

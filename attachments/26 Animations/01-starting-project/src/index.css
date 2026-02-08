@@ -277,34 +277,31 @@ main {
 }
 
 /*
- * LESSON 521: CSS TRANSITIONS
+ * LESSONS 521 → 525: CSS TRANSITION REPLACED BY FRAMER MOTION
  *
- * The `transition` property below tells the browser to animate any change
- * to the `transform` property on this icon element. When the parent div
- * gains the "expanded" class (toggled dynamically in ChallengeItem.jsx),
- * the next rule applies `transform: rotate(180deg)`. Instead of the
- * rotation happening instantly, the browser smoothly animates it over
- * 0.3 seconds with an ease-out curve (fast start, gentle deceleration).
+ * In Lesson 521, we animated this icon using a CSS transition on the
+ * `transform` property, combined with a dynamic "expanded" class that
+ * applied `transform: rotate(180deg)`. That worked, but the animation
+ * felt mechanical -- a simple ease-out curve with no overshoot.
  *
- * The transition is placed on the BASE rule (always active), not on the
- * conditional .expanded rule. This ensures the animation plays in BOTH
- * directions: when expanding (0 → 180deg) AND when collapsing
- * (180deg → 0). If it were only on the .expanded rule, the reverse
- * animation would not play because the transition would no longer apply
- * once the expanded class is removed.
+ * In Lesson 525, we replaced that CSS approach with Framer Motion's
+ * `animate` prop directly on the <motion.span> element in
+ * ChallengeItem.jsx. This gives us spring-based physics by default,
+ * producing a subtle bounce/overshoot that feels more natural.
+ *
+ * WHAT WAS REMOVED:
+ *   - The `transition: transform 0.3s ease-out;` property below
+ *   - The `.challenge-item-details.expanded .challenge-item-details-icon`
+ *     rule (which applied transform: rotate(180deg))
+ *   - The dynamic "expanded" class in ChallengeItem.jsx
+ *
+ * The rotation is now handled entirely by Framer Motion in JSX:
+ *   <motion.span animate={{ rotate: isExpanded ? 180 : 0 }}>
  */
 .challenge-item-details-icon {
   display: inline-block;
   font-size: 0.85rem;
   margin-left: 0.25rem;
-  transition: transform 0.3s ease-out;
-}
-
-/* This rule activates when the parent div has BOTH "challenge-item-details"
-   and "expanded" classes. It rotates the arrow icon 180 degrees (pointing
-   downward). The transition defined above animates this rotation smoothly. */
-.challenge-item-details.expanded .challenge-item-details-icon {
-  transform: rotate(180deg);
 }
 
 .challenge-item-description {
@@ -329,74 +326,36 @@ main {
 
 /*
  * ============================================================================
- * LESSON 522: CSS ANIMATIONS (@keyframes) FOR THE MODAL
+ * LESSONS 522 → 526: CSS ANIMATION REPLACED BY FRAMER MOTION
  * ============================================================================
  *
- * CSS TRANSITIONS vs CSS ANIMATIONS -- WHEN EACH IS APPROPRIATE
+ * In Lesson 522, the modal's entry animation was built with CSS @keyframes:
+ *   - A @keyframes rule called "slide-up-fade-in" defined a two-step
+ *     animation from { translateY(30px), opacity: 0 } to { translateY(0),
+ *     opacity: 1 }.
+ *   - The .modal rule applied it via: animation: slide-up-fade-in 0.3s
+ *     ease-out forwards;
  *
- * In Lesson 521, we used a CSS transition to animate the arrow icon. That
- * worked because the icon element was ALREADY in the DOM -- we just toggled
- * a class to change its transform value, and the transition animated between
- * the old and new values.
+ * This CSS animation played whenever the modal element appeared in the DOM,
+ * creating a slide-up + fade-in effect. However, CSS animations have a
+ * critical limitation: they only handle ENTRY animations. When the modal
+ * is removed from the DOM (by React's conditional rendering), CSS has no
+ * way to play an EXIT animation before removal.
  *
- * The modal is different. It is NOT always in the DOM. In Header.jsx, the
- * <NewChallenge> component (which renders the Modal) is conditionally
- * rendered with {isCreatingNewChallenge && <NewChallenge />}. When the
- * modal is closed, the element is completely removed from the DOM. When
- * opened, it is freshly added to the DOM.
+ * In Lesson 526, we replaced this CSS approach with Framer Motion's
+ * `initial` and `animate` props on a <motion.dialog> in Modal.jsx.
+ * This achieves the same entry animation with spring physics, and
+ * sets the stage for adding exit animations in a future lesson.
  *
- * A CSS transition cannot animate an element that didn't exist a moment
- * ago -- there is no "old value" to transition FROM. The element simply
- * appears with whatever CSS properties it has, with no animation.
+ * WHAT WAS REMOVED:
+ *   - The @keyframes slide-up-fade-in rule (entire keyframe definition)
+ *   - The `animation` property from the .modal CSS rule
  *
- * CSS ANIMATIONS solve this problem. Using @keyframes, you define a
- * named sequence of states (from/to or 0%/100%) that the browser plays
- * automatically whenever the element appears in the DOM. This means
- * the animation plays even when the element is freshly added.
- *
- * @KEYFRAMES SYNTAX:
- *
- *   @keyframes <animation-name> {
- *     0%   { ... initial CSS properties ... }
- *     100% { ... final CSS properties ... }
- *   }
- *
- * You can also use "from" and "to" instead of 0% and 100%, and you can
- * add any number of intermediate steps (e.g., 50%) for more complex
- * multi-step animations.
- *
- * The `animation` shorthand property attaches the keyframes to an element:
- *
- *   animation: <name> <duration> <easing> <fill-mode>;
- *
- * - name:      references the @keyframes name
- * - duration:  how long the animation takes (e.g., 0.3s)
- * - easing:    acceleration curve (ease-out, ease-in, linear, etc.)
- * - forwards:  a fill-mode keyword that tells the browser to keep the
- *              FINAL state of the animation after it finishes. Without
- *              this, the element would snap back to its pre-animation
- *              state once the duration is over.
+ * The entry animation is now handled entirely by Framer Motion in JSX.
  *
  * ============================================================================
  */
 
-/* Define the animation: start pushed down and invisible, end at normal
-   position and fully visible. This creates a "slide up + fade in" effect. */
-@keyframes slide-up-fade-in {
-  0% {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* The `animation` property triggers slide-up-fade-in automatically whenever
-   this .modal element is added to the DOM (i.e., when the user clicks
-   "Add Challenge"). The `forwards` keyword ensures the modal stays at
-   opacity: 1 and translateY(0) after the animation completes. */
 .modal {
   top: 10%;
   border-radius: 6px;
@@ -404,7 +363,6 @@ main {
   width: 30rem;
   max-width: 90%;
   z-index: 10;
-  animation: slide-up-fade-in 0.3s ease-out forwards;
 }
 
 .modal h2 {
