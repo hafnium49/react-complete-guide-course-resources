@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/ChallengeItem.jsx - LESSONS 519, 520, 521 & 525
+ * src/components/ChallengeItem.jsx - LESSONS 519, 520, 521, 525, 534 & 535
  * ============================================================================
  *
  * LESSON 519 & 520: Project overview -- individual challenge card component
@@ -70,6 +70,74 @@
  * the animation; the component just declares the target state.
  *
  * ============================================================================
+ * 🎓 LESSON 534: LAYOUT ANIMATIONS -- SMOOTH LIST REORDERING
+ * ============================================================================
+ *
+ * THE PROBLEM:
+ *
+ * When a challenge is marked as "failed" or "completed", it is removed
+ * from the active list. Any remaining items below it instantly snap
+ * upward to fill the gap -- no animation, just an abrupt jump. This
+ * feels jarring, especially in a list with multiple items.
+ *
+ * THE SOLUTION: THE `layout` PROP
+ *
+ * Framer Motion provides a `layout` prop that can be added to any
+ * motion component. When present, Framer Motion automatically detects
+ * changes to the element's position or size in the DOM layout, and
+ * smoothly ANIMATES the transition from the old position/size to the
+ * new one.
+ *
+ * How it works under the hood:
+ *   1. Before a React re-render, Framer Motion records the current
+ *      position and dimensions of every motion component with `layout`
+ *   2. After the re-render, it records the new positions/dimensions
+ *   3. If any element moved or resized, it animates from old → new
+ *
+ * This is powerful because it works automatically -- you don't need to
+ * calculate positions or define animate/initial values. Just add
+ * `layout` and Framer Motion handles the rest.
+ *
+ * USE CASE HERE:
+ *
+ * The <li> element wrapping each challenge card is converted to
+ * <motion.li layout>. When an item above is removed from the list,
+ * the remaining items shift upward. Framer Motion detects this layout
+ * change and smoothly animates the remaining items to their new
+ * positions instead of letting them snap instantly.
+ *
+ * NOTE: The layout prop only animates items that REMAIN in the DOM
+ * and change position. The removed item itself still disappears
+ * instantly (unless exit animations are also configured with
+ * AnimatePresence). The layout animation specifically targets the
+ * surviving siblings that need to reflow.
+ *
+ * ============================================================================
+ * 🎓 LESSON 535: EXIT ANIMATION FOR INDIVIDUAL CHALLENGE ITEMS
+ * ============================================================================
+ *
+ * With the layout prop (Lesson 534), remaining items animate smoothly
+ * to their new positions when a sibling is removed. But the removed
+ * item itself still vanished instantly -- no visual indication of it
+ * leaving.
+ *
+ * Adding an `exit` prop to the motion.li defines what animation plays
+ * when this element is removed from the DOM. Here, the item slides
+ * upward 30px and fades out:
+ *
+ *   exit={{ y: -30, opacity: 0 }}
+ *
+ * This exit animation is triggered by the AnimatePresence component
+ * that wraps the list of ChallengeItem components in Challenges.jsx.
+ * AnimatePresence detects when a child (identified by its key) is no
+ * longer in the rendered output, intercepts the removal, plays the
+ * exit animation, and only then removes the element from the DOM.
+ *
+ * The layout prop and exit prop work together: when an item exits,
+ * it slides up and fades out via the exit animation, while the
+ * remaining items smoothly shift to fill the gap via layout animation.
+ *
+ * ============================================================================
  */
 
 import { useContext } from 'react';
@@ -102,7 +170,13 @@ export default function ChallengeItem({
   }
 
   return (
-    <li>
+    // LESSON 534: <li> → <motion.li> with the layout prop. This tells
+    // Framer Motion to animate this element's position whenever the DOM
+    // layout changes (e.g., when a sibling item is removed from the list).
+    // LESSON 535: exit prop added so the item slides up and fades out when
+    // removed, instead of vanishing instantly. Requires AnimatePresence
+    // in the parent (Challenges.jsx) to intercept DOM removal.
+    <motion.li layout exit={{ y: -30, opacity: 0 }}>
       <article className="challenge-item">
         <header>
           <img {...challenge.image} />
@@ -147,6 +221,6 @@ export default function ChallengeItem({
           )}
         </div>
       </article>
-    </li>
+    </motion.li>
   );
 }
