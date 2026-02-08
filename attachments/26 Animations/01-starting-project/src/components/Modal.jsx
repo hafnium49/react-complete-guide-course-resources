@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Modal.jsx - LESSONS 519, 520 & 526
+ * src/components/Modal.jsx - LESSONS 519, 520, 526 & 527
  * ============================================================================
  *
  * A portal-based modal dialog. It renders a backdrop overlay and a <dialog>
@@ -68,9 +68,53 @@
  *   - The @keyframes slide-up-fade-in rule
  *   - The `animation` property from the .modal CSS rule
  *
- * NEXT STEP: The entry animation is now handled by Framer Motion, but
- * the modal still disappears instantly when closed. A future lesson
- * will add exit animations using AnimatePresence.
+ * ============================================================================
+ * 🎓 LESSON 527: EXIT ANIMATIONS WITH THE `exit` PROP & AnimatePresence
+ * ============================================================================
+ *
+ * THE PATTERN: initial → animate → exit
+ *
+ * Framer Motion motion components accept three complementary props that
+ * define the full animation lifecycle of an element:
+ *
+ *   initial  → the starting state when the element APPEARS in the DOM
+ *   animate  → the target state to animate TO after appearing
+ *   exit     → the target state to animate TO when the element is REMOVED
+ *
+ * The exit prop takes the same kind of configuration object as initial
+ * and animate. You can reuse the same values as initial (to reverse the
+ * entry animation) or define a completely different exit animation.
+ *
+ * WHY `exit` ALONE IS NOT ENOUGH:
+ *
+ * Adding exit={{ opacity: 0, y: 30 }} to the motion.dialog tells Framer
+ * Motion WHAT to animate to on removal -- but it does not prevent React
+ * from instantly removing the element. React's conditional rendering
+ * (e.g., {show && <Component />}) removes elements from the DOM the
+ * moment the condition becomes false, with no delay. There is no built-in
+ * mechanism to say "wait for an animation before removing."
+ *
+ * THE SOLUTION: AnimatePresence
+ *
+ * AnimatePresence is a component provided by Framer Motion that wraps
+ * around conditionally rendered content. It intercepts React's removal
+ * process: when a child element is about to be removed, AnimatePresence
+ * keeps it in the DOM long enough for its exit animation to play, then
+ * removes it after the animation completes.
+ *
+ * AnimatePresence must be used in the PARENT component -- the one that
+ * controls the conditional rendering. In this app, that is Header.jsx,
+ * which renders {isCreatingNewChallenge && <NewChallenge />}. The
+ * AnimatePresence wrapper goes around that conditional expression.
+ *
+ * HOW IT WORKS TOGETHER:
+ *   1. User clicks "Add Challenge" → isCreatingNewChallenge becomes true
+ *   2. NewChallenge (which includes Modal) mounts in the DOM
+ *   3. motion.dialog plays initial → animate (slide up + fade in)
+ *   4. User closes modal → isCreatingNewChallenge becomes false
+ *   5. AnimatePresence intercepts removal, finds exit prop on motion.dialog
+ *   6. motion.dialog plays animate → exit (slide down + fade out)
+ *   7. After exit animation completes, element is actually removed from DOM
  *
  * ============================================================================
  */
@@ -82,17 +126,18 @@ export default function Modal({ title, children, onClose }) {
   return createPortal(
     <>
       <div className="backdrop" onClick={onClose} />
-      {/* LESSON 526: <dialog> replaced with <motion.dialog> to enable
-          Framer Motion animation. The initial prop sets the starting state
-          (invisible, 30px below final position). The animate prop sets the
-          target state (fully visible, normal position). Framer Motion
-          automatically plays a spring animation from initial → animate
-          when this element mounts. */}
+      {/* LESSON 526: <dialog> replaced with <motion.dialog>.
+          initial → animate plays a spring slide-up + fade-in on mount.
+          LESSON 527: exit prop added -- mirrors the initial state so
+          the modal slides back down and fades out when removed. This
+          exit animation only plays if AnimatePresence wraps the
+          conditional rendering in the parent (Header.jsx). */}
       <motion.dialog
         open
         className="modal"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 30 }}
       >
         <h2>{title}</h2>
         {children}
