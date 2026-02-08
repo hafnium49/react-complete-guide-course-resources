@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/NewChallenge.jsx - LESSON 530
+ * src/components/NewChallenge.jsx - LESSONS 530 & 531
  * ============================================================================
  *
  * The form for creating a new challenge. It is rendered as a child of the
@@ -61,6 +61,60 @@
  * -- but since we're already at that state, no animation plays, and
  * there's no delay. The entry animation still works because the
  * variants propagation from the parent is not disrupted.
+ *
+ * ============================================================================
+ * 🎓 LESSON 531: STAGGERING LIST ANIMATIONS WITH staggerChildren
+ * ============================================================================
+ *
+ * THE PROBLEM WITH SIMULTANEOUS LIST ANIMATIONS:
+ *
+ * When multiple list items all animate at once (e.g., all images scaling
+ * up simultaneously), the effect can feel overwhelming or flat. A more
+ * polished approach is to STAGGER the animations: each item starts its
+ * animation slightly after the previous one, creating a cascading wave
+ * effect that feels more intentional and elegant.
+ *
+ * HOW TO STAGGER WITH FRAMER MOTION:
+ *
+ * Staggering is configured on the PARENT element (the list), not on
+ * the individual items. The steps are:
+ *
+ * 1. Convert the parent element to a motion component (e.g., <ul> →
+ *    <motion.ul>). This is needed because the parent must participate
+ *    in the variants system to pass timing information to its children.
+ *
+ * 2. Add a `variants` prop on the parent with a variant (matching the
+ *    parent's active variant name, e.g., "visible") that contains ONLY
+ *    a `transition` property -- no animation values like opacity or
+ *    scale, since we don't want to animate the list container itself.
+ *
+ * 3. Inside that transition, set `staggerChildren` to the desired delay
+ *    (in seconds) between each child's animation start:
+ *
+ *      variants={{
+ *        visible: { transition: { staggerChildren: 0.05 } }
+ *      }}
+ *
+ *    With 0.05, the 1st child starts immediately, the 2nd starts after
+ *    50ms, the 3rd after 100ms, the 4th after 150ms, and so on.
+ *
+ * PER-VARIANT TRANSITION vs GLOBAL TRANSITION PROP:
+ *
+ * You can configure transition settings in two places:
+ *
+ *   - The `transition` PROP on a motion component (e.g.,
+ *     <motion.li transition={{ type: 'spring' }}>) applies to ALL
+ *     animations on that element regardless of which variant or
+ *     animation prop triggers them.
+ *
+ *   - A `transition` PROPERTY inside a variant object applies ONLY
+ *     when that specific variant is active. This lets you use different
+ *     timing for different animation states (e.g., fast entry but slow
+ *     exit, or staggering only on the "visible" variant).
+ *
+ * This per-variant transition is not limited to variants -- you can
+ * also embed transition settings inside inline animate, exit, etc.
+ * objects to control timing for specific animation phases.
  *
  * ============================================================================
  */
@@ -124,7 +178,14 @@ export default function NewChallenge({ onDone }) {
           <input ref={deadline} type="date" name="deadline" id="deadline" />
         </p>
 
-        <ul id="new-challenge-images">
+        {/* LESSON 531: <ul> → <motion.ul> to enable stagger control over
+            its children. The "visible" variant contains only a transition
+            with staggerChildren: 0.05, adding a 50ms delay between each
+            child motion.li's animation start. No opacity/scale is set
+            here because we don't want to animate the list container. */}
+        <motion.ul id="new-challenge-images" variants={{
+          visible: { transition: { staggerChildren: 0.05 } },
+        }}>
           {images.map((image) => (
             /* LESSON 530: <li> → <motion.li> with variants that match the
                parent modal's variant names ("hidden"/"visible"). When the
@@ -147,7 +208,7 @@ export default function NewChallenge({ onDone }) {
               <img {...image} />
             </motion.li>
           ))}
-        </ul>
+        </motion.ul>
 
         <p className="new-challenge-actions">
           <button type="button" onClick={onDone}>
