@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Challenges.jsx - LESSONS 519, 520 & 535
+ * src/components/Challenges.jsx - LESSONS 519, 520, 535 & 537
  * ============================================================================
  *
  * The main challenge list component. It reads all challenges from context,
@@ -70,6 +70,21 @@
  * can animate out if items are added back.
  *
  * ============================================================================
+ * 🎓 LESSON 537: ENTRY ANIMATION FOR THE CHALLENGE LIST
+ * ============================================================================
+ *
+ * When switching from a tab with no items (showing the fallback message)
+ * to a tab that has items, the list just pops in abruptly with no
+ * animation. This is because the motion.ol only had an exit prop -- it
+ * knew how to animate OUT, but had no entry animation defined.
+ *
+ * The fix is to add initial and animate props to the motion.ol, using
+ * the same values as the fallback paragraph. This gives the list a
+ * matching fade-in + slide-up animation when it appears, creating a
+ * symmetrical transition: the fallback slides out, then the list slides
+ * in using the same motion pattern.
+ *
+ * ============================================================================
  */
 
 import { useContext, useState } from 'react';
@@ -125,9 +140,14 @@ export default function Challenges() {
           {displayedChallenges.length > 0 ? (
             // LESSON 535: <ol> → <motion.ol> with exit animation. The key="list"
             // lets AnimatePresence distinguish this element from the fallback.
+            // LESSON 537: initial and animate added so the list fades in and
+            // slides up when appearing (e.g., switching from an empty tab to
+            // a tab with items), matching the fallback paragraph's animation.
             <motion.ol
               key="list"
               className="challenge-items"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ y: -30, opacity: 0 }}
             >
               {/* LESSON 535: Inner AnimatePresence wraps the individual items.
