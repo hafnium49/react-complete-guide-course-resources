@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/ChallengeTabs.jsx - LESSON 537
+ * src/components/ChallengeTabs.jsx - LESSONS 537 & 538
  * ============================================================================
  *
  * The tab bar component for switching between Active, Completed, and Failed
@@ -55,6 +55,32 @@
  * between tabs automatically.
  *
  * ============================================================================
+ * 🎓 LESSON 538: RE-TRIGGERING BADGE ANIMATIONS WITH React's key PROP
+ * ============================================================================
+ *
+ * The Badge component (Badge.jsx) has a scale keyframe animation that
+ * plays on mount. But when a challenge moves between tabs, the badge
+ * count updates yet the animation does NOT replay -- React reuses the
+ * existing Badge instance and simply updates its props.
+ *
+ * To force the animation to replay, we leverage React's `key` prop.
+ * Normally associated with list rendering, `key` has a second purpose:
+ * when the key value changes, React unmounts the old component and
+ * mounts a completely new instance. This triggers all mount-time
+ * behavior, including Framer Motion entry animations.
+ *
+ * By setting key={badgeCaption} on each Badge, the key changes
+ * whenever the item count changes (e.g., from 3 to 2). React
+ * destroys the old Badge and creates a fresh one, which runs the
+ * scale [1, 1.2, 1] keyframe animation -- producing a visible "bump"
+ * that draws the user's eye to the updated count.
+ *
+ * This is a general React pattern for resetting components. Any time
+ * you need a component to re-initialize (reset state, replay effects,
+ * replay animations), you can assign a key that changes when you want
+ * the reset to occur.
+ *
+ * ============================================================================
  */
 
 import { motion } from 'framer-motion';
@@ -69,7 +95,10 @@ function Tab({ isSelected, onSelect, badgeCaption, children }) {
         onClick={onSelect}
       >
         {children}
-        <Badge caption={badgeCaption}></Badge>
+        {/* LESSON 538: key={badgeCaption} forces React to destroy and
+            recreate the Badge whenever the count changes, which replays
+            the mount-time scale animation (the "bump" effect). */}
+        <Badge key={badgeCaption} caption={badgeCaption}></Badge>
       </button>
       {/* LESSON 537: <div> → <motion.div> with layoutId="tab-indicator".
           All three tabs render this element conditionally, but they share
