@@ -289,7 +289,12 @@ export default function NewChallenge({ onDone, isOpen }) {
             with staggerChildren: 0.05, adding a 50ms delay between each
             child motion.li's animation start. No opacity/scale is set
             here because we don't want to animate the list container. */}
+        {/* BUGFIX: "hidden" variant added so the motion.ul has a matching
+            variant when the parent dialog propagates exit="hidden". Without
+            it, the missing variant could prevent the exit animation from
+            completing, leaving the modal stuck in the DOM. */}
         <motion.ul id="new-challenge-images" variants={{
+          hidden: {},
           visible: { transition: { staggerChildren: 0.05 } },
         }}>
           {images.map((image) => (

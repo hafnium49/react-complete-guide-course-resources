@@ -179,27 +179,34 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Modal({ title, children, onClose, open }) {
-  // BUGFIX: AnimatePresence is placed INSIDE the portal so it is at the
-  // same DOM level as the animated elements. The `open` prop drives the
-  // conditional rendering, replacing the parent-level conditional that
-  // previously failed to clean up portalled content reliably.
+  // BUGFIX: Two SEPARATE AnimatePresence wrappers, each with a single
+  // keyed motion component. A fragment inside AnimatePresence can cause
+  // exit tracking to fail (AnimatePresence may not detect when the exit
+  // animations complete, leaving invisible elements in the DOM). Splitting
+  // into two wrappers ensures each AnimatePresence tracks exactly one
+  // child. The backdrop's exit is independent of the dialog's — if the
+  // dialog's variant propagation causes any delay, the backdrop still
+  // gets removed promptly, preventing it from blocking pointer events.
   return createPortal(
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* BUGFIX: Backdrop converted from plain <div> to <motion.div>
-              with its own fade animation, so it participates in the exit
-              lifecycle and is properly removed when the modal closes. */}
+    <>
+      <AnimatePresence>
+        {open && (
           <motion.div
+            key="backdrop"
             className="backdrop"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
-          {/* LESSONS 526-527: <dialog> → <motion.dialog> with entry/exit
-              animations. LESSON 529: Named variants for "hidden"/"visible". */}
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {open && (
+          // LESSONS 526-527: <dialog> → <motion.dialog> with entry/exit
+          // animations. LESSON 529: Named variants for "hidden"/"visible".
           <motion.dialog
+            key="dialog"
             open
             className="modal"
             variants={{
@@ -213,9 +220,9 @@ export default function Modal({ title, children, onClose, open }) {
             <h2>{title}</h2>
             {children}
           </motion.dialog>
-        </>
-      )}
-    </AnimatePresence>,
+        )}
+      </AnimatePresence>
+    </>,
     document.getElementById('modal')
   );
 }
