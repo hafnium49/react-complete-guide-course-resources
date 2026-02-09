@@ -1,7 +1,9 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSON 540 (MODULE INTRODUCTION)
+ * src/App.jsx - LESSONS 540 & 541
  * ============================================================================
+ *
+ * LESSON 541: PROJECT SETUP
  *
  * This is the starting project for Section 27: Patterns & Practices.
  *
@@ -24,6 +26,11 @@
  *
  * All patterns will be applied to a demo project built incrementally
  * across the upcoming lessons, starting from this minimal scaffold.
+ *
+ * The initial folder structure is intentionally bare — just the standard
+ * Vite entry point (main.jsx), global styles (index.css), an empty
+ * components directory, and this App component. The files will be
+ * populated with logic as the section progresses.
  *
  * ============================================================================
  */
