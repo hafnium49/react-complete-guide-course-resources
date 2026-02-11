@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.js - LESSON 552
+ * src/App.js - LESSONS 552 & 554
  * ============================================================================
  *
  * SECTION OVERVIEW: REPLACING REDUX WITH CONTEXT API + HOOKS
@@ -32,6 +32,39 @@
  * connect() calls will be incrementally replaced with Context providers,
  * custom hooks, and React's useReducer — achieving the same global state
  * management without Redux.
+ *
+ * ============================================================================
+ * LESSON 554: PROJECT WALKTHROUGH
+ * ============================================================================
+ *
+ * This lesson walks through the existing Redux-based project to understand
+ * what will be replaced. The app is intentionally simple so the focus stays
+ * on the migration, not the business logic. Key points:
+ *
+ * WHY REDUX IS USED HERE:
+ *
+ *   - The favorite status of products is needed on TWO different pages
+ *     (Products and Favorites). Passing this state through props alone
+ *     would be cumbersome, especially with deeper component trees.
+ *   - Redux provides a global store that any component can read from
+ *     or dispatch to, avoiding manual prop drilling.
+ *
+ * WHY YOU MIGHT REPLACE REDUX:
+ *
+ *   - Stay in the "React-only" world — no extra libraries to learn
+ *   - Smaller bundle size — removing redux + react-redux reduces the
+ *     amount of code shipped to users in production
+ *   - Explore what React's built-in tools (Context, Hooks) can do
+ *
+ * IMPORTANT: There is nothing wrong with keeping Redux. It is a mature,
+ * well-tested solution. Replacing it is optional, not recommended.
+ *
+ * WHAT COMES NEXT:
+ *
+ * Two different React-only approaches will be demonstrated:
+ *   1. One that works well for this use case
+ *   2. One that has limitations for certain scenarios
+ * Both will be shown so you understand which to use and when.
  *
  * ============================================================================
  */
