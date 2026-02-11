@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/SearchableList/SearchableList.jsx - LESSONS 547 & 548
+ * src/components/SearchableList/SearchableList.jsx - LESSONS 547, 548 & 549
  * ============================================================================
  *
  * INTRODUCING THE RENDER PROPS PATTERN — MOTIVATION:
@@ -57,20 +57,49 @@
  * .includes(). This is a simple but universal approach — it works
  * with any data shape without needing to know the object's structure.
  *
- * STILL TEMPORARY — RENDERING:
+ * ============================================================================
+ * LESSON 549: IMPLEMENTING THE RENDER PROPS PATTERN
+ * ============================================================================
  *
- * The items are still rendered with toString() and index keys. The
- * search logic works (filtering is correct), but the output is still
- * not useful for complex objects. The render props pattern in the
- * next lesson will solve this by letting the consumer control
- * how each filtered item is displayed.
+ * CHILDREN AS A FUNCTION:
+ *
+ * The children prop is destructured from props, but instead of being
+ * rendered as static JSX markup, it is CALLED AS A FUNCTION for each
+ * item in the filtered results. This is the heart of render props:
+ *   children(item) → JSX for that specific item
+ *
+ * This works because React can render whatever a function returns, as
+ * long as the return value is valid JSX. The component iterates over
+ * searchResults, and for each item it invokes children(item), which
+ * produces the concrete markup the consumer defined.
+ *
+ * WHY A FUNCTION AND NOT PLAIN MARKUP:
+ *
+ * If children were plain JSX (e.g., <Place />), the same identical
+ * markup would appear for every list item — no way to vary the content
+ * per item. By making children a function that receives the current
+ * item, each invocation can return different JSX tailored to that
+ * item's data. The component controls WHEN and WITH WHAT the function
+ * is called; the consumer controls WHAT it returns.
+ *
+ * THE CONSUMER'S RESPONSIBILITY:
+ *
+ * The consumer passes a function between the opening and closing
+ * <SearchableList> tags. That function receives the item argument
+ * (forwarded by this component) and returns the JSX to render —
+ * for example, a <Place> component for objects, or a plain string
+ * for simple text items. Different consumers can provide completely
+ * different rendering functions for the same SearchableList.
  *
  * ============================================================================
  */
 
 import { useState } from 'react';
 
-export default function SearchableList({ items }) {
+// LESSON 549: children is destructured alongside items because it will be
+// called as a function — not rendered as static markup. This is the
+// "render prop" that the consumer provides to control item rendering.
+export default function SearchableList({ items, children }) {
   // LESSON 548: State to track the current search input value.
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -94,11 +123,12 @@ export default function SearchableList({ items }) {
           a re-render with new filtered results. */}
       <input type="search" placeholder="Search" onChange={handleChange} />
       <ul>
-        {/* LESSON 548: Now mapping over searchResults (filtered) instead
-            of the raw items array. Rendering is still temporary —
-            toString() and index keys will be replaced by render props. */}
+        {/* LESSON 549: For each filtered result, children is invoked as
+            a function with the current item. The consumer's function
+            returns the JSX to display — this component never needs to
+            know the item's shape or how it should look. */}
         {searchResults.map((item, index) => (
-          <li key={index}>{item.toString()}</li>
+          <li key={index}>{children(item)}</li>
         ))}
       </ul>
     </div>

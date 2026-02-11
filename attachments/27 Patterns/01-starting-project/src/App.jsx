@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545, 546 & 547
+ * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545, 546, 547 & 549
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -116,10 +116,32 @@
  * letting the consumer provide a rendering function.
  *
  * ============================================================================
+ * LESSON 549: RENDER PROPS IN ACTION — THE CONSUMER SIDE
+ * ============================================================================
+ *
+ * Each SearchableList now receives a FUNCTION between its opening and
+ * closing tags (i.e., as the children prop). SearchableList calls this
+ * function for every filtered item, passing the item as an argument,
+ * and renders whatever JSX the function returns.
+ *
+ * For PLACES, the function renders a <Place> component — a dedicated
+ * presentational component that displays the place's image, title, and
+ * description. For the string array, the function simply returns the
+ * string itself (which React renders as text).
+ *
+ * This is the render props pattern in its complete form: the logic
+ * component (SearchableList) owns the filtering, and the consumer
+ * (this file) owns the rendering. The same SearchableList works for
+ * any data shape because the consumer tells it how to display each item.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
 import SearchableList from './components/SearchableList/SearchableList.jsx';
+// LESSON 549: Place is a presentational component used inside the render
+// prop function to display each place object with its image and details.
+import Place from './components/Place.jsx';
 import { PLACES } from './places.js';
 
 function App() {
@@ -168,13 +190,23 @@ function App() {
         </Accordion>
       </section>
 
-      {/* LESSON 547: Two SearchableList instances with different data
-          shapes — PLACES (array of objects) and a plain string array.
-          This demonstrates why we need render props: the component
-          handles search logic but can't know how to render each type. */}
+      {/* LESSON 549: Render props in action. Each SearchableList receives
+          a function as children. SearchableList calls this function for
+          every filtered item, passing the item as the argument. The
+          function returns the JSX that should be rendered for that item.
+
+          For PLACES: the function renders a <Place> component, which
+          displays the item's image, title, and description.
+
+          For the string array: the function simply returns the string
+          itself, which React renders as plain text. */}
       <section>
-        <SearchableList items={PLACES} />
-        <SearchableList items={['city', 'beach', 'mountains', 'forest', 'desert']} />
+        <SearchableList items={PLACES}>
+          {(item) => <Place item={item} />}
+        </SearchableList>
+        <SearchableList items={['city', 'beach', 'mountains', 'forest', 'desert']}>
+          {(item) => item}
+        </SearchableList>
       </section>
     </main>
   );
