@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545, 546, 547 & 549
+ * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545, 546, 547, 549 & 550
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -135,6 +135,20 @@
  * any data shape because the consumer tells it how to display each item.
  *
  * ============================================================================
+ * LESSON 550: itemKeyFn — EXTENDING RENDER PROPS FOR KEY GENERATION
+ * ============================================================================
+ *
+ * Each SearchableList now also receives an itemKeyFn prop — a function
+ * that extracts a unique key from each item. This follows the same
+ * philosophy as the children render prop: the component iterates, the
+ * consumer provides the data-specific logic.
+ *
+ * For PLACES, itemKeyFn returns item.id (each place object has a
+ * unique id field). For the string array, itemKeyFn returns the item
+ * itself (each string is already unique). This replaces the fragile
+ * index-based key that was used previously.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
@@ -201,10 +215,14 @@ function App() {
           For the string array: the function simply returns the string
           itself, which React renders as plain text. */}
       <section>
-        <SearchableList items={PLACES}>
+        {/* LESSON 550: itemKeyFn returns item.id for place objects —
+            a stable, data-derived key instead of the array index. */}
+        <SearchableList items={PLACES} itemKeyFn={(item) => item.id}>
           {(item) => <Place item={item} />}
         </SearchableList>
-        <SearchableList items={['city', 'beach', 'mountains', 'forest', 'desert']}>
+        {/* LESSON 550: For plain strings, the string itself serves as
+            a unique key — no id property exists on primitives. */}
+        <SearchableList items={['city', 'beach', 'mountains', 'forest', 'desert']} itemKeyFn={(item) => item}>
           {(item) => item}
         </SearchableList>
       </section>

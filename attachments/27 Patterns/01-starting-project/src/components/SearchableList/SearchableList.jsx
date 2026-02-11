@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/SearchableList/SearchableList.jsx - LESSONS 547, 548 & 549
+ * src/components/SearchableList/SearchableList.jsx - LESSONS 547, 548, 549 & 550
  * ============================================================================
  *
  * INTRODUCING THE RENDER PROPS PATTERN — MOTIVATION:
@@ -92,6 +92,35 @@
  * different rendering functions for the same SearchableList.
  *
  * ============================================================================
+ * LESSON 550: DYNAMIC KEYS VIA A KEY FUNCTION PROP
+ * ============================================================================
+ *
+ * THE INDEX KEY PROBLEM:
+ *
+ * Using the array index as a React key is fragile — it's not tied to
+ * the data itself. If items are reordered, filtered, or removed, the
+ * index no longer reliably identifies the same item across renders.
+ * React may reuse DOM nodes incorrectly, leading to subtle UI bugs.
+ *
+ * WHY item.id WON'T WORK HERE:
+ *
+ * SearchableList is data-shape-agnostic: it works with objects that
+ * have an id property AND with plain strings that have no properties
+ * at all. Hardcoding item.id as the key would break for non-object
+ * items. The component cannot assume any particular data structure.
+ *
+ * THE itemKeyFn PROP — A FUNCTION FOR KEY GENERATION:
+ *
+ * The same pattern used for rendering (children as a function) is
+ * applied here for key generation. An itemKeyFn prop receives a
+ * function from the consumer. SearchableList calls itemKeyFn(item)
+ * for each item to get a unique, stable key. The consumer knows the
+ * data shape, so it can return item.id for objects or the item
+ * itself for strings. This extends the render props philosophy:
+ * the component handles the iteration, the consumer handles the
+ * data-specific logic.
+ *
+ * ============================================================================
  */
 
 import { useState } from 'react';
@@ -99,7 +128,9 @@ import { useState } from 'react';
 // LESSON 549: children is destructured alongside items because it will be
 // called as a function — not rendered as static markup. This is the
 // "render prop" that the consumer provides to control item rendering.
-export default function SearchableList({ items, children }) {
+// LESSON 550: itemKeyFn is another function prop — called with each item to
+// produce a unique, data-derived key. This replaces the fragile index key.
+export default function SearchableList({ items, children, itemKeyFn }) {
   // LESSON 548: State to track the current search input value.
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -127,8 +158,12 @@ export default function SearchableList({ items, children }) {
             a function with the current item. The consumer's function
             returns the JSX to display — this component never needs to
             know the item's shape or how it should look. */}
-        {searchResults.map((item, index) => (
-          <li key={index}>{children(item)}</li>
+        {/* LESSON 550: itemKeyFn(item) replaces the index key. The consumer
+            provides this function, so it can return item.id for objects or
+            the item itself for strings — whatever uniquely identifies each
+            item in the consumer's specific data shape. */}
+        {searchResults.map((item) => (
+          <li key={itemKeyFn(item)}>{children(item)}</li>
         ))}
       </ul>
     </div>
