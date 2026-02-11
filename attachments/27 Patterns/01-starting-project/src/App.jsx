@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542 & 543
+ * src/App.jsx - LESSONS 540, 541, 542, 543 & 544
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -37,7 +37,7 @@
  * ============================================================================
  *
  * This file demonstrates how compound components are USED (consumed).
- * Notice the structure: <Accordion> wraps multiple <AccordionItem>
+ * Notice the structure: <Accordion> wraps multiple <Accordion.Item>
  * children, mirroring the <select>/<option> relationship from HTML.
  *
  * Each AccordionItem receives a title prop for its heading and
@@ -55,10 +55,22 @@
  * at a time) will be added in the next lesson.
  *
  * ============================================================================
+ * LESSON 544: DOT-NOTATION SYNTAX FOR COMPOUND COMPONENTS
+ * ============================================================================
+ *
+ * Instead of importing Accordion and AccordionItem separately, we now
+ * import only Accordion. The AccordionItem component is attached as
+ * Accordion.Item (set up in Accordion.jsx via Accordion.Item = ...).
+ *
+ * Using <Accordion.Item> in JSX makes it visually obvious that Item
+ * is a sub-component designed to live inside <Accordion>. This is a
+ * common convention in component libraries — a single import gives
+ * access to the entire family of related compound components.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
-import AccordionItem from './components/Accordion/AccordionItem.jsx';
 
 function App() {
   return (
@@ -68,13 +80,13 @@ function App() {
 
         {/* LESSON 542: The compound components pattern in action.
             Accordion provides the <ul> shell and will manage shared state.
-            AccordionItem provides individual <li> sections with custom
+            Accordion.Item provides individual <li> sections with custom
             titles and arbitrary body content via children. */}
         <Accordion className="accordion">
           {/* LESSON 543: Each AccordionItem needs a unique id so the
               context can track which one is open. The id is compared
               against openItemId in the shared context. */}
-          <AccordionItem
+          <Accordion.Item
             id="experience"
             className="accordion-item"
             title="We got 20 years of experience"
@@ -86,9 +98,9 @@ function App() {
                 vacation trips for more than 20 years.
               </p>
             </article>
-          </AccordionItem>
+          </Accordion.Item>
 
-          <AccordionItem
+          <Accordion.Item
             id="local-guides"
             className="accordion-item"
             title="We're working with local guides"
@@ -100,7 +112,7 @@ function App() {
                 and pleasant vacation.
               </p>
             </article>
-          </AccordionItem>
+          </Accordion.Item>
         </Accordion>
       </section>
     </main>

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Accordion/Accordion.jsx - LESSONS 542 & 543
+ * src/components/Accordion/Accordion.jsx - LESSONS 542, 543 & 544
  * ============================================================================
  *
  * THE COMPOUND COMPONENTS PATTERN:
@@ -73,9 +73,9 @@
  *    item is open.
  *
  * 4. CONTEXT VALUE CONTAINS BOTH STATE AND ACTIONS: The context object
- *    exposes openItemId (read), openItem (set a specific id), and
- *    closeItem (reset to null). This gives consuming components
- *    everything they need to both display and control the accordion.
+ *    exposes openItemId (read) and toggleItem (toggle by id). This
+ *    gives consuming components everything they need to both display
+ *    and control the accordion.
  *
  * CUSTOM HOOK — useAccordionContext:
  *
@@ -87,9 +87,41 @@
  * catches misuse early and provides a clear message to the developer.
  *
  * ============================================================================
+ * LESSON 544: REFINING STATE LOGIC + DOT-NOTATION COMPOUND IDENTIFIERS
+ * ============================================================================
+ *
+ * MERGING openItem/closeItem INTO toggleItem:
+ *
+ * The previous two-function approach (openItem + closeItem) worked but
+ * was redundant. A single toggleItem function handles both cases:
+ *   - If the clicked item is already open → close it (set null)
+ *   - If a different item (or none) is open → open the clicked one
+ *
+ * The function form of setState is used (prevOpenItemId => ...) because
+ * the new state depends on the previous state. This is a React best
+ * practice: when deriving new state from old state, always use the
+ * updater function form to avoid stale closure issues.
+ *
+ * ATTACHING SUB-COMPONENTS VIA DOT NOTATION:
+ *
+ * In JavaScript, functions are objects — you can add properties to them.
+ * The pattern Accordion.Item = AccordionItem attaches the child component
+ * as a property of the parent component function. This lets consumers
+ * write <Accordion.Item> instead of importing AccordionItem separately.
+ *
+ * Benefits of this pattern:
+ *   - Makes the compound relationship EXPLICIT in the consumer's JSX:
+ *     <Accordion.Item> clearly belongs to <Accordion>
+ *   - Reduces import clutter — one import covers all related components
+ *   - Follows conventions used by popular libraries (e.g., Tabs.Panel,
+ *     Form.Field, Menu.Item)
+ *
+ * ============================================================================
  */
 
 import { createContext, useContext, useState } from 'react';
+
+import AccordionItem from './AccordionItem.jsx';
 
 // LESSON 543: Context created in the same file as Accordion because it's
 // tightly coupled to this component family, not a general app-wide context.
@@ -116,18 +148,17 @@ export default function Accordion({ children, className }) {
   // open at a time, so a single value (not an array) is sufficient.
   const [openItemId, setOpenItemId] = useState(null);
 
-  function openItem(id) {
-    setOpenItemId(id);
+  // LESSON 544: Single toggleItem function replaces the previous separate
+  // openItem/closeItem pair. Uses the updater function form of setState
+  // (prevOpenItemId => ...) because the new value depends on the old one.
+  // If the clicked item is already open, close it (null); otherwise open it.
+  function toggleItem(id) {
+    setOpenItemId((prevOpenItemId) =>
+      prevOpenItemId === id ? null : id
+    );
   }
 
-  function closeItem() {
-    setOpenItemId(null);
-  }
-
-  // LESSON 543: The context value bundles both the current state and
-  // the functions to change it. Every descendant that consumes this
-  // context can read which item is open and trigger open/close actions.
-  const contextValue = { openItemId, openItem, closeItem };
+  const contextValue = { openItemId, toggleItem };
 
   return (
     // LESSON 543: Accordion acts as both the UI wrapper (<ul>) and the
@@ -138,3 +169,9 @@ export default function Accordion({ children, className }) {
     </AccordionContext.Provider>
   );
 }
+
+// LESSON 544: Attach AccordionItem as a property on the Accordion function
+// object. In JavaScript, functions are objects, so we can add properties to
+// them. This enables the <Accordion.Item> syntax in consumer code, making the
+// compound relationship explicit without requiring a separate import.
+Accordion.Item = AccordionItem;

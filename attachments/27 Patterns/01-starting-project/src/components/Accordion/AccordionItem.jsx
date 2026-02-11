@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Accordion/AccordionItem.jsx - LESSONS 542 & 543
+ * src/components/Accordion/AccordionItem.jsx - LESSONS 542, 543 & 544
  * ============================================================================
  *
  * A COMPOUND COMPONENT PARTNER TO <Accordion>:
@@ -33,8 +33,7 @@
  * state managed by the parent Accordion. From the context it reads:
  *
  *   - openItemId: the id of the currently open item (or null)
- *   - openItem(id): function to set a specific item as open
- *   - closeItem(): function to close the currently open item
+ *   - toggleItem(id): function to open or close an item by id
  *
  * DERIVED STATE — isOpen:
  *
@@ -45,14 +44,14 @@
  *
  * TOGGLE BEHAVIOR:
  *
- * Clicking the title heading triggers handleClick, which checks isOpen:
- *   - If this item is already open → call closeItem() to collapse it
- *   - If this item is closed → call openItem(id) to expand it
+ * Clicking the title calls toggleItem(id). The toggle logic lives in
+ * the parent Accordion — if the clicked item is already open, it
+ * closes; otherwise it opens and any previously open item implicitly
+ * closes because there is only a single openItemId slot.
  *
- * Because openItem sets a single openItemId in the parent, opening one
- * item automatically "closes" any previously open item — no explicit
- * close call is needed for the other item. The mutual exclusion
- * constraint is inherent in the single-value state design.
+ * LESSON 544: The onClick handler is now an inline arrow function
+ * calling toggleItem(id) directly, eliminating the need for a
+ * separate handleClick wrapper function.
  *
  * CSS CLASS TOGGLING:
  *
@@ -70,24 +69,17 @@ import { useAccordionContext } from './Accordion.jsx';
 export default function AccordionItem({ id, className, title, children }) {
   // LESSON 543: Read the shared accordion state via the custom hook.
   // This will throw if AccordionItem is used outside of <Accordion>.
-  const { openItemId, openItem, closeItem } = useAccordionContext();
+  const { openItemId, toggleItem } = useAccordionContext();
 
   // LESSON 543: Derived state — compare this item's id against the
   // context's openItemId to determine if this instance is expanded.
   const isOpen = openItemId === id;
 
-  function handleClick() {
-    if (isOpen) {
-      closeItem();
-    } else {
-      openItem(id);
-    }
-  }
-
   return (
     <li className={className}>
-      {/* LESSON 543: Clicking the title toggles this item open/closed. */}
-      <h3 onClick={handleClick}>{title}</h3>
+      {/* LESSON 544: Inline arrow calling toggleItem(id) — no separate
+          handler function needed since the logic lives in Accordion. */}
+      <h3 onClick={() => toggleItem(id)}>{title}</h3>
       {/* LESSON 543: "accordion-item-content" hides content by default.
           The "open" class is appended when this item is expanded,
           overriding the CSS to reveal the children. */}
