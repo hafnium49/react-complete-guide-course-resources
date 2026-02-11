@@ -61,10 +61,17 @@ main {
   color: #c1d9fa;
 }
 
+/* LESSON 545: display:none moved from here into a separate .close class
+   so that accordion-item-content is purely about visual styling (padding,
+   background). The open/close toggle is handled by dedicated utility classes,
+   making the component more reusable with custom consumer classes. */
 .accordion-item-content {
-  display: none;
   padding: 1rem;
   background-color: #2c344a;
+}
+
+.close {
+  display: none;
 }
 
 .open {

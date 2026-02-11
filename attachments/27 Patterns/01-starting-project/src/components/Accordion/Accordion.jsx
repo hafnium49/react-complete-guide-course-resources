@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Accordion/Accordion.jsx - LESSONS 542, 543 & 544
+ * src/components/Accordion/Accordion.jsx - LESSONS 542, 543, 544 & 545
  * ============================================================================
  *
  * THE COMPOUND COMPONENTS PATTERN:
@@ -117,11 +117,33 @@
  *     Form.Field, Menu.Item)
  *
  * ============================================================================
+ * LESSON 545: EXPANDING THE COMPOUND FAMILY WITH TITLE AND CONTENT
+ * ============================================================================
+ *
+ * Two new sub-components are added to the Accordion family:
+ *
+ *   - AccordionTitle: Extracted from AccordionItem — renders the
+ *     clickable heading, consumes context for toggleItem.
+ *   - AccordionContent: Extracted from AccordionItem — renders the
+ *     collapsible body, consumes context for openItemId.
+ *
+ * Both are attached via dot notation (Accordion.Title, Accordion.Content)
+ * alongside the existing Accordion.Item. AccordionItem is now a simple
+ * <li> shell that just forwards className and children — all the toggle
+ * and visibility logic has moved to Title and Content respectively.
+ *
+ * This decomposition gives consumers maximum configurability: each
+ * piece of an accordion item (the wrapper, the title, the body) can
+ * be independently styled, extended, or even omitted.
+ *
+ * ============================================================================
  */
 
 import { createContext, useContext, useState } from 'react';
 
 import AccordionItem from './AccordionItem.jsx';
+import AccordionTitle from './AccordionTitle.jsx';
+import AccordionContent from './AccordionContent.jsx';
 
 // LESSON 543: Context created in the same file as Accordion because it's
 // tightly coupled to this component family, not a general app-wide context.
@@ -175,3 +197,9 @@ export default function Accordion({ children, className }) {
 // them. This enables the <Accordion.Item> syntax in consumer code, making the
 // compound relationship explicit without requiring a separate import.
 Accordion.Item = AccordionItem;
+
+// LESSON 545: Two more sub-components attached via dot notation, giving
+// consumers access to <Accordion.Title> and <Accordion.Content> from
+// the same single Accordion import.
+Accordion.Title = AccordionTitle;
+Accordion.Content = AccordionContent;

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542, 543 & 544
+ * src/App.jsx - LESSONS 540, 541, 542, 543, 544 & 545
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -68,6 +68,26 @@
  * access to the entire family of related compound components.
  *
  * ============================================================================
+ * LESSON 545: FINE-GRAINED SUB-COMPONENTS — TITLE AND CONTENT
+ * ============================================================================
+ *
+ * The compound family now has four members accessible via dot notation:
+ *   - <Accordion>          — the <ul> wrapper + context provider
+ *   - <Accordion.Item>     — a <li> shell (no longer handles toggling)
+ *   - <Accordion.Title>    — the clickable heading (handles toggleItem)
+ *   - <Accordion.Content>  — the collapsible body (handles open/close)
+ *
+ * Each Accordion.Item now explicitly contains an Accordion.Title and
+ * Accordion.Content as children. The item's id must be passed to BOTH
+ * Title and Content so each can independently interact with the context.
+ *
+ * The title prop is gone — the title text is now children of
+ * Accordion.Title, which means consumers can render richer markup
+ * (icons, badges, etc.) inside the title, not just a plain string.
+ *
+ * Each sub-component accepts its own className for independent styling.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
@@ -83,35 +103,37 @@ function App() {
             Accordion.Item provides individual <li> sections with custom
             titles and arbitrary body content via children. */}
         <Accordion className="accordion">
-          {/* LESSON 543: Each AccordionItem needs a unique id so the
-              context can track which one is open. The id is compared
-              against openItemId in the shared context. */}
-          <Accordion.Item
-            id="experience"
-            className="accordion-item"
-            title="We got 20 years of experience"
-          >
-            <article>
-              <p>You can&apos;t go wrong with us.</p>
-              <p>
-                We are in the business of planning highly individualized
-                vacation trips for more than 20 years.
-              </p>
-            </article>
+          {/* LESSON 545: Each Accordion.Item is now a thin <li> shell.
+              The id must be passed to BOTH Title and Content so each
+              can independently interact with the shared context. */}
+          <Accordion.Item className="accordion-item">
+            <Accordion.Title className="accordion-item-title" id="experience">
+              We got 20 years of experience
+            </Accordion.Title>
+            <Accordion.Content className="accordion-item-content" id="experience">
+              <article>
+                <p>You can&apos;t go wrong with us.</p>
+                <p>
+                  We are in the business of planning highly individualized
+                  vacation trips for more than 20 years.
+                </p>
+              </article>
+            </Accordion.Content>
           </Accordion.Item>
 
-          <Accordion.Item
-            id="local-guides"
-            className="accordion-item"
-            title="We're working with local guides"
-          >
-            <article>
-              <p>We are not doing this alone from our office.</p>
-              <p>
-                Instead, we are working with local guides to ensure a safe
-                and pleasant vacation.
-              </p>
-            </article>
+          <Accordion.Item className="accordion-item">
+            <Accordion.Title className="accordion-item-title" id="local-guides">
+              We&apos;re working with local guides
+            </Accordion.Title>
+            <Accordion.Content className="accordion-item-content" id="local-guides">
+              <article>
+                <p>We are not doing this alone from our office.</p>
+                <p>
+                  Instead, we are working with local guides to ensure a safe
+                  and pleasant vacation.
+                </p>
+              </article>
+            </Accordion.Content>
           </Accordion.Item>
         </Accordion>
       </section>
