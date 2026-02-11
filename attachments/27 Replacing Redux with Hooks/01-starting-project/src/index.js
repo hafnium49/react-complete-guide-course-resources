@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/index.js - LESSON 553
+ * src/index.js - LESSONS 553 & 555
  * ============================================================================
  *
  * REACT 18 UPGRADE NOTE:
@@ -41,45 +41,45 @@
  * only built-in React features.
  *
  * ============================================================================
+ * LESSON 555: REPLACING REDUX PROVIDER WITH CONTEXT PROVIDER
+ * ============================================================================
+ *
+ * The Redux imports (Provider, combineReducers, createStore, productReducer)
+ * are now removed. In their place, ProductsProvider is imported from
+ * context/products-context.js.
+ *
+ * ProductsProvider wraps the app tree just like Redux's <Provider> did,
+ * but instead of injecting a Redux store, it provides a React Context
+ * that any descendant can consume via useContext(ProductsContext).
+ *
+ * Nothing else in this file changes — BrowserRouter and App remain the
+ * same. The store folder is kept for reference but is no longer used.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
 // LESSON 553: React 18 uses 'react-dom/client' (not 'react-dom') for the
 // createRoot API, which enables concurrent rendering features.
 import ReactDOM from 'react-dom/client';
-// LESSON 553: Provider is the Redux wrapper that injects the store into the
-// component tree. This will be replaced by a custom Context provider later.
-import { Provider } from 'react-redux';
-// LESSON 553: combineReducers and createStore are core Redux functions.
-// combineReducers merges multiple reducer slices; createStore creates
-// the central store object. Both will be removed when Redux is replaced.
-import { combineReducers, createStore } from 'redux';
 import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './App';
-// LESSON 553: The product reducer manages the products list and favorites.
-// It will be replaced by useReducer or useState within a Context provider.
-import productReducer from './store/reducers/products';
-
-// LESSON 553: "shop" is the key under which productReducer's state lives.
-// Connected components access it as state.shop.products, state.shop.favorites, etc.
-const rootReducer = combineReducers({
-  shop: productReducer,
-});
-
-// LESSON 553: The single source of truth for the entire app's state.
-const store = createStore(rootReducer);
+// LESSON 555: ProductsProvider replaces Redux's <Provider store={store}>.
+// It wraps the app tree and provides the products state via React Context.
+// No Redux imports (Provider, combineReducers, createStore) are needed anymore.
+import ProductsProvider from './context/products-context';
 
 // LESSON 553: React 18's createRoot replaces the legacy ReactDOM.render().
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // LESSON 553: Provider makes the Redux store accessible to all descendants.
-  // Any component wrapped with connect() (or using useSelector) can read from
-  // and dispatch actions to this store.
-  <Provider store={store}>
+  // LESSON 555: ProductsProvider replaces the Redux <Provider>. It manages
+  // the products state internally via useState and makes it available to
+  // all descendants through ProductsContext. No store prop needed.
+  <ProductsProvider>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </Provider>
+  </ProductsProvider>
 );

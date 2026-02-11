@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/containers/Products.js - LESSON 554
+ * src/containers/Products.js - LESSONS 554 & 555
  * ============================================================================
  *
  * PRODUCTS PAGE — READING FROM THE REDUX STORE:
@@ -24,20 +24,34 @@
  * when Redux is removed.
  *
  * ============================================================================
+ * LESSON 555: READING FROM CONTEXT INSTEAD OF REDUX
+ * ============================================================================
+ *
+ * useSelector is replaced by useContext. Instead of selecting from a
+ * Redux store via state.shop.products, we now read from the
+ * ProductsContext object, accessing its products property.
+ *
+ * The useContext hook subscribes this component to the context: whenever
+ * the ProductsProvider updates its state (and therefore the context
+ * value), this component automatically re-renders — the same behavior
+ * useSelector provided with Redux.
+ *
+ * ============================================================================
  */
 
-import React from 'react';
-// LESSON 554: useSelector reads from the Redux store. It will be replaced
-// by useContext or a custom hook when we migrate away from Redux.
-import { useSelector } from 'react-redux';
+import React, { useContext } from 'react';
 
 import ProductItem from '../components/Products/ProductItem';
 import './Products.css';
+// LESSON 555: Import the context object (named export) — not the Provider.
+// useContext needs the context object to know which Provider to read from.
+import { ProductsContext } from '../context/products-context';
 
 const Products = props => {
-  // LESSON 554: Selects the full products array from the "shop" slice.
-  // state.shop is the key defined in combineReducers in index.js.
-  const productList = useSelector(state => state.shop.products);
+  // LESSON 555: useContext replaces useSelector. It reads the current value
+  // from ProductsContext (provided by ProductsProvider in index.js). The
+  // .products key matches the shape of the value object in the Provider.
+  const productList = useContext(ProductsContext).products;
   return (
     <ul className="products-list">
       {productList.map(prod => (

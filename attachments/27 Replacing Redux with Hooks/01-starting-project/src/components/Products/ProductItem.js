@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Products/ProductItem.js - LESSON 554
+ * src/components/Products/ProductItem.js - LESSONS 554 & 555
  * ============================================================================
  *
  * PRODUCT ITEM — DISPATCHING ACTIONS TO THE REDUX STORE:
@@ -24,28 +24,30 @@
  * achieves the same toggle behavior.
  *
  * ============================================================================
+ * LESSON 555: TEMPORARILY REMOVING REDUX DISPATCH
+ * ============================================================================
+ *
+ * Since we've removed the Redux store from the app, we must also remove
+ * the useDispatch and toggleFav imports from this component. Without a
+ * Redux store, calling useDispatch would throw an error.
+ *
+ * The favorite button still renders but the toggle handler is temporarily
+ * a no-op. The Context provider doesn't yet expose a function for
+ * modifying the products list — that will be added in the next lesson.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
-// LESSON 554: useDispatch gives access to the Redux store's dispatch function.
-// It will be replaced by a Context-based dispatch or custom hook function.
-import { useDispatch } from 'react-redux';
 
 import Card from '../UI/Card';
 import './ProductItem.css';
-// LESSON 554: The toggleFav action creator produces the action object that
-// the reducer uses to flip a product's isFavorite status.
-import { toggleFav } from '../../store/actions/products';
 
 const ProductItem = props => {
-  // LESSON 554: Get the dispatch function from the Redux store.
-  const dispatch = useDispatch();
-
-  // LESSON 554: On button click, dispatch the TOGGLE_FAV action with
-  // this product's id. The reducer handles the state update immutably.
-  const toggleFavHandler = () => {
-    dispatch(toggleFav(props.id));
-  };
+  // LESSON 555: Temporary no-op handler. The Redux dispatch and toggleFav
+  // action have been removed, but the Context doesn't provide a toggle
+  // function yet. This will be wired up in the next lesson.
+  const toggleFavHandler = () => {};
 
   return (
     <Card style={{ marginBottom: '1rem' }}>
