@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545 & 546
+ * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545, 546 & 547
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -97,9 +97,30 @@
  * This eliminates redundancy and prevents mismatched id bugs.
  *
  * ============================================================================
+ * LESSON 547: SEARCHABLE LIST — SETTING THE STAGE FOR RENDER PROPS
+ * ============================================================================
+ *
+ * A new SearchableList component is introduced alongside the Accordion.
+ * Its purpose is to encapsulate search/filter LOGIC while remaining
+ * agnostic about HOW individual items should be rendered.
+ *
+ * The same SearchableList is used twice here with different data:
+ *   1. PLACES — an array of objects (id, image, title, description)
+ *   2. A plain array of strings
+ *
+ * This highlights the core problem that motivates the render props
+ * pattern: the SearchableList needs to work with ANY data shape, so
+ * it cannot hardcode the rendering for each item type. Currently it
+ * uses a temporary toString() approach (objects show as [object Object]).
+ * The render props pattern will solve this in the next lesson by
+ * letting the consumer provide a rendering function.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
+import SearchableList from './components/SearchableList/SearchableList.jsx';
+import { PLACES } from './places.js';
 
 function App() {
   return (
@@ -145,6 +166,15 @@ function App() {
             </Accordion.Content>
           </Accordion.Item>
         </Accordion>
+      </section>
+
+      {/* LESSON 547: Two SearchableList instances with different data
+          shapes — PLACES (array of objects) and a plain string array.
+          This demonstrates why we need render props: the component
+          handles search logic but can't know how to render each type. */}
+      <section>
+        <SearchableList items={PLACES} />
+        <SearchableList items={['city', 'beach', 'mountains', 'forest', 'desert']} />
       </section>
     </main>
   );
