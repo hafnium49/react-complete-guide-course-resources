@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/containers/Favorites.js - LESSON 554
+ * src/containers/Favorites.js - LESSONS 554 & 556
  * ============================================================================
  *
  * FAVORITES PAGE — DERIVED DATA FROM THE REDUX STORE:
@@ -22,21 +22,40 @@
  * lifting state up to a common ancestor and passing it through props.
  *
  * ============================================================================
+ * LESSON 556: REPLACING useSelector WITH useContext
+ * ============================================================================
+ *
+ * The final Redux consumer is migrated to Context. useSelector and the
+ * react-redux import are removed, replaced by useContext reading from
+ * ProductsContext.
+ *
+ * The filtering logic remains the same — .filter(p => p.isFavorite) —
+ * but instead of selecting from state.shop.products, we read from
+ * the context's products property. The context provides the same
+ * products array that the Redux store used to hold.
+ *
+ * With this change, every component that previously depended on Redux
+ * now uses the Context API instead. The react-redux package is no
+ * longer imported anywhere in the project.
+ *
+ * ============================================================================
  */
 
-import React from 'react';
-// LESSON 554: useSelector extracts state from the Redux store. The inline
-// filter derives the favorites subset from the full products array.
-import { useSelector } from 'react-redux';
+import React, { useContext } from 'react';
 
 import FavoriteItem from '../components/Favorites/FavoriteItem';
 import './Products.css';
+// LESSON 556: Import the context object to replace the Redux useSelector hook.
+// This is the same context that Products.js and ProductItem.js already consume.
+import { ProductsContext } from '../context/products-context';
 
 const Favorites = props => {
-  // LESSON 554: Derived state — filter inline to get only favorited products.
-  // No separate "favorites" state exists; it's computed from the products array.
-  const favoriteProducts = useSelector(state =>
-    state.shop.products.filter(p => p.isFavorite)
+  // LESSON 556: useContext replaces useSelector. Instead of selecting from
+  // state.shop.products, we read the products array from the context. The
+  // .filter() call is identical — it derives the favorites subset by keeping
+  // only products where isFavorite is true.
+  const favoriteProducts = useContext(ProductsContext).products.filter(
+    p => p.isFavorite
   );
   let content = <p className="placeholder">Got no favorites yet!</p>;
   if (favoriteProducts.length > 0) {

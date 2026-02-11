@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Products/ProductItem.js - LESSONS 554 & 555
+ * src/components/Products/ProductItem.js - LESSONS 554, 555 & 556
  * ============================================================================
  *
  * PRODUCT ITEM — DISPATCHING ACTIONS TO THE REDUX STORE:
@@ -19,10 +19,6 @@
  * from the parent Products page. Only the dispatch mechanism comes
  * from Redux — the component doesn't directly read store state.
  *
- * When Redux is replaced, this useDispatch + action creator pattern
- * will be swapped for a Context-based function or custom hook that
- * achieves the same toggle behavior.
- *
  * ============================================================================
  * LESSON 555: TEMPORARILY REMOVING REDUX DISPATCH
  * ============================================================================
@@ -36,18 +32,40 @@
  * modifying the products list — that will be added in the next lesson.
  *
  * ============================================================================
+ * LESSON 556: WIRING UP THE CONTEXT'S TOGGLE FUNCTION
+ * ============================================================================
+ *
+ * The no-op handler is replaced with a real toggle function from the
+ * Context. useContext(ProductsContext) provides the toggleFav function
+ * that the ProductsProvider now exposes.
+ *
+ * The pattern mirrors how useDispatch + action creator worked in Redux,
+ * but simplified: instead of dispatch(toggleFav(id)), we call
+ * toggleFav(id) directly. The function lives in the context Provider
+ * and handles the state update internally via setProductsList.
+ *
+ * ============================================================================
  */
 
-import React from 'react';
+import React, { useContext } from 'react';
 
 import Card from '../UI/Card';
 import './ProductItem.css';
+// LESSON 556: Import the context object to access the toggleFav function.
+// This replaces the old Redux imports (useDispatch and the toggleFav action creator).
+import { ProductsContext } from '../../context/products-context';
 
 const ProductItem = props => {
-  // LESSON 555: Temporary no-op handler. The Redux dispatch and toggleFav
-  // action have been removed, but the Context doesn't provide a toggle
-  // function yet. This will be wired up in the next lesson.
-  const toggleFavHandler = () => {};
+  // LESSON 556: Pull the toggleFav function from the context. This is the
+  // function defined in ProductsProvider that calls setProductsList to flip
+  // a product's isFavorite status — the Context equivalent of Redux dispatch.
+  const toggleFav = useContext(ProductsContext).toggleFav;
+
+  // LESSON 556: The handler now calls the context's toggleFav with this
+  // product's id. This replaces the old dispatch(toggleFav(props.id)) pattern.
+  const toggleFavHandler = () => {
+    toggleFav(props.id);
+  };
 
   return (
     <Card style={{ marginBottom: '1rem' }}>

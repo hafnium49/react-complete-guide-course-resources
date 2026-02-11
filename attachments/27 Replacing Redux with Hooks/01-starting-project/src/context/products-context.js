@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/context/products-context.js - LESSON 555
+ * src/context/products-context.js - LESSONS 555 & 556
  * ============================================================================
  *
  * APPROACH 1: REPLACING REDUX WITH THE CONTEXT API
@@ -54,11 +54,28 @@
  * rather than the raw array. This allows adding more fields to the context
  * later (e.g., a toggleFavorite function) without changing every consumer.
  *
- * CURRENT LIMITATION:
+ * ============================================================================
+ * LESSON 556: ADDING TOGGLE FAVORITE TO THE CONTEXT
+ * ============================================================================
  *
- * At this stage, the context only provides READ access to the products.
- * There is no way to modify the list yet (no toggleFavorite function).
- * That will be added in the next lesson.
+ * The context now provides WRITE access in addition to READ access. A
+ * toggleFavorite function is defined inside the Provider and passed as
+ * part of the context value object under the key "toggleFav".
+ *
+ * This mirrors what the Redux reducer's TOGGLE_FAV case did: find the
+ * product by id, flip its isFavorite boolean, and return a new array
+ * (immutable update). The key difference is that instead of dispatching
+ * an action to a reducer, consuming components call the function directly
+ * from the context.
+ *
+ * The toggleFavorite function uses the FUNCTION FORM of setProductsList
+ * (prevState => newState) rather than passing a new value directly. This
+ * ensures we always operate on the most up-to-date state, which matters
+ * when multiple rapid toggles could overlap.
+ *
+ * The default value in createContext also gets a dummy toggleFav function
+ * with an id parameter. This serves IDE autocompletion — editors can see
+ * the expected shape and parameter names without needing the Provider.
  *
  * ============================================================================
  */
@@ -66,10 +83,13 @@
 import React, { useState } from 'react';
 
 // LESSON 555: Create the context object with a default shape. The default
-// value (products: []) is only used if a component reads the context without
-// a Provider ancestor — mainly useful for IDE autocompletion and type hints.
+// value is only used if a component reads the context without a Provider
+// ancestor — mainly useful for IDE autocompletion and type hints.
+// LESSON 556: toggleFav added to the default so IDEs can autocomplete the
+// function signature. The id parameter documents what the real function expects.
 export const ProductsContext = React.createContext({
   products: [],
+  toggleFav: id => {}
 });
 
 // LESSON 555: The Provider component manages the products state and makes it
@@ -106,13 +126,36 @@ const ProductsProvider = props => {
     }
   ]);
 
+  // LESSON 556: This function replicates the logic from the old Redux reducer's
+  // TOGGLE_FAV case. It finds the product by id, flips its isFavorite flag, and
+  // returns a brand-new array — the same immutable update pattern Redux required.
+  const toggleFavorite = productId => {
+    // LESSON 556: The function form of setState (prevProducts => ...) guarantees
+    // we work with the latest state. If we used productsList directly, rapid
+    // toggles could read stale state and produce incorrect results.
+    setProductsList(prevProducts => {
+      const prodIndex = prevProducts.findIndex(p => p.id === productId);
+      // LESSON 556: Create a shallow copy of the array, then replace the target
+      // product with a new object that has the flipped isFavorite value. This
+      // immutable update ensures React detects the change and re-renders consumers.
+      const newFavStatus = !prevProducts[prodIndex].isFavorite;
+      const updatedProducts = [...prevProducts];
+      updatedProducts[prodIndex] = {
+        ...prevProducts[prodIndex],
+        isFavorite: newFavStatus
+      };
+      return updatedProducts;
+    });
+  };
+
   return (
-    // LESSON 555: The value prop is an object with a products key. Whenever
-    // productsList changes (via setProductsList), a new object is passed here,
-    // causing all useContext(ProductsContext) consumers to re-render.
-    <ProductsContext.Provider value={{ products: productsList }}>
-      {/* LESSON 555: props.children renders whatever is nested inside
-          <ProductsProvider> in index.js — the entire app tree. */}
+    // LESSON 556: The value now includes both the products array for reading
+    // and the toggleFav function for writing. Any consuming component can call
+    // toggleFav(productId) to flip a product's favorite status — replacing
+    // the Redux pattern of dispatch(toggleFav(id)).
+    <ProductsContext.Provider
+      value={{ products: productsList, toggleFav: toggleFavorite }}
+    >
       {props.children}
     </ProductsContext.Provider>
   );
