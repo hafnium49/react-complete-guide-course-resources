@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Accordion/AccordionContent.jsx - LESSON 545
+ * src/components/Accordion/AccordionContent.jsx - LESSONS 545 & 546
  * ============================================================================
  *
  * THE CONTENT PANE OF AN ACCORDION ITEM:
@@ -34,12 +34,25 @@
  * their own styling classes without inheriting the hide behavior.
  *
  * ============================================================================
+ * LESSON 546: id FROM ITEM-LEVEL CONTEXT
+ * ============================================================================
+ *
+ * Like AccordionTitle, this component no longer accepts id as a prop.
+ * Instead it reads the id from AccordionItemContext (provided by the
+ * parent <Accordion.Item>). Two contexts are consumed:
+ *   - useAccordionContext → for openItemId (which item is open)
+ *   - useAccordionItemContext → for id (which item this content belongs to)
+ *
+ * ============================================================================
  */
 
 import { useAccordionContext } from './Accordion.jsx';
+import { useAccordionItemContext } from './AccordionItem.jsx';
 
-export default function AccordionContent({ id, className, children }) {
+export default function AccordionContent({ className, children }) {
   const { openItemId } = useAccordionContext();
+  // LESSON 546: id now comes from the item-level context, not from props.
+  const id = useAccordionItemContext();
 
   const isOpen = openItemId === id;
 

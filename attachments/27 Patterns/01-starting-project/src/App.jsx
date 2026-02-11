@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541, 542, 543, 544 & 545
+ * src/App.jsx - LESSONS 540, 541, 542, 543, 544, 545 & 546
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -88,6 +88,15 @@
  * Each sub-component accepts its own className for independent styling.
  *
  * ============================================================================
+ * LESSON 546: id SET ONCE ON ITEM, CONSUMED VIA CONTEXT
+ * ============================================================================
+ *
+ * Previously, the id had to be duplicated on both <Accordion.Title>
+ * and <Accordion.Content>. Now the id is set once on <Accordion.Item>,
+ * which provides it to Title and Content through AccordionItemContext.
+ * This eliminates redundancy and prevents mismatched id bugs.
+ *
+ * ============================================================================
  */
 
 import Accordion from './components/Accordion/Accordion.jsx';
@@ -103,14 +112,14 @@ function App() {
             Accordion.Item provides individual <li> sections with custom
             titles and arbitrary body content via children. */}
         <Accordion className="accordion">
-          {/* LESSON 545: Each Accordion.Item is now a thin <li> shell.
-              The id must be passed to BOTH Title and Content so each
-              can independently interact with the shared context. */}
-          <Accordion.Item className="accordion-item">
-            <Accordion.Title className="accordion-item-title" id="experience">
+          {/* LESSON 546: id is set once on Accordion.Item and flows
+              to Title and Content via AccordionItemContext. No need to
+              repeat it on each sub-component. */}
+          <Accordion.Item id="experience" className="accordion-item">
+            <Accordion.Title className="accordion-item-title">
               We got 20 years of experience
             </Accordion.Title>
-            <Accordion.Content className="accordion-item-content" id="experience">
+            <Accordion.Content className="accordion-item-content">
               <article>
                 <p>You can&apos;t go wrong with us.</p>
                 <p>
@@ -121,11 +130,11 @@ function App() {
             </Accordion.Content>
           </Accordion.Item>
 
-          <Accordion.Item className="accordion-item">
-            <Accordion.Title className="accordion-item-title" id="local-guides">
+          <Accordion.Item id="local-guides" className="accordion-item">
+            <Accordion.Title className="accordion-item-title">
               We&apos;re working with local guides
             </Accordion.Title>
-            <Accordion.Content className="accordion-item-content" id="local-guides">
+            <Accordion.Content className="accordion-item-content">
               <article>
                 <p>We are not doing this alone from our office.</p>
                 <p>
