@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/context/products-context.js - LESSONS 555 & 556
+ * src/context/products-context.js - LESSONS 555, 556 & 557
  * ============================================================================
  *
  * APPROACH 1: REPLACING REDUX WITH THE CONTEXT API
@@ -76,6 +76,46 @@
  * The default value in createContext also gets a dummy toggleFav function
  * with an id parameter. This serves IDE autocompletion — editors can see
  * the expected shape and parameter names without needing the Provider.
+ *
+ * ============================================================================
+ * LESSON 557: LIMITATIONS OF THE CONTEXT API FOR STATE MANAGEMENT
+ * ============================================================================
+ *
+ * While this Context-based approach works, the React team has stated that
+ * the Context API is designed for LOW-FREQUENCY updates — not high-frequency
+ * ones. This distinction is critical when deciding whether to use Context
+ * or a dedicated state management library like Redux.
+ *
+ * GOOD FIT FOR CONTEXT (low-frequency changes):
+ *
+ *   - Authentication status: users log in/out rarely during a session
+ *   - Theme/appearance settings: toggled infrequently (light/dark mode)
+ *   - Locale/language preferences: set once and rarely changed
+ *
+ * POOR FIT FOR CONTEXT (high-frequency changes):
+ *
+ *   - Favorite/like toggling: users interact with these buttons regularly
+ *   - Shopping cart updates: items added/removed throughout a session
+ *   - Any state that changes often in response to user interaction
+ *
+ * WHY CONTEXT STRUGGLES WITH FREQUENT UPDATES:
+ *
+ * When any part of the context value changes, React has no way to determine
+ * which consuming components are actually affected by that specific change.
+ * Every component calling useContext(ProductsContext) will re-render — even
+ * if it only reads a property that did not change. There is no built-in
+ * selectivity (unlike Redux's useSelector, which can compare slices).
+ *
+ * This means the Context API was never intended to be a complete global
+ * state management solution. It works well for certain cross-cutting
+ * concerns (auth, theme) but lacks the performance optimizations needed
+ * for frequently-changing application state.
+ *
+ * WHAT'S NEXT:
+ *
+ * A non-Redux alternative that handles high-frequency updates better
+ * will be explored in the following lessons — achieving the same global
+ * state management without these re-rendering limitations.
  *
  * ============================================================================
  */
