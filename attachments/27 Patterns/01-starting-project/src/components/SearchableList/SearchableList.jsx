@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/SearchableList/SearchableList.jsx - LESSONS 547, 548, 549 & 550
+ * src/components/SearchableList/SearchableList.jsx - LESSONS 547, 548, 549, 550 & 551
  * ============================================================================
  *
  * INTRODUCING THE RENDER PROPS PATTERN — MOTIVATION:
@@ -121,9 +121,67 @@
  * data-specific logic.
  *
  * ============================================================================
+ * LESSON 551: DEBOUNCING — DELAYING STATE UPDATES UNTIL TYPING PAUSES
+ * ============================================================================
+ *
+ * WHAT IS DEBOUNCING:
+ *
+ * Debouncing is a general front-end technique (not React-specific) that
+ * prevents a function from firing on every rapid event (like keystrokes).
+ * Instead of updating state on every single character typed, debouncing
+ * waits until the user STOPS typing for a defined threshold (e.g., 500ms)
+ * before applying the update. This avoids redundant intermediate updates.
+ *
+ * WHY DEBOUNCE HERE:
+ *
+ * In this demo with simple local data, updating on every keystroke is
+ * fine. But in real apps, each state update might trigger expensive
+ * operations: complex filtering, HTTP requests, heavy re-renders. If
+ * the user types "african" (7 characters), without debouncing that's
+ * 7 separate filter operations. With debouncing, it's just one — after
+ * the user finishes typing.
+ *
+ * IMPLEMENTATION WITH setTimeout + useRef:
+ *
+ * The approach uses two built-in browser/React tools:
+ *
+ *   1. setTimeout: Delays the state update by the threshold duration.
+ *      It returns a timer ID that can be used to cancel it later.
+ *
+ *   2. useRef (lastChange): Stores the timer ID between renders without
+ *      triggering re-renders. A ref is ideal here because:
+ *        - State would cause unwanted re-renders when storing the timer
+ *        - A plain variable would be lost on each render cycle
+ *        - A ref persists across renders and is mutable via .current
+ *
+ * THE DEBOUNCE FLOW:
+ *
+ *   1. User types a character → handleChange fires
+ *   2. If a previous timer exists (lastChange.current is truthy),
+ *      cancel it with clearTimeout — the previous pending update is
+ *      discarded because the user is still actively typing
+ *   3. Start a new setTimeout with the latest input value, storing
+ *      the new timer ID in lastChange.current
+ *   4. If the user types again before 500ms, step 2 cancels this timer
+ *      and step 3 creates a fresh one (the cycle repeats)
+ *   5. Once the user stops typing and 500ms elapse, the timer callback
+ *      finally executes: it updates searchTerm state and clears the
+ *      ref (sets lastChange.current to null)
+ *
+ * CLEARING THE REF AFTER EXPIRY:
+ *
+ * Inside the setTimeout callback, lastChange.current is set to null
+ * after the state update. This is necessary because the ref does not
+ * automatically know the timer has expired — it would still hold the
+ * old (now-irrelevant) timer ID. Without clearing it, the if check
+ * at the top of handleChange would always find a truthy value and
+ * call clearTimeout on an already-expired timer (harmless but wasteful
+ * and semantically incorrect).
+ *
+ * ============================================================================
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 // LESSON 549: children is destructured alongside items because it will be
 // called as a function — not rendered as static markup. This is the
@@ -134,9 +192,30 @@ export default function SearchableList({ items, children, itemKeyFn }) {
   // LESSON 548: State to track the current search input value.
   const [searchTerm, setSearchTerm] = useState('');
 
-  // LESSON 548: Update state on every keystroke in the search input.
+  // LESSON 551: A ref to hold the currently scheduled timer ID. Using a ref
+  // (not state) because changing the timer ID should NOT trigger a re-render.
+  // A plain variable wouldn't work either — it would reset on every render.
+  const lastChange = useRef();
+
+  // LESSON 551: handleChange no longer updates state directly. Instead it
+  // uses debouncing: cancel any pending timer, then schedule a new one.
   function handleChange(event) {
-    setSearchTerm(event.target.value);
+    // LESSON 551: If a timer from a previous keystroke is still pending,
+    // cancel it — the user is still typing, so we discard that update.
+    if (lastChange.current) {
+      clearTimeout(lastChange.current);
+    }
+
+    // LESSON 551: Schedule a new state update after the debounce threshold.
+    // The timer ID is stored in the ref so it can be canceled by the next
+    // keystroke. 500ms means: "only update if the user pauses for half a second."
+    lastChange.current = setTimeout(() => {
+      // LESSON 551: Clear the ref after the timer expires. Without this,
+      // the ref would still hold a stale timer ID, and the if-check above
+      // would needlessly call clearTimeout on an already-expired timer.
+      lastChange.current = null;
+      setSearchTerm(event.target.value);
+    }, 500);
   }
 
   // LESSON 548: Derived data — filter items based on the search term.
