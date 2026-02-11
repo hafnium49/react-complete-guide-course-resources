@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.jsx - LESSONS 540, 541 & 542
+ * src/App.jsx - LESSONS 540, 541, 542 & 543
  * ============================================================================
  *
  * LESSON 541: PROJECT SETUP
@@ -71,7 +71,11 @@ function App() {
             AccordionItem provides individual <li> sections with custom
             titles and arbitrary body content via children. */}
         <Accordion className="accordion">
+          {/* LESSON 543: Each AccordionItem needs a unique id so the
+              context can track which one is open. The id is compared
+              against openItemId in the shared context. */}
           <AccordionItem
+            id="experience"
             className="accordion-item"
             title="We got 20 years of experience"
           >
@@ -85,6 +89,7 @@ function App() {
           </AccordionItem>
 
           <AccordionItem
+            id="local-guides"
             className="accordion-item"
             title="We're working with local guides"
           >

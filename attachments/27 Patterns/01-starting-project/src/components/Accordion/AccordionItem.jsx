@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Accordion/AccordionItem.jsx - LESSON 542
+ * src/components/Accordion/AccordionItem.jsx - LESSONS 542 & 543
  * ============================================================================
  *
  * A COMPOUND COMPONENT PARTNER TO <Accordion>:
@@ -25,21 +25,75 @@
  * Accordion wrapper, this gives the consumer control over both the
  * container styling and the individual item styling.
  *
- * CURRENT STATE:
+ * ============================================================================
+ * LESSON 543: CONSUMING CONTEXT TO COORDINATE OPEN/CLOSE STATE
+ * ============================================================================
  *
- * Right now, both the title and body content are always visible.
- * The open/close toggling behavior and the "only one item open at a
- * time" constraint will be added in upcoming lessons, powered by
- * shared state in the parent Accordion component.
+ * AccordionItem uses the useAccordionContext hook to access the shared
+ * state managed by the parent Accordion. From the context it reads:
+ *
+ *   - openItemId: the id of the currently open item (or null)
+ *   - openItem(id): function to set a specific item as open
+ *   - closeItem(): function to close the currently open item
+ *
+ * DERIVED STATE — isOpen:
+ *
+ * Each AccordionItem receives a unique `id` prop. By comparing its own
+ * id against the context's openItemId, it derives whether THIS specific
+ * instance is the one currently expanded. This is a simple equality
+ * check, not additional state — it's recalculated on every render.
+ *
+ * TOGGLE BEHAVIOR:
+ *
+ * Clicking the title heading triggers handleClick, which checks isOpen:
+ *   - If this item is already open → call closeItem() to collapse it
+ *   - If this item is closed → call openItem(id) to expand it
+ *
+ * Because openItem sets a single openItemId in the parent, opening one
+ * item automatically "closes" any previously open item — no explicit
+ * close call is needed for the other item. The mutual exclusion
+ * constraint is inherent in the single-value state design.
+ *
+ * CSS CLASS TOGGLING:
+ *
+ * The content wrapper div always has the "accordion-item-content" class
+ * (which hides content by default via CSS). When isOpen is true, the
+ * additional "open" class is appended, which overrides the hidden state
+ * and reveals the content. This approach uses CSS to handle visibility
+ * rather than conditionally rendering/removing the content from the DOM.
  *
  * ============================================================================
  */
 
-export default function AccordionItem({ className, title, children }) {
+import { useAccordionContext } from './Accordion.jsx';
+
+export default function AccordionItem({ id, className, title, children }) {
+  // LESSON 543: Read the shared accordion state via the custom hook.
+  // This will throw if AccordionItem is used outside of <Accordion>.
+  const { openItemId, openItem, closeItem } = useAccordionContext();
+
+  // LESSON 543: Derived state — compare this item's id against the
+  // context's openItemId to determine if this instance is expanded.
+  const isOpen = openItemId === id;
+
+  function handleClick() {
+    if (isOpen) {
+      closeItem();
+    } else {
+      openItem(id);
+    }
+  }
+
   return (
     <li className={className}>
-      <h3>{title}</h3>
-      <div>{children}</div>
+      {/* LESSON 543: Clicking the title toggles this item open/closed. */}
+      <h3 onClick={handleClick}>{title}</h3>
+      {/* LESSON 543: "accordion-item-content" hides content by default.
+          The "open" class is appended when this item is expanded,
+          overriding the CSS to reveal the children. */}
+      <div className={isOpen ? 'accordion-item-content open' : 'accordion-item-content'}>
+        {children}
+      </div>
     </li>
   );
 }
