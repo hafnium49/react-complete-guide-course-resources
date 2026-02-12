@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/hooks-store/store.js - LESSONS 558 & 559
+ * src/hooks-store/store.js - LESSONS 558, 559 & 560
  * ============================================================================
  *
  * APPROACH 2: A CUSTOM HOOK-BASED GLOBAL STATE MANAGEMENT STORE
@@ -98,9 +98,10 @@
  *
  *   1. Look up the action function in the actions object by its
  *      identifier string (e.g., "TOGGLE_FAV").
- *   2. Call that function with the current globalState. The action
- *      function acts like a Redux reducer case — it receives the current
- *      state and returns a NEW partial state object describing what changed.
+ *   2. Call that function with the current globalState AND an optional
+ *      payload. The action function acts like a Redux reducer case — it
+ *      receives the current state (and any extra data) and returns a
+ *      NEW partial state object describing what changed.
  *   3. Merge the returned newState into globalState using the spread
  *      operator. This is an immutable update: a new object is created
  *      containing all old properties overwritten by the new ones.
@@ -172,12 +173,18 @@ const useStore = () => {
   // LESSON 559: dispatch takes an action identifier string, finds the
   // matching action function, runs it to produce a new partial state,
   // merges that into globalState, and notifies all listening components.
-  const dispatch = actionIdentifier => {
+  // LESSON 560: A second parameter (payload) is now accepted and forwarded
+  // to the action function. The payload can be any value — a string id,
+  // a number, an object — whatever extra data the action needs beyond
+  // the current state. For example, TOGGLE_FAV receives a productId.
+  const dispatch = (actionIdentifier, payload) => {
     // LESSON 559: Look up the action by its string key. The actions object
     // was populated earlier via initStore(). Each value is a function with
-    // the signature: (currentState) => partialNewState — conceptually the
-    // same as a single case inside a Redux reducer's switch statement.
-    const newState = actions[actionIdentifier](globalState);
+    // the signature: (currentState, payload) => partialNewState —
+    // conceptually the same as a single case inside a Redux reducer.
+    // LESSON 560: payload is forwarded as the second argument so actions
+    // like TOGGLE_FAV can receive the productId they need to operate on.
+    const newState = actions[actionIdentifier](globalState, payload);
 
     // LESSON 559: Immutable merge — create a new object combining the old
     // globalState with the returned newState. Properties in newState
