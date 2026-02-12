@@ -102,6 +102,10 @@ import useStore from '../../hooks-store/store';
 // haven't changed. Combined with useStore(false), this ensures only the
 // single item whose isFav prop changed re-renders — not the entire list.
 const ProductItem = React.memo(props => {
+  // LESSON 563: Debugging aid to verify the optimization. Without useStore(false)
+  // + React.memo, toggling one favorite would log "RENDERING" four times (once per
+  // ProductItem). With the optimization, only the single toggled item re-renders.
+  console.log('RENDERING');
   // LESSON 561: useStore() returns [globalState, dispatch]. We only need
   // dispatch here (to trigger the TOGGLE_FAV action), so we skip the first
   // element with a comma and destructure just the second.
