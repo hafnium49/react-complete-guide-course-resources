@@ -1,6 +1,34 @@
+/**
+ * ============================================================================
+ * src/hooks-store/products-store.js - LESSON 564 (BONUS: MULTIPLE STATE SLICES)
+ * ============================================================================
+ *
+ * THE PRODUCTS SLICE — ONE OF MULTIPLE CONCURRENT SLICES:
+ *
+ * This file is unchanged from the single-slice version (lesson 560). It
+ * defines the TOGGLE_FAV action and seeds the products initial state by
+ * calling initStore. What makes this a "slice" rather than "the whole store"
+ * is that counter-store.js also calls initStore — both contributions merge
+ * into the same globalState and actions objects inside store.js.
+ *
+ * After both configureProductsStore() and configureCounterStore() run:
+ *   globalState = { products: [...4 items], counter: 0 }
+ *   actions     = { TOGGLE_FAV: fn, ADD: fn, SUB: fn }
+ *
+ * This slice owns the "products" state key and the "TOGGLE_FAV" action
+ * identifier. It has no awareness of the counter slice and vice versa —
+ * each slice is self-contained. The store engine handles the merging.
+ *
+ * ============================================================================
+ */
+
 import { initStore } from './store';
 
 const configureStore = () => {
+  // The TOGGLE_FAV action receives the full globalState and a productId
+  // payload. It only reads/modifies state.products — the counter key (from
+  // the other slice) passes through untouched because the returned object
+  // { products: updatedProducts } only overwrites the "products" key.
   const actions = {
     TOGGLE_FAV: (curState, productId) => {
       const prodIndex = curState.products.findIndex(p => p.id === productId);
@@ -13,6 +41,8 @@ const configureStore = () => {
       return { products: updatedProducts };
     }
   };
+  // Register this slice's action and initial products array. initStore merges
+  // these into the global store alongside any other slices already registered.
   initStore(actions, {
     products: [
       {

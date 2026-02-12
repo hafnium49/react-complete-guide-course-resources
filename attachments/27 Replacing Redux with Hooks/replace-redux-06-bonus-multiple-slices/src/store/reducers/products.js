@@ -1,3 +1,8 @@
+// LEGACY FILE — NOT USED IN THE CUSTOM HOOK STORE APPROACH.
+// This file was part of the original Redux setup (lessons 553–554). It defines
+// the productReducer with its TOGGLE_FAV case. It is kept for reference but is
+// no longer imported. The custom hook store (hooks-store/products-store.js)
+// replaces this reducer with an action function registered via initStore.
 import { TOGGLE_FAV } from '../actions/products';
 
 const initialState = {

@@ -1,3 +1,8 @@
+// LEGACY FILE — NOT USED IN THE CUSTOM HOOK STORE APPROACH.
+// This file was part of the Context API approach (lessons 555–557). It defines
+// a ProductsContext and a Provider component that managed products via useState.
+// It is kept for reference but is no longer imported. The custom hook store
+// (hooks-store/) replaces both Redux and Context with module-level variables.
 import React, { useState } from 'react';
 
 export const ProductsContext = React.createContext({
