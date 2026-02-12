@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/hooks-store/store.js - LESSON 558
+ * src/hooks-store/store.js - LESSONS 558 & 559
  * ============================================================================
  *
  * APPROACH 2: A CUSTOM HOOK-BASED GLOBAL STATE MANAGEMENT STORE
@@ -35,17 +35,18 @@
  *      changes, calling each of these functions forces the corresponding
  *      component to re-render. This is the notification mechanism.
  *
- *   3. actions: An object that will hold named action functions (similar
- *      to Redux action creators + reducer logic combined). Empty for now;
- *      it will be populated in later lessons.
+ *   3. actions: An object whose keys are action identifiers (strings)
+ *      and whose values are functions that receive the current state
+ *      and return a partial new state — similar to individual Redux
+ *      reducer cases, but without the switch statement.
  *
  * These variables are NOT exported — they are private to this module.
- * The only public interface is the useStore custom hook.
+ * Components interact with them only through useStore and initStore.
  *
  * THE useStore CUSTOM HOOK:
  *
  * Components call useStore() to participate in the global state system.
- * The hook does two things:
+ * The hook does three things:
  *
  *   1. Calls useState(globalState) to get a setState function. We only
  *      care about the updater (second element), not the state snapshot
@@ -61,6 +62,11 @@
  *      into listeners. On unmount, the cleanup function filters it out.
  *      This way, only currently-mounted components receive re-render
  *      signals when state changes.
+ *
+ *   3. Provides a dispatch function that looks up an action by its
+ *      identifier, executes it with the current globalState, merges the
+ *      returned partial state into globalState, and notifies all
+ *      listeners to trigger re-renders.
  *
  * WHY useEffect WITH AN EMPTY DEPENDENCY ARRAY:
  *
@@ -81,11 +87,53 @@
  * component. Each component gets its own setState from its own useState
  * call, so there are no collisions between different components.
  *
- * THIS IS JUST THE SKELETON:
+ * ============================================================================
+ * LESSON 559: DISPATCH, RETURN VALUE, AND initStore
+ * ============================================================================
  *
- * At this stage, the hook registers/unregisters listeners and holds
- * shared state, but there is no mechanism yet to update the state or
- * dispatch actions. Those pieces will be added in subsequent lessons.
+ * THE DISPATCH FUNCTION:
+ *
+ * dispatch(actionIdentifier) is the mechanism for updating global state.
+ * It mirrors the Redux dispatch concept but with a simpler flow:
+ *
+ *   1. Look up the action function in the actions object by its
+ *      identifier string (e.g., "TOGGLE_FAV").
+ *   2. Call that function with the current globalState. The action
+ *      function acts like a Redux reducer case — it receives the current
+ *      state and returns a NEW partial state object describing what changed.
+ *   3. Merge the returned newState into globalState using the spread
+ *      operator. This is an immutable update: a new object is created
+ *      containing all old properties overwritten by the new ones.
+ *   4. Loop through every listener (setState function) and call it with
+ *      the updated globalState. This forces every component using
+ *      useStore to re-render with the fresh state.
+ *
+ * RETURN VALUE — [globalState, dispatch]:
+ *
+ * useStore returns a two-element array, intentionally matching the shape
+ * of React's built-in useReducer hook: [state, dispatch]. The difference
+ * is that useReducer manages state within a single component, while
+ * useStore shares state across all components that call it.
+ *
+ * THE initStore FUNCTION:
+ *
+ * initStore(userActions, initialState) is the configuration entry point.
+ * Concrete store slices (e.g., a products store) call this to register
+ * their actions and seed their initial state. It performs two merges:
+ *
+ *   - If initialState is provided, merge it INTO the existing globalState.
+ *     This is critical because multiple slices may call initStore, each
+ *     adding their own portion of state. This is analogous to Redux's
+ *     combineReducers — each slice contributes its own initial data to
+ *     one shared state object.
+ *
+ *   - Merge userActions INTO the existing actions object. Again, multiple
+ *     slices can register their own action functions without overwriting
+ *     actions from other slices.
+ *
+ * initStore is a named export (alongside the default export useStore)
+ * so that store configuration files can import and call it to set up
+ * their specific state and actions.
  *
  * ============================================================================
  */
@@ -103,9 +151,10 @@ let globalState = {};
 // corresponding component. This is the "subscription" mechanism.
 let listeners = [];
 
-// LESSON 558: Will hold named action functions (e.g., toggleFav) that know
-// how to produce a new state from the current one. Empty for now — actions
-// will be registered in a later lesson.
+// LESSON 558: Holds named action functions keyed by identifier strings.
+// Each action receives the current state and returns a partial new state.
+// LESSON 559: Populated via initStore() when concrete store slices register
+// their specific actions (e.g., TOGGLE_FAV for the products store).
 let actions = {};
 
 // LESSON 558: The custom hook that components call to participate in the
@@ -119,6 +168,32 @@ const useStore = () => {
   // (wired up in a later lesson). The updater function's sole purpose here
   // is to force this component to re-render when called.
   const [, setState] = useState(globalState);
+
+  // LESSON 559: dispatch takes an action identifier string, finds the
+  // matching action function, runs it to produce a new partial state,
+  // merges that into globalState, and notifies all listening components.
+  const dispatch = actionIdentifier => {
+    // LESSON 559: Look up the action by its string key. The actions object
+    // was populated earlier via initStore(). Each value is a function with
+    // the signature: (currentState) => partialNewState — conceptually the
+    // same as a single case inside a Redux reducer's switch statement.
+    const newState = actions[actionIdentifier](globalState);
+
+    // LESSON 559: Immutable merge — create a new object combining the old
+    // globalState with the returned newState. Properties in newState
+    // overwrite matching keys in globalState, while unrelated keys are
+    // preserved. This mirrors how Redux reducers spread old state and
+    // overlay changed properties.
+    globalState = { ...globalState, ...newState };
+
+    // LESSON 559: Notify every mounted component. Each listener is a
+    // setState function from a component's useState call. Passing the
+    // updated globalState triggers React to re-render that component
+    // with the new state value.
+    for (const listener of listeners) {
+      listener(globalState);
+    }
+  };
 
   // LESSON 558: Register this component's setState in the shared listeners
   // array when it mounts, and remove it when it unmounts. The empty-ish
@@ -143,6 +218,35 @@ const useStore = () => {
   // exhaustive-deps lint rule. In practice, React guarantees that the
   // setState function from useState never changes identity for a given
   // component, so this effect truly runs only once per mount/unmount cycle.
+
+  // LESSON 559: Return shape matches useReducer's [state, dispatch] pattern.
+  // globalState is the shared module-level variable (always up to date),
+  // and dispatch is the function components call to trigger state changes.
+  return [globalState, dispatch];
+};
+
+// LESSON 559: Configuration function that concrete store slices call to
+// register their actions and seed their initial state. Multiple slices can
+// each call initStore independently — their states and actions merge into
+// the single shared globalState and actions objects. This is analogous to
+// Redux's combineReducers, where each reducer contributes its own slice
+// of the overall state tree.
+export const initStore = (userActions, initialState) => {
+  // LESSON 559: Only merge initialState if provided. The caller may only
+  // want to register actions without adding new state properties.
+  if (initialState) {
+    // LESSON 559: Spread the existing globalState first so that state from
+    // other slices (registered by earlier initStore calls) is preserved.
+    // Then overlay the new slice's initialState. This builds up the shared
+    // state object incrementally, just like combineReducers assembles
+    // individual reducer states into one root state.
+    globalState = { ...globalState, ...initialState };
+  }
+  // LESSON 559: Merge the new action functions into the shared actions
+  // object, preserving actions registered by other slices. Each key in
+  // userActions is an action identifier string, and its value is a
+  // function: (currentState) => partialNewState.
+  actions = { ...actions, ...userActions };
 };
 
 export default useStore;
