@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/hooks-store/store.js - LESSONS 558, 559, 560, 562 & 563
+ * src/hooks-store/store.js - LESSONS 558, 559, 560, 562, 563 & 565
  * ============================================================================
  *
  * APPROACH 2: A CUSTOM HOOK-BASED GLOBAL STATE MANAGEMENT STORE
@@ -211,6 +211,57 @@
  * value is a constant (true or false) passed at the call site, it never
  * changes during a component's lifetime, so the effect still runs at
  * most once.
+ *
+ * ============================================================================
+ * LESSON 565: SECTION WRAP-UP — CHOOSING YOUR STATE MANAGEMENT APPROACH
+ * ============================================================================
+ *
+ * This section explored three ways to manage global state in React:
+ *
+ *   1. REDUX (lessons 553–554):
+ *      A mature, battle-tested library with its own ecosystem. The overhead
+ *      of adding an extra dependency is not significant, especially in
+ *      larger projects. Once you learn the patterns (store, reducers,
+ *      actions, dispatch, selectors), Redux handles the heavy lifting —
+ *      subscriptions, immutability helpers (via Redux Toolkit), middleware,
+ *      devtools, and more. For most production apps, Redux remains a
+ *      strong, reliable choice.
+ *
+ *   2. CONTEXT API (lessons 555–557):
+ *      Built into React — no extra dependencies. Works well for LOW-
+ *      FREQUENCY updates like authentication state, theme preferences,
+ *      or locale settings. However, it re-renders ALL consumers on ANY
+ *      context value change, making it a poor fit for high-frequency
+ *      updates (e.g., rapidly toggling favorites in a product list).
+ *      Use Context for data that changes rarely and is needed by many
+ *      components across the tree.
+ *
+ *   3. CUSTOM HOOK STORE (lessons 558–564):
+ *      Uses only React hooks and plain JavaScript — no third-party
+ *      dependency at all. Module-level variables provide shared state,
+ *      while useState + useEffect provide the re-render mechanism. It
+ *      works, it can be optimized (shouldListen, React.memo), and it
+ *      supports multiple state slices (lesson 564). The trade-off is
+ *      that you must build and maintain the infrastructure yourself.
+ *
+ * WHEN TO USE WHICH:
+ *
+ *   - If you want a proven, full-featured solution and don't mind an
+ *     extra package: stick with Redux (or Redux Toolkit).
+ *
+ *   - If you want zero dependencies and your global state changes
+ *     infrequently: the Context API is sufficient.
+ *
+ *   - If you want zero dependencies but need high-frequency updates
+ *     without the Context re-render problem: a custom hook store like
+ *     this one is a viable alternative.
+ *
+ * There are also third-party packages that follow this same hook-based
+ * approach internally — they use only React and React hooks under the
+ * hood, giving you the convenience of a library without pulling in a
+ * fundamentally different state management paradigm. Exploring their
+ * source code can be instructive for understanding how React's built-in
+ * primitives can power a complete state management solution.
  *
  * ============================================================================
  */
