@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/hooks-store/store.js - LESSONS 558, 559 & 560
+ * src/hooks-store/store.js - LESSONS 558, 559, 560 & 562
  * ============================================================================
  *
  * APPROACH 2: A CUSTOM HOOK-BASED GLOBAL STATE MANAGEMENT STORE
@@ -135,6 +135,53 @@
  * initStore is a named export (alongside the default export useStore)
  * so that store configuration files can import and call it to set up
  * their specific state and actions.
+ *
+ * ============================================================================
+ * LESSON 562: ARCHITECTURAL RECAP — HOW THIS REPLACES REDUX
+ * ============================================================================
+ *
+ * This file is a complete, custom replacement for Redux built with
+ * nothing but React hooks and plain JavaScript. Here is a summary of
+ * how each piece maps to its Redux counterpart:
+ *
+ *   Redux createStore        → initStore (registers state + actions)
+ *   Redux combineReducers    → multiple initStore calls, each merging
+ *                               its slice into the shared globalState
+ *   Redux reducer (switch)   → actions object (keys = identifiers,
+ *                               values = (state, payload) => newState)
+ *   Redux dispatch(action)   → dispatch(identifier, payload)
+ *   Redux <Provider>         → not needed — module-level variables are
+ *                               shared automatically via JS imports
+ *   Redux useSelector        → useStore()[0] (the globalState)
+ *   Redux useDispatch        → useStore()[1] (the dispatch function)
+ *
+ * WHY THIS WORKS WITHOUT A PROVIDER:
+ *
+ * Redux and Context both rely on React's component tree to propagate
+ * state downward via a Provider. This custom store sidesteps the tree
+ * entirely: globalState, listeners, and actions are module-scoped
+ * variables. JavaScript's module system guarantees that a module is
+ * evaluated once and all importers share the same bindings. So every
+ * component that imports useStore (directly or indirectly) operates on
+ * the exact same data — no tree wrapping needed.
+ *
+ * THE RE-RENDER MECHANISM:
+ *
+ * Each component that calls useStore() registers a setState function
+ * in the listeners array (via useEffect on mount). When dispatch is
+ * called, it updates globalState and then calls every registered
+ * setState with the new state. This forces React to re-render each
+ * subscribed component — the same effect as Redux's internal
+ * subscription system, but implemented in ~30 lines of code.
+ *
+ * CONCURRENT SLICES:
+ *
+ * Multiple store slices (products, auth, cart, etc.) can coexist by
+ * each calling initStore with their own actions and initialState. All
+ * slices merge into the single globalState and actions objects, just
+ * as Redux's combineReducers assembles individual reducers into one
+ * root state. The only requirement is that action identifier strings
+ * and state keys must not collide between slices.
  *
  * ============================================================================
  */
