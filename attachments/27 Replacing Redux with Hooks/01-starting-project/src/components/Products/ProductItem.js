@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Products/ProductItem.js - LESSONS 554, 555, 556 & 561
+ * src/components/Products/ProductItem.js - LESSONS 554, 555, 556, 561 & 563
  * ============================================================================
  *
  * PRODUCT ITEM — DISPATCHING ACTIONS TO THE REDUX STORE:
@@ -61,6 +61,33 @@
  * object inside products-store.js's configureStore function.
  *
  * ============================================================================
+ * LESSON 563: OPTIMIZING WITH shouldListen AND React.memo
+ * ============================================================================
+ *
+ * Without optimization, every ProductItem re-renders whenever ANY
+ * product's favorite status changes — even items whose props haven't
+ * changed. This happens because useStore() registers a listener by
+ * default, and dispatch notifies ALL listeners.
+ *
+ * Two changes fix this:
+ *
+ *   1. useStore(false): Passing false for the shouldListen parameter
+ *      tells the hook NOT to register this component as a listener.
+ *      The component can still dispatch actions, but it won't be
+ *      notified of state changes — it doesn't need to be, because
+ *      its display data comes from props, not from the store.
+ *
+ *   2. React.memo: Wrapping the component in React.memo prevents
+ *      re-renders when props haven't changed. Since Products.js
+ *      (the parent) re-renders on store changes and passes fresh
+ *      props to each ProductItem, only the item whose isFav prop
+ *      actually changed will re-render. The other items receive
+ *      the same props and are skipped by memo's shallow comparison.
+ *
+ * Together, these reduce re-renders from N (all items) to 1 (only
+ * the toggled item) when a single favorite is changed.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
@@ -71,11 +98,17 @@ import './ProductItem.css';
 // This replaces useContext + ProductsContext from the Context approach.
 import useStore from '../../hooks-store/store';
 
-const ProductItem = props => {
+// LESSON 563: React.memo wraps the component to skip re-renders when props
+// haven't changed. Combined with useStore(false), this ensures only the
+// single item whose isFav prop changed re-renders — not the entire list.
+const ProductItem = React.memo(props => {
   // LESSON 561: useStore() returns [globalState, dispatch]. We only need
   // dispatch here (to trigger the TOGGLE_FAV action), so we skip the first
   // element with a comma and destructure just the second.
-  const [, dispatch] = useStore();
+  // LESSON 563: Passing false opts out of listener registration. This
+  // component doesn't read from the store — it only dispatches — so there
+  // is no reason to re-render when globalState changes.
+  const [, dispatch] = useStore(false);
 
   // LESSON 561: dispatch takes two arguments: the action identifier string
   // (matching a key in the actions map from products-store.js) and the
@@ -99,6 +132,6 @@ const ProductItem = props => {
       </div>
     </Card>
   );
-};
+});
 
 export default ProductItem;

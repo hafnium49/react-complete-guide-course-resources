@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/hooks-store/store.js - LESSONS 558, 559, 560 & 562
+ * src/hooks-store/store.js - LESSONS 558, 559, 560, 562 & 563
  * ============================================================================
  *
  * APPROACH 2: A CUSTOM HOOK-BASED GLOBAL STATE MANAGEMENT STORE
@@ -184,6 +184,35 @@
  * and state keys must not collide between slices.
  *
  * ============================================================================
+ * LESSON 563: shouldListen OPTIMIZATION — DISPATCH-ONLY COMPONENTS
+ * ============================================================================
+ *
+ * By default, every component calling useStore() registers a listener,
+ * meaning it re-renders on EVERY global state change. But some components
+ * only use the store to DISPATCH actions — they never read state from it.
+ * For example, ProductItem receives its data via props (from Products.js)
+ * and only calls dispatch('TOGGLE_FAV', id). It has no reason to
+ * re-render when the store changes.
+ *
+ * The shouldListen parameter (default: true) lets a component opt out
+ * of listener registration. Passing useStore(false) means:
+ *   - No setState is pushed into the listeners array
+ *   - No cleanup function is needed on unmount
+ *   - The component will NOT re-render when globalState changes
+ *   - The component still has full access to dispatch
+ *
+ * Combined with React.memo on the component, this means only components
+ * whose PROPS actually changed will re-render. In a list of ProductItems,
+ * toggling one item's favorite status causes only that single item to
+ * re-render (because its isFav prop changed), while the other items
+ * are skipped entirely.
+ *
+ * shouldListen becomes an additional dependency of useEffect. Since its
+ * value is a constant (true or false) passed at the call site, it never
+ * changes during a component's lifetime, so the effect still runs at
+ * most once.
+ *
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';
@@ -208,7 +237,10 @@ let actions = {};
 // LESSON 558: The custom hook that components call to participate in the
 // global state system. Each component that calls useStore() gets its own
 // setState from useState, which is then tracked in the shared listeners array.
-const useStore = () => {
+// LESSON 563: shouldListen parameter allows dispatch-only components to opt
+// out of re-renders. Default is true (register listener). Pass false when a
+// component only needs dispatch and receives its display data via props.
+const useStore = (shouldListen = true) => {
   // LESSON 558: We destructure only the second element (the updater function)
   // because the first element (state snapshot) would quickly become stale —
   // other components may update globalState at any time. Instead of relying
@@ -252,11 +284,15 @@ const useStore = () => {
   // LESSON 558: Register this component's setState in the shared listeners
   // array when it mounts, and remove it when it unmounts. The empty-ish
   // dependency array means this runs once on mount and cleans up on unmount.
+  // LESSON 563: The entire registration is now conditional on shouldListen.
+  // When false, no listener is pushed and no cleanup is needed — the
+  // component can dispatch actions without receiving re-render notifications.
   useEffect(() => {
-    // LESSON 558: Push this component's re-render trigger into the shared
-    // list. Every mounted component that uses useStore will have exactly
-    // one entry in listeners.
-    listeners.push(setState);
+    if (shouldListen) {
+      // LESSON 558: Push this component's re-render trigger into the shared
+      // list. Only done when shouldListen is true.
+      listeners.push(setState);
+    }
 
     // LESSON 558: Cleanup — when this component unmounts, filter out its
     // setState from the listeners array. The closure captures the same
@@ -264,14 +300,19 @@ const useStore = () => {
     // (li !== setState) correctly finds and removes only this component's
     // listener. This prevents memory leaks and avoids calling setState on
     // unmounted components.
+    // LESSON 563: Only attempt cleanup if we registered a listener.
     return () => {
-      listeners = listeners.filter(li => li !== setState);
+      if (shouldListen) {
+        listeners = listeners.filter(li => li !== setState);
+      }
     };
-  }, [setState]);
+  }, [setState, shouldListen]);
   // LESSON 558: setState is listed as a dependency to satisfy the
   // exhaustive-deps lint rule. In practice, React guarantees that the
   // setState function from useState never changes identity for a given
   // component, so this effect truly runs only once per mount/unmount cycle.
+  // LESSON 563: shouldListen is also a dependency. Since it's a constant
+  // passed at the call site, it never changes during a component's lifetime.
 
   // LESSON 559: Return shape matches useReducer's [state, dispatch] pattern.
   // globalState is the shared module-level variable (always up to date),
