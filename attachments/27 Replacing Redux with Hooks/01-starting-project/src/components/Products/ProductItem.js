@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/components/Products/ProductItem.js - LESSONS 554, 555 & 556
+ * src/components/Products/ProductItem.js - LESSONS 554, 555, 556 & 561
  * ============================================================================
  *
  * PRODUCT ITEM — DISPATCHING ACTIONS TO THE REDUX STORE:
@@ -45,26 +45,44 @@
  * and handles the state update internally via setProductsList.
  *
  * ============================================================================
+ * LESSON 561: DISPATCHING VIA THE CUSTOM HOOK STORE
+ * ============================================================================
+ *
+ * useContext is replaced by useStore. This component only needs the
+ * dispatch function (second element of the returned array), not the
+ * state itself — product data still arrives via props from Products.js.
+ *
+ * dispatch('TOGGLE_FAV', props.id) looks up the TOGGLE_FAV action
+ * function registered in products-store.js, calls it with the current
+ * globalState and the product id as payload, merges the result into
+ * globalState, and notifies all listeners to re-render.
+ *
+ * The string 'TOGGLE_FAV' must match the key used in the actions
+ * object inside products-store.js's configureStore function.
+ *
+ * ============================================================================
  */
 
-import React, { useContext } from 'react';
+import React from 'react';
 
 import Card from '../UI/Card';
 import './ProductItem.css';
-// LESSON 556: Import the context object to access the toggleFav function.
-// This replaces the old Redux imports (useDispatch and the toggleFav action creator).
-import { ProductsContext } from '../../context/products-context';
+// LESSON 561: Import the custom hook from the generic store module.
+// This replaces useContext + ProductsContext from the Context approach.
+import useStore from '../../hooks-store/store';
 
 const ProductItem = props => {
-  // LESSON 556: Pull the toggleFav function from the context. This is the
-  // function defined in ProductsProvider that calls setProductsList to flip
-  // a product's isFavorite status — the Context equivalent of Redux dispatch.
-  const toggleFav = useContext(ProductsContext).toggleFav;
+  // LESSON 561: useStore() returns [globalState, dispatch]. We only need
+  // dispatch here (to trigger the TOGGLE_FAV action), so we skip the first
+  // element with a comma and destructure just the second.
+  const [, dispatch] = useStore();
 
-  // LESSON 556: The handler now calls the context's toggleFav with this
-  // product's id. This replaces the old dispatch(toggleFav(props.id)) pattern.
+  // LESSON 561: dispatch takes two arguments: the action identifier string
+  // (matching a key in the actions map from products-store.js) and the
+  // payload (the product id). This replaces the Context's toggleFav(props.id)
+  // and Redux's dispatch(toggleFav(props.id)).
   const toggleFavHandler = () => {
-    toggleFav(props.id);
+    dispatch('TOGGLE_FAV', props.id);
   };
 
   return (

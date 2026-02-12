@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/containers/Favorites.js - LESSONS 554 & 556
+ * src/containers/Favorites.js - LESSONS 554, 556 & 561
  * ============================================================================
  *
  * FAVORITES PAGE — DERIVED DATA FROM THE REDUX STORE:
@@ -39,24 +39,41 @@
  * longer imported anywhere in the project.
  *
  * ============================================================================
+ * LESSON 561: REPLACING useContext WITH THE CUSTOM HOOK STORE
+ * ============================================================================
+ *
+ * useContext + ProductsContext is replaced by useStore(). The state
+ * object returned by useStore contains the same products array, now
+ * at state.products (the key registered in products-store.js).
+ *
+ * The filtering logic is unchanged — .filter(p => p.isFavorite) still
+ * derives the favorites subset from the full products array. The only
+ * difference is the source: useStore's globalState instead of the
+ * Context's value object.
+ *
+ * With this change, all three consumer components (Products, ProductItem,
+ * Favorites) now use the custom hook store. Neither Redux nor the
+ * Context API is imported by any component anymore.
+ *
+ * ============================================================================
  */
 
-import React, { useContext } from 'react';
+import React from 'react';
 
 import FavoriteItem from '../components/Favorites/FavoriteItem';
 import './Products.css';
-// LESSON 556: Import the context object to replace the Redux useSelector hook.
-// This is the same context that Products.js and ProductItem.js already consume.
-import { ProductsContext } from '../context/products-context';
+// LESSON 561: Import the custom hook from the generic store module.
+// This replaces useContext + ProductsContext from the Context approach.
+import useStore from '../hooks-store/store';
 
 const Favorites = props => {
-  // LESSON 556: useContext replaces useSelector. Instead of selecting from
-  // state.shop.products, we read the products array from the context. The
-  // .filter() call is identical — it derives the favorites subset by keeping
-  // only products where isFavorite is true.
-  const favoriteProducts = useContext(ProductsContext).products.filter(
-    p => p.isFavorite
-  );
+  // LESSON 561: useStore() returns [globalState, dispatch]. We only need
+  // state here. state.products is the shared array, and .filter() derives
+  // the favorites subset — the same filtering logic used in every previous
+  // approach (Redux selector, Context consumer).
+  const [state] = useStore();
+  const favoriteProducts = state.products.filter(p => p.isFavorite);
+
   let content = <p className="placeholder">Got no favorites yet!</p>;
   if (favoriteProducts.length > 0) {
     content = (

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/containers/Products.js - LESSONS 554 & 555
+ * src/containers/Products.js - LESSONS 554, 555 & 561
  * ============================================================================
  *
  * PRODUCTS PAGE — READING FROM THE REDUX STORE:
@@ -37,24 +37,41 @@
  * useSelector provided with Redux.
  *
  * ============================================================================
+ * LESSON 561: READING FROM THE CUSTOM HOOK STORE
+ * ============================================================================
+ *
+ * useContext is replaced by the custom useStore hook. useStore() returns
+ * [globalState, dispatch]. This component only needs to READ state, so
+ * we destructure just the first element.
+ *
+ * The products array lives at state.products because that's the key
+ * used in products-store.js when calling initStore with the initial
+ * state object { products: [...] }.
+ *
+ * Unlike Context (which re-renders ALL consumers on ANY value change),
+ * this custom store re-renders consumers by explicitly calling each
+ * registered setState — which is functionally similar but avoids the
+ * Context API's structural limitations.
+ *
+ * ============================================================================
  */
 
-import React, { useContext } from 'react';
+import React from 'react';
 
 import ProductItem from '../components/Products/ProductItem';
 import './Products.css';
-// LESSON 555: Import the context object (named export) — not the Provider.
-// useContext needs the context object to know which Provider to read from.
-import { ProductsContext } from '../context/products-context';
+// LESSON 561: Import the custom hook from the generic store module.
+// useStore provides access to the shared globalState and dispatch function.
+import useStore from '../hooks-store/store';
 
 const Products = props => {
-  // LESSON 555: useContext replaces useSelector. It reads the current value
-  // from ProductsContext (provided by ProductsProvider in index.js). The
-  // .products key matches the shape of the value object in the Provider.
-  const productList = useContext(ProductsContext).products;
+  // LESSON 561: useStore() returns [globalState, dispatch]. We only need the
+  // state here (no dispatching), so we extract just the first element.
+  // state.products is the array seeded by configureStore in products-store.js.
+  const [state] = useStore();
   return (
     <ul className="products-list">
-      {productList.map(prod => (
+      {state.products.map(prod => (
         <ProductItem
           key={prod.id}
           id={prod.id}

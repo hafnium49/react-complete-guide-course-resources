@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/index.js - LESSONS 553 & 555
+ * src/index.js - LESSONS 553, 555 & 561
  * ============================================================================
  *
  * REACT 18 UPGRADE NOTE:
@@ -56,6 +56,30 @@
  * same. The store folder is kept for reference but is no longer used.
  *
  * ============================================================================
+ * LESSON 561: REPLACING CONTEXT PROVIDER WITH CUSTOM HOOK STORE
+ * ============================================================================
+ *
+ * The ProductsProvider wrapper is removed entirely. In its place, we
+ * simply import and call configureStore() from hooks-store/products-store.
+ *
+ * KEY DIFFERENCE FROM CONTEXT AND REDUX:
+ *
+ * Both Redux and Context required a Provider component wrapping the app
+ * tree. The custom hook store needs NO wrapping component at all.
+ * Calling configureStore() registers the initial state and actions in
+ * the module-level variables (globalState, actions) inside store.js.
+ * Any component that later calls useStore() automatically reads from
+ * and writes to those shared variables.
+ *
+ * MULTIPLE STORE SLICES:
+ *
+ * If the app had additional store slices (e.g., an auth store, a cart
+ * store), each would have its own configureXxxStore function. All of
+ * them would be imported and called here — each call merges its state
+ * and actions into the single shared global store, analogous to calling
+ * combineReducers with multiple reducers in Redux.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
@@ -66,20 +90,25 @@ import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './App';
-// LESSON 555: ProductsProvider replaces Redux's <Provider store={store}>.
-// It wraps the app tree and provides the products state via React Context.
-// No Redux imports (Provider, combineReducers, createStore) are needed anymore.
-import ProductsProvider from './context/products-context';
+// LESSON 561: Import and call configureStore to initialize the products slice.
+// This registers the TOGGLE_FAV action and seeds globalState.products with
+// the initial product data — no Provider component wrapping needed.
+import configureProductsStore from './hooks-store/products-store';
+
+// LESSON 561: Call the configuration function BEFORE rendering. This ensures
+// that globalState and actions in store.js are populated before any component
+// mounts and calls useStore(). For multiple slices, each configureXxxStore
+// would be called here side by side.
+configureProductsStore();
 
 // LESSON 553: React 18's createRoot replaces the legacy ReactDOM.render().
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // LESSON 555: ProductsProvider replaces the Redux <Provider>. It manages
-  // the products state internally via useState and makes it available to
-  // all descendants through ProductsContext. No store prop needed.
-  <ProductsProvider>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </ProductsProvider>
+  // LESSON 561: No wrapper component needed — unlike Redux's <Provider> or
+  // the Context-based ProductsProvider, the custom hook store is initialized
+  // by the function call above. The shared module-level variables in store.js
+  // are accessible to any component that imports useStore.
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
 );
