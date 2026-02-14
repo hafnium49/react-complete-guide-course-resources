@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.test.js - LESSONS 567 & 568
+ * src/App.test.js - LESSONS 567, 568 & 569
  * ============================================================================
  *
  * WHAT IS AUTOMATED TESTING?
@@ -128,6 +128,63 @@
  * Together, they form a safety net: manual testing catches what automated
  * tests don't cover (subjective UX, visual regressions), and automated
  * tests catch what manual testing misses (regressions in untouched code).
+ *
+ * ============================================================================
+ * LESSON 569: THREE CATEGORIES OF AUTOMATED TESTS
+ * ============================================================================
+ *
+ * Automated tests fall into three main categories, each operating at a
+ * different level of granularity:
+ *
+ *   1. UNIT TESTS:
+ *      Test the smallest possible units of an application in isolation —
+ *      individual functions, custom hooks, or single React components
+ *      independent from the rest of the app. A project typically contains
+ *      MANY unit tests because the goal is to cover every unit (every
+ *      function, every component) with at least one test. The reasoning:
+ *      if every individual piece works correctly on its own, the overall
+ *      application is very likely to work correctly as well. Unit tests
+ *      are the most common and most important category.
+ *
+ *   2. INTEGRATION TESTS:
+ *      Test combinations of multiple building blocks working together —
+ *      for example, several components rendering as a group, or a
+ *      component interacting with a custom hook that fetches data.
+ *      Projects contain fewer integration tests than unit tests, but
+ *      they are still extremely important because they verify that
+ *      independently-tested units actually cooperate correctly.
+ *
+ *      In React, the boundary between unit and integration tests is
+ *      often blurry. Testing a parent component that renders child
+ *      components is technically an integration test, even though it
+ *      feels like testing a single component. This gray area is normal
+ *      and not something to worry about.
+ *
+ *   3. END-TO-END (E2E) TESTS:
+ *      Test entire workflows as a real user would experience them —
+ *      logging in, navigating to a page, filling out a form, submitting
+ *      it, and verifying the result. E2E tests reproduce manual testing
+ *      scenarios but in an automated way (often using a real or headless
+ *      browser via tools like Cypress, Playwright, or Selenium).
+ *
+ *      Despite sounding like the most important category, E2E tests are
+ *      written in smaller numbers. They are slower to run, harder to
+ *      maintain, and it is difficult to enumerate every possible user
+ *      scenario at the whole-app level. If unit and integration tests
+ *      are thorough, you can be confident the overall app works — E2E
+ *      tests then serve as a final safety check for critical paths.
+ *
+ * THE TESTING PYRAMID:
+ *
+ *         /  E2E  \        ← Few: slow, broad, full-workflow
+ *        /----------\
+ *       / Integration\     ← Some: medium scope, multi-unit
+ *      /--------------\
+ *     /   Unit Tests   \   ← Many: fast, focused, per-function/component
+ *
+ * This course section focuses on unit tests and integration tests —
+ * the foundation of the pyramid — since they provide the most value
+ * per test written.
  *
  * ============================================================================
  */
