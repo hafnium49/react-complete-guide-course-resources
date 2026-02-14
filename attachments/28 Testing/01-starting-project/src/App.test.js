@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.test.js - LESSONS 567, 568 & 569
+ * src/App.test.js - LESSONS 567, 568, 569 & 570
  * ============================================================================
  *
  * WHAT IS AUTOMATED TESTING?
@@ -185,6 +185,47 @@
  * This course section focuses on unit tests and integration tests —
  * the foundation of the pyramid — since they provide the most value
  * per test written.
+ *
+ * ============================================================================
+ * LESSON 570: WHAT TO TEST AND HOW TO TEST
+ * ============================================================================
+ *
+ * Before writing any test code, two fundamental questions must be answered:
+ *
+ * ── WHAT TO TEST ──
+ *
+ * Test the individual building blocks of your application — the small,
+ * self-contained units (functions, hooks, components). Each test should
+ * verify ONE main thing. The goal is to have many small, focused tests
+ * rather than a few large, sprawling ones.
+ *
+ * Why small tests?
+ *   - When a small test fails, the reason is immediately obvious — it
+ *     tests one thing, so that one thing must be broken.
+ *   - When a large test fails, it could be any of the many things it
+ *     covers, making debugging harder and slower.
+ *   - Small tests are easier to write, read, and maintain.
+ *
+ * ── HOW TO TEST ──
+ *
+ * For each building block, consider the different scenarios that can
+ * occur when a user interacts with it:
+ *
+ *   SUCCESS CASES — The expected, "happy path" behavior. Does the
+ *                    component render the right output? Does clicking
+ *                    a button produce the correct result?
+ *
+ *   ERROR CASES   — What happens when something goes wrong? Does the
+ *                    component display an error message when validation
+ *                    fails? Does it handle a rejected API call gracefully?
+ *
+ *   EDGE CASES    — Rare but possible scenarios. What if the list is
+ *                    empty? What if the input is an unusual value? These
+ *                    are the scenarios manual testing often misses.
+ *
+ * By systematically testing success, error, and edge cases for each
+ * small building block, you build comprehensive coverage that catches
+ * bugs across the full range of possible user interactions.
  *
  * ============================================================================
  */
