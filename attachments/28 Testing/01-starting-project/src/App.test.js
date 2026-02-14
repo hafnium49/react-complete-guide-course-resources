@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.test.js - LESSON 567: INTRODUCTION TO TESTING REACT APPS
+ * src/App.test.js - LESSONS 567 & 568
  * ============================================================================
  *
  * WHAT IS AUTOMATED TESTING?
@@ -76,6 +76,58 @@
  * npm test     — Starts Jest in watch mode. It re-runs tests automatically
  *                when source or test files change. Press 'a' to run all
  *                tests, 'q' to quit.
+ *
+ * ============================================================================
+ * LESSON 568: MANUAL TESTING vs AUTOMATED TESTING — DEEPER DIVE
+ * ============================================================================
+ *
+ * MANUAL TESTING IS NOT GOING AWAY:
+ *
+ * Previewing your app in the browser and interacting with it as a user
+ * would is invaluable. You see exactly what your users see — layout,
+ * animations, responsiveness, overall feel. Manual testing will always be
+ * a core part of development. Automated testing does NOT replace it.
+ *
+ * THE PROBLEM WITH MANUAL TESTING ALONE:
+ *
+ * In a complex React app with many pages and features, every code change
+ * potentially affects other parts of the application. When you add a new
+ * feature or modify an existing one, you will naturally test THAT change
+ * in the browser. But you will not manually re-verify every other feature
+ * every single time — it would take too long, and you would inevitably
+ * miss edge cases.
+ *
+ * This means a change in one part of the app can silently break another
+ * part. The bug slips through unnoticed, possibly reaching users before
+ * anyone catches it. The later a bug is discovered, the more expensive
+ * it is to fix — both in development time and user trust.
+ *
+ * HOW AUTOMATED TESTING SOLVES THIS:
+ *
+ * Automated tests cover the individual building blocks of your app.
+ * Because they are code, running them costs almost no time — you can
+ * run ALL of them after EVERY change. If a new feature accidentally
+ * breaks an existing component, the test for that component fails
+ * immediately, pinpointing the regression before it ships.
+ *
+ * The key insight: automated testing is not about testing one thing once.
+ * It is about testing EVERYTHING, EVERY TIME. The cost of writing the
+ * test is paid once; the benefit of running it is paid forever.
+ *
+ * THE COMPLEMENTARY RELATIONSHIP:
+ *
+ *   MANUAL TESTING → Verifies user experience, visual correctness, and
+ *                     exploratory scenarios a developer thinks of on the
+ *                     spot. Essential but limited to what you remember to
+ *                     check.
+ *
+ *   AUTOMATED TESTING → Verifies that every building block still works
+ *                        correctly after every code change. Systematic,
+ *                        repeatable, and exhaustive within its coverage.
+ *
+ * Together, they form a safety net: manual testing catches what automated
+ * tests don't cover (subjective UX, visual regressions), and automated
+ * tests catch what manual testing misses (regressions in untouched code).
  *
  * ============================================================================
  */
