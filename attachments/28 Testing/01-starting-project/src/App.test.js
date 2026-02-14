@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * src/App.test.js - LESSONS 567, 568, 569 & 570
+ * src/App.test.js - LESSONS 567, 568, 569, 570 & 571
  * ============================================================================
  *
  * WHAT IS AUTOMATED TESTING?
@@ -226,6 +226,42 @@
  * By systematically testing success, error, and edge cases for each
  * small building block, you build comprehensive coverage that catches
  * bugs across the full range of possible user interactions.
+ *
+ * ============================================================================
+ * LESSON 571: THE TECHNICAL SETUP — TWO TOOLS FOR TWO JOBS
+ * ============================================================================
+ *
+ * Writing test code requires two distinct capabilities:
+ *
+ *   JOB 1: RUNNING TESTS + ASSERTING RESULTS
+ *   Something needs to discover test files, execute the test functions,
+ *   and determine whether each test passed or failed based on its
+ *   assertions. This is the test RUNNER's job.
+ *   → Tool: JEST (see lesson 567 notes for details)
+ *
+ *   JOB 2: SIMULATING / RENDERING REACT COMPONENTS
+ *   React components render in a browser DOM, but automated tests run
+ *   in a terminal (Node.js). We need a way to render components into a
+ *   simulated DOM so that tests can inspect the output, find elements,
+ *   and simulate user interactions — all without opening a browser.
+ *   → Tool: REACT TESTING LIBRARY (see lesson 567 notes for details)
+ *
+ * HOW CRA BUNDLES EVERYTHING:
+ *
+ * In a Create React App project, both tools are pre-installed. Looking
+ * at package.json, you can see the @testing-library packages listed as
+ * direct dependencies:
+ *
+ *   "@testing-library/jest-dom"    — DOM-specific assertion matchers
+ *   "@testing-library/react"       — render() and screen for components
+ *   "@testing-library/user-event"  — simulated user interactions
+ *
+ * Notably, Jest itself does NOT appear as a direct dependency in
+ * package.json. It is a TRANSITIVE dependency — bundled inside
+ * react-scripts (the CRA build toolchain). When you run "npm test",
+ * react-scripts invokes Jest internally. This means the entire testing
+ * infrastructure is ready to use in any CRA project without any
+ * additional installation or configuration.
  *
  * ============================================================================
  */
