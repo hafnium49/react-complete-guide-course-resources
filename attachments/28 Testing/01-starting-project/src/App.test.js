@@ -264,22 +264,105 @@
  * additional installation or configuration.
  *
  * ============================================================================
+ * LESSON 572: RUNNING THE FIRST TEST
+ * ============================================================================
+ *
+ * TEST FILE NAMING CONVENTION:
+ *
+ * This file — App.test.js — already exists out of the box in every CRA
+ * project. CRA generates it alongside App.js as a starter example. The
+ * naming convention is significant: a test file mirrors the name of the
+ * source file it covers, with ".test" inserted before the extension:
+ *
+ *   App.js       → App.test.js
+ *   Greeting.js  → Greeting.test.js
+ *   Header.js    → Header.test.js
+ *
+ * Jest automatically discovers files matching *.test.js (or *.spec.js)
+ * and treats them as test files. Any .js file WITHOUT ".test" or ".spec"
+ * in its name is ignored by the test runner — it will never be executed
+ * as a test, no matter what it contains.
+ *
+ * HOW TO RUN TESTS:
+ *
+ * From the project root, execute:
+ *
+ *   npm test
+ *
+ * This invokes react-scripts test, which launches Jest in WATCH MODE.
+ * Watch mode keeps running in the terminal and monitors your source and
+ * test files for changes. When you save any file, Jest automatically
+ * re-runs the relevant tests — you do not need to manually trigger them
+ * each time. When prompted, press 'a' to run ALL tests in the project.
+ *
+ * INTERPRETING TEST OUTPUT:
+ *
+ * When a test PASSES, the terminal displays:
+ *
+ *   PASS  src/App.test.js
+ *     ✓ renders learn react link (xx ms)
+ *
+ *   Test Suites: 1 passed, 1 total
+ *   Tests:       1 passed, 1 total
+ *
+ * The green checkmark (✓) and the word PASS indicate success. The
+ * description string you pass as the first argument to test() — in
+ * this case "renders learn react link" — appears in the output. This
+ * is why descriptive test names matter: when you have dozens of tests,
+ * the description is how you identify WHICH test passed or failed.
+ *
+ * When a test FAILS, the output changes dramatically:
+ *
+ *   FAIL  src/App.test.js
+ *     ✕ renders learn react link (xx ms)
+ *
+ *     TestingLibraryElementError: Unable to find an element with the
+ *     text: /learn react/i.
+ *
+ *     <body>
+ *       <div>
+ *         ... (rendered HTML) ...
+ *       </div>
+ *     </body>
+ *
+ * The red cross (✕) and FAIL label signal the problem. Jest then prints
+ * the exact error — here, getByText could not find "learn react" in the
+ * rendered output. It even dumps the entire rendered HTML so you can see
+ * what the component actually produced, helping you spot the mismatch
+ * between what the test expected and what the component rendered.
+ *
+ * DEMONSTRATING FAILURE:
+ *
+ * If you change "Learn React" in App.js to something else (e.g.,
+ * "Learn More"), save the file, and watch mode re-runs the test,
+ * getByText(/learn react/i) will no longer find a matching element.
+ * The test fails, and the output shows exactly why — the text "learn
+ * react" no longer exists in the rendered DOM. Reverting the change
+ * and saving again makes the test pass once more. This feedback loop
+ * is the core value of automated testing: instant notification when
+ * a code change breaks expected behavior.
+ *
+ * ============================================================================
  */
 
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-// test() defines a single test case. The first argument is a human-readable
-// description of what the test verifies. The second argument is a function
-// containing the test logic.
+// test() defines a single test case. The first argument is a description
+// string that identifies this test in the terminal output — it appears next
+// to the checkmark (✓) or cross (✕) when tests run. Choosing a clear,
+// specific description makes it easy to locate the failing test among many.
+// The second argument is an anonymous function containing the actual test logic.
 test('renders learn react link', () => {
   // ARRANGE: Render the App component into a simulated DOM (provided by
   // Jest's jsdom environment). No real browser is needed.
   render(<App />);
   // ASSERT: Query the rendered output for an element containing text that
   // matches the regular expression /learn react/i (case-insensitive).
-  // getByText throws an error if no matching element is found, which
-  // causes the test to fail automatically.
+  // getByText throws an error if no matching element is found — this thrown
+  // error is what causes Jest to report the test as FAILED. The failure
+  // output includes the full rendered HTML, making it straightforward to
+  // see what the component actually produced versus what was expected.
   const linkElement = screen.getByText(/learn react/i);
   // Verify that the found element is present in the document. The
   // toBeInTheDocument() matcher comes from @testing-library/jest-dom
