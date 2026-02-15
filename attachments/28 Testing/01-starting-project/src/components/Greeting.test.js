@@ -201,6 +201,41 @@
  * visible. Only an explicit absence test catches that class of bug.
  *
  * ============================================================================
+ * LESSON 576: TESTING CONNECTED COMPONENTS (INTEGRATION TESTING)
+ * ============================================================================
+ *
+ * Greeting now renders an Output wrapper component instead of raw <p> tags.
+ * Despite this structural change, NONE of the tests below needed updating.
+ * React Testing Library's render() traverses the entire component tree,
+ * rendering child components (like Output) along with the parent. The
+ * final DOM still contains the same text in <p> elements, so all queries
+ * and assertions work identically.
+ *
+ * UNIT TEST vs INTEGRATION TEST — A BLURRY LINE:
+ *
+ * Strictly speaking, these tests are now INTEGRATION tests because they
+ * exercise two components (Greeting + Output) working together. But in
+ * React testing, this distinction is often academic — rendering a parent
+ * inherently renders its children. The pragmatic guideline:
+ *
+ *   - If a child component is a simple wrapper (no independent state or
+ *     logic), testing through the parent is sufficient. No separate test
+ *     file needed for the wrapper.
+ *
+ *   - If a child component has its own state, side effects, or complex
+ *     behavior, consider a dedicated test file (e.g., Output.test.js)
+ *     to verify that logic in isolation.
+ *
+ * PROPS IN THE COMPONENT TREE:
+ *
+ * The Output component receives its content via props.children. This is
+ * tested implicitly — the tests verify that the correct text appears in
+ * the DOM, which can only happen if Greeting passes the right children
+ * to Output and Output renders them. There is no need for a separate
+ * "props are forwarded correctly" test unless the prop handling involves
+ * transformation or conditional logic.
+ *
+ * ============================================================================
  */
 
 import { render, screen } from '@testing-library/react';
