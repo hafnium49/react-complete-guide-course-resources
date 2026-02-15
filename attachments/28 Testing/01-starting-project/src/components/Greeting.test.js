@@ -236,6 +236,58 @@
  * transformation or conditional logic.
  *
  * ============================================================================
+ * LESSON 579: SECTION WRAP-UP — TESTING REACT APPS
+ * ============================================================================
+ *
+ * This module provided an introduction to testing React applications. The
+ * full depth of testing is a topic worthy of its own dedicated course, but
+ * the core workflow covered here forms the foundation:
+ *
+ *   1. Render a component with render() from @testing-library/react
+ *   2. Query the DOM with screen (getBy, queryBy, findBy and their variants)
+ *   3. Simulate user interactions with userEvent from @testing-library/user-event
+ *   4. Assert outcomes with expect() and jest-dom matchers
+ *   5. Mock external dependencies (like fetch) with jest.fn()
+ *
+ * KEY CONCEPTS COVERED IN THIS SECTION:
+ *
+ *   - Manual vs automated testing (lesson 568)
+ *   - Unit / integration / E2E test categories and the testing pyramid (569)
+ *   - What to test and how: success, error, edge cases (570)
+ *   - Jest (runner + assertions) and React Testing Library (renderer) (571)
+ *   - Test file naming conventions (*.test.js) and npm test (572)
+ *   - Writing first tests, the AAA pattern (Arrange/Act/Assert) (573)
+ *   - Test suites with describe() (574)
+ *   - Testing state changes and user interaction with userEvent (575)
+ *   - Integration testing with connected components (576)
+ *   - Async testing with findBy queries for fetched data (577)
+ *   - Mocking HTTP requests with jest.fn() and mockResolvedValueOnce (578)
+ *
+ * FURTHER READING — OFFICIAL DOCUMENTATION:
+ *
+ *   JEST (test runner + assertion library):
+ *   The Jest documentation covers matchers (the different ways to express
+ *   expectations), async testing patterns (awaiting promises, callbacks),
+ *   and mocking in depth (mock functions, mock modules, timer mocks).
+ *   Note: Jest is a general-purpose JavaScript testing tool, not React-
+ *   specific — the docs cover broader JS testing scenarios as well. The
+ *   setup steps in the Jest docs can be skipped for CRA projects since
+ *   everything is pre-configured.
+ *
+ *   REACT TESTING LIBRARY (component rendering + DOM queries):
+ *   The RTL documentation is essential for understanding the full query
+ *   API (getBy vs queryBy vs findBy, ByRole vs ByText vs ByLabelText,
+ *   etc.), firing events, and testing async behavior. The Core API
+ *   section explains query method differences in detail. The Ecosystem
+ *   section lists useful extensions.
+ *
+ *   REACT HOOKS TESTING LIBRARY:
+ *   A specialized extension for testing custom hooks in isolation —
+ *   particularly useful when a custom hook manages complex state or
+ *   side effects and you want to test it independently from any
+ *   component that consumes it.
+ *
+ * ============================================================================
  */
 
 import { render, screen } from '@testing-library/react';
