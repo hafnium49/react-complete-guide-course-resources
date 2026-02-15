@@ -76,36 +76,79 @@
  * before the assertion executes if the element is missing.
  *
  * ============================================================================
+ * LESSON 574: TEST SUITES WITH describe()
+ * ============================================================================
+ *
+ * As an application grows, so does the number of tests — dozens, hundreds,
+ * or even thousands. Without organization, the terminal output becomes a
+ * flat list of pass/fail lines that is difficult to scan. Test SUITES solve
+ * this by grouping related tests under a labeled category.
+ *
+ * CREATING A SUITE:
+ *
+ * The globally available describe() function (no import needed, like test()
+ * and expect()) creates a test suite. It takes two arguments:
+ *
+ *   1. A description string — the label for this group (e.g., "Greeting
+ *      component"). This appears as a heading in the terminal output, with
+ *      individual tests indented beneath it.
+ *
+ *   2. A callback function — inside this function you place your test()
+ *      calls. The callback does NOT contain testing logic directly; it
+ *      contains one or more test() definitions.
+ *
+ * TERMINAL OUTPUT WITH SUITES:
+ *
+ * Without describe(), all tests appear in a flat list:
+ *
+ *   PASS  src/components/Greeting.test.js
+ *     ✓ renders Hello World as a text (xx ms)
+ *
+ * With describe(), tests are grouped under their suite name:
+ *
+ *   PASS  src/components/Greeting.test.js
+ *     Greeting component
+ *       ✓ renders Hello World as a text (xx ms)
+ *
+ * The indentation and grouping make it clear which component each test
+ * belongs to — essential when scanning output from many test files.
+ *
+ * IMPLICIT vs EXPLICIT SUITES:
+ *
+ * If you write test() calls without wrapping them in describe(), Jest
+ * still runs them — it creates an implicit, unnamed suite automatically.
+ * Using describe() simply makes the grouping explicit and labeled,
+ * which is a best practice as soon as a project has more than a handful
+ * of tests.
+ *
+ * MULTIPLE SUITES AND NESTING:
+ *
+ * A single test file can contain multiple describe() blocks (for example,
+ * one per sub-feature of a component), and describe() blocks can be nested
+ * inside each other for finer-grained categorization. Each suite can hold
+ * any number of test() calls. This flexibility lets you mirror your
+ * component's behavior structure in your test organization.
+ *
+ * ============================================================================
  */
 
 import { render, screen } from '@testing-library/react';
 import Greeting from './Greeting';
 
-// test() is globally provided by Jest — no import needed. The description
-// string ("renders Hello World as a text") identifies this test in the
-// terminal output, appearing next to the pass/fail indicator.
-test('renders Hello World as a text', () => {
-  // ── ARRANGE ──
-  // Render the Greeting component into Jest's simulated DOM. This is the
-  // setup step — mounting the component so its output can be inspected.
-  render(<Greeting />);
+// describe() groups related tests into a named suite. The description
+// string ("Greeting component") appears as a heading in the test output,
+// with each test() inside indented beneath it. This makes it easy to
+// identify which component a test belongs to when reviewing results.
+describe('Greeting component', () => {
+  test('renders Hello World as a text', () => {
+    // ── ARRANGE ──
+    render(<Greeting />);
 
-  // ── ACT ──
-  // Nothing to do here. This test only verifies the initial render output.
-  // There are no user interactions to simulate (no clicks, no typing).
-  // In later lessons, this step will contain actions like button clicks.
+    // ── ACT ──
+    // Nothing — testing initial render only.
 
-  // ── ASSERT ──
-  // Query the rendered DOM for an element whose text content is exactly
-  // "Hello World!" (with exclamation mark). getByText uses exact matching
-  // by default, so the string must match precisely. If no element with
-  // this text exists, getByText throws an error and the test fails — the
-  // failure output includes the full rendered HTML for debugging.
-  const helloWorldElement = screen.getByText('Hello World!');
-
-  // Verify that the found element exists in the document. This uses the
-  // toBeInTheDocument() matcher from @testing-library/jest-dom (loaded
-  // globally via setupTests.js). expect() is globally available from Jest,
-  // just like test() — no import required.
-  expect(helloWorldElement).toBeInTheDocument();
+    // ── ASSERT ──
+    const helloWorldElement = screen.getByText('Hello World!');
+    expect(helloWorldElement).toBeInTheDocument();
+  });
 });
