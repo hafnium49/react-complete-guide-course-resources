@@ -51,10 +51,79 @@
  *
  * IMPORTANT CAVEAT (addressed in the next lesson):
  *
- * This test currently sends a REAL HTTP request to JSONPlaceholder every
- * time it runs. This is problematic for several reasons — network
- * dependency, test speed, and side effects. The next lesson introduces
- * mocking to solve this.
+ * This test originally sent a REAL HTTP request to JSONPlaceholder every
+ * time it ran — see lesson 578 below for the mocking solution.
+ *
+ * ============================================================================
+ * LESSON 578: MOCKING HTTP REQUESTS WITH jest.fn()
+ * ============================================================================
+ *
+ * WHY MOCK?
+ *
+ * Sending real HTTP requests from tests is problematic for several reasons:
+ *
+ *   1. NETWORK TRAFFIC — Tests run frequently during development. If every
+ *      test run hits a real server, you hammer it with requests (especially
+ *      when you have hundreds of tests).
+ *
+ *   2. SIDE EFFECTS — Components that send POST/PUT/DELETE requests could
+ *      insert, modify, or delete real data on the server during testing.
+ *      Tests should never cause real-world side effects.
+ *
+ *   3. RELIABILITY — If the server is temporarily down, slow, or rate-
+ *      limiting, your tests fail for reasons unrelated to your code. Tests
+ *      should fail only when YOUR code is broken.
+ *
+ *   4. SPEED — Network round-trips add latency. Mock functions resolve
+ *      instantly, keeping the test suite fast.
+ *
+ * THE KEY PRINCIPLE — DON'T TEST CODE YOU DIDN'T WRITE:
+ *
+ * The built-in fetch() function is provided by the browser. We trust the
+ * browser vendors to implement it correctly — testing whether fetch
+ * successfully sends an HTTP request is not our job. What IS our job is
+ * testing how our component BEHAVES based on the response it receives.
+ * Mocking lets us control that response and verify the component's
+ * reaction to it.
+ *
+ * TWO APPROACHES TO AVOIDING REAL REQUESTS:
+ *
+ *   A. Replace the function with a mock (what we do here) — the request
+ *      is never sent at all. We control the resolved value directly.
+ *
+ *   B. Send requests to a dedicated test server — a real request is sent,
+ *      but to a safe, isolated environment. More realistic but slower and
+ *      more complex to set up.
+ *
+ * HOW MOCKING WORKS:
+ *
+ * 1. Override window.fetch with jest.fn() — this creates a mock function
+ *    that replaces the real fetch for the duration of the test.
+ *
+ * 2. Use .mockResolvedValueOnce() to define what the mock should return
+ *    when called. This sets the value the promise resolves to — we
+ *    structure it to mimic the real fetch Response object.
+ *
+ * 3. The component calls fetch() as usual, but now it receives our
+ *    controlled response instead of making a network request.
+ *
+ * jest.fn() vs A PLAIN FUNCTION:
+ *
+ * You could override window.fetch with a regular function, but jest.fn()
+ * adds extra capabilities: tracking how many times the function was called,
+ * what arguments it received, setting different return values for successive
+ * calls, and more. These features become valuable in more advanced tests.
+ *
+ * MIMICKING THE fetch() RESPONSE SHAPE:
+ *
+ * The real fetch() returns a Response object with a .json() method that
+ * itself returns a promise. Our mock must replicate this structure:
+ *
+ *   { json: async () => [{ id: 'p1', title: 'First post' }] }
+ *
+ * The component's .then(response => response.json()) chain works
+ * identically whether it receives a real Response or our mock — it just
+ * calls .json() and awaits the result.
  *
  * ============================================================================
  */
@@ -63,30 +132,41 @@ import { render, screen } from '@testing-library/react';
 import Async from './Async';
 
 describe('Async component', () => {
-  // This test verifies that list items appear after the fetch completes.
-  // The async keyword allows us to use await inside the test body. Jest
-  // treats the returned promise as the test lifecycle — the test does not
-  // finish until the promise resolves (or rejects, causing a failure).
   test('renders posts if request succeeds', async () => {
     // ── ARRANGE ──
+
+    // Override the browser's built-in fetch with a Jest mock function.
+    // This prevents any real HTTP request from being sent. The mock lives
+    // on the window object because calling fetch() in component code is
+    // equivalent to calling window.fetch().
+    window.fetch = jest.fn();
+
+    // Define what the mock should return when called. mockResolvedValueOnce
+    // sets the value the promise resolves to for the NEXT call to this mock.
+    // We replicate the shape of a real fetch Response: an object with a
+    // json() method that returns a promise resolving to our test data.
+    // The async keyword on the json function ensures it returns a promise,
+    // matching the behavior of the real Response.json().
+    window.fetch.mockResolvedValueOnce({
+      json: async () => [{ id: 'p1', title: 'First post' }],
+    });
+
     render(<Async />);
 
     // ── ACT ──
-    // No explicit action needed. Rendering the component triggers useEffect,
-    // which fires the fetch automatically. The act of fetching IS the action.
+    // No explicit action needed — useEffect fires the (now mocked) fetch
+    // automatically after the initial render.
 
     // ── ASSERT ──
-    // findAllByRole returns a promise that resolves once one or more elements
-    // with the 'listitem' role appear in the DOM. The 'listitem' role
-    // corresponds to <li> elements. By awaiting this promise, we let React
-    // Testing Library retry the query until the fetch completes and the
-    // component re-renders with the post data.
+    // findAllByRole waits for list items to appear in the DOM. The mock
+    // resolves instantly (no network delay), so this is much faster than
+    // the real request was. The 'listitem' role matches <li> elements.
     const listItemElements = await screen.findAllByRole('listitem');
 
-    // Verify that the array of list items is not empty. If the fetch failed
-    // or the component did not render the posts, this array would have a
-    // length of 0. The .not.toHaveLength(0) assertion confirms at least one
-    // post was rendered.
+    // Verify at least one list item rendered. Since our mock returns an
+    // array with one post, we expect exactly one <li>. Using
+    // .not.toHaveLength(0) keeps the assertion flexible — it passes as
+    // long as the array is non-empty.
     expect(listItemElements).not.toHaveLength(0);
   });
 });
