@@ -130,25 +130,146 @@
  * component's behavior structure in your test organization.
  *
  * ============================================================================
+ * LESSON 575: TESTING USER INTERACTION AND STATE CHANGES
+ * ============================================================================
+ *
+ * TESTING ALL POSSIBLE SCENARIOS:
+ *
+ * A component with conditional rendering creates multiple scenarios that
+ * each deserve their own test. Testing only one scenario (e.g., the initial
+ * render) leaves blind spots — a bug in another scenario (e.g., after a
+ * button click) would go undetected. Thorough testing means covering every
+ * meaningful state the component can be in:
+ *
+ *   - What the user sees BEFORE any interaction
+ *   - What the user sees AFTER an interaction
+ *   - What should DISAPPEAR after an interaction
+ *
+ * DESCRIPTIVE TEST NAMES:
+ *
+ * When combined with the describe() suite label, each test description
+ * should read like a sentence:
+ *
+ *   "Greeting component renders Hello World as a text"
+ *   "Greeting component renders 'good to see you' if the button was not clicked"
+ *   "Greeting component renders 'Changed!' if the button was clicked"
+ *   "Greeting component does not render 'good to see you' if the button was clicked"
+ *
+ * This sentence-like structure makes test output immediately understandable
+ * without needing to read the test code itself.
+ *
+ * SIMULATING USER EVENTS WITH userEvent:
+ *
+ * The @testing-library/user-event package (pre-installed by CRA) provides
+ * a userEvent object for triggering realistic user interactions in tests.
+ * Unlike the lower-level fireEvent API, userEvent simulates full event
+ * sequences as a real user would produce them (e.g., focus → keydown →
+ * keypress → keyup for typing).
+ *
+ * Common methods on userEvent:
+ *   userEvent.click(element)       — Simulate a mouse click
+ *   userEvent.dblClick(element)    — Simulate a double-click
+ *   userEvent.hover(element)       — Simulate mouse hover
+ *   userEvent.type(element, text)  — Simulate typing into an input
+ *
+ * Each method requires the target DOM element as its first argument. Use
+ * screen queries (getByRole, getByText, etc.) to obtain that element.
+ *
+ * SELECTING ELEMENTS BY ROLE:
+ *
+ * screen.getByRole('button') selects an element by its ARIA role. HTML
+ * elements have implicit roles — <button> has role "button", <a> has role
+ * "link", <input type="checkbox"> has role "checkbox", etc. Querying by
+ * role mirrors how assistive technologies identify elements, making tests
+ * more accessible-aware. When multiple elements share a role, pass a
+ * { name: '...' } option to disambiguate by accessible name.
+ *
+ * ASSERTING ABSENCE WITH queryByText + toBeNull():
+ *
+ * To verify an element does NOT exist, you cannot use getByText — it
+ * throws before the assertion runs if nothing is found. Instead, use
+ * queryByText, which returns null when no match exists. Then assert with
+ * toBeNull() to confirm the element is truly absent. This is the standard
+ * pattern for testing that something has been removed from the DOM after
+ * a state change.
+ *
+ * WHY TEST FOR ABSENCE?
+ *
+ * It is surprisingly easy to forget a conditional check and accidentally
+ * render both paragraphs simultaneously. A test that only checks for the
+ * presence of the NEW text would pass even if the OLD text is still
+ * visible. Only an explicit absence test catches that class of bug.
+ *
+ * ============================================================================
  */
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Greeting from './Greeting';
 
-// describe() groups related tests into a named suite. The description
-// string ("Greeting component") appears as a heading in the test output,
-// with each test() inside indented beneath it. This makes it easy to
-// identify which component a test belongs to when reviewing results.
 describe('Greeting component', () => {
+  // TEST 1 (from lesson 573): The heading renders regardless of state.
   test('renders Hello World as a text', () => {
+    render(<Greeting />);
+    const helloWorldElement = screen.getByText('Hello World!');
+    expect(helloWorldElement).toBeInTheDocument();
+  });
+
+  // TEST 2: Verify the DEFAULT paragraph text is present on initial render
+  // (before any user interaction). The { exact: false } option matches a
+  // substring, ignoring casing — useful when you only care about part of
+  // the element's text content.
+  test('renders good to see you if the button was not clicked', () => {
     // ── ARRANGE ──
     render(<Greeting />);
 
     // ── ACT ──
-    // Nothing — testing initial render only.
+    // Nothing — we are testing the initial (pre-click) state.
 
     // ── ASSERT ──
-    const helloWorldElement = screen.getByText('Hello World!');
-    expect(helloWorldElement).toBeInTheDocument();
+    const outputElement = screen.getByText('good to see you', { exact: false });
+    expect(outputElement).toBeInTheDocument();
+  });
+
+  // TEST 3: Verify the paragraph text CHANGES after the button is clicked.
+  // This is the first test that uses the ACT step meaningfully — we
+  // simulate a click via userEvent before making our assertion.
+  test('renders Changed! if the button was clicked', () => {
+    // ── ARRANGE ──
+    render(<Greeting />);
+
+    // ── ACT ──
+    // Select the button by its ARIA role. Since there is only one <button>
+    // in the rendered output, getByRole('button') unambiguously returns it.
+    const buttonElement = screen.getByRole('button');
+    // Simulate a user click on the button, which triggers changeTextHandler
+    // and flips changedText from false to true.
+    userEvent.click(buttonElement);
+
+    // ── ASSERT ──
+    const outputElement = screen.getByText('Changed!');
+    expect(outputElement).toBeInTheDocument();
+  });
+
+  // TEST 4: Verify the ORIGINAL paragraph text DISAPPEARS after the button
+  // click. This catches the subtle bug where a developer forgets to make
+  // the first paragraph conditional — both paragraphs would render
+  // simultaneously, but only this test would detect it.
+  test('does not render good to see you if the button was clicked', () => {
+    // ── ARRANGE ──
+    render(<Greeting />);
+
+    // ── ACT ──
+    const buttonElement = screen.getByRole('button');
+    userEvent.click(buttonElement);
+
+    // ── ASSERT ──
+    // queryByText returns null (instead of throwing) when no element matches.
+    // This is essential here — we EXPECT the element to be gone, so getByText
+    // would throw an error and fail the test before the assertion ever runs.
+    const outputElement = screen.queryByText('good to see you', {
+      exact: false,
+    });
+    expect(outputElement).toBeNull();
   });
 });
