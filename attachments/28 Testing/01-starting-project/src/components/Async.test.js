@@ -132,6 +132,15 @@ import { render, screen } from '@testing-library/react';
 import Async from './Async';
 
 describe('Async component', () => {
+  // Save the original fetch so we can restore it after each test. Without
+  // this cleanup, the mocked fetch leaks open handles that prevent Jest's
+  // worker process from exiting gracefully.
+  const originalFetch = window.fetch;
+
+  afterEach(() => {
+    window.fetch = originalFetch;
+  });
+
   test('renders posts if request succeeds', async () => {
     // ── ARRANGE ──
 
