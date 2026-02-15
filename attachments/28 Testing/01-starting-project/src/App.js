@@ -1,23 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+/**
+ * ============================================================================
+ * src/App.js — LESSON 573
+ * ============================================================================
+ *
+ * The default CRA App component (logo, "Learn React" link) has been replaced
+ * with our custom Greeting component. This is the component under test in
+ * Greeting.test.js. Changing App's output is what invalidated the original
+ * App.test.js test — it searched for "learn react" text that no longer exists
+ * in the rendered tree, causing it to fail. That file was deleted since its
+ * test no longer applies to the updated application.
+ *
+ * ============================================================================
+ */
+
+import Greeting from './components/Greeting';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Greeting />
     </div>
   );
 }
