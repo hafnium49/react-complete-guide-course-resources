@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * no-typescript.js — LESSONS 580 & 581
+ * no-typescript.js — LESSONS 580, 581 & 582
  * ============================================================================
  *
  * SECTION 29: REACT + TYPESCRIPT — INTRODUCTION
@@ -104,6 +104,25 @@
  * TypeScript lets you write SAFER code by catching type mismatches before
  * execution. The larger the project and the more people working on it,
  * the more valuable this early error detection becomes.
+ *
+ * ============================================================================
+ * LESSON 582: INSTALLING AND COMPILING TYPESCRIPT
+ * ============================================================================
+ *
+ * This file (no-typescript.js) remains as the plain-JavaScript "before"
+ * example. The TypeScript version of this same code now lives in
+ * with-typescript.ts, where type annotations have been added to the add()
+ * function parameters.
+ *
+ * See with-typescript.ts for full details on:
+ *   - Installing TypeScript via npm
+ *   - The TypeScript compiler (tsc) and how to invoke it
+ *   - What compilation does (strips types, downlevels syntax, reports errors)
+ *   - The development workflow (write .ts → compile → run .js in browser)
+ *
+ * index.html now loads the compiled with-typescript.js instead of this
+ * file. To see the string-concatenation bug in action again, change the
+ * <script src> back to "no-typescript.js".
  *
  * ============================================================================
  */
