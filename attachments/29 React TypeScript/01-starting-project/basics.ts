@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * basics.ts — LESSONS 583, 584, 585 & 586
+ * basics.ts — LESSONS 583–588
  * ============================================================================
  *
  * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
@@ -33,10 +33,15 @@
  *   - When explicit annotations are NOT redundant (overriding inference)
  *   - Union types can be used anywhere a type assignment appears
  *
+ *   LESSON 587 — Type aliases:
+ *   - The "type" keyword for creating reusable custom type names
+ *   - Eliminating duplicated type definitions across the codebase
+ *   - Type aliases are erased during compilation (TypeScript-only feature)
+ *
  * UPCOMING TOPICS (covered in later lessons):
  *
  *   - Function types and return types
- *   - Type aliases and more advanced patterns
+ *   - Generics and more advanced patterns
  *
  * ============================================================================
  * PRIMITIVE TYPES IN JAVASCRIPT (AND TYPESCRIPT)
@@ -214,6 +219,52 @@ let hobbies: string[] = ["Sports", "Cooking"];
 //
 // This is the fallback you should avoid. Use a proper type instead.
 
+// ============================================================================
+// LESSON 587: TYPE ALIASES
+// ============================================================================
+//
+// As TypeScript code grows, you will often find yourself repeating the same
+// type definition in multiple places. For example, the object type
+// { name: string; age: number } was used both for "person" (a single
+// object) and "people" (an array of objects) in lesson 584. Duplicating
+// a type definition is error-prone — if the structure changes, you must
+// update every copy.
+//
+// TYPE ALIASES solve this by letting you assign a name to any type
+// definition. You define it once, then reference the name wherever you
+// need that type.
+//
+// SYNTAX:
+//
+//   type Person = { name: string; age: number };
+//
+// The "type" keyword is a TYPESCRIPT-ONLY feature — it does not exist in
+// standard JavaScript. During compilation, type aliases (like all type
+// information) are completely ERASED from the output. They exist solely
+// for the type checker and your IDE; the browser never sees them.
+//
+// KEY POINTS:
+//
+//   - The name after "type" can be anything you choose (by convention,
+//     PascalCase — e.g., Person, CourseGoal, UserData).
+//   - The right side of the "=" is a TYPE DEFINITION, not a JavaScript
+//     value. It can be any type: a primitive, an object type, a union,
+//     an array type, or any combination.
+//   - Once defined, the alias can be used in all the same places as an
+//     inline type: variable annotations, function parameters, return
+//     types, array element types, etc.
+//   - Changing the alias definition automatically updates every place
+//     that references it — single source of truth.
+// ============================================================================
+
+// Define a reusable type alias for a person object. This replaces the
+// inline { name: string; age: number } that was previously duplicated
+// across the "person" and "people" variables.
+type Person = {
+  name: string;
+  age: number;
+};
+
 // ── OBJECT TYPE ─────────────────────────────────────────────────────────────
 
 // An object type definition describes the required structure. The syntax
@@ -221,18 +272,20 @@ let hobbies: string[] = ["Sports", "Cooking"];
 // an object literal but it is NOT creating a value. It appears after the
 // colon (in the type position), not after the equals sign (the value
 // position).
-let person: {
-  name: string;
-  age: number;
-} = {
+//
+// LESSON 587 UPDATE: The inline object type that was originally written
+// here has been extracted into a type alias (see the "Person" type alias
+// below). The variable now references that alias instead of repeating
+// the full object structure.
+let person: Person = {
   name: "Max",
   age: 32,
 };
 
 // UNCOMMENTING THE BLOCK BELOW WOULD CAUSE A COMPILE-TIME ERROR:
-// The object { isEmployee: true } does not match the required structure
-// { name: string; age: number }. TypeScript rejects it because the
-// properties and their types do not align.
+// The object { isEmployee: true } does not match the Person type alias
+// (which requires { name: string; age: number }). TypeScript rejects it
+// because the properties and their types do not align.
 //
 // person = {
 //   isEmployee: true,
@@ -240,14 +293,11 @@ let person: {
 
 // ── COMBINING ARRAYS AND OBJECTS ────────────────────────────────────────────
 
-// Appending [] after an object type definition creates an ARRAY OF OBJECTS
-// where each element must conform to the specified structure. This is a
-// common pattern — for example, a list of users, products, or posts would
-// each be typed as an array of objects with a defined shape.
-let people: {
-  name: string;
-  age: number;
-}[];
+// Appending [] after a type name creates an ARRAY OF OBJECTS where each
+// element must conform to the specified structure. Using the Person alias
+// here (instead of repeating the full object type) demonstrates why type
+// aliases are valuable — the type is defined once and reused everywhere.
+let people: Person[];
 
 // ============================================================================
 // LESSON 585: TYPE INFERENCE
