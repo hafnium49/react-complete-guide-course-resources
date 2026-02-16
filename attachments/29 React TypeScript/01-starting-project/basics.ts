@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * basics.ts — LESSONS 583, 584 & 585
+ * basics.ts — LESSONS 583, 584, 585 & 586
  * ============================================================================
  *
  * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
@@ -28,10 +28,15 @@
  *   - Why explicit annotations are redundant when initializing immediately
  *   - Best practice: rely on inference, annotate only when necessary
  *
+ *   LESSON 586 — Union types:
+ *   - Allowing multiple types for a single variable with the pipe (|) syntax
+ *   - When explicit annotations are NOT redundant (overriding inference)
+ *   - Union types can be used anywhere a type assignment appears
+ *
  * UPCOMING TOPICS (covered in later lessons):
  *
  *   - Function types and return types
- *   - Union types, type aliases, and more advanced patterns
+ *   - Type aliases and more advanced patterns
  *
  * ============================================================================
  * PRIMITIVE TYPES IN JAVASCRIPT (AND TYPESCRIPT)
@@ -313,3 +318,62 @@ let course = "React - The Complete Guide";
 //
 //   let title: string = "Advanced TypeScript";   // explicit (redundant)
 //   let title = "Advanced TypeScript";            // inferred (preferred)
+
+// ============================================================================
+// LESSON 586: UNION TYPES
+// ============================================================================
+//
+// Up to this point, every variable has been restricted to a SINGLE type —
+// just a number, just a string, just a boolean. But sometimes a variable
+// legitimately needs to accept more than one type. For example, a "course"
+// variable might hold either a course name (string) or a course ID (number).
+//
+// UNION TYPE SYNTAX:
+//
+// A union type is created by joining two or more types with the PIPE
+// symbol (|):
+//
+//   let value: string | number;
+//
+// This declares that "value" can hold either a string OR a number — both
+// are valid assignments. You can chain as many types as needed:
+//
+//   let flexible: string | number | boolean;
+//
+// WHERE UNION TYPES CAN BE USED:
+//
+// Union types work anywhere a type annotation appears — variable
+// declarations, function parameters, function return types, object
+// properties, array element types, etc. They are not limited to
+// simple variable declarations.
+//
+// UNION TYPES AND TYPE INFERENCE:
+//
+// In lesson 585 we learned that explicitly writing ": string" on a
+// variable initialized with a string is redundant. But when defining
+// a UNION type, the explicit annotation is NOT redundant — inference
+// would only give you the type of the initial value (e.g., string),
+// not the union you actually want (string | number). So union type
+// annotations are always necessary and never redundant.
+// ============================================================================
+
+// ── UNION TYPE IN ACTION ────────────────────────────────────────────────────
+
+// Without a union type, TypeScript infers "course" as string (lesson 585),
+// and assigning a number would fail. By explicitly annotating the variable
+// as "string | number", we tell TypeScript that BOTH types are acceptable.
+// This annotation is NOT redundant — it expands the allowed types beyond
+// what inference alone would provide.
+let courseFlexible: string | number = "React - The Complete Guide";
+
+// Now assigning a number is perfectly valid — the union type permits it.
+// Without the union, this line would produce a compile-time error.
+courseFlexible = 12345;
+
+// ── UNION TYPES ON OTHER VARIABLES ──────────────────────────────────────────
+
+// Union types can combine any types, including complex ones. Here a
+// userName could be a single string (e.g., "Max") or an array of strings
+// (e.g., ["Max", "Schwarzmüller"] for first and last name separately).
+let flexibleName: string | string[] = "Max";
+flexibleName = ["Max", "Schwarzmüller"];
