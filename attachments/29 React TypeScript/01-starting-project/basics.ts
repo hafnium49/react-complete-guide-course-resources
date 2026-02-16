@@ -38,9 +38,13 @@
  *   - Eliminating duplicated type definitions across the codebase
  *   - Type aliases are erased during compilation (TypeScript-only feature)
  *
+ *   LESSON 588 — Functions and types:
+ *   - Parameter types (recap) and return type inference
+ *   - Explicit return type annotations (when needed vs redundant)
+ *   - The "void" return type for functions that return nothing
+ *
  * UPCOMING TOPICS (covered in later lessons):
  *
- *   - Function types and return types
  *   - Generics and more advanced patterns
  *
  * ============================================================================
@@ -427,3 +431,94 @@ courseFlexible = 12345;
 // (e.g., ["Max", "Schwarzmüller"] for first and last name separately).
 let flexibleName: string | string[] = "Max";
 flexibleName = ["Max", "Schwarzmüller"];
+
+// ============================================================================
+// LESSON 588: FUNCTIONS AND TYPES
+// ============================================================================
+//
+// Functions interact with the type system in TWO places:
+//
+//   1. PARAMETER TYPES — annotations on the input values (already seen in
+//      lesson 581 with the add function). These work exactly like variable
+//      type annotations: a colon after the parameter name, followed by the
+//      type.
+//
+//   2. RETURN TYPE — the type of the value the function gives back. This
+//      is placed after the closing parenthesis of the parameter list:
+//
+//        function add(a: number, b: number): number { ... }
+//                                            ^^^^^^
+//                                         return type
+//
+// RETURN TYPE INFERENCE:
+//
+// Just as TypeScript infers variable types from initial values (lesson 585),
+// it also infers RETURN TYPES by analyzing the return statement and the
+// types of the values involved. If a function returns "a + b" where both
+// a and b are numbers, TypeScript knows the result must be a number — no
+// explicit return type annotation is needed.
+//
+// You CAN add an explicit return type, and it is not an error to do so.
+// But if the inferred type is already correct, it is redundant — the same
+// best-practice rule from lesson 585 applies: let inference do the work
+// unless you have a specific reason to override it.
+//
+// THE "void" RETURN TYPE:
+//
+// Some functions perform an action (like logging to the console) but do
+// NOT return a value — they have no return statement. TypeScript represents
+// this with the special type "void".
+//
+//   function printOutput(value: any): void { console.log(value); }
+//
+// "void" is conceptually similar to undefined (which is what a function
+// without a return statement actually produces at runtime), but it is a
+// distinct type used exclusively for function return values. It signals
+// to other developers and to the type checker that the function's return
+// value is intentionally unused.
+//
+// NOTE ON "any" FOR PARAMETERS:
+//
+// In most cases, "any" should be avoided (lesson 584). But for a utility
+// function whose sole purpose is to log a value — where the type of the
+// value genuinely does not matter — "any" is an acceptable choice. The
+// function works identically regardless of what it receives.
+// ============================================================================
+
+// ── FUNCTION WITH INFERRED RETURN TYPE ──────────────────────────────────────
+
+// Parameter types are explicitly set to number. The return type is INFERRED
+// as number because "a + b" with two number operands can only produce a
+// number. Hovering over the function name in the IDE confirms:
+//   function add(a: number, b: number): number
+// There is no need to write ": number" after the parameter list explicitly.
+function add(a: number, b: number) {
+  return a + b;
+}
+
+// An explicit return type annotation IS possible but REDUNDANT here.
+// The following would be equivalent:
+//
+//   function add(a: number, b: number): number { return a + b; }
+//
+// Only add an explicit return type when:
+//   - The inferred type is not what you intend (e.g., you want to narrow it)
+//   - You want to document the contract for a complex function
+//   - The function has multiple return paths with different types
+
+// ── FUNCTION WITH void RETURN TYPE ──────────────────────────────────────────
+
+// This function logs a value to the console but does not return anything.
+// TypeScript infers the return type as "void" — a special type that means
+// "this function produces no usable return value."
+//
+// The parameter is typed as "any" because the function simply passes the
+// value to console.log, which accepts anything. The concrete type of the
+// input is irrelevant to the function's behavior.
+//
+// NOTE: The function is named "printOutput" rather than "print" to avoid
+// clashing with JavaScript's built-in window.print() function, which
+// would cause a compilation error due to the name conflict.
+function printOutput(value: any) {
+  console.log(value);
+}
