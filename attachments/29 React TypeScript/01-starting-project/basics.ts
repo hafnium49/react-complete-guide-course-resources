@@ -1,26 +1,32 @@
 /**
  * ============================================================================
- * basics.ts — LESSON 583
+ * basics.ts — LESSONS 583 & 584
  * ============================================================================
  *
- * TYPESCRIPT FUNDAMENTALS — PRIMITIVE TYPES
+ * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
  *
- * This file explores the core type system features of TypeScript, starting
- * with the most fundamental building blocks: primitive value types.
+ * This file explores the core type system features of TypeScript, from
+ * the most fundamental primitives to more complex structures.
  *
  * WHAT THIS FILE COVERS:
  *
- *   - Primitive types: number, string, boolean
+ *   LESSON 583 — Primitive types:
+ *   - number, string, boolean
  *   - Type annotations on variables (not just function parameters)
- *   - The difference between declaration-only and declaration-with-assignment
- *   - Why lowercase type names matter (number vs Number)
- *   - Why null/undefined are rarely used as standalone type annotations
+ *   - Declaration-only vs declaration-with-assignment
+ *   - Lowercase vs uppercase type names (number vs Number)
+ *   - Why null/undefined are rarely used as standalone annotations
+ *
+ *   LESSON 584 — Complex types:
+ *   - Array types (e.g., string[], number[])
+ *   - Object types with defined structure (e.g., { name: string; age: number })
+ *   - The "any" type and why it should be avoided
+ *   - Combining arrays and objects (arrays of objects)
  *
  * UPCOMING TOPICS (covered in later lessons):
  *
- *   - Complex types: arrays, objects
  *   - Function types and return types
- *   - And more advanced patterns
+ *   - Union types, type aliases, and more advanced patterns
  *
  * ============================================================================
  * PRIMITIVE TYPES IN JAVASCRIPT (AND TYPESCRIPT)
@@ -114,3 +120,121 @@ let isInstructor: boolean = true;
 // In practice, null and undefined are combined with other types using
 // UNION TYPES (e.g., string | null) to indicate that a value might or
 // might not be present. Union types are covered in an upcoming lesson.
+
+// ============================================================================
+// LESSON 584: COMPLEX TYPES — ARRAYS AND OBJECTS
+// ============================================================================
+//
+// ARRAY TYPES:
+//
+// To declare that a variable holds an ARRAY of a certain type, append
+// square brackets [] to the element type:
+//
+//   string[]   → an array where every element must be a string
+//   number[]   → an array where every element must be a number
+//   boolean[]  → an array where every element must be a boolean
+//
+// Note the difference: "string" (without brackets) means a single string
+// value, while "string[]" means an array containing only strings.
+//
+// OBJECT TYPES:
+//
+// TypeScript lets you describe the exact SHAPE (structure) of an object
+// using an object type definition. The syntax looks similar to creating
+// an object literal, but it appears on the RIGHT side of the colon in a
+// type annotation — so it defines a type, not a value.
+//
+// Inside the curly braces, each property is listed with its name, a colon,
+// and its expected type. Properties are separated by semicolons (not commas,
+// though commas also work):
+//
+//   { name: string; age: number }
+//
+// This means: "an object that has a 'name' property of type string AND
+// an 'age' property of type number."
+//
+// THE "any" TYPE:
+//
+// When you declare a variable without a type annotation AND without an
+// initial value, TypeScript assigns the implicit type "any". This means
+// the variable can hold literally anything — numbers, strings, objects,
+// arrays, etc. You can also write "any" explicitly:
+//
+//   let data: any;
+//
+// While valid, "any" completely disables type checking for that variable.
+// It is essentially opting back into plain JavaScript behavior, which
+// defeats the purpose of using TypeScript. Avoid "any" whenever possible
+// and use a specific type instead.
+//
+// COMBINING ARRAYS AND OBJECTS:
+//
+// Array types and object types can be combined to describe arrays of
+// objects. Append [] after the object type definition:
+//
+//   { name: string; age: number }[]
+//
+// This declares an array where every element must be an object matching
+// that structure.
+// ============================================================================
+
+// ── ARRAY TYPE: string[] ────────────────────────────────────────────────────
+
+// The square brackets after "string" mean this variable must hold an ARRAY
+// of strings — not a single string. Every element in the array must be a
+// string; mixing in a number or other type would cause a compile error.
+let hobbies: string[] = ["Sports", "Cooking"];
+
+// UNCOMMENTING THE LINE BELOW WOULD CAUSE A COMPILE-TIME ERROR:
+//   Type 'number' is not assignable to type 'string'.
+// because the array is typed as string-only.
+// hobbies = ["Sports", "Cooking", 3];
+
+// ── THE "any" TYPE (AND WHY TO AVOID IT) ────────────────────────────────────
+
+// Without a type annotation, TypeScript defaults to "any" — the variable
+// accepts any value with no type checking at all. Writing "any" explicitly
+// makes the intent visible but is equally permissive.
+// let person: any;
+//
+// With "any", ALL of the following would be allowed — no errors, no safety:
+//   person = "hello";
+//   person = 42;
+//   person = { isEmployee: true };
+//
+// This is the fallback you should avoid. Use a proper type instead.
+
+// ── OBJECT TYPE ─────────────────────────────────────────────────────────────
+
+// An object type definition describes the required structure. The syntax
+// uses curly braces with property names and their types — it LOOKS like
+// an object literal but it is NOT creating a value. It appears after the
+// colon (in the type position), not after the equals sign (the value
+// position).
+let person: {
+  name: string;
+  age: number;
+} = {
+  name: "Max",
+  age: 32,
+};
+
+// UNCOMMENTING THE BLOCK BELOW WOULD CAUSE A COMPILE-TIME ERROR:
+// The object { isEmployee: true } does not match the required structure
+// { name: string; age: number }. TypeScript rejects it because the
+// properties and their types do not align.
+//
+// person = {
+//   isEmployee: true,
+// };
+
+// ── COMBINING ARRAYS AND OBJECTS ────────────────────────────────────────────
+
+// Appending [] after an object type definition creates an ARRAY OF OBJECTS
+// where each element must conform to the specified structure. This is a
+// common pattern — for example, a list of users, products, or posts would
+// each be typed as an array of objects with a defined shape.
+let people: {
+  name: string;
+  age: number;
+}[];

@@ -143,7 +143,7 @@ function add(a, b) {
 // that intent. JavaScript silently concatenates the strings, producing
 // "25" instead of 7. With TypeScript's type annotations, this call would
 // be flagged as an error immediately in the IDE.
-const result = add("2", "5");
+const result = add(2, 5);
 
 // Logs "25" (string concatenation) to the console — not 7 (addition).
 // Open index.html in a browser and check the developer tools console
