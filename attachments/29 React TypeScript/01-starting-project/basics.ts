@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * basics.ts — LESSONS 583 & 584
+ * basics.ts — LESSONS 583, 584 & 585
  * ============================================================================
  *
  * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
@@ -22,6 +22,11 @@
  *   - Object types with defined structure (e.g., { name: string; age: number })
  *   - The "any" type and why it should be avoided
  *   - Combining arrays and objects (arrays of objects)
+ *
+ *   LESSON 585 — Type inference:
+ *   - How TypeScript automatically determines types from initial values
+ *   - Why explicit annotations are redundant when initializing immediately
+ *   - Best practice: rely on inference, annotate only when necessary
  *
  * UPCOMING TOPICS (covered in later lessons):
  *
@@ -238,3 +243,73 @@ let people: {
   name: string;
   age: number;
 }[];
+
+// ============================================================================
+// LESSON 585: TYPE INFERENCE
+// ============================================================================
+//
+// In the examples above, every variable has an EXPLICIT type annotation
+// written out by hand. But TypeScript has a powerful feature called TYPE
+// INFERENCE that often makes explicit annotations unnecessary.
+//
+// HOW IT WORKS:
+//
+// When you declare a variable AND assign an initial value in the same
+// statement, TypeScript automatically examines the value and infers the
+// variable's type from it. You do not need to write the type yourself —
+// TypeScript figures it out.
+//
+//   let course = "React - The Complete Guide";   // inferred as string
+//   let count = 42;                              // inferred as number
+//   let active = true;                           // inferred as boolean
+//
+// After inference, the variable is locked to that type just as firmly as
+// if you had written an explicit annotation. Attempting to assign a value
+// of a different type will produce a compile-time error.
+//
+// WHEN TO USE EXPLICIT ANNOTATIONS vs INFERENCE:
+//
+//   REDUNDANT (avoid):
+//     let course: string = "React - The Complete Guide";
+//
+//   The ": string" annotation adds no information — TypeScript already
+//   knows the initial value is a string. Writing it out is extra work
+//   for no benefit.
+//
+//   NECESSARY (keep):
+//     let age: number;
+//     age = 24;
+//
+//   Here the declaration has NO initial value, so TypeScript cannot infer
+//   the type. Without the explicit annotation, the variable would default
+//   to "any". The annotation is needed to tell TypeScript what to expect.
+//
+// BEST PRACTICE:
+//
+// Rely on type inference whenever possible. Only add explicit type
+// annotations when TypeScript cannot determine the type on its own —
+// typically when a variable is declared without an initial value, or
+// when the inferred type is broader than what you intend. This keeps
+// code concise without sacrificing type safety.
+// ============================================================================
+
+// ── TYPE INFERENCE IN ACTION ────────────────────────────────────────────────
+
+// No ": string" annotation needed. TypeScript inspects the initial value
+// "React - The Complete Guide" and infers that course is of type string.
+// Hovering over this variable in the IDE confirms the inferred type.
+let course = "React - The Complete Guide";
+
+// UNCOMMENTING THE LINE BELOW WOULD CAUSE A COMPILE-TIME ERROR:
+//   Type 'number' is not assignable to type 'string'.
+// Even though no explicit type was written, inference locks the variable
+// to string. Assigning a number (e.g., a course ID) is rejected.
+// course = 12345;
+
+// COMPARE: Adding an explicit annotation here IS valid but REDUNDANT.
+// Both lines below produce the exact same result — the variable is
+// typed as string either way. The second form is preferred because
+// it is shorter and leverages inference.
+//
+//   let title: string = "Advanced TypeScript";   // explicit (redundant)
+//   let title = "Advanced TypeScript";            // inferred (preferred)
