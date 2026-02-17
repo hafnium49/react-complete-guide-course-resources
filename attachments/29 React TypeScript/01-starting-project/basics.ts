@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * basics.ts — LESSONS 583–588
+ * basics.ts — LESSONS 583–589
  * ============================================================================
  *
  * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
@@ -43,9 +43,14 @@
  *   - Explicit return type annotations (when needed vs redundant)
  *   - The "void" return type for functions that return nothing
  *
- * UPCOMING TOPICS (covered in later lessons):
+ *   LESSON 589 — Generics:
+ *   - The problem: using "any" to write flexible functions loses type safety
+ *   - Generic type parameters (<T>) for type-safe flexibility
+ *   - How TypeScript infers the concrete type from the arguments
+ *   - Why generics matter: catching errors that "any" would silently allow
  *
- *   - Generics and more advanced patterns
+ * This file covers the complete TypeScript fundamentals introduction.
+ * Later lessons move on to using TypeScript with React.
  *
  * ============================================================================
  * PRIMITIVE TYPES IN JAVASCRIPT (AND TYPESCRIPT)
@@ -522,3 +527,115 @@ function add(a: number, b: number) {
 function printOutput(value: any) {
   console.log(value);
 }
+
+// ============================================================================
+// LESSON 589: GENERICS
+// ============================================================================
+//
+// THE PROBLEM — FLEXIBILITY vs TYPE SAFETY:
+//
+// Consider a utility function that inserts a value at the beginning of an
+// array and returns the new array. To make it work with ANY type of array
+// (numbers, strings, objects, etc.), you might type the parameters as "any":
+//
+//   function insertAtBeginning(array: any[], value: any) {
+//     return [value, ...array];
+//   }
+//
+// This works — it accepts any array and any value. But it has a critical
+// flaw: TypeScript loses ALL type information about the result. Even if
+// you pass in a number[] and a number, the returned array is typed as
+// any[]. That means TypeScript will not catch mistakes when you use the
+// returned values — you could call string methods on numbers without any
+// error, completely defeating the purpose of type checking.
+//
+// GENERICS SOLVE THIS:
+//
+// A GENERIC function uses a TYPE PARAMETER (conventionally named T) to
+// create a link between the types of the inputs and the type of the output.
+// Instead of hardcoding a specific type or giving up with "any", the
+// function says: "I don't know the type yet — the CALLER will determine
+// it when they invoke me."
+//
+// SYNTAX:
+//
+//   function insertAtBeginning<T>(array: T[], value: T): T[] {
+//     return [value, ...array];
+//   }
+//
+// The <T> after the function name DEFINES a generic type parameter. It
+// acts as a placeholder that gets filled in with a concrete type each
+// time the function is called. Everywhere "T" appears in the parameter
+// list and return type, it represents the SAME concrete type.
+//
+// HOW TYPE INFERENCE WORKS WITH GENERICS:
+//
+// When you call insertAtBeginning([1, 2, 3], -1), TypeScript examines the
+// arguments and determines that T must be "number" — because the array
+// contains numbers and the value is a number. The return type is then
+// inferred as number[], not any[]. All type information is preserved.
+//
+// You do NOT need to specify T explicitly (though you can):
+//
+//   insertAtBeginning<number>([1, 2, 3], -1)   // explicit (valid but verbose)
+//   insertAtBeginning([1, 2, 3], -1)            // inferred (preferred)
+//
+// WHY THIS MATTERS:
+//
+// With the "any" version, TypeScript would silently allow calling
+// updatedArray[0].split("") on a number — no error until runtime. With
+// the generic version, TypeScript knows the result is number[] and
+// immediately flags .split("") as invalid on a number value. Generics
+// give you the FLEXIBILITY of "any" (works with any type) combined with
+// the SAFETY of explicit types (TypeScript tracks what T actually is).
+//
+// GENERICS ARE USED EXTENSIVELY IN REACT:
+//
+// React's own type definitions use generics heavily — for example,
+// useState<T> lets TypeScript know the type of state you're managing.
+// Understanding generics here prepares you for React + TypeScript in
+// the upcoming lessons.
+// ============================================================================
+
+// ── GENERIC FUNCTION: insertAtBeginning ─────────────────────────────────────
+
+// The <T> after the function name declares a generic type parameter. When
+// the function is called, TypeScript fills in T with the actual type of
+// the arguments. The parameter "array" must be an array of T values, and
+// "value" must also be of type T — ensuring they are compatible. The
+// return type T[] is inferred automatically (it could also be written
+// explicitly, but inference handles it).
+function insertAtBeginning<T>(array: T[], value: T) {
+  // The spread operator creates a new array with "value" as the first
+  // element, followed by all elements of the original array. Because
+  // both inputs are typed as T, the result is also T[].
+  return [value, ...array];
+}
+
+// ── USING THE GENERIC FUNCTION WITH NUMBERS ─────────────────────────────────
+
+// TypeScript examines the arguments: [1, 2, 3] is number[] and -1 is a
+// number. It infers T = number, so the return type is number[]. The
+// variable updatedArray is correctly typed as number[] — all type
+// information is preserved.
+const demoArray = [1, 2, 3];
+const updatedArray = insertAtBeginning(demoArray, -1); // number[]
+
+// Because TypeScript knows updatedArray is number[], it catches type
+// errors when you try to use the elements incorrectly:
+//
+// UNCOMMENTING THE LINE BELOW WOULD CAUSE A COMPILE-TIME ERROR:
+//   Property 'split' does not exist on type 'number'.
+//
+// updatedArray[0].split("");
+//
+// With the "any" version of the function, this error would NOT be caught
+// — TypeScript would allow .split("") on an any value, and the bug would
+// only surface at runtime. Generics prevent this class of error entirely.
+
+// ── USING THE SAME GENERIC FUNCTION WITH STRINGS ────────────────────────────
+
+// The same function works with strings too — T is inferred as "string"
+// this time, producing a string[] result. The function is reusable across
+// types without losing type safety.
+const stringArray = insertAtBeginning(["a", "b", "c"], "d"); // string[]
