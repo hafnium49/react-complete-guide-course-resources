@@ -1,49 +1,35 @@
 /**
  * ============================================================================
- * App.tsx — LESSON 592
+ * App.tsx — LESSONS 592–593
  * ============================================================================
  *
- * BUILDING A BASIC TODO APP WITH REACT AND TYPESCRIPT
+ * LESSON 593 UPDATE — PASSING TYPED PROPS
  *
- * This lesson cleans up the CRA boilerplate and starts building a
- * simple todo application to demonstrate core TypeScript features
- * in a React context.
+ * The Todos component now expects an "items" prop of type string[].
+ * Because the prop is required (not optional), TypeScript will flag
+ * an error if we use <Todos /> without passing "items". This is one
+ * of the key benefits of typed props — incorrect component usage is
+ * caught at compile time, directly in the IDE, before the code ever
+ * runs.
  *
- * CLEANUP PERFORMED:
- *
- *   - Deleted boilerplate files: App.test.tsx, logo.svg,
- *     reportWebVitals.ts, setupTests.ts
- *   - Kept react-app-env.d.ts (links TypeScript into the project)
- *   - Removed the React import (not needed in modern React with the
- *     new JSX transform — this applies to TypeScript projects too)
- *   - Removed the logo import and App.css import (no longer used)
- *   - Replaced the default CRA JSX with the Todos component
- *
- * KEY TAKEAWAY — REACT CODE DOES NOT CHANGE:
- *
- * The code in this file and in index.tsx is exactly the same React
- * code used throughout the rest of this course. There are no special
- * type annotations here because TypeScript's built-in type inference
- * handles everything automatically. Components are still functions
- * that return JSX — nothing about that pattern changes with TypeScript.
- *
- * The upcoming lessons will show WHERE TypeScript adds value: typing
- * props, state, events, refs, and more. But the underlying React
- * patterns remain identical.
+ * If we wanted to make "items" optional, we could add a question mark
+ * in the Todos component's type definition: { items?: string[] }.
+ * But then the component would need to handle the case where items
+ * is undefined. Here, items is required — every usage of <Todos />
+ * MUST provide it.
  *
  * ============================================================================
  */
 
 import Todos from './components/Todos';
 
-// The root App component renders the Todos component. This is a
-// standard React component — no TypeScript-specific syntax is needed
-// here. The component is imported from the components folder using
-// the same pattern used throughout the course.
+// The items prop is passed as an array of strings. Without this prop,
+// TypeScript would report an error because the Todos component's type
+// definition (React.FC<{ items: string[] }>) marks it as required.
 function App() {
   return (
     <div>
-      <Todos />
+      <Todos items={['Learn React', 'Learn TypeScript']} />
     </div>
   );
 }
