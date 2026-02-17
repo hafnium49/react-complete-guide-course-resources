@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * basics.ts — LESSONS 583–589
+ * basics.ts — LESSONS 583–590
  * ============================================================================
  *
  * TYPESCRIPT FUNDAMENTALS — PRIMITIVE AND COMPLEX TYPES
@@ -48,6 +48,12 @@
  *   - Generic type parameters (<T>) for type-safe flexibility
  *   - How TypeScript infers the concrete type from the arguments
  *   - Why generics matter: catching errors that "any" would silently allow
+ *
+ *   LESSON 590 — A closer look at generics:
+ *   - Arrays are generics: Array<number> is the full form behind number[]
+ *   - Angle brackets for CONSUMING generic types (not just defining them)
+ *   - Explicitly setting the type placeholder when calling generic functions
+ *   - When explicit type arguments are needed vs when inference suffices
  *
  * This file covers the complete TypeScript fundamentals introduction.
  * Later lessons move on to using TypeScript with React.
@@ -639,3 +645,101 @@ const updatedArray = insertAtBeginning(demoArray, -1); // number[]
 // this time, producing a string[] result. The function is reusable across
 // types without losing type safety.
 const stringArray = insertAtBeginning(["a", "b", "c"], "d"); // string[]
+
+// ============================================================================
+// LESSON 590: A CLOSER LOOK AT GENERICS
+// ============================================================================
+//
+// ARRAYS ARE GENERICS — YOU HAVE BEEN USING THEM ALL ALONG:
+//
+// Every array in TypeScript is actually an instance of the generic type
+// "Array<T>". When we write number[], that is just SYNTACTIC SUGAR —
+// a shorter, more convenient notation for Array<number>. Both forms
+// mean exactly the same thing:
+//
+//   let numbers: number[]         = [1, 2, 3];   // shorthand syntax
+//   let numbers: Array<number>    = [1, 2, 3];   // full generic syntax
+//
+// The Array type on its own is incomplete — it needs to know what KIND
+// of elements it holds. That is why Array is a GENERIC type: it has a
+// type parameter (T) that must be filled in with a concrete type like
+// number, string, Person, etc. Writing just "Array" without angle
+// brackets would be like saying "an array of... something" — TypeScript
+// needs the specifics.
+//
+// TWO USES OF ANGLE BRACKETS (<>):
+//
+// In lesson 589, we used angle brackets to DEFINE a generic type
+// parameter on our own function:
+//
+//   function insertAtBeginning<T>(array: T[], value: T) { ... }
+//                             ^^^
+//                          defining T
+//
+// But angle brackets also serve a second purpose: CONSUMING (using) a
+// generic type by explicitly specifying what the placeholder should be:
+//
+//   let numbers: Array<number> = [1, 2, 3];
+//                      ^^^^^^
+//                   filling in T with "number"
+//
+// The same consuming syntax works when CALLING a generic function:
+//
+//   const result = insertAtBeginning<string>(["a", "b", "c"], "d");
+//                                   ^^^^^^
+//                       explicitly setting T to "string"
+//
+// INFERENCE vs EXPLICIT TYPE ARGUMENTS:
+//
+// In most cases, TypeScript can INFER the type argument from the values
+// you pass in — just as it infers variable types from initial values
+// (lesson 585). When inference works correctly, there is no need to
+// write the angle brackets explicitly:
+//
+//   insertAtBeginning([1, 2, 3], -1)       // T inferred as number
+//   insertAtBeginning(["a", "b"], "c")     // T inferred as string
+//
+// However, there are situations where TypeScript cannot determine the
+// correct type on its own, or where the inferred type is not what you
+// want. In those cases, you can (and sometimes must) specify the type
+// argument explicitly using angle brackets. Examples of this will
+// appear later in this course section when working with React and
+// TypeScript together.
+//
+// WHY THE SHORTHAND EXISTS:
+//
+// Writing Array<number> is verbose and somewhat cluttered for such a
+// common type. The shorthand number[] is more concise and easier to
+// read at a glance. Both are fully interchangeable — use whichever
+// you prefer, though the shorthand is far more common in practice.
+// ============================================================================
+
+// ── ARRAYS: SHORTHAND vs FULL GENERIC SYNTAX ────────────────────────────────
+
+// These two declarations are IDENTICAL in meaning. The first uses the
+// familiar shorthand (element type followed by []), the second uses the
+// explicit generic form (Array with the element type in angle brackets).
+// TypeScript treats them as the exact same type.
+let numbersShorthand: number[] = [1, 2, 3];
+let numbersGeneric: Array<number> = [1, 2, 3];
+
+// In practice, the shorthand is almost always preferred because it is
+// shorter and more readable. The full generic form is shown here to
+// illustrate that arrays are built on the same generic type system
+// introduced in lesson 589.
+
+// ── EXPLICITLY SETTING THE TYPE ARGUMENT ON A GENERIC FUNCTION ──────────────
+
+// In lesson 589, TypeScript inferred T from the arguments we passed in.
+// But we can also set T EXPLICITLY using angle brackets at the call site.
+// Here, <string> tells TypeScript directly that T is "string" — it does
+// not need to examine the arguments to figure this out.
+const explicitStringArray = insertAtBeginning<string>(["a", "b", "c"], "d");
+
+// This is equivalent to the inferred version from lesson 589:
+//
+//   const stringArray = insertAtBeginning(["a", "b", "c"], "d");
+//
+// Both produce a string[] result. The explicit form is useful when
+// TypeScript cannot infer the type correctly on its own, or when you
+// want to be absolutely clear about what type is intended.
