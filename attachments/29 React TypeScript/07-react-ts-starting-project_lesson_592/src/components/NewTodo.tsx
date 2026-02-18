@@ -1,90 +1,146 @@
 /**
  * ============================================================================
- * NewTodo.tsx — LESSON 596
+ * NewTodo.tsx — LESSONS 596–597
  * ============================================================================
  *
- * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENT OBJECTS
+ * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENTS AND REFS
  *
- * This component renders a form where the user can type in a new todo
- * and submit it. It introduces an important TypeScript concept for
- * React: TYPING EVENT HANDLER PARAMETERS.
+ * LESSON 596 introduced this component with a form and a typed submit
+ * handler (React.FormEvent). LESSON 597 adds useRef with TypeScript
+ * to extract the user's input from the text field.
  *
- * THE PROBLEM — EVENT OBJECTS HAVE NO IMPLICIT TYPE:
+ * ============================================================================
+ * LESSON 596 RECAP — TYPING EVENT HANDLER PARAMETERS
+ * ============================================================================
  *
- * When you write a function that will handle a form submission event
- * and include an "event" parameter, TypeScript does not automatically
- * know what type that parameter is. Unlike props (which React.FC can
- * describe), event handler parameters must be typed MANUALLY — you
- * must tell TypeScript what kind of event object the function will
- * receive.
+ * React event types must be annotated manually on handler parameters:
  *
- * Without a type annotation, TypeScript reports:
+ *   - React.FormEvent   — for onSubmit on <form>
+ *   - React.MouseEvent  — for onClick on buttons, divs, etc.
+ *   - React.ChangeEvent — for onChange on inputs, selects, etc.
  *
- *   "Parameter 'event' implicitly has an 'any' type."
+ * The type must MATCH the event listener. Using the wrong event type
+ * (e.g., MouseEvent on onSubmit) produces a TypeScript error.
  *
- * And you get no auto-completion for methods like event.preventDefault().
+ * ============================================================================
+ * LESSON 597 — useRef WITH TYPESCRIPT
+ * ============================================================================
  *
- * REACT EVENT TYPES:
+ * THE PROBLEM — useRef NEEDS A GENERIC TYPE:
  *
- * React provides its own set of event types (wrappers around native
- * DOM events) that match the specific event listener being used:
+ * In plain JavaScript, useRef() creates a ref that can be connected
+ * to any element — TypeScript has no idea which HTML element it will
+ * be attached to. Since different HTML elements have different
+ * properties (an input has .value, a button does not), TypeScript
+ * requires you to specify the element type upfront.
  *
- *   - React.FormEvent   — for onSubmit handlers on <form> elements
- *   - React.MouseEvent  — for onClick handlers on buttons, divs, etc.
- *   - React.ChangeEvent — for onChange handlers on inputs, selects, etc.
- *   - React.KeyboardEvent — for onKeyDown, onKeyUp handlers
+ * SYNTAX:
+ *
+ *   const todoTextInputRef = useRef<HTMLInputElement>(null);
+ *
+ *   - useRef is a GENERIC hook — the angle brackets specify what
+ *     type of value the ref will eventually hold
+ *   - HTMLInputElement is the built-in DOM type for <input> elements
+ *   - null is the REQUIRED initial value because the ref is not yet
+ *     connected to any element when it is created
+ *
+ * BUILT-IN HTML ELEMENT TYPES:
+ *
+ * Every DOM element has a corresponding TypeScript type. You can
+ * find the type name on the MDN documentation page for each element:
+ *
+ *   <input>      → HTMLInputElement
+ *   <button>     → HTMLButtonElement
+ *   <p>          → HTMLParagraphElement
+ *   <div>        → HTMLDivElement
+ *   <textarea>   → HTMLTextAreaElement
+ *   <select>     → HTMLSelectElement
  *   (and many more)
  *
- * The type must MATCH the event listener where the function is used.
- * If you type the parameter as React.MouseEvent but connect the
- * function to onSubmit (which expects React.FormEvent), TypeScript
- * reports a type mismatch — another safety check that prevents bugs.
+ * ACCESSING THE REF VALUE — ? vs !:
  *
- * FORM SUBMISSION PATTERN:
+ * Because the ref starts as null and may not yet be connected when
+ * you try to read it, the "current" property could be null. This
+ * leads to two TypeScript operators for handling possibly-null values:
  *
- * The standard React pattern for handling form submission is:
+ *   OPTIONAL CHAINING — the "?" operator:
  *
- *   1. Define a handler function that receives the event object
- *   2. Call event.preventDefault() to stop the browser's default
- *      page reload behavior
- *   3. Extract the user input (via refs or state)
- *   4. Connect the handler to the form's onSubmit prop
+ *     todoTextInputRef.current?.value
  *
- * This pattern is identical to non-TypeScript React — the only
- * addition is the type annotation on the event parameter.
+ *     "Try to access .value. If current is null, return undefined
+ *     instead of crashing." The resulting type is string | undefined.
  *
- * GETTING USER INPUT — useRef (coming in the next lesson):
+ *   NON-NULL ASSERTION — the "!" operator:
  *
- * This lesson sets up the form and the submit handler. The actual
- * extraction of user input using useRef with TypeScript will be
- * covered in the next lesson. For now, the handler only calls
- * preventDefault() to demonstrate the event typing pattern.
+ *     todoTextInputRef.current!.value
+ *
+ *     "I guarantee that current is NOT null at this point — go ahead
+ *     and access .value directly." The resulting type is just string.
+ *
+ * IMPORTANT: Use "!" only when you are CERTAIN the ref is connected.
+ * In a submit handler, the form can only be submitted after React
+ * has rendered the input and connected the ref — so "!" is safe here.
+ *
+ * These operators (? and !) are NOT specific to refs or React — they
+ * are general TypeScript operators for any value that could be null.
+ *
+ * COMMUNICATION BACK TO THE PARENT:
+ *
+ * Once the entered text is extracted and validated, it needs to be
+ * passed back to the App component (which manages the list of todos).
+ * That parent-to-child communication pattern will be wired up in
+ * the next lesson.
  *
  * ============================================================================
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 
 const NewTodo: React.FC = () => {
-  // The event parameter is typed as React.FormEvent because this
-  // function will be connected to a <form>'s onSubmit prop. This
-  // type gives us access to methods like preventDefault() with full
-  // auto-completion. Using a different event type (e.g., MouseEvent)
-  // would cause a TypeScript error when connecting to onSubmit.
+  // Create a ref that will be connected to the text <input> element.
+  // The generic parameter <HTMLInputElement> tells TypeScript what
+  // type of DOM element this ref will hold — enabling auto-completion
+  // for input-specific properties like .value, .checked, .focus(), etc.
+  //
+  // The initial value MUST be null because the ref has no connection
+  // yet — React will assign the actual DOM element to .current after
+  // the component renders and the ref={...} attribute is processed.
+  const todoTextInputRef = useRef<HTMLInputElement>(null);
+
   const submitHandler = (event: React.FormEvent) => {
     event.preventDefault();
 
-    // TODO: Extract user input and create a new todo.
-    // This will be implemented in the next lesson using useRef.
+    // Access the input's current value through the ref. The "!"
+    // after .current is the non-null assertion operator — it tells
+    // TypeScript that .current is definitely not null at this point.
+    // This is safe because the submit handler can only fire after
+    // the form (and its input) have been rendered and the ref has
+    // been connected.
+    //
+    // Without "!", TypeScript would infer enteredText as
+    // string | undefined. With "!", it knows it is just string.
+    const enteredText = todoTextInputRef.current!.value;
+
+    // Basic validation: if the trimmed input is empty (nothing but
+    // whitespace), exit early without adding a todo. This is standard
+    // input validation — unrelated to TypeScript.
+    if (enteredText.trim().length === 0) {
+      return;
+    }
+
+    // TODO: Pass the entered text back to the App component to add
+    // it to the list of todos. This will be wired up in the next
+    // lesson using a callback prop.
   };
 
   return (
-    // Connect the submitHandler to the form's onSubmit prop. React
-    // will call this function with a FormEvent object when the user
-    // submits the form (by clicking the button or pressing Enter).
     <form onSubmit={submitHandler}>
       <label htmlFor="text">Todo text</label>
-      <input type="text" id="text" />
+      {/* Connect the ref to the input element. TypeScript verifies
+          that the ref type (HTMLInputElement) matches the element
+          type (<input>). Connecting a ref typed as HTMLInputElement
+          to a <button> element would cause a type error. */}
+      <input type="text" id="text" ref={todoTextInputRef} />
       <button>Add Todo</button>
     </form>
   );
