@@ -1,9 +1,17 @@
 /**
  * ============================================================================
- * App.tsx — LESSONS 592–594
+ * App.tsx — LESSONS 592–596
  * ============================================================================
  *
- * LESSON 594 UPDATE — USING THE Todo CLASS TO CREATE DATA
+ * LESSON 596 UPDATE — ADDING THE NewTodo FORM COMPONENT
+ *
+ * A new <NewTodo /> component is rendered above the todo list. It
+ * displays a form where the user can type and submit a new todo.
+ * For now, the form handles submission (with preventDefault) but
+ * does not yet create actual todos — that wiring comes in the next
+ * lesson when useRef is introduced.
+ *
+ * LESSON 594 — USING THE Todo CLASS TO CREATE DATA
  *
  * Instead of passing plain strings as items, we now create Todo OBJECTS
  * using the Todo class from models/todo.ts. Each Todo instance has:
@@ -27,6 +35,7 @@
  * ============================================================================
  */
 
+import NewTodo from './components/NewTodo';
 import Todos from './components/Todos';
 import Todo from './models/todo';
 
@@ -42,6 +51,7 @@ const todos = [new Todo('Learn React'), new Todo('Learn TypeScript')];
 function App() {
   return (
     <div>
+      <NewTodo />
       <Todos items={todos} />
     </div>
   );
