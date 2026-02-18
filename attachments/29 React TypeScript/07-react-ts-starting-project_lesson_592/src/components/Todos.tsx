@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Todos.tsx — LESSONS 592–595, 600
+ * Todos.tsx — LESSONS 592–595, 600, 601
  * ============================================================================
  *
  * TYPING COMPONENT PROPS WITH React.FC AND GENERICS
@@ -48,6 +48,43 @@
  * numbering irrelevant.
  *
  * ============================================================================
+ * LESSON 601 — FORWARDING THE REMOVE CALLBACK (PROP CHAIN)
+ * ============================================================================
+ *
+ * This component sits BETWEEN App (which owns the state) and
+ * TodoItem (which handles the click). It does not define the removal
+ * logic itself — it receives onRemoveTodo from App and forwards it
+ * down to each TodoItem. This is a PROP CHAIN: a function passed
+ * through multiple layers of components to reach the one that
+ * actually triggers it.
+ *
+ * TYPE MISMATCH AND THE .bind() SOLUTION:
+ *
+ * App's removeTodoHandler expects a string parameter (the todo ID),
+ * but TodoItem's onRemoveTodo prop is typed as () => void (no
+ * parameters). These shapes do not match directly. The solution is
+ * .bind() — a built-in JavaScript method that creates a NEW function
+ * with pre-configured arguments:
+ *
+ *   props.onRemoveTodo.bind(null, item.id)
+ *
+ *   - The first argument to .bind() sets the "this" context. Since
+ *     arrow functions ignore "this", null is passed.
+ *   - The second argument (item.id) becomes the FIRST argument that
+ *     onRemoveTodo will receive when it is eventually called.
+ *
+ * The result is a new function that takes NO parameters (matching
+ * TodoItem's () => void type) but internally calls the original
+ * function with item.id already filled in.
+ *
+ * AN ALTERNATIVE APPROACH — PASSING THE ID THROUGH:
+ *
+ * Instead of using .bind(), you could pass the ID as a separate prop
+ * to TodoItem and have TodoItem call onRemoveTodo(id) itself. Both
+ * approaches are valid. The .bind() approach keeps TodoItem simpler
+ * by not requiring it to know about IDs at all.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
@@ -59,11 +96,21 @@ import TodoItem from './TodoItem';
 // This prevents style collisions between components.
 import classes from './Todos.module.css';
 
-const Todos: React.FC<{ items: Todo[] }> = (props) => {
+// Props now include onRemoveTodo — a function that takes an ID
+// (string) and returns nothing. This matches the shape of
+// removeTodoHandler defined in App.tsx.
+const Todos: React.FC<{ items: Todo[]; onRemoveTodo: (id: string) => void }> = (props) => {
   return (
     <ul className={classes.todos}>
       {props.items.map((item) => (
-        <TodoItem key={item.id} text={item.text} />
+        // .bind(null, item.id) pre-fills the id argument so that
+        // TodoItem receives a () => void function — it does not
+        // need to know or pass the id itself.
+        <TodoItem
+          key={item.id}
+          text={item.text}
+          onRemoveTodo={props.onRemoveTodo.bind(null, item.id)}
+        />
       ))}
     </ul>
   );

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * App.tsx — LESSONS 592–599
+ * App.tsx — LESSONS 592–601
  * ============================================================================
  *
  * LESSON 599 UPDATE — useState WITH TYPESCRIPT
@@ -76,6 +76,33 @@
  * value, always use the function form to avoid stale closures.
  *
  * ============================================================================
+ * LESSON 601 — REMOVING TODOS (filter FOR IMMUTABLE DELETION)
+ * ============================================================================
+ *
+ * To remove a todo, the removeTodoHandler receives the ID of the
+ * todo to delete. It uses Array.filter() to produce a NEW array
+ * that excludes the matching todo, then passes that new array to
+ * setTodos. Like concat, filter does NOT mutate the original
+ * array — it returns a brand new one.
+ *
+ * HOW filter WORKS FOR DELETION:
+ *
+ *   prevTodos.filter(todo => todo.id !== todoId)
+ *
+ * filter keeps every element where the callback returns true. By
+ * checking todo.id !== todoId, we KEEP all todos whose ID does NOT
+ * match the one being removed, effectively dropping the one that
+ * does match.
+ *
+ * THE CALLBACK CHAIN — App → Todos → TodoItem:
+ *
+ * removeTodoHandler is defined here with the signature
+ * (todoId: string) => void. It is passed to the Todos component
+ * as the onRemoveTodo prop. Todos then uses .bind(null, item.id)
+ * to pre-fill the ID for each TodoItem, so TodoItem receives a
+ * simple () => void callback it can attach directly to onClick.
+ *
+ * ============================================================================
  */
 
 import { useState } from 'react';
@@ -105,10 +132,22 @@ function App() {
     });
   };
 
+  // Receives the ID of the todo to remove. The parameter type is
+  // string because that is how IDs are typed in the Todo class.
+  // Uses the function form of setTodos since the new state depends
+  // on the previous state.
+  const removeTodoHandler = (todoId: string) => {
+    setTodos((prevTodos) => {
+      // filter returns a new array containing only the todos whose
+      // ID does NOT match todoId — the matching todo is excluded.
+      return prevTodos.filter((todo) => todo.id !== todoId);
+    });
+  };
+
   return (
     <div>
       <NewTodo onAddTodo={addTodoHandler} />
-      <Todos items={todos} />
+      <Todos items={todos} onRemoveTodo={removeTodoHandler} />
     </div>
   );
 }

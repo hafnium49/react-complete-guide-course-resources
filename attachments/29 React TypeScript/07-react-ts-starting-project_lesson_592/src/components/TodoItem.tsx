@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * TodoItem.tsx — LESSONS 595, 600
+ * TodoItem.tsx — LESSONS 595, 600, 601
  * ============================================================================
  *
  * A SINGLE TODO ITEM — OUTSOURCED INTO ITS OWN COMPONENT
@@ -49,16 +49,56 @@
  * its own card-like appearance with padding and a box shadow.
  *
  * ============================================================================
+ * LESSON 601 — ADDING A CALLBACK PROP FOR REMOVING TODOS
+ * ============================================================================
+ *
+ * To remove a todo when the user clicks on it, this component needs
+ * to notify its parent that a click occurred. The standard React
+ * pattern is to receive a callback function as a prop and call it
+ * from an event handler.
+ *
+ * THE onRemoveTodo PROP TYPE — () => void:
+ *
+ * The function type for onRemoveTodo is () => void — a function that
+ * takes NO parameters and returns nothing. This may seem surprising
+ * because the removal logic in App.tsx needs the todo's ID to know
+ * WHICH todo to remove. However, TodoItem itself does not know or
+ * care about IDs. The ID is pre-configured by the PARENT component
+ * (Todos.tsx) using .bind() before the function is passed down.
+ * By the time TodoItem receives onRemoveTodo, the ID is already
+ * baked in, so TodoItem just calls it with no arguments.
+ *
+ * This keeps TodoItem's interface minimal — it does not need to
+ * receive an ID prop just to pass it back up through a callback.
+ *
+ * WHY NOT INCLUDE THE EVENT PARAMETER?
+ *
+ * Since onRemoveTodo is bound to onClick, we COULD type it as
+ * (event: React.MouseEvent) => void to match onClick's signature
+ * exactly. But if the function never uses the event object (which
+ * it does not here), the parameter can be omitted from the type
+ * definition entirely. TypeScript allows a function with FEWER
+ * parameters to be assigned where more parameters are expected —
+ * the extra arguments are simply ignored at runtime.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
 
 import classes from './TodoItem.module.css';
 
-// The className uses the scoped "item" class from the CSS module,
-// which styles each list item as a card with shadow and padding.
-const TodoItem: React.FC<{ text: string }> = (props) => {
-  return <li className={classes.item}>{props.text}</li>;
+// Props now include onRemoveTodo — a callback with no parameters.
+// The parent pre-configures which todo to remove (via .bind()),
+// so this component only needs to invoke the function on click.
+const TodoItem: React.FC<{ text: string; onRemoveTodo: () => void }> = (props) => {
+  // onClick triggers onRemoveTodo, which the parent has already
+  // bound to the specific todo's ID. No arguments needed here.
+  return (
+    <li className={classes.item} onClick={props.onRemoveTodo}>
+      {props.text}
+    </li>
+  );
 };
 
 export default TodoItem;
