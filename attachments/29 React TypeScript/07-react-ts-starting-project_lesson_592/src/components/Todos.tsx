@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Todos.tsx — LESSONS 592–595
+ * Todos.tsx — LESSONS 592–595, 600
  * ============================================================================
  *
  * TYPING COMPONENT PROPS WITH React.FC AND GENERICS
@@ -28,25 +28,44 @@
  * into the child component.
  *
  * ============================================================================
+ * LESSON 600 — ADDING CSS MODULES (NOTHING TYPESCRIPT-SPECIFIC)
+ * ============================================================================
+ *
+ * CSS Modules work exactly the same way in a TypeScript React project
+ * as they do in a plain JavaScript React project. There is NOTHING
+ * TypeScript-specific about importing or using CSS files — the build
+ * tool (Create React App / Webpack) handles CSS module resolution
+ * regardless of whether the component file is .tsx or .jsx.
+ *
+ * The import statement "import classes from './Todos.module.css'"
+ * brings in an object where each key is a CSS class name defined in
+ * the file (e.g., classes.todos corresponds to the .todos selector).
+ * These are then applied via className={classes.todos} on JSX
+ * elements.
+ *
+ * The list element is changed from <ol> to <ul> since the CSS module
+ * removes default list styling (list-style: none), making ordered
+ * numbering irrelevant.
+ *
+ * ============================================================================
  */
 
 import React from 'react';
 
 import Todo from '../models/todo';
 import TodoItem from './TodoItem';
+// CSS Module import — the "classes" object maps each CSS class name
+// defined in the .module.css file to a unique, scoped class string.
+// This prevents style collisions between components.
+import classes from './Todos.module.css';
 
-// The map callback now renders <TodoItem /> instead of a raw <li>.
-// TypeScript auto-completes the "text" prop because it knows the
-// TodoItem component expects { text: string } from its React.FC
-// generic parameter. Pressing Ctrl+Space in the IDE shows the
-// available props for TodoItem.
 const Todos: React.FC<{ items: Todo[] }> = (props) => {
   return (
-    <ol>
+    <ul className={classes.todos}>
       {props.items.map((item) => (
         <TodoItem key={item.id} text={item.text} />
       ))}
-    </ol>
+    </ul>
   );
 };
 

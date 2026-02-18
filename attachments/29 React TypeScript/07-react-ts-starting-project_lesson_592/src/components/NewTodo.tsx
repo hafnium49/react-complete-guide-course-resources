@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * NewTodo.tsx — LESSONS 596–598
+ * NewTodo.tsx — LESSONS 596–598, 600
  * ============================================================================
  *
  * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENTS, REFS, AND
@@ -80,6 +80,8 @@
 
 import React, { useRef } from 'react';
 
+import classes from './NewTodo.module.css';
+
 // The generic parameter now includes onAddTodo — a FUNCTION TYPE.
 // It describes a callback that accepts a string and returns nothing.
 // This is the typed version of the "pass a function as a prop"
@@ -103,8 +105,10 @@ const NewTodo: React.FC<{ onAddTodo: (text: string) => void }> = (props) => {
     props.onAddTodo(enteredText);
   };
 
+  // The "form" class from NewTodo.module.css styles the form container,
+  // label, input, and button using nested selectors (.form label, etc.).
   return (
-    <form onSubmit={submitHandler}>
+    <form onSubmit={submitHandler} className={classes.form}>
       <label htmlFor="text">Todo text</label>
       <input type="text" id="text" ref={todoTextInputRef} />
       <button>Add Todo</button>

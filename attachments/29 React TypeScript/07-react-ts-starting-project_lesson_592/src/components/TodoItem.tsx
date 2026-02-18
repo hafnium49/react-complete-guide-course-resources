@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * TodoItem.tsx — LESSON 595
+ * TodoItem.tsx — LESSONS 595, 600
  * ============================================================================
  *
  * A SINGLE TODO ITEM — OUTSOURCED INTO ITS OWN COMPONENT
@@ -42,17 +42,23 @@
  * is set in the PARENT component (Todos.tsx) where the map happens,
  * not inside TodoItem itself.
  *
+ * LESSON 600 — CSS MODULE STYLING:
+ *
+ * The .item class from TodoItem.module.css is applied to the <li>
+ * element via className={classes.item}. This gives each todo item
+ * its own card-like appearance with padding and a box shadow.
+ *
  * ============================================================================
  */
 
 import React from 'react';
 
-// A functional component that renders a single todo item. The props
-// definition specifies only "text: string" — the minimum data needed
-// to display the item. The React.FC type automatically includes
-// built-in props like "children" and "key" alongside our custom ones.
+import classes from './TodoItem.module.css';
+
+// The className uses the scoped "item" class from the CSS module,
+// which styles each list item as a card with shadow and padding.
 const TodoItem: React.FC<{ text: string }> = (props) => {
-  return <li>{props.text}</li>;
+  return <li className={classes.item}>{props.text}</li>;
 };
 
 export default TodoItem;
