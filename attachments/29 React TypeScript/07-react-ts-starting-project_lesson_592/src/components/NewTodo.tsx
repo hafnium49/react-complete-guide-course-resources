@@ -1,13 +1,15 @@
 /**
  * ============================================================================
- * NewTodo.tsx — LESSONS 596–597
+ * NewTodo.tsx — LESSONS 596–598
  * ============================================================================
  *
- * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENTS AND REFS
+ * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENTS, REFS, AND
+ * FUNCTION PROPS
  *
- * LESSON 596 introduced this component with a form and a typed submit
- * handler (React.FormEvent). LESSON 597 adds useRef with TypeScript
- * to extract the user's input from the text field.
+ * LESSON 596 introduced this component with a typed submit handler.
+ * LESSON 597 added useRef with TypeScript to extract user input.
+ * LESSON 598 adds a CALLBACK PROP so this component can communicate
+ * the entered text back to the parent (App) component.
  *
  * ============================================================================
  * LESSON 596 RECAP — TYPING EVENT HANDLER PARAMETERS
@@ -19,127 +21,91 @@
  *   - React.MouseEvent  — for onClick on buttons, divs, etc.
  *   - React.ChangeEvent — for onChange on inputs, selects, etc.
  *
- * The type must MATCH the event listener. Using the wrong event type
- * (e.g., MouseEvent on onSubmit) produces a TypeScript error.
- *
  * ============================================================================
- * LESSON 597 — useRef WITH TYPESCRIPT
+ * LESSON 597 RECAP — useRef WITH TYPESCRIPT
  * ============================================================================
  *
- * THE PROBLEM — useRef NEEDS A GENERIC TYPE:
+ * useRef is generic: useRef<HTMLInputElement>(null) specifies the
+ * element type and the required null initial value. The "!" operator
+ * asserts non-null when accessing .current inside the submit handler.
  *
- * In plain JavaScript, useRef() creates a ref that can be connected
- * to any element — TypeScript has no idea which HTML element it will
- * be attached to. Since different HTML elements have different
- * properties (an input has .value, a button does not), TypeScript
- * requires you to specify the element type upfront.
+ * ============================================================================
+ * LESSON 598 — FUNCTION TYPES IN PROPS (CALLBACK PATTERN)
+ * ============================================================================
  *
- * SYNTAX:
+ * CHILD-TO-PARENT COMMUNICATION:
  *
- *   const todoTextInputRef = useRef<HTMLInputElement>(null);
+ * A common React pattern is passing a function from a parent to a
+ * child component via props. The child calls the function to send
+ * data back up. This pattern is identical in TypeScript — the only
+ * addition is that the FUNCTION ITSELF must be typed in the props
+ * definition.
  *
- *   - useRef is a GENERIC hook — the angle brackets specify what
- *     type of value the ref will eventually hold
- *   - HTMLInputElement is the built-in DOM type for <input> elements
- *   - null is the REQUIRED initial value because the ref is not yet
- *     connected to any element when it is created
+ * FUNCTION TYPE SYNTAX IN TYPESCRIPT:
  *
- * BUILT-IN HTML ELEMENT TYPES:
+ * A function type describes the shape of a function — its parameters
+ * and return type — using arrow notation within a type definition:
  *
- * Every DOM element has a corresponding TypeScript type. You can
- * find the type name on the MDN documentation page for each element:
+ *   onAddTodo: (text: string) => void
  *
- *   <input>      → HTMLInputElement
- *   <button>     → HTMLButtonElement
- *   <p>          → HTMLParagraphElement
- *   <div>        → HTMLDivElement
- *   <textarea>   → HTMLTextAreaElement
- *   <select>     → HTMLSelectElement
- *   (and many more)
+ *   - (text: string)   — the function takes one parameter of type string
+ *   - => void           — the function returns nothing
  *
- * ACCESSING THE REF VALUE — ? vs !:
+ * IMPORTANT: This looks like an arrow function, but it is NOT creating
+ * a function. It appears inside a TYPE DEFINITION (between the angle
+ * brackets of React.FC<...>), so TypeScript interprets it as a
+ * function TYPE — a description of what shape the function must have.
  *
- * Because the ref starts as null and may not yet be connected when
- * you try to read it, the "current" property could be null. This
- * leads to two TypeScript operators for handling possibly-null values:
+ * EXAMPLES OF FUNCTION TYPES:
  *
- *   OPTIONAL CHAINING — the "?" operator:
+ *   () => void                    — no parameters, no return value
+ *   (text: string) => void        — one string parameter, no return
+ *   (a: number, b: number) => number — two numbers in, one number out
+ *   (items: Todo[]) => boolean    — array of Todos in, boolean out
  *
- *     todoTextInputRef.current?.value
+ * WHY THIS MATTERS:
  *
- *     "Try to access .value. If current is null, return undefined
- *     instead of crashing." The resulting type is string | undefined.
+ * TypeScript verifies BOTH sides of the callback:
  *
- *   NON-NULL ASSERTION — the "!" operator:
+ *   1. Inside this component — calling props.onAddTodo(enteredText)
+ *      is valid because enteredText is a string and onAddTodo expects
+ *      a string. Passing a number would cause a type error.
  *
- *     todoTextInputRef.current!.value
- *
- *     "I guarantee that current is NOT null at this point — go ahead
- *     and access .value directly." The resulting type is just string.
- *
- * IMPORTANT: Use "!" only when you are CERTAIN the ref is connected.
- * In a submit handler, the form can only be submitted after React
- * has rendered the input and connected the ref — so "!" is safe here.
- *
- * These operators (? and !) are NOT specific to refs or React — they
- * are general TypeScript operators for any value that could be null.
- *
- * COMMUNICATION BACK TO THE PARENT:
- *
- * Once the entered text is extracted and validated, it needs to be
- * passed back to the App component (which manages the list of todos).
- * That parent-to-child communication pattern will be wired up in
- * the next lesson.
+ *   2. In the parent (App.tsx) — the function passed to onAddTodo
+ *      must match the declared shape. A function with wrong parameter
+ *      types or a different number of parameters would be rejected.
  *
  * ============================================================================
  */
 
 import React, { useRef } from 'react';
 
-const NewTodo: React.FC = () => {
-  // Create a ref that will be connected to the text <input> element.
-  // The generic parameter <HTMLInputElement> tells TypeScript what
-  // type of DOM element this ref will hold — enabling auto-completion
-  // for input-specific properties like .value, .checked, .focus(), etc.
-  //
-  // The initial value MUST be null because the ref has no connection
-  // yet — React will assign the actual DOM element to .current after
-  // the component renders and the ref={...} attribute is processed.
+// The generic parameter now includes onAddTodo — a FUNCTION TYPE.
+// It describes a callback that accepts a string and returns nothing.
+// This is the typed version of the "pass a function as a prop"
+// pattern used throughout the course for child-to-parent communication.
+const NewTodo: React.FC<{ onAddTodo: (text: string) => void }> = (props) => {
   const todoTextInputRef = useRef<HTMLInputElement>(null);
 
   const submitHandler = (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Access the input's current value through the ref. The "!"
-    // after .current is the non-null assertion operator — it tells
-    // TypeScript that .current is definitely not null at this point.
-    // This is safe because the submit handler can only fire after
-    // the form (and its input) have been rendered and the ref has
-    // been connected.
-    //
-    // Without "!", TypeScript would infer enteredText as
-    // string | undefined. With "!", it knows it is just string.
     const enteredText = todoTextInputRef.current!.value;
 
-    // Basic validation: if the trimmed input is empty (nothing but
-    // whitespace), exit early without adding a todo. This is standard
-    // input validation — unrelated to TypeScript.
     if (enteredText.trim().length === 0) {
       return;
     }
 
-    // TODO: Pass the entered text back to the App component to add
-    // it to the list of todos. This will be wired up in the next
-    // lesson using a callback prop.
+    // Call the callback function received from the parent. TypeScript
+    // knows that onAddTodo expects exactly one string argument because
+    // of our function type definition above. Passing a value of the
+    // wrong type (e.g., a number) would be flagged as an error.
+    props.onAddTodo(enteredText);
   };
 
   return (
     <form onSubmit={submitHandler}>
       <label htmlFor="text">Todo text</label>
-      {/* Connect the ref to the input element. TypeScript verifies
-          that the ref type (HTMLInputElement) matches the element
-          type (<input>). Connecting a ref typed as HTMLInputElement
-          to a <button> element would cause a type error. */}
       <input type="text" id="text" ref={todoTextInputRef} />
       <button>Add Todo</button>
     </form>

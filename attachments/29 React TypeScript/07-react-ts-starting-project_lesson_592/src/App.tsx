@@ -1,36 +1,31 @@
 /**
  * ============================================================================
- * App.tsx — LESSONS 592–596
+ * App.tsx — LESSONS 592–598
  * ============================================================================
  *
- * LESSON 596 UPDATE — ADDING THE NewTodo FORM COMPONENT
+ * LESSON 598 UPDATE — WIRING THE CALLBACK FROM NewTodo TO App
  *
- * A new <NewTodo /> component is rendered above the todo list. It
- * displays a form where the user can type and submit a new todo.
- * For now, the form handles submission (with preventDefault) but
- * does not yet create actual todos — that wiring comes in the next
- * lesson when useRef is introduced.
+ * The NewTodo component now expects an onAddTodo prop — a function
+ * that takes a string and returns void. In this file, we define the
+ * addTodoHandler function that matches that shape and pass it as the
+ * prop value. When the user submits the form, NewTodo calls
+ * props.onAddTodo(enteredText), which invokes addTodoHandler here.
  *
- * LESSON 594 — USING THE Todo CLASS TO CREATE DATA
+ * FUNCTION SHAPE MUST MATCH:
  *
- * Instead of passing plain strings as items, we now create Todo OBJECTS
- * using the Todo class from models/todo.ts. Each Todo instance has:
+ * The addTodoHandler function must accept a string parameter (the
+ * todo text) and return nothing — matching the function type defined
+ * in NewTodo's props: (text: string) => void. If the shapes don't
+ * match (wrong parameter type, wrong number of parameters, or a
+ * return type mismatch), TypeScript flags an error on the JSX prop.
  *
- *   - id: string   (auto-generated in the constructor from a timestamp)
- *   - text: string (the todo description, passed to the constructor)
+ * NEXT STEP — STATE MANAGEMENT:
  *
- * The Todos component's type definition has been updated to expect
- * Todo[] instead of string[], so passing plain strings would now
- * cause a TypeScript error — the type system ensures that the data
- * shape matches what the component expects.
- *
- * TYPE SAFETY IN ACTION:
- *
- * If we tried to pass incorrect data (e.g., plain strings, objects
- * missing the "id" or "text" property, or objects with wrong types),
- * TypeScript would flag the error directly in the IDE. Errors are
- * caught during development, not at runtime when the user encounters
- * a broken page.
+ * The todos array is still hardcoded outside the component. To make
+ * the list dynamic (adding new todos triggers a re-render), we need
+ * to manage it with useState. That will be wired up in the next
+ * lesson — for now, the handler is defined but does not yet modify
+ * the list.
  *
  * ============================================================================
  */
@@ -39,19 +34,26 @@ import NewTodo from './components/NewTodo';
 import Todos from './components/Todos';
 import Todo from './models/todo';
 
-// Create Todo instances using the class constructor. Each call to
-// "new Todo(...)" produces an object with an auto-generated id and
-// the provided text. The resulting array is typed as Todo[] —
-// TypeScript infers this from the constructor calls.
 const todos = [new Todo('Learn React'), new Todo('Learn TypeScript')];
 
-// Pass the todos array as the items prop. TypeScript verifies that
-// the array matches the expected type (Todo[]) defined in the Todos
-// component's React.FC generic parameter.
+// This function matches the shape expected by NewTodo's onAddTodo
+// prop: (text: string) => void. It receives the entered text from
+// the child component's form submission. The parameter type MUST be
+// string — if it were number or any other type, TypeScript would
+// reject the function when it is passed to NewTodo's onAddTodo prop.
+const addTodoHandler = (text: string) => {
+  // TODO: Add the new todo to the todos array using state management.
+  // This will be implemented in the next lesson with useState.
+};
+
+// Pass addTodoHandler as the onAddTodo prop to NewTodo. TypeScript
+// verifies that the function shape matches the expected type. If we
+// forgot this prop entirely, TypeScript would flag an error because
+// onAddTodo is required (not optional) in NewTodo's type definition.
 function App() {
   return (
     <div>
-      <NewTodo />
+      <NewTodo onAddTodo={addTodoHandler} />
       <Todos items={todos} />
     </div>
   );
