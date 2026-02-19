@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * NewTodo.tsx — LESSONS 596–598, 600
+ * NewTodo.tsx — LESSONS 596–598, 600, 602
  * ============================================================================
  *
  * A FORM COMPONENT FOR ADDING TODOS — TYPING EVENTS, REFS, AND
@@ -8,8 +8,8 @@
  *
  * LESSON 596 introduced this component with a typed submit handler.
  * LESSON 597 added useRef with TypeScript to extract user input.
- * LESSON 598 adds a CALLBACK PROP so this component can communicate
- * the entered text back to the parent (App) component.
+ * LESSON 598 added a CALLBACK PROP so this component could
+ * communicate the entered text back to the parent (App) component.
  *
  * ============================================================================
  * LESSON 596 RECAP — TYPING EVENT HANDLER PARAMETERS
@@ -30,63 +30,54 @@
  * asserts non-null when accessing .current inside the submit handler.
  *
  * ============================================================================
- * LESSON 598 — FUNCTION TYPES IN PROPS (CALLBACK PATTERN)
+ * LESSON 598 RECAP — FUNCTION TYPES IN PROPS (CALLBACK PATTERN)
  * ============================================================================
  *
- * CHILD-TO-PARENT COMMUNICATION:
+ * Previously, this component received an onAddTodo callback through
+ * props, typed as (text: string) => void. The parent (App) defined
+ * the actual handler function and passed it down via JSX attributes.
  *
- * A common React pattern is passing a function from a parent to a
- * child component via props. The child calls the function to send
- * data back up. This pattern is identical in TypeScript — the only
- * addition is that the FUNCTION ITSELF must be typed in the props
- * definition.
+ * ============================================================================
+ * LESSON 602 — REPLACING PROPS WITH useContext
+ * ============================================================================
  *
- * FUNCTION TYPE SYNTAX IN TYPESCRIPT:
+ * Instead of receiving a callback from the parent through props,
+ * this component now accesses the addTodo function directly from
+ * the TodosContext via useContext. This eliminates the need for the
+ * parent to know about or forward the callback.
  *
- * A function type describes the shape of a function — its parameters
- * and return type — using arrow notation within a type definition:
+ * WHAT CHANGED:
  *
- *   onAddTodo: (text: string) => void
+ *   - The onAddTodo prop is removed from the component's type
+ *     definition. React.FC no longer has a generic parameter since
+ *     there are no custom props to describe.
+ *   - The (props) parameter is removed from the arrow function.
+ *   - props.onAddTodo(enteredText) becomes todosCtx.addTodo(enteredText).
+ *   - useContext and TodosContext are imported.
  *
- *   - (text: string)   — the function takes one parameter of type string
- *   - => void           — the function returns nothing
+ * WHAT STAYED THE SAME:
  *
- * IMPORTANT: This looks like an arrow function, but it is NOT creating
- * a function. It appears inside a TYPE DEFINITION (between the angle
- * brackets of React.FC<...>), so TypeScript interprets it as a
- * function TYPE — a description of what shape the function must have.
- *
- * EXAMPLES OF FUNCTION TYPES:
- *
- *   () => void                    — no parameters, no return value
- *   (text: string) => void        — one string parameter, no return
- *   (a: number, b: number) => number — two numbers in, one number out
- *   (items: Todo[]) => boolean    — array of Todos in, boolean out
- *
- * WHY THIS MATTERS:
- *
- * TypeScript verifies BOTH sides of the callback:
- *
- *   1. Inside this component — calling props.onAddTodo(enteredText)
- *      is valid because enteredText is a string and onAddTodo expects
- *      a string. Passing a number would cause a type error.
- *
- *   2. In the parent (App.tsx) — the function passed to onAddTodo
- *      must match the declared shape. A function with wrong parameter
- *      types or a different number of parameters would be rejected.
+ * Everything INSIDE the component — the ref, the submit handler, the
+ * form JSX — remains identical. The only difference is WHERE the
+ * addTodo function comes from (context instead of props). The
+ * internal logic of reading the input, validating it, and calling
+ * the function is unchanged.
  *
  * ============================================================================
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useContext } from 'react';
 
 import classes from './NewTodo.module.css';
+import { TodosContext } from '../store/todos-context';
 
-// The generic parameter now includes onAddTodo — a FUNCTION TYPE.
-// It describes a callback that accepts a string and returns nothing.
-// This is the typed version of the "pass a function as a prop"
-// pattern used throughout the course for child-to-parent communication.
-const NewTodo: React.FC<{ onAddTodo: (text: string) => void }> = (props) => {
+// No custom props — the addTodo function comes from context.
+// The generic parameter on React.FC is omitted.
+const NewTodo: React.FC = () => {
+  // Access the context to get the addTodo function. TypeScript
+  // knows the full shape of the context value automatically.
+  const todosCtx = useContext(TodosContext);
+
   const todoTextInputRef = useRef<HTMLInputElement>(null);
 
   const submitHandler = (event: React.FormEvent) => {
@@ -98,11 +89,11 @@ const NewTodo: React.FC<{ onAddTodo: (text: string) => void }> = (props) => {
       return;
     }
 
-    // Call the callback function received from the parent. TypeScript
-    // knows that onAddTodo expects exactly one string argument because
-    // of our function type definition above. Passing a value of the
-    // wrong type (e.g., a number) would be flagged as an error.
-    props.onAddTodo(enteredText);
+    // Call addTodo from context instead of from props. TypeScript
+    // still verifies that enteredText (string) matches the expected
+    // parameter type — the type safety comes from the context's
+    // type definition rather than from a props interface.
+    todosCtx.addTodo(enteredText);
   };
 
   // The "form" class from NewTodo.module.css styles the form container,

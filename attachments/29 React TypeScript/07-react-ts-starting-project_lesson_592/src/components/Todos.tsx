@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Todos.tsx — LESSONS 592–595, 600, 601
+ * Todos.tsx — LESSONS 592–595, 600–602
  * ============================================================================
  *
  * TYPING COMPONENT PROPS WITH React.FC AND GENERICS
@@ -37,79 +37,81 @@
  * tool (Create React App / Webpack) handles CSS module resolution
  * regardless of whether the component file is .tsx or .jsx.
  *
- * The import statement "import classes from './Todos.module.css'"
- * brings in an object where each key is a CSS class name defined in
- * the file (e.g., classes.todos corresponds to the .todos selector).
- * These are then applied via className={classes.todos} on JSX
- * elements.
- *
- * The list element is changed from <ol> to <ul> since the CSS module
- * removes default list styling (list-style: none), making ordered
- * numbering irrelevant.
- *
  * ============================================================================
- * LESSON 601 — FORWARDING THE REMOVE CALLBACK (PROP CHAIN)
+ * LESSON 601 RECAP — THE .bind() TECHNIQUE (STILL USED HERE)
  * ============================================================================
  *
- * This component sits BETWEEN App (which owns the state) and
- * TodoItem (which handles the click). It does not define the removal
- * logic itself — it receives onRemoveTodo from App and forwards it
- * down to each TodoItem. This is a PROP CHAIN: a function passed
- * through multiple layers of components to reach the one that
- * actually triggers it.
+ * The .bind() approach from lesson 601 is still used here to
+ * pre-configure the todo ID for each TodoItem's onRemoveTodo
+ * callback. The difference is that the removeTodo function now
+ * comes from CONTEXT instead of props.
  *
- * TYPE MISMATCH AND THE .bind() SOLUTION:
+ * ============================================================================
+ * LESSON 602 — REPLACING PROPS WITH useContext
+ * ============================================================================
  *
- * App's removeTodoHandler expects a string parameter (the todo ID),
- * but TodoItem's onRemoveTodo prop is typed as () => void (no
- * parameters). These shapes do not match directly. The solution is
- * .bind() — a built-in JavaScript method that creates a NEW function
- * with pre-configured arguments:
+ * This component previously received both items (Todo[]) and
+ * onRemoveTodo ((id: string) => void) as PROPS from App.tsx. That
+ * required App to act as a middleman, passing data and functions
+ * through even though App itself did not use them.
  *
- *   props.onRemoveTodo.bind(null, item.id)
+ * Now, both values come directly from the TodosContext via the
+ * useContext hook. The component no longer accepts any custom props,
+ * so the generic parameter on React.FC is removed entirely.
  *
- *   - The first argument to .bind() sets the "this" context. Since
- *     arrow functions ignore "this", null is passed.
- *   - The second argument (item.id) becomes the FIRST argument that
- *     onRemoveTodo will receive when it is eventually called.
+ * AUTOMATIC TYPE INFERENCE FROM useContext:
  *
- * The result is a new function that takes NO parameters (matching
- * TodoItem's () => void type) but internally calls the original
- * function with item.id already filled in.
+ * When you call useContext(TodosContext), TypeScript automatically
+ * knows the return type because TodosContext was created with
+ * createContext<TodosContextObj>(...). There is no need to annotate
+ * the todosCtx variable — hovering over it in the IDE shows the
+ * full TodosContextObj type with items, addTodo, and removeTodo.
  *
- * AN ALTERNATIVE APPROACH — PASSING THE ID THROUGH:
+ * WHAT CHANGED IN THE JSX:
  *
- * Instead of using .bind(), you could pass the ID as a separate prop
- * to TodoItem and have TodoItem call onRemoveTodo(id) itself. Both
- * approaches are valid. The .bind() approach keeps TodoItem simpler
- * by not requiring it to know about IDs at all.
+ *   - props.items        → todosCtx.items
+ *   - props.onRemoveTodo → todosCtx.removeTodo
+ *
+ * The .bind(null, item.id) technique remains the same — it still
+ * pre-configures the ID so TodoItem receives a () => void function.
+ *
+ * REMOVING THE PROPS TYPE DEFINITION:
+ *
+ * Since this component no longer uses any custom props, the generic
+ * parameter on React.FC<{ items: Todo[]; onRemoveTodo: ... }> is
+ * removed. The component is now just React.FC with no type argument.
+ * The Todo model import is also removed since items are accessed
+ * through context, not through a typed prop.
  *
  * ============================================================================
  */
 
-import React from 'react';
+import React, { useContext } from 'react';
 
-import Todo from '../models/todo';
 import TodoItem from './TodoItem';
-// CSS Module import — the "classes" object maps each CSS class name
-// defined in the .module.css file to a unique, scoped class string.
-// This prevents style collisions between components.
 import classes from './Todos.module.css';
+// Import the context object (named export) — NOT the provider.
+// The context is passed to useContext to access the current value.
+import { TodosContext } from '../store/todos-context';
 
-// Props now include onRemoveTodo — a function that takes an ID
-// (string) and returns nothing. This matches the shape of
-// removeTodoHandler defined in App.tsx.
-const Todos: React.FC<{ items: Todo[]; onRemoveTodo: (id: string) => void }> = (props) => {
+// No custom props — all data comes from context. The generic
+// parameter on React.FC is omitted since there are no props to type.
+const Todos: React.FC = () => {
+  // useContext returns the current context value. TypeScript infers
+  // its type as TodosContextObj automatically from the generic
+  // parameter that was set on createContext.
+  const todosCtx = useContext(TodosContext);
+
   return (
     <ul className={classes.todos}>
-      {props.items.map((item) => (
-        // .bind(null, item.id) pre-fills the id argument so that
-        // TodoItem receives a () => void function — it does not
-        // need to know or pass the id itself.
+      {todosCtx.items.map((item) => (
+        // .bind(null, item.id) still pre-fills the id — the only
+        // change is the source: todosCtx.removeTodo instead of
+        // props.onRemoveTodo.
         <TodoItem
           key={item.id}
           text={item.text}
-          onRemoveTodo={props.onRemoveTodo.bind(null, item.id)}
+          onRemoveTodo={todosCtx.removeTodo.bind(null, item.id)}
         />
       ))}
     </ul>
